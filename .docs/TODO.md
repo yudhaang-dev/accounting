@@ -14,7 +14,7 @@
 - [x] **M0-04** Kerangka modul (`app/Modules/*`, `Orchestration`, `Platform`, `Support`), service provider dan route per modul, prefix tabel — ADR-0002
 - [x] **M0-05** Penjaga arsitektur di CI: deptrac sesuai graf, Pest arch (import lintas modul hanya ke `Contracts`, tanpa pemeriksaan nama role, prefix tabel) — ADR-0002
 - [x] **M0-06** Tipe dasar: `Money` (brick/math) dan cast desimal, model berbasis ULID, scope perusahaan dan konvensi composite FK — API-TR-04, API-TR-05
-- [ ] **M0-07** Platform Audit: log append-only dengan aktor user/klien dan nilai sebelum/sesudah, dilindungi trigger — X-FR-01, X-AC-05
+- [x] **M0-07** Platform Audit: log append-only dengan aktor user/klien dan nilai sebelum/sesudah, dilindungi trigger — X-FR-01, X-AC-05
 - [ ] **M0-08** Platform Numbering: seri berpola (prefix, token tanggal, reset, padding), tanpa celah dalam transaksi; dipakai GL-FR-05 dan TE-FR-16
 - [ ] **M0-09** Platform Localization: `lang/id` dan `lang/en`, middleware `Accept-Language`, locale default dari konfigurasi — API-TR-06, API-AC-10, ADR-0001
 - [ ] **M0-10** Dasar API: prefix `/api/v1` dengan middleware sesi + CSRF (ADR-0011), binding dan validasi scope perusahaan, konvensi resource, command, dan parameter laporan, handler error (422, `code`, 409, 403) beserta katalog kode — API-TR-01, API-TR-02, API-TR-03, API-TR-07, API-TR-08, API-TR-09, API-TR-10, API-TR-11, API-TR-12, API-AC-01, API-AC-02
