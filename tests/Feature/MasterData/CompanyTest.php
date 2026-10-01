@@ -54,8 +54,9 @@ beforeEach(function () {
     $this->companyId = $response->json('data.company_id');
     $this->url = "/api/v1/companies/{$this->companyId}";
 
-    // Activation needs a confirmed chart of accounts (GL-FR-01, X-AC-03).
+    // Activation needs a confirmed chart of accounts and a fiscal calendar (GL-FR-01, GL-FR-03, X-AC-03).
     confirmChartOfAccounts($this->admin, $this->companyId);
+    setUpFiscalCalendar($this->admin, $this->companyId);
 });
 
 describe('GET /companies/{companyId} (MD-FR-01)', function () {

@@ -218,6 +218,7 @@ describe('access', function () {
 
     it('refuses changes once the company is inactive', function () {
         confirmChartOfAccounts($this->admin, $this->companyId);
+        setUpFiscalCalendar($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();
         $this->actingAs($this->admin)->postJson("{$this->url}/deactivate")->assertOk();
 
@@ -339,6 +340,8 @@ describe('activation prerequisite (GL-FR-01, X-AC-03)', function () {
         $parent = postAccount(['code' => '5000', 'class' => 'expense'])->json('data.id');
         postAccount(['code' => '5100', 'class' => 'expense', 'parent_id' => $parent]);
 
+        setUpFiscalCalendar($this->admin, $this->companyId);
+
         $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk()->assertJsonPath('data.status', 'active');
     });
 
@@ -355,6 +358,7 @@ describe('activation prerequisite (GL-FR-01, X-AC-03)', function () {
 
     it('activates a company with the confirmed template', function () {
         confirmChartOfAccounts($this->admin, $this->companyId);
+        setUpFiscalCalendar($this->admin, $this->companyId);
 
         expect(app(AccountDirectory::class)->missingClasses($this->companyId))->toBe([]);
         $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();

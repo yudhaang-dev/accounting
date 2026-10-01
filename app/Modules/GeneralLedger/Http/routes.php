@@ -2,6 +2,9 @@
 
 use App\Modules\GeneralLedger\Http\AccountController;
 use App\Modules\GeneralLedger\Http\AccountTemplateController;
+use App\Modules\GeneralLedger\Http\FiscalCalendarController;
+use App\Modules\GeneralLedger\Http\FiscalYearController;
+use App\Modules\GeneralLedger\Http\PeriodController;
 use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
 
@@ -27,4 +30,21 @@ Route::companyScoped(function () {
         Route::post("accounts/{id}/{$action}", [AccountController::class, $action])
             ->middleware('permission:accounts.manage')->where('id', ApiServiceProvider::ULID)->name("accounts.{$action}");
     }
+
+    Route::get('fiscal-calendar', [FiscalCalendarController::class, 'show'])->middleware('permission:periods.read')->name('fiscal-calendar.show');
+    Route::post('fiscal-calendar', [FiscalCalendarController::class, 'store'])->middleware('permission:periods.manage')->name('fiscal-calendar.store');
+    Route::patch('fiscal-calendar', [FiscalCalendarController::class, 'update'])->middleware('permission:periods.manage')->name('fiscal-calendar.update');
+
+    Route::get('fiscal-years', [FiscalYearController::class, 'index'])->middleware('permission:periods.read')->name('fiscal-years.index');
+    Route::post('fiscal-years', [FiscalYearController::class, 'store'])->middleware('permission:periods.manage')->name('fiscal-years.store');
+    Route::get('fiscal-years/{id}', [FiscalYearController::class, 'show'])
+        ->middleware('permission:periods.read')->where('id', ApiServiceProvider::ULID)->name('fiscal-years.show');
+
+    Route::get('periods', [PeriodController::class, 'index'])->middleware('permission:periods.read')->name('periods.index');
+    Route::get('periods/{id}', [PeriodController::class, 'show'])
+        ->middleware('permission:periods.read')->where('id', ApiServiceProvider::ULID)->name('periods.show');
+    Route::post('periods/{id}/close', [PeriodController::class, 'close'])
+        ->middleware('permission:periods.close')->where('id', ApiServiceProvider::ULID)->name('periods.close');
+    Route::post('periods/{id}/reopen', [PeriodController::class, 'reopen'])
+        ->middleware('permission:periods.reopen')->where('id', ApiServiceProvider::ULID)->name('periods.reopen');
 });

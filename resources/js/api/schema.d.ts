@@ -229,6 +229,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/fiscal-calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The fiscal calendar of the company. Answers 404 until it has been set up */
+        get: operations["fiscal-calendar.show"];
+        put?: never;
+        /**
+         * Sets up the calendar: the month a fiscal year starts and how it is cut into periods. Answers
+         *     409 when the company already has one
+         */
+        post: operations["fiscal-calendar.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Changes the calendar. `lock_version` is required; a real change is refused with 409 once
+         *     fiscal years exist
+         */
+        patch: operations["fiscal-calendar.update"];
+        trace?: never;
+    };
+    "/companies/{companyId}/fiscal-years": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fiscal years of the company in date order, with their number of periods */
+        get: operations["fiscal-years.index"];
+        put?: never;
+        /**
+         * Creates `count` fiscal years (default 1), each with twelve monthly periods. The first year
+         *     needs `start_date` (the 1st of the calendar start month); later years continue the previous
+         *     one. Answers 422 `MAPPING_REQUIRED` while the fiscal calendar has not been set up
+         */
+        post: operations["fiscal-years.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/fiscal-years/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A fiscal year with all its periods */
+        get: operations["fiscal-years.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -260,6 +324,76 @@ export interface paths {
         get: operations["me.workspaces"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/periods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Periods in date order. Filters: `filter[fiscal_year_id]`, `filter[status]` and `filter[date]`
+         *     (the period that contains the date). `per_page` defaults to 50, at most 200
+         */
+        get: operations["periods.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/periods/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["periods.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/periods/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Closes an open period: it no longer accepts postings */
+        post: operations["periods.close"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/periods/{id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reopens a closed period. A `reason` is required and is audited with the actor */
+        post: operations["periods.reopen"];
         delete?: never;
         options?: never;
         head?: never;
@@ -322,6 +456,12 @@ export interface components {
             status: string;
             lock_version: number;
         };
+        /**
+         * CalendarPattern
+         * @description How a fiscal year is cut into periods. Only calendar months for now; 4-4-5 and free ranges come with M4-02.
+         * @enum {string}
+         */
+        CalendarPattern: "monthly";
         /** CompanyResource */
         CompanyResource: {
             id: string;
@@ -346,6 +486,18 @@ export interface components {
             normal_balance?: "debit" | "credit" | null;
             parent_id?: string | null;
         };
+        /** CreateFiscalYearsRequest */
+        CreateFiscalYearsRequest: {
+            /**
+             * Format: date
+             * @description Required for the first year (the 1st of the calendar start month); later years continue
+             *     the previous one, and a start date, when given, must equal that continuation.
+             */
+            start_date?: string;
+            count?: number;
+            /** @description Only with count 1; defaults to FY2026, or FY2026/2027 when the year does not start in January. */
+            name?: string;
+        };
         /** CreateWorkspaceRequest */
         CreateWorkspaceRequest: {
             workspace_name: string;
@@ -364,6 +516,22 @@ export interface components {
             company_name: string;
             permissions: string[];
         };
+        /** FiscalCalendarResource */
+        FiscalCalendarResource: {
+            id: string;
+            pattern: string;
+            start_month: number;
+            lock_version: number;
+        };
+        /** FiscalYearResource */
+        FiscalYearResource: {
+            id: string;
+            name: string;
+            start_date: string;
+            end_date: string;
+            period_count: string | number;
+            periods?: components["schemas"]["PeriodResource"][];
+        };
         /** ImportTemplateRequest */
         ImportTemplateRequest: {
             template: string;
@@ -378,6 +546,32 @@ export interface components {
             email: string;
             email_verified: boolean;
             two_factor_enabled: boolean;
+        };
+        /** PeriodResource */
+        PeriodResource: {
+            id: string;
+            fiscal_year_id: string;
+            number: number;
+            name: string;
+            start_date: string;
+            end_date: string;
+            status: string;
+        };
+        /**
+         * PeriodStatus
+         * @description `open` accepts postings, `closed` refuses all of them (GL-FR-04). `soft_closed` arrives with M4-02.
+         * @enum {string}
+         */
+        PeriodStatus: "open" | "closed";
+        /** ReopenPeriodRequest */
+        ReopenPeriodRequest: {
+            reason: string;
+        };
+        /** StoreFiscalCalendarRequest */
+        StoreFiscalCalendarRequest: {
+            pattern: components["schemas"]["CalendarPattern"];
+            /** @description Month (1 = January) in which a fiscal year starts; the year always starts on the 1st. */
+            start_month: number;
         };
         /** UpdateAccountRequest */
         UpdateAccountRequest: {
@@ -399,6 +593,12 @@ export interface components {
             timezone?: string;
             /** @enum {string} */
             default_locale?: "id" | "en";
+        };
+        /** UpdateFiscalCalendarRequest */
+        UpdateFiscalCalendarRequest: {
+            lock_version: number;
+            pattern?: components["schemas"]["CalendarPattern"];
+            start_month?: number;
         };
         /** WorkspaceResource */
         WorkspaceResource: {
@@ -905,6 +1105,200 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "fiscal-calendar.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `FiscalCalendarResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FiscalCalendarResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "fiscal-calendar.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreFiscalCalendarRequest"];
+            };
+        };
+        responses: {
+            /** @description `FiscalCalendarResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FiscalCalendarResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "fiscal-calendar.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateFiscalCalendarRequest"];
+            };
+        };
+        responses: {
+            /** @description `FiscalCalendarResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FiscalCalendarResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "fiscal-years.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `FiscalYearResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FiscalYearResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "fiscal-years.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CreateFiscalYearsRequest"];
+            };
+        };
+        responses: {
+            /** @description Array of `FiscalYearResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: (components["schemas"]["FiscalYearResource"] & Record<string, never>)[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "fiscal-years.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `FiscalYearResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FiscalYearResource"] & Record<string, never>;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -949,6 +1343,148 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "periods.index": {
+        parameters: {
+            query?: {
+                "filter[fiscal_year_id]"?: string;
+                "filter[status]"?: components["schemas"]["PeriodStatus"];
+                /** @description The period that contains this date. */
+                "filter[date]"?: string;
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `PeriodResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PeriodResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "periods.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `PeriodResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PeriodResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "periods.close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `PeriodResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PeriodResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "periods.reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReopenPeriodRequest"];
+            };
+        };
+        responses: {
+            /** @description `PeriodResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PeriodResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "workspaces.store": {

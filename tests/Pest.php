@@ -92,3 +92,16 @@ function confirmChartOfAccounts(User $admin, string $companyId): void
         'confirmed' => true,
     ])->assertCreated();
 }
+
+/** Sets up a monthly calendar starting in January and creates fiscal year 2026, so activation can pass. */
+function setUpFiscalCalendar(User $admin, string $companyId, int $startMonth = 1, string $firstStart = '2026-01-01'): void
+{
+    test()->actingAs($admin)->postJson("/api/v1/companies/{$companyId}/fiscal-calendar", [
+        'pattern' => 'monthly',
+        'start_month' => $startMonth,
+    ])->assertCreated();
+
+    test()->actingAs($admin)->postJson("/api/v1/companies/{$companyId}/fiscal-years", [
+        'start_date' => $firstStart,
+    ])->assertCreated();
+}
