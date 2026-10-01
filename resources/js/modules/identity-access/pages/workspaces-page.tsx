@@ -55,7 +55,7 @@ export function WorkspacesPage({
             </div>
 
             {workspaces.length === 0 ? (
-                <Empty className="max-w-xl border">
+                <Empty className="max-w-xl flex-none border py-10">
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
                             <FolderOpenIcon />

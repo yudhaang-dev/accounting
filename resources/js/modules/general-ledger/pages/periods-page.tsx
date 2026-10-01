@@ -153,7 +153,7 @@ export function PeriodsPage({
             ) : years.data === undefined ? (
                 <Skeleton className="h-64 w-full" />
             ) : years.data.length === 0 ? (
-                <Empty className="max-w-xl border">
+                <Empty className="max-w-xl flex-none border py-10">
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
                             <CalendarRangeIcon />

@@ -44,23 +44,25 @@ function Step({
 
     return (
         <Card>
-            <CardHeader className="flex-row items-center gap-3">
-                <span
-                    aria-hidden
-                    className="flex size-7 shrink-0 items-center justify-center rounded-full border text-sm font-medium data-[state=done]:border-primary data-[state=done]:bg-primary data-[state=done]:text-primary-foreground"
-                    data-state={state}
-                >
-                    {state === 'done' ? (
-                        <CheckIcon className="size-4" />
-                    ) : (
-                        number
-                    )}
-                </span>
-                <CardTitle className="flex-1">{title}</CardTitle>
-                <Badge variant={state === 'done' ? 'secondary' : 'outline'}>
-                    {t(`setup.state.${state}`)}
-                </Badge>
-                {action}
+            <CardHeader>
+                <div className="flex items-center gap-3">
+                    <span
+                        aria-hidden
+                        className="flex size-7 shrink-0 items-center justify-center rounded-full border text-sm font-medium data-[state=done]:border-primary data-[state=done]:bg-primary data-[state=done]:text-primary-foreground"
+                        data-state={state}
+                    >
+                        {state === 'done' ? (
+                            <CheckIcon className="size-4" />
+                        ) : (
+                            number
+                        )}
+                    </span>
+                    <CardTitle className="flex-1">{title}</CardTitle>
+                    <Badge variant={state === 'done' ? 'secondary' : 'outline'}>
+                        {t(`setup.state.${state}`)}
+                    </Badge>
+                    {action}
+                </div>
             </CardHeader>
             {children && <CardContent>{children}</CardContent>}
         </Card>

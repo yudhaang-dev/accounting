@@ -20,7 +20,7 @@ export function RecordNotFound() {
     useDocumentTitle(t('notFound.recordTitle'));
 
     return (
-        <Empty className="max-w-xl border">
+        <Empty className="max-w-xl flex-none border py-10">
             <EmptyHeader>
                 <EmptyMedia variant="icon">
                     <FileQuestionIcon />

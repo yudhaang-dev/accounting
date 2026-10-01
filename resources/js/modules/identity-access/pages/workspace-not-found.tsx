@@ -19,7 +19,7 @@ export function WorkspaceNotFound() {
     useDocumentTitle(t('workspace.notFoundTitle'));
 
     return (
-        <Empty className="max-w-xl border">
+        <Empty className="max-w-xl flex-none border py-10">
             <EmptyHeader>
                 <EmptyMedia variant="icon">
                     <FolderXIcon />

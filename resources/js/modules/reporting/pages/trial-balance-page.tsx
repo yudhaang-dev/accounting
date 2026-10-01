@@ -215,7 +215,7 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                     )}
 
                     {report.data.rows.length === 0 ? (
-                        <Empty className="max-w-xl border">
+                        <Empty className="max-w-xl flex-none border py-10">
                             <EmptyHeader>
                                 <EmptyMedia variant="icon">
                                     <FileSpreadsheetIcon />

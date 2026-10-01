@@ -164,7 +164,7 @@ export function EntriesPage({
             ) : list.data === undefined ? (
                 <Skeleton className="h-64 w-full" />
             ) : list.data.total === 0 && !filtered ? (
-                <Empty className="max-w-xl border">
+                <Empty className="max-w-xl flex-none border py-10">
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
                             <FileTextIcon />
