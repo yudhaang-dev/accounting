@@ -21,7 +21,7 @@
 - [x] **M0-11** `Idempotency-Key`, `lock_version`, dan rate limit — API-TR-13, API-TR-14, API-TR-15, API-AC-08, API-AC-09
 - [x] **M0-12** Scramble: publikasi spesifikasi OpenAPI dan pembuatan klien SPA dari spesifikasi di CI — ADR-0004, ADR-0010
 - [x] **M0-13** Kerangka SPA: React + TypeScript + Vite, TanStack Router/Query, react-i18next, shadcn; alur CSRF, login, 2FA, passkey, dan logout lewat Fortify — API-TR-21, IA-FR-04, ADR-0010
-- [ ] **M0-14** Kebijakan retensi per perusahaan (default Indonesia 10 tahun) dan larangan hard delete data keuangan — X-FR-05
+- [x] **M0-14** Kebijakan retensi per perusahaan (default Indonesia 10 tahun) dan larangan hard delete data keuangan — X-FR-05
 
 ## M1 — Irisan end-to-end awal
 

@@ -11,6 +11,7 @@ use App\Platform\Api\ApiServiceProvider;
 use App\Platform\Audit\AuditServiceProvider;
 use App\Platform\Localization\LocalizationServiceProvider;
 use App\Platform\Numbering\NumberingServiceProvider;
+use App\Platform\Retention\RetentionServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
 use App\Support\SupportServiceProvider;
@@ -22,6 +23,7 @@ return [
     ApiServiceProvider::class,
     AuditServiceProvider::class,
     NumberingServiceProvider::class,
+    RetentionServiceProvider::class,
     LocalizationServiceProvider::class,
     MasterDataServiceProvider::class,
     IdentityAccessServiceProvider::class,

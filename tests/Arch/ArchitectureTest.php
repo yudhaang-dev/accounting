@@ -101,3 +101,13 @@ it('uses only the owning module prefix for table names', function () use ($modul
 
     expect($violations)->toBe([]);
 });
+
+it('opens the hard-delete bypass only inside the retention platform capability', function () {
+    $offenders = array_filter(
+        phpFilesUnder(APP_DIR),
+        fn (string $path) => str_contains(file_get_contents($path), 'app.retention_purge')
+            && ! str_contains(str_replace(DIRECTORY_SEPARATOR, '/', $path), '/Platform/Retention/'),
+    );
+
+    expect($offenders)->toBe([]);
+});
