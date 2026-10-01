@@ -34,7 +34,7 @@ describe('two-step verification', () => {
         await typist.type(input, '123456');
 
         expect(
-            await screen.findByText('Halo, Budi Santoso'),
+            await screen.findByRole('heading', { name: 'Ruang kerja baru' }),
         ).toBeInTheDocument();
         expect(api.called('POST /two-factor-challenge')[0]?.body).toEqual({
             code: '123456',
@@ -341,8 +341,8 @@ describe('e-mail verification', () => {
         const { router } = renderApp('/email/verify');
 
         expect(
-            await screen.findByText('Halo, Budi Santoso'),
+            await screen.findByRole('heading', { name: 'Ruang kerja baru' }),
         ).toBeInTheDocument();
-        expect(router.state.location.pathname).toBe('/workspaces');
+        expect(router.state.location.pathname).toBe('/workspaces/new');
     });
 });

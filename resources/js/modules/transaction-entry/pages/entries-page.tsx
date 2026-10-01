@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { DatePicker } from '@/components/date-picker';
 import { Link } from '@tanstack/react-router';
 import { FileTextIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
@@ -14,7 +15,6 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 import { Field, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
@@ -35,6 +35,7 @@ import {
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { formatDecimal, sumDecimals } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
+import { useTypeLabel } from '@/modules/transaction-entry/type-labels';
 import { EntryStatusBadge } from '@/modules/transaction-entry/components/entry-status-badge';
 import {
     ENTRY_STATUSES,
@@ -53,6 +54,7 @@ export function EntriesPage({
     canCreate: boolean;
 }) {
     const { t, i18n } = useTranslation();
+    const typeLabel = useTypeLabel(companyId);
     const [status, setStatus] = useState<EntryStatus | undefined>();
     const [from, setFrom] = useState('');
     const [to, setTo] = useState('');
@@ -129,30 +131,32 @@ export function EntriesPage({
                         </SelectContent>
                     </Select>
                 </Field>
-                <Field className="w-44">
-                    <FieldLabel htmlFor="entries-from">
+                <Field className="w-56">
+                    <FieldLabel id="entries-from-label" htmlFor="entries-from">
                         {t('entries.from')}
                     </FieldLabel>
-                    <Input
+                    <DatePicker
                         id="entries-from"
-                        type="date"
+                        labelledBy="entries-from-label"
                         value={from}
-                        onChange={(event) => {
-                            setFrom(event.target.value);
+                        clearable
+                        onChange={(value) => {
+                            setFrom(value);
                             setPage(1);
                         }}
                     />
                 </Field>
-                <Field className="w-44">
-                    <FieldLabel htmlFor="entries-to">
+                <Field className="w-56">
+                    <FieldLabel id="entries-to-label" htmlFor="entries-to">
                         {t('entries.to')}
                     </FieldLabel>
-                    <Input
+                    <DatePicker
                         id="entries-to"
-                        type="date"
+                        labelledBy="entries-to-label"
                         value={to}
-                        onChange={(event) => {
-                            setTo(event.target.value);
+                        clearable
+                        onChange={(value) => {
+                            setTo(value);
                             setPage(1);
                         }}
                     />
@@ -227,7 +231,9 @@ export function EntriesPage({
                                             {entry.description}
                                         </TableCell>
                                         <TableCell>
-                                            {entry.transaction_type_key}
+                                            {typeLabel(
+                                                entry.transaction_type_key,
+                                            )}
                                         </TableCell>
                                         <TableCell className="text-end tabular-nums">
                                             {formatDecimal(

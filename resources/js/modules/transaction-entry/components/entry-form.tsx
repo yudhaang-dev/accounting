@@ -21,6 +21,9 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/date-picker';
+import { MoneyInput } from '@/components/money-input';
+import { SearchableSelect } from '@/components/searchable-select';
 import {
     Select,
     SelectContent,
@@ -38,6 +41,7 @@ import {
     isPositive,
     sumDecimals,
 } from '@/lib/decimal';
+import { todayIso } from '@/lib/date';
 import { genericErrorMessage } from '@/lib/errors';
 import { applyApiErrors } from '@/lib/forms';
 import { isApiError } from '@/lib/http';
@@ -75,12 +79,6 @@ const blankLine = (): Line => ({
     description: '',
 });
 
-const today = (): string => {
-    const now = new Date();
-
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-};
-
 const valuesOf = (entry: Entry | undefined, typeKey: string): Values =>
     entry
         ? {
@@ -98,7 +96,7 @@ const valuesOf = (entry: Entry | undefined, typeKey: string): Values =>
           }
         : {
               transaction_type_key: typeKey,
-              accounting_date: today(),
+              accounting_date: todayIso(),
               document_date: '',
               description: '',
               lines: [blankLine(), blankLine()],
@@ -274,8 +272,6 @@ function EntryFields({
                 t('entries.form.amountInvalid')
             );
         },
-        onChange: (event: { target: { value: string } }) =>
-            onSide(index, side, event.target.value),
     });
 
     return (
@@ -338,18 +334,26 @@ function EntryFields({
                     <Field
                         data-invalid={errors.accounting_date ? true : undefined}
                     >
-                        <FieldLabel htmlFor="entry-date">
+                        <FieldLabel id="entry-date-label" htmlFor="entry-date">
                             {t('entries.form.accountingDate')}
                         </FieldLabel>
-                        <Input
-                            id="entry-date"
-                            type="date"
-                            aria-invalid={
-                                errors.accounting_date ? true : undefined
-                            }
-                            {...register('accounting_date', {
-                                required: t('common.required'),
-                            })}
+                        <Controller
+                            control={control}
+                            name="accounting_date"
+                            rules={{ required: t('common.required') }}
+                            render={({ field }) => (
+                                <DatePicker
+                                    id="entry-date"
+                                    labelledBy="entry-date-label"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    aria-invalid={
+                                        errors.accounting_date
+                                            ? true
+                                            : undefined
+                                    }
+                                />
+                            )}
                         />
                         {errors.accounting_date && (
                             <FieldError>
@@ -360,16 +364,27 @@ function EntryFields({
                     <Field
                         data-invalid={errors.document_date ? true : undefined}
                     >
-                        <FieldLabel htmlFor="entry-document-date">
+                        <FieldLabel
+                            id="entry-document-date-label"
+                            htmlFor="entry-document-date"
+                        >
                             {t('entries.form.documentDate')}
                         </FieldLabel>
-                        <Input
-                            id="entry-document-date"
-                            type="date"
-                            aria-invalid={
-                                errors.document_date ? true : undefined
-                            }
-                            {...register('document_date')}
+                        <Controller
+                            control={control}
+                            name="document_date"
+                            render={({ field }) => (
+                                <DatePicker
+                                    id="entry-document-date"
+                                    labelledBy="entry-document-date-label"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    clearable
+                                    aria-invalid={
+                                        errors.document_date ? true : undefined
+                                    }
+                                />
+                            )}
                         />
                         {errors.document_date && (
                             <FieldError>
@@ -434,81 +449,71 @@ function EntryFields({
                                                 required: t('common.required'),
                                             }}
                                             render={({ field: account }) => (
-                                                <Select
-                                                    value={account.value}
+                                                <SearchableSelect
                                                     items={accountItems}
+                                                    value={account.value}
                                                     onValueChange={
                                                         account.onChange
                                                     }
-                                                >
-                                                    <SelectTrigger
-                                                        className="w-full"
-                                                        aria-label={`${t('entries.form.account')} ${t('entries.form.line', { n })}`}
-                                                        aria-invalid={
-                                                            row?.account_id
-                                                                ? true
-                                                                : undefined
-                                                        }
-                                                    >
-                                                        <SelectValue
+                                                    placeholder={t(
+                                                        'entries.form.chooseAccount',
+                                                    )}
+                                                    emptyText={t(
+                                                        'common.noMatch',
+                                                    )}
+                                                    aria-label={`${t('entries.form.account')} ${t('entries.form.line', { n })}`}
+                                                    aria-invalid={
+                                                        row?.account_id
+                                                            ? true
+                                                            : undefined
+                                                    }
+                                                />
+                                            )}
+                                        />
+                                        {(['debit', 'credit'] as const).map(
+                                            (side) => (
+                                                <Controller
+                                                    key={side}
+                                                    control={control}
+                                                    name={`lines.${index}.${side}`}
+                                                    rules={amountRules(
+                                                        index,
+                                                        side,
+                                                    )}
+                                                    render={({
+                                                        field: money,
+                                                    }) => (
+                                                        <MoneyInput
                                                             placeholder={t(
-                                                                'entries.form.chooseAccount',
+                                                                `entries.form.${side}`,
                                                             )}
+                                                            aria-label={`${t(`entries.form.${side}`)} ${t('entries.form.line', { n })}`}
+                                                            aria-invalid={
+                                                                row?.[side]
+                                                                    ? true
+                                                                    : undefined
+                                                            }
+                                                            value={money.value}
+                                                            onBlur={
+                                                                money.onBlur
+                                                            }
+                                                            onChange={(
+                                                                next,
+                                                            ) => {
+                                                                money.onChange(
+                                                                    next,
+                                                                );
+                                                                onSide(
+                                                                    index,
+                                                                    side,
+                                                                    next,
+                                                                );
+                                                            }}
                                                         />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectGroup>
-                                                            {accountItems.map(
-                                                                (item) => (
-                                                                    <SelectItem
-                                                                        key={
-                                                                            item.value
-                                                                        }
-                                                                        value={
-                                                                            item.value
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            item.label
-                                                                        }
-                                                                    </SelectItem>
-                                                                ),
-                                                            )}
-                                                        </SelectGroup>
-                                                    </SelectContent>
-                                                </Select>
-                                            )}
-                                        />
-                                        <Input
-                                            inputMode="decimal"
-                                            placeholder={t(
-                                                'entries.form.debit',
-                                            )}
-                                            className="text-right tabular-nums"
-                                            aria-label={`${t('entries.form.debit')} ${t('entries.form.line', { n })}`}
-                                            aria-invalid={
-                                                row?.debit ? true : undefined
-                                            }
-                                            {...register(
-                                                `lines.${index}.debit`,
-                                                amountRules(index, 'debit'),
-                                            )}
-                                        />
-                                        <Input
-                                            inputMode="decimal"
-                                            placeholder={t(
-                                                'entries.form.credit',
-                                            )}
-                                            className="text-right tabular-nums"
-                                            aria-label={`${t('entries.form.credit')} ${t('entries.form.line', { n })}`}
-                                            aria-invalid={
-                                                row?.credit ? true : undefined
-                                            }
-                                            {...register(
-                                                `lines.${index}.credit`,
-                                                amountRules(index, 'credit'),
-                                            )}
-                                        />
+                                                    )}
+                                                />
+                                            ),
+                                        )}
                                         <Input
                                             placeholder={t(
                                                 'entries.form.lineDescription',

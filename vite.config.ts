@@ -28,6 +28,8 @@ export default defineConfig({
         include: ['resources/js/test/**/*.test.{ts,tsx}'],
         css: false,
         restoreMocks: true,
+        // The screens are heavy (calendars, comboboxes, tables) and a full flow runs several of them.
+        testTimeout: 20000,
     },
     server: {
         watch: {

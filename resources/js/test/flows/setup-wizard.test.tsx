@@ -130,6 +130,137 @@ function setupServer(overrides: Record<string, () => Response> = {}) {
 
 const setupPath = `/w/${workspace.company_id}/setup`;
 
+describe('opening a company that is still being set up', () => {
+    const asAdmin = (status: string) => {
+        const server = setupServer();
+
+        server.state.status = status;
+
+        return {
+            ...server.routes,
+            'GET /api/v1/me/workspaces': () =>
+                json({
+                    data: [
+                        {
+                            ...workspace,
+                            permissions: ['company.activate', 'accounts.read'],
+                        },
+                    ],
+                }),
+        };
+    };
+
+    it('goes straight to the wizard for someone who may finish it', async () => {
+        mockApi(asAdmin('setup'));
+
+        const { router } = renderApp('/');
+
+        expect(
+            await screen.findByRole('heading', {
+                name: 'Menyiapkan PT Toko Budi',
+            }),
+        ).toBeInTheDocument();
+        expect(router.state.location.pathname).toBe(
+            `/w/${workspace.company_id}/setup`,
+        );
+    });
+
+    it('also does so from the company home, so the wizard cannot be missed', async () => {
+        mockApi(asAdmin('setup'));
+
+        const { router } = renderApp(`/w/${workspace.company_id}`);
+
+        await screen.findByRole('heading', { name: 'Menyiapkan PT Toko Budi' });
+        expect(router.state.location.pathname).toBe(
+            `/w/${workspace.company_id}/setup`,
+        );
+    });
+
+    it('leaves an active company on its home', async () => {
+        mockApi(asAdmin('active'));
+
+        const { router } = renderApp(`/w/${workspace.company_id}`);
+
+        expect(
+            await screen.findByRole('heading', { name: 'PT Toko Budi' }),
+        ).toBeInTheDocument();
+        expect(router.state.location.pathname).toBe(
+            `/w/${workspace.company_id}`,
+        );
+    });
+
+    it('keeps the home, with its note, for someone who cannot finish the setup', async () => {
+        mockApi({ ...setupServer().routes });
+
+        const { router } = renderApp(`/w/${workspace.company_id}`);
+
+        expect(
+            await screen.findByText('Perusahaan masih dalam penyiapan'),
+        ).toBeInTheDocument();
+        expect(router.state.location.pathname).toBe(
+            `/w/${workspace.company_id}`,
+        );
+    });
+});
+
+describe('wizard progress', () => {
+    const years = [
+        {
+            id: 'fy1',
+            name: 'FY2026',
+            start_date: '2026-01-01',
+            end_date: '2026-12-31',
+            period_count: 12,
+        },
+    ];
+
+    it('points at the chart of accounts first', async () => {
+        mockApi(setupServer().routes);
+
+        renderApp(setupPath);
+
+        expect(await screen.findByText('Langkah 2 dari 4')).toBeInTheDocument();
+        expect(
+            screen.getByRole('listitem', { current: 'step' }),
+        ).toHaveTextContent('Bagan akun');
+    });
+
+    it('moves on to the calendar once the chart is in', async () => {
+        const server = setupServer();
+
+        server.state.chart = 4;
+        mockApi(server.routes);
+
+        renderApp(setupPath);
+
+        expect(await screen.findByText('Langkah 3 dari 4')).toBeInTheDocument();
+        expect(
+            screen.getByRole('listitem', { current: 'step' }),
+        ).toHaveTextContent('Kalender fiskal');
+    });
+
+    it('ends on the activation when both are done', async () => {
+        const server = setupServer();
+
+        server.state.chart = 4;
+        server.state.calendar = {
+            id: 'cal',
+            pattern: 'monthly',
+            start_month: 1,
+            lock_version: 1,
+        };
+        server.state.years = years;
+        mockApi(server.routes);
+
+        renderApp(setupPath);
+
+        expect(await screen.findByText('Langkah 4 dari 4')).toBeInTheDocument();
+        expect(
+            screen.getByRole('listitem', { current: 'step' }),
+        ).toHaveTextContent('Aktivasi');
+    });
+});
+
 describe('company setup wizard', () => {
     it('creates a workspace with its company and continues to the setup', async () => {
         const server = setupServer();

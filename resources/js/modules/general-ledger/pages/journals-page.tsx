@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { DatePicker } from '@/components/date-picker';
 import { Link } from '@tanstack/react-router';
 import { BookTextIcon, XIcon } from 'lucide-react';
 import { useState } from 'react';
@@ -14,7 +15,6 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 import { Field, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
@@ -100,35 +100,34 @@ export function JournalsPage({
             </div>
 
             <div className="flex flex-wrap items-end gap-3">
-                <Field className="w-44">
-                    <FieldLabel htmlFor="journals-from">
+                <Field className="w-56">
+                    <FieldLabel
+                        id="journals-from-label"
+                        htmlFor="journals-from"
+                    >
                         {t('journals.list.from')}
                     </FieldLabel>
-                    <Input
+                    <DatePicker
                         id="journals-from"
-                        type="date"
+                        labelledBy="journals-from-label"
                         value={search.from ?? ''}
-                        onChange={(event) =>
-                            change({
-                                ...search,
-                                from: event.target.value || undefined,
-                            })
+                        clearable
+                        onChange={(value) =>
+                            change({ ...search, from: value || undefined })
                         }
                     />
                 </Field>
-                <Field className="w-44">
-                    <FieldLabel htmlFor="journals-to">
+                <Field className="w-56">
+                    <FieldLabel id="journals-to-label" htmlFor="journals-to">
                         {t('journals.list.to')}
                     </FieldLabel>
-                    <Input
+                    <DatePicker
                         id="journals-to"
-                        type="date"
+                        labelledBy="journals-to-label"
                         value={search.to ?? ''}
-                        onChange={(event) =>
-                            change({
-                                ...search,
-                                to: event.target.value || undefined,
-                            })
+                        clearable
+                        onChange={(value) =>
+                            change({ ...search, to: value || undefined })
                         }
                     />
                 </Field>

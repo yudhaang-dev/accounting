@@ -9,6 +9,10 @@ export const id = {
         hidePassword: 'Sembunyikan kata sandi',
         capsLock: 'Caps Lock sedang aktif',
         retry: 'Coba lagi',
+        pickDate: 'Pilih tanggal',
+        today: 'Hari ini',
+        clear: 'Hapus',
+        noMatch: 'Tidak ada yang cocok.',
         required: 'Wajib diisi',
         email: 'Email',
         password: 'Kata sandi',
@@ -356,8 +360,7 @@ export const id = {
             save: 'Simpan draf',
             saving: 'Menyimpan…',
             cancel: 'Batal',
-            amountInvalid:
-                'Isi angka positif tanpa pemisah ribuan, misalnya 1250000 atau 1250000.50.',
+            amountInvalid: 'Isi angka lebih dari nol, misalnya 1.250.000,50.',
             oneSide: 'Isi salah satu: debit atau kredit.',
             saved: 'Draf disimpan.',
             conflict:
@@ -385,7 +388,7 @@ export const id = {
                 'Belum ada jenis transaksi. Buat satu jenis dengan baris bebas, cocok untuk jurnal umum.',
             key: 'Kunci',
             keyHint:
-                'Huruf kecil, angka, dan garis bawah; diawali huruf. Tidak dapat diubah.',
+                'Terisi dari nama jenis; boleh Anda ubah. Huruf kecil, angka, dan garis bawah, diawali huruf. Tidak dapat diubah setelah dibuat.',
             label: 'Nama jenis',
             create: 'Buat jenis',
             creating: 'Membuat…',
@@ -498,6 +501,10 @@ export const id = {
         title: 'Menyiapkan {{name}}',
         description:
             'Selesaikan langkah berikut sebelum perusahaan dipakai mencatat transaksi.',
+        progress: {
+            label: 'Langkah penyiapan',
+            step: 'Langkah {{current}} dari {{total}}',
+        },
         steps: {
             profile: 'Profil perusahaan',
             chart: 'Bagan akun',

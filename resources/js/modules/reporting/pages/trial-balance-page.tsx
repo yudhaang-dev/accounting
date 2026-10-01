@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { DatePicker } from '@/components/date-picker';
 import { Link } from '@tanstack/react-router';
 import { CheckIcon, DownloadIcon, FileSpreadsheetIcon } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
@@ -16,7 +17,6 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import {
@@ -29,6 +29,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useDocumentTitle } from '@/hooks/use-document-title';
+import { todayIso } from '@/lib/date';
 import { formatDecimal, isPositive } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
@@ -37,14 +38,6 @@ import {
     trialBalanceQuery,
     type Range,
 } from '@/modules/reporting/trial-balance';
-
-const pad = (n: number) => String(n).padStart(2, '0');
-
-const todayIso = (): string => {
-    const now = new Date();
-
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-};
 
 const defaultRange = (): Range => ({
     from: `${new Date().getFullYear()}-01-01`,
@@ -140,37 +133,35 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                 className="flex flex-wrap items-end gap-3"
             >
                 <Field
-                    className="w-44"
+                    className="w-56"
                     data-invalid={rangeError ? true : undefined}
                 >
-                    <FieldLabel htmlFor="tb-from">
+                    <FieldLabel id="tb-from-label" htmlFor="tb-from">
                         {t('trialBalance.from')}
                     </FieldLabel>
-                    <Input
+                    <DatePicker
                         id="tb-from"
-                        type="date"
+                        labelledBy="tb-from-label"
                         value={draft.from}
                         aria-invalid={rangeError ? true : undefined}
-                        onChange={(event) =>
-                            setDraft({ ...draft, from: event.target.value })
+                        onChange={(value) =>
+                            setDraft({ ...draft, from: value })
                         }
                     />
                 </Field>
                 <Field
-                    className="w-44"
+                    className="w-56"
                     data-invalid={rangeError ? true : undefined}
                 >
-                    <FieldLabel htmlFor="tb-to">
+                    <FieldLabel id="tb-to-label" htmlFor="tb-to">
                         {t('trialBalance.to')}
                     </FieldLabel>
-                    <Input
+                    <DatePicker
                         id="tb-to"
-                        type="date"
+                        labelledBy="tb-to-label"
                         value={draft.to}
                         aria-invalid={rangeError ? true : undefined}
-                        onChange={(event) =>
-                            setDraft({ ...draft, to: event.target.value })
-                        }
+                        onChange={(value) => setDraft({ ...draft, to: value })}
                     />
                 </Field>
                 <Button type="submit">{t('trialBalance.show')}</Button>

@@ -25,6 +25,7 @@ import { useDocumentTitle } from '@/hooks/use-document-title';
 import { formatDecimal, isPositive, sumDecimals } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
+import { useTypeLabel } from '@/modules/transaction-entry/type-labels';
 import { EntryStatusBadge } from '@/modules/transaction-entry/components/entry-status-badge';
 import { ReasonDialog } from '@/modules/transaction-entry/components/reason-dialog';
 import {
@@ -58,6 +59,7 @@ export function EntryPage({
     can: EntryPermissions;
 }) {
     const { t, i18n } = useTranslation();
+    const typeLabel = useTypeLabel(companyId);
     const queryClient = useQueryClient();
     const { data: entry } = useSuspenseQuery(entryQuery(companyId, entryId));
     const accounts = useQuery(accountNamesQuery(companyId));
@@ -210,7 +212,7 @@ export function EntryPage({
                                 {t('entries.detail.type')}
                             </dt>
                             <dd className="font-medium">
-                                {entry.transaction_type_key}
+                                {typeLabel(entry.transaction_type_key)}
                             </dd>
                         </div>
                         <div className="flex flex-col gap-0.5">

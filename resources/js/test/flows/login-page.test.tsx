@@ -41,7 +41,7 @@ describe('login screen', () => {
         await typist.click(screen.getByRole('button', { name: 'Masuk' }));
 
         expect(
-            await screen.findByText('Halo, Budi Santoso'),
+            await screen.findByRole('heading', { name: 'Ruang kerja baru' }),
         ).toBeInTheDocument();
         expect(api.called('POST /login')[0]?.body).toEqual({
             email: 'budi@example.com',
@@ -261,9 +261,9 @@ describe('route guards', () => {
         const { router } = renderApp('/login');
 
         expect(
-            await screen.findByText('Halo, Budi Santoso'),
+            await screen.findByRole('heading', { name: 'Ruang kerja baru' }),
         ).toBeInTheDocument();
-        expect(router.state.location.pathname).toBe('/workspaces');
+        expect(router.state.location.pathname).toBe('/workspaces/new');
     });
 
     it('parks an unverified account on the verification screen', async () => {

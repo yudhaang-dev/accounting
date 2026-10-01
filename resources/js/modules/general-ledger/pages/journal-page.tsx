@@ -86,7 +86,10 @@ export function JournalPage({
     const foreign = journal.lines.some(
         (line) => compareDecimals(line.exchange_rate, '1') !== 0,
     );
-    const references = Object.entries(journal.references ?? {});
+    // The source entry is linked in the header; its raw id would only repeat it.
+    const references = Object.entries(journal.references ?? {}).filter(
+        ([key]) => !(key === 'entry_id' && journal.entry_id),
+    );
     const postedBy = journal.posted_by;
 
     return (

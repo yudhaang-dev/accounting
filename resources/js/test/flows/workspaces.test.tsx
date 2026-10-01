@@ -53,9 +53,24 @@ describe('workspace selection', () => {
         ).toBeInTheDocument();
     });
 
-    it('lets a user without workspaces know there is nothing to open yet', async () => {
+    it('starts the first workspace for someone who has none', async () => {
         mockApi({ ...signedIn });
-        renderApp('/');
+        const { router } = renderApp('/');
+
+        expect(
+            await screen.findByRole('heading', { name: 'Ruang kerja baru' }),
+        ).toBeInTheDocument();
+        expect(router.state.location.pathname).toBe('/workspaces/new');
+        // It is step 1 of 4 of the same wizard as the setup page.
+        expect(screen.getByText('Langkah 1 dari 4')).toBeInTheDocument();
+        expect(
+            screen.getByRole('listitem', { current: 'step' }),
+        ).toHaveTextContent('Profil perusahaan');
+    });
+
+    it('still lists nothing, with a way to begin, when the list is opened on purpose', async () => {
+        mockApi({ ...signedIn });
+        renderApp('/workspaces');
 
         expect(
             await screen.findByText('Belum ada ruang kerja'),

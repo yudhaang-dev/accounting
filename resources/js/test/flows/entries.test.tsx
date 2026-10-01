@@ -1,4 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react';
+import { pickDate } from '@/test/pickers';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import {
@@ -153,8 +154,9 @@ describe('entry list', () => {
         renderApp(entriesPath);
         const typist = userEvent.setup();
 
-        await typist.type(
-            await screen.findByLabelText('Dari tanggal'),
+        await pickDate(
+            typist,
+            await screen.findByRole('button', { name: /Dari tanggal/ }),
             '2026-10-01',
         );
 
@@ -186,8 +188,8 @@ describe('entry form', () => {
         const debit = await screen.findByLabelText('Debit Baris 1');
         const credit = screen.getByLabelText('Kredit Baris 1');
 
-        await typist.type(debit, '0.1');
-        await typist.type(screen.getByLabelText('Kredit Baris 2'), '0.2');
+        await typist.type(debit, '0,1');
+        await typist.type(screen.getByLabelText('Kredit Baris 2'), '0,2');
 
         expect(screen.getByText('Selisih 0,1')).toBeInTheDocument();
 
@@ -203,13 +205,11 @@ describe('entry form', () => {
         const typist = userEvent.setup();
 
         await typist.type(await screen.findByLabelText('Keterangan'), 'Tes');
-        await typist.type(screen.getByLabelText('Debit Baris 1'), 'abc');
+        await typist.type(screen.getByLabelText('Debit Baris 1'), '0');
         await typist.click(screen.getByRole('button', { name: 'Simpan draf' }));
 
         expect(
-            await screen.findAllByText(
-                /Isi angka positif tanpa pemisah ribuan/,
-            ),
+            await screen.findAllByText(/Isi angka lebih dari nol/),
         ).not.toHaveLength(0);
         expect(screen.getAllByText('Wajib diisi').length).toBeGreaterThan(0);
         expect(api.called(`POST ${base}/entries`)).toHaveLength(0);
@@ -237,7 +237,7 @@ describe('entry form', () => {
         await typist.click(
             await screen.findByRole('option', { name: '1111 · Kas Kecil' }),
         );
-        await typist.type(screen.getByLabelText('Debit Baris 1'), '1500000.50');
+        await typist.type(screen.getByLabelText('Debit Baris 1'), '1500000,50');
 
         await typist.click(
             screen.getByRole('combobox', { name: 'Akun Baris 2' }),
@@ -247,7 +247,7 @@ describe('entry form', () => {
         );
         await typist.type(
             screen.getByLabelText('Kredit Baris 2'),
-            '1500000.50',
+            '1500000,50',
         );
 
         expect(screen.getByText('Seimbang')).toBeInTheDocument();
@@ -333,7 +333,7 @@ describe('entry form', () => {
         const description = await screen.findByLabelText('Keterangan');
 
         expect(screen.getByLabelText('Debit Baris 1')).toHaveValue(
-            '1500000.50',
+            '1.500.000,50',
         );
         await typist.clear(description);
         await typist.type(description, 'Setoran modal awal');
@@ -376,6 +376,122 @@ describe('entry form', () => {
                 'Hanya entri berstatus draf yang dapat diubah.',
             ),
         ).toBeInTheDocument();
+    });
+});
+
+describe('transaction type names', () => {
+    const typeRoute = {
+        [`GET ${base}/transaction-types`]: () => json({ data: [type] }),
+    };
+
+    it('shows the name of the type in the list, not its key', async () => {
+        mockApi({
+            ...withPermissions(['entries.read']),
+            ...typeRoute,
+            [`GET ${base}/entries`]: () => page([entry()]),
+        });
+
+        renderApp(entriesPath);
+
+        expect(await screen.findByText('Jurnal Umum')).toBeInTheDocument();
+        expect(screen.queryByText('general')).not.toBeInTheDocument();
+    });
+
+    it('shows it on the entry too', async () => {
+        mockApi({
+            ...withPermissions(['entries.read']),
+            ...typeRoute,
+            [`GET ${base}/accounts`]: accountList,
+            [`GET ${entryPath()}`]: () => json({ data: entry() }),
+        });
+
+        renderApp(`${entriesPath}/${entry().id}`);
+
+        expect(await screen.findByText('Jurnal Umum')).toBeInTheDocument();
+    });
+
+    it('falls back to the key for a type that is gone', async () => {
+        mockApi({
+            ...withPermissions(['entries.read']),
+            [`GET ${base}/transaction-types`]: () => json({ data: [] }),
+            [`GET ${base}/entries`]: () =>
+                page([entry({ transaction_type_key: 'retired' })]),
+        });
+
+        renderApp(entriesPath);
+
+        expect(await screen.findByText('retired')).toBeInTheDocument();
+    });
+});
+
+describe('creating a transaction type', () => {
+    const noTypes = () => ({
+        ...withPermissions([
+            'entries.read',
+            'entries.create',
+            'policies.manage',
+        ]),
+        [`GET ${base}/transaction-types`]: () => json({ data: [] }),
+        [`GET ${base}/accounts`]: accountList,
+    });
+
+    it('writes the key from the name as it is typed', async () => {
+        mockApi(noTypes());
+
+        renderApp(`${entriesPath}/new`);
+        const typist = userEvent.setup();
+
+        await typist.type(
+            await screen.findByLabelText('Nama jenis'),
+            'Jurnal Penyesuaian',
+        );
+
+        expect(screen.getByLabelText('Kunci')).toHaveValue(
+            'jurnal_penyesuaian',
+        );
+    });
+
+    it('stops following the name once the user writes a key', async () => {
+        const api = mockApi({
+            ...noTypes(),
+            [`POST ${base}/transaction-types`]: () => json({ data: type }, 201),
+        });
+
+        renderApp(`${entriesPath}/new`);
+        const typist = userEvent.setup();
+
+        await typist.type(await screen.findByLabelText('Nama jenis'), 'Jurnal');
+        await typist.clear(screen.getByLabelText('Kunci'));
+        await typist.type(screen.getByLabelText('Kunci'), 'general');
+        await typist.type(screen.getByLabelText('Nama jenis'), ' Umum');
+
+        expect(screen.getByLabelText('Kunci')).toHaveValue('general');
+        await typist.click(screen.getByRole('button', { name: 'Buat jenis' }));
+
+        await waitFor(() =>
+            expect(
+                api.called(`POST ${base}/transaction-types`)[0]?.body,
+            ).toEqual({
+                key: 'general',
+                label: 'Jurnal Umum',
+            }),
+        );
+    });
+
+    it('follows the name again when the key is emptied', async () => {
+        mockApi(noTypes());
+
+        renderApp(`${entriesPath}/new`);
+        const typist = userEvent.setup();
+
+        await typist.type(await screen.findByLabelText('Kunci'), 'x');
+        await typist.type(screen.getByLabelText('Nama jenis'), 'Kas Masuk');
+        expect(screen.getByLabelText('Kunci')).toHaveValue('x');
+
+        await typist.clear(screen.getByLabelText('Kunci'));
+        await typist.type(screen.getByLabelText('Nama jenis'), ' Harian');
+
+        expect(screen.getByLabelText('Kunci')).toHaveValue('kas_masuk_harian');
     });
 });
 

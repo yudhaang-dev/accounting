@@ -3,6 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { WizardProgress } from '@/app/wizard-progress';
 import { FormAlert } from '@/components/form-alert';
 import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
@@ -95,80 +96,89 @@ export function NewWorkspacePage() {
     });
 
     return (
-        <Card className="max-w-xl">
-            <CardHeader>
-                <CardTitle role="heading" aria-level={1}>
-                    {t('newWorkspace.title')}
-                </CardTitle>
-                <CardDescription>
-                    {t('newWorkspace.description')}
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <FormProvider {...form}>
-                    <form
-                        noValidate
-                        onSubmit={form.handleSubmit((values) => {
-                            setFormError(null);
-                            create.mutate(values);
-                        })}
-                    >
-                        <FieldGroup>
-                            {formError && <FormAlert>{formError}</FormAlert>}
+        <div className="flex flex-col gap-4">
+            <WizardProgress current={1} />
+            <Card className="max-w-xl">
+                <CardHeader>
+                    <CardTitle role="heading" aria-level={1}>
+                        {t('newWorkspace.title')}
+                    </CardTitle>
+                    <CardDescription>
+                        {t('newWorkspace.description')}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <FormProvider {...form}>
+                        <form
+                            noValidate
+                            onSubmit={form.handleSubmit((values) => {
+                                setFormError(null);
+                                create.mutate(values);
+                            })}
+                        >
+                            <FieldGroup>
+                                {formError && (
+                                    <FormAlert>{formError}</FormAlert>
+                                )}
 
-                            <Field
-                                data-invalid={
-                                    errors.workspace_name ? true : undefined
-                                }
-                            >
-                                <FieldLabel htmlFor="workspace-name">
-                                    {t('newWorkspace.workspaceName')}
-                                </FieldLabel>
-                                <Input
-                                    id="workspace-name"
-                                    autoFocus
-                                    aria-invalid={
+                                <Field
+                                    data-invalid={
                                         errors.workspace_name ? true : undefined
                                     }
-                                    {...register('workspace_name', {
-                                        required: t('common.required'),
-                                    })}
-                                />
-                                {errors.workspace_name && (
-                                    <FieldError>
-                                        {errors.workspace_name.message}
-                                    </FieldError>
-                                )}
-                            </Field>
-
-                            <FieldSet>
-                                <FieldLegend>
-                                    {t('newWorkspace.companyDetails')}
-                                </FieldLegend>
-                                <FieldGroup>
-                                    <CompanyFields />
-                                </FieldGroup>
-                            </FieldSet>
-
-                            <div className="flex flex-wrap gap-2">
-                                <SubmitButton
-                                    className="w-auto"
-                                    pending={create.isPending}
-                                    pendingLabel={t('newWorkspace.submitting')}
                                 >
-                                    {t('newWorkspace.submit')}
-                                </SubmitButton>
-                                <Button
-                                    variant="ghost"
-                                    render={<Link to="/workspaces" />}
-                                >
-                                    {t('newWorkspace.cancel')}
-                                </Button>
-                            </div>
-                        </FieldGroup>
-                    </form>
-                </FormProvider>
-            </CardContent>
-        </Card>
+                                    <FieldLabel htmlFor="workspace-name">
+                                        {t('newWorkspace.workspaceName')}
+                                    </FieldLabel>
+                                    <Input
+                                        id="workspace-name"
+                                        autoFocus
+                                        aria-invalid={
+                                            errors.workspace_name
+                                                ? true
+                                                : undefined
+                                        }
+                                        {...register('workspace_name', {
+                                            required: t('common.required'),
+                                        })}
+                                    />
+                                    {errors.workspace_name && (
+                                        <FieldError>
+                                            {errors.workspace_name.message}
+                                        </FieldError>
+                                    )}
+                                </Field>
+
+                                <FieldSet>
+                                    <FieldLegend>
+                                        {t('newWorkspace.companyDetails')}
+                                    </FieldLegend>
+                                    <FieldGroup>
+                                        <CompanyFields />
+                                    </FieldGroup>
+                                </FieldSet>
+
+                                <div className="flex flex-wrap gap-2">
+                                    <SubmitButton
+                                        className="w-auto"
+                                        pending={create.isPending}
+                                        pendingLabel={t(
+                                            'newWorkspace.submitting',
+                                        )}
+                                    >
+                                        {t('newWorkspace.submit')}
+                                    </SubmitButton>
+                                    <Button
+                                        variant="ghost"
+                                        render={<Link to="/workspaces" />}
+                                    >
+                                        {t('newWorkspace.cancel')}
+                                    </Button>
+                                </div>
+                            </FieldGroup>
+                        </form>
+                    </FormProvider>
+                </CardContent>
+            </Card>
+        </div>
     );
 }

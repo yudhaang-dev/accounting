@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { genericErrorMessage } from '@/lib/errors';
 import { applyApiErrors } from '@/lib/forms';
 import { isApiError } from '@/lib/http';
+import { slugify } from '@/lib/slug';
 import { createTransactionType } from '@/modules/transaction-entry/entries';
 
 type Values = { key: string; label: string };
@@ -31,8 +32,18 @@ export function TransactionTypeForm({ companyId }: { companyId: string }) {
     const form = useForm<Values>({ defaultValues: { key: '', label: '' } });
     const {
         register,
-        formState: { errors },
+        formState: { errors, dirtyFields },
     } = form;
+    const label = form.watch('label');
+
+    // The key follows the name until the user writes one of their own; clearing it hands it back.
+    useEffect(() => {
+        if (!dirtyFields.key) {
+            form.setValue('key', slugify(label), {
+                shouldValidate: form.formState.isSubmitted,
+            });
+        }
+    }, [label, dirtyFields.key]);
 
     const create = useMutation({
         mutationFn: (values: Values) =>
@@ -70,6 +81,21 @@ export function TransactionTypeForm({ companyId }: { companyId: string }) {
                 </p>
                 {formError && <FormAlert>{formError}</FormAlert>}
                 <div className="grid gap-4 sm:grid-cols-2">
+                    <Field data-invalid={errors.label ? true : undefined}>
+                        <FieldLabel htmlFor="type-label">
+                            {t('entries.types.label')}
+                        </FieldLabel>
+                        <Input
+                            id="type-label"
+                            aria-invalid={errors.label ? true : undefined}
+                            {...register('label', {
+                                required: t('common.required'),
+                            })}
+                        />
+                        {errors.label && (
+                            <FieldError>{errors.label.message}</FieldError>
+                        )}
+                    </Field>
                     <Field data-invalid={errors.key ? true : undefined}>
                         <FieldLabel htmlFor="type-key">
                             {t('entries.types.key')}
@@ -92,21 +118,6 @@ export function TransactionTypeForm({ companyId }: { companyId: string }) {
                             <FieldDescription>
                                 {t('entries.types.keyHint')}
                             </FieldDescription>
-                        )}
-                    </Field>
-                    <Field data-invalid={errors.label ? true : undefined}>
-                        <FieldLabel htmlFor="type-label">
-                            {t('entries.types.label')}
-                        </FieldLabel>
-                        <Input
-                            id="type-label"
-                            aria-invalid={errors.label ? true : undefined}
-                            {...register('label', {
-                                required: t('common.required'),
-                            })}
-                        />
-                        {errors.label && (
-                            <FieldError>{errors.label.message}</FieldError>
                         )}
                     </Field>
                 </div>

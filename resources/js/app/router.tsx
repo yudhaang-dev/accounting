@@ -191,7 +191,8 @@ const verifiedRoute = createRoute({
     },
 });
 
-// `/` only decides where to go: the company last worked in, the only one there is, or the picker.
+// `/` only decides where to go: the company last worked in, the only one there is, the picker, or the
+// form of the first workspace.
 const indexRoute = createRoute({
     getParentRoute: () => verifiedRoute,
     path: '/',
@@ -202,11 +203,17 @@ const indexRoute = createRoute({
             workspaces.find((w) => w.company_id === last) ??
             (workspaces.length === 1 ? workspaces[0] : undefined);
 
-        throw target
-            ? redirect({
-                  to: '/w/$companyId',
-                  params: { companyId: target.company_id },
-              })
+        if (target) {
+            throw redirect({
+                to: '/w/$companyId',
+                params: { companyId: target.company_id },
+            });
+        }
+
+        // Someone with no workspace has only one thing to do, and it is the first step of the setup:
+        // start it, rather than showing an empty list with a button.
+        throw workspaces.length === 0
+            ? redirect({ to: '/workspaces/new' })
             : redirect({ to: '/workspaces' });
     },
 });
@@ -502,9 +509,26 @@ const companySetupRoute = createRoute({
     },
 });
 
+// A company still in `setup` opens on its wizard, for whoever may finish it; anyone else would only
+// find a screen they cannot use, so they get the home with its note about the setup.
 const companyHomeRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/',
+    beforeLoad: async ({ context, params }) => {
+        const company = await context.queryClient.ensureQueryData(
+            companyQuery(params.companyId),
+        );
+
+        if (
+            company.status === 'setup' &&
+            can(context.workspace, 'company.activate')
+        ) {
+            throw redirect({
+                to: '/w/$companyId/setup',
+                params: { companyId: params.companyId },
+            });
+        }
+    },
     component: function CompanyHome() {
         return (
             <CompanyHomePage

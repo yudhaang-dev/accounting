@@ -21,6 +21,7 @@ import {
     FieldGroup,
     FieldLabel,
 } from '@/components/ui/field';
+import { SearchableSelect } from '@/components/searchable-select';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -51,8 +52,6 @@ type Values = {
     /** Empty means no parent. */
     parent_id: string;
 };
-
-const NO_PARENT = '__none';
 
 type Props = {
     companyId: string;
@@ -165,15 +164,12 @@ function AccountForm({
         },
     });
 
-    const parentItems = [
-        { value: NO_PARENT, label: t('accounts.form.noParent') },
-        ...(parents.data ?? [])
-            .filter((candidate) => candidate.id !== account?.id)
-            .map((candidate) => ({
-                value: candidate.id,
-                label: `${candidate.code} · ${candidate.name}`,
-            })),
-    ];
+    const parentItems = (parents.data ?? [])
+        .filter((candidate) => candidate.id !== account?.id)
+        .map((candidate) => ({
+            value: candidate.id,
+            label: `${candidate.code} · ${candidate.name}`,
+        }));
 
     return (
         <form
@@ -341,37 +337,18 @@ function AccountForm({
                         control={control}
                         name="parent_id"
                         render={({ field }) => (
-                            <Select
-                                value={field.value || NO_PARENT}
+                            <SearchableSelect
+                                id="account-parent"
                                 items={parentItems}
-                                onValueChange={(value) =>
-                                    field.onChange(
-                                        value === NO_PARENT ? '' : value,
-                                    )
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder={t('accounts.form.noParent')}
+                                emptyText={t('common.noMatch')}
+                                clearable
+                                aria-invalid={
+                                    errors.parent_id ? true : undefined
                                 }
-                            >
-                                <SelectTrigger
-                                    id="account-parent"
-                                    className="w-full"
-                                    aria-invalid={
-                                        errors.parent_id ? true : undefined
-                                    }
-                                >
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        {parentItems.map((item) => (
-                                            <SelectItem
-                                                key={item.value}
-                                                value={item.value}
-                                            >
-                                                {item.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
+                            />
                         )}
                     />
                     {errors.parent_id && (

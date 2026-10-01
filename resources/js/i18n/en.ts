@@ -12,6 +12,10 @@ export const en: Widen<typeof id> = {
         hidePassword: 'Hide password',
         capsLock: 'Caps Lock is on',
         retry: 'Try again',
+        pickDate: 'Pick a date',
+        today: 'Today',
+        clear: 'Clear',
+        noMatch: 'Nothing matches.',
         required: 'Required',
         email: 'Email',
         password: 'Password',
@@ -360,7 +364,7 @@ export const en: Widen<typeof id> = {
             saving: 'Saving…',
             cancel: 'Cancel',
             amountInvalid:
-                'Enter a positive number without thousands separators, for example 1250000 or 1250000.50.',
+                'Enter a number greater than zero, for example 1,250,000.50.',
             oneSide: 'Fill in one of debit or credit.',
             saved: 'Draft saved.',
             conflict:
@@ -388,7 +392,7 @@ export const en: Widen<typeof id> = {
                 'There is no transaction type yet. Create one with free lines, suited to general journals.',
             key: 'Key',
             keyHint:
-                'Lowercase letters, digits and underscores, starting with a letter. Cannot be changed.',
+                'Filled in from the type name; you may change it. Lowercase letters, digits and underscores, starting with a letter. Cannot be changed once created.',
             label: 'Type name',
             create: 'Create type',
             creating: 'Creating…',
@@ -500,6 +504,10 @@ export const en: Widen<typeof id> = {
         title: 'Setting up {{name}}',
         description:
             'Complete these steps before the company is used to record transactions.',
+        progress: {
+            label: 'Setup steps',
+            step: 'Step {{current}} of {{total}}',
+        },
         steps: {
             profile: 'Company profile',
             chart: 'Chart of accounts',

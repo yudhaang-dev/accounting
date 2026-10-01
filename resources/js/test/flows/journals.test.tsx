@@ -180,6 +180,30 @@ describe('journal detail', () => {
         expect(screen.getByText('INV-7')).toBeInTheDocument();
     });
 
+    it('does not repeat the source entry id among the references', async () => {
+        mockApi(
+            routes(
+                readAll,
+                journal({
+                    references: {
+                        entry_id: entryId,
+                        entry_number: 'ENT/2026/10/000001',
+                        source_system: 'erp',
+                    },
+                }),
+            ),
+        );
+
+        renderApp(journalPath);
+
+        expect(await screen.findByText('entry_number')).toBeInTheDocument();
+        expect(screen.getByText('source_system')).toBeInTheDocument();
+        expect(screen.queryByText('entry_id')).not.toBeInTheDocument();
+        expect(
+            screen.getByRole('link', { name: 'Buka entri' }),
+        ).toBeInTheDocument();
+    });
+
     it('shows the rate of a line that is not in the ledger currency', async () => {
         mockApi(
             routes(

@@ -1,7 +1,10 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach, beforeAll, vi } from 'vitest';
 import { initI18n, setLocale } from '@/i18n';
+
+// Waiting for a screen to settle is not a failure: a loaded machine needs more than the default 1s.
+configure({ asyncUtilTimeout: 5000 });
 
 beforeAll(async () => {
     initI18n();

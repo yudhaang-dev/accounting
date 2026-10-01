@@ -9,6 +9,7 @@ import { CheckIcon } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { WizardProgress } from '@/app/wizard-progress';
 import { FormAlert } from '@/components/form-alert';
 import { SubmitButton } from '@/components/submit-button';
 import { Badge } from '@/components/ui/badge';
@@ -233,6 +234,12 @@ export function CompanySetupPage({ companyId }: { companyId: string }) {
                 <p className="text-sm text-muted-foreground">
                     {t('setup.description')}
                 </p>
+            </div>
+
+            <div className="max-w-3xl">
+                <WizardProgress
+                    current={!chartDone ? 2 : !calendarDone ? 3 : 4}
+                />
             </div>
 
             <div className="flex max-w-3xl flex-col gap-4">

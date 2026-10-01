@@ -16,8 +16,15 @@ const sidebar = (page: Page, name: string) =>
 const status = (page: Page, text: string) =>
     page.locator('[data-slot="badge"]', { hasText: text });
 
-const chooseAccount = async (page: Page, line: number, option: RegExp) => {
-    await page.getByRole('combobox', { name: `Akun Baris ${line}` }).click();
+const chooseAccount = async (
+    page: Page,
+    line: number,
+    search: string,
+    option: RegExp,
+) => {
+    await page
+        .getByRole('combobox', { name: `Akun Baris ${line}` })
+        .fill(search);
     await page.getByRole('option', { name: option }).click();
 };
 
@@ -28,9 +35,9 @@ const fillEntry = async (
     credit: string,
 ) => {
     await page.getByLabel('Keterangan', { exact: true }).fill(description);
-    await chooseAccount(page, 1, /^1111 · /);
+    await chooseAccount(page, 1, '1111', /^1111 · /);
     await page.getByLabel('Debit Baris 1').fill(debit);
-    await chooseAccount(page, 2, /^1112 · /);
+    await chooseAccount(page, 2, 'bank oper', /^1112 · /);
     await page.getByLabel('Kredit Baris 2').fill(credit);
 };
 
@@ -46,19 +53,18 @@ test('from sign-in to a posted journal in the trial balance', async ({
             .fill(USER.password);
         await page.getByRole('button', { name: 'Masuk', exact: true }).click();
 
-        await expect(page).toHaveURL(/\/workspaces$/);
-        await expect(page.getByText('Belum ada ruang kerja')).toBeVisible();
-        await shot(page, 'workspaces-empty');
+        // Nothing to pick from, so the first step of the setup starts by itself.
+        await expect(page).toHaveURL(/\/workspaces\/new$/);
+        await expect(page.getByText('Langkah 1 dari 4')).toBeVisible();
+        await shot(page, 'new-workspace-first-login');
     });
 
     await test.step('create a workspace with its company', async () => {
-        await page.getByRole('link', { name: 'Buat ruang kerja baru' }).click();
         await expect(
             page.getByRole('heading', { name: 'Ruang kerja baru' }),
         ).toBeVisible();
         await page.getByLabel('Nama ruang kerja').fill('Toko Budi');
         await page.getByLabel('Nama perusahaan').fill('PT Toko Budi');
-        await shot(page, 'new-workspace');
         await page
             .getByRole('button', { name: 'Buat ruang kerja', exact: true })
             .click();
@@ -66,6 +72,7 @@ test('from sign-in to a posted journal in the trial balance', async ({
         await expect(
             page.getByRole('heading', { name: 'Menyiapkan PT Toko Budi' }),
         ).toBeVisible();
+        await expect(page.getByText('Langkah 2 dari 4')).toBeVisible();
         await shot(page, 'setup-start');
     });
 
@@ -85,6 +92,13 @@ test('from sign-in to a posted journal in the trial balance', async ({
             .click();
         await install.click();
 
+        await expect(page.getByText('Bagan akun terpasang')).toBeVisible();
+    });
+
+    await test.step('leaving and coming back lands on the wizard again, not the home', async () => {
+        await page.goto('/');
+
+        await expect(page).toHaveURL(/\/setup$/);
         await expect(page.getByText('Bagan akun terpasang')).toBeVisible();
     });
 
@@ -130,8 +144,10 @@ test('from sign-in to a posted journal in the trial balance', async ({
         await expect(page.getByText('Belum ada entri')).toBeVisible();
         await page.getByRole('link', { name: 'Entri baru' }).first().click();
 
-        await page.getByLabel('Kunci').fill('general');
+        // The key writes itself from the name; the user keeps the last word.
         await page.getByLabel('Nama jenis').fill('Jurnal Umum');
+        await expect(page.getByLabel('Kunci')).toHaveValue('jurnal_umum');
+        await page.getByLabel('Kunci').fill('general');
         await shot(page, 'transaction-type');
         await page.getByRole('button', { name: 'Buat jenis' }).click();
 
@@ -141,17 +157,50 @@ test('from sign-in to a posted journal in the trial balance', async ({
         await fillEntry(
             page,
             'Pindah dana kas ke bank',
-            '1500000.50',
-            '1500000.50',
+            '1500000,50',
+            '1500000,50',
         );
         await expect(page.getByText('Seimbang')).toBeVisible();
+        // What was typed as 1500000,50 is shown grouped, and the date is written out.
+        await expect(page.getByLabel('Debit Baris 1')).toHaveValue(
+            '1.500.000,50',
+        );
+        await expect(
+            page.getByRole('button', { name: /Tanggal akuntansi/ }),
+        ).toContainText(
+            new Date().toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                timeZone: 'Asia/Jakarta',
+            }),
+        );
         await shot(page, 'entry-form');
+
+        // The calendar opens in a popover, on the month of the date shown.
+        await page.getByRole('button', { name: /Tanggal akuntansi/ }).click();
+        await expect(
+            page.getByRole('button', { name: 'Hari ini', exact: true }),
+        ).toBeVisible();
+        await shot(page, 'date-picker-open');
+        await page.keyboard.press('Escape');
+
+        // The account list narrows as you type.
+        await page.getByRole('combobox', { name: 'Akun Baris 2' }).fill('bank');
+        await expect(
+            page.getByRole('option', { name: /^1112 · / }),
+        ).toBeVisible();
+        await shot(page, 'account-combobox');
+        await page.keyboard.press('Escape');
+
         await page.getByRole('button', { name: 'Simpan draf' }).click();
 
         await expect(
             page.getByRole('heading', { name: /^Entri / }),
         ).toBeVisible();
         await expect(status(page, 'Draf')).toBeVisible();
+        // Entries show the name of their type, not its key.
+        await expect(page.getByText('Jurnal Umum')).toBeVisible();
         await shot(page, 'entry-draft');
     });
 
@@ -217,6 +266,14 @@ test('from sign-in to a posted journal in the trial balance', async ({
         // The refused draft never reached the ledger: only the posted 1.500.000,50 is there.
         await expect(page.getByText('1.500.000,50').first()).toBeVisible();
         await shot(page, 'trial-balance');
+
+        // Choose the end of the range from the calendar's own "today" and ask again.
+        await page.getByRole('button', { name: /Sampai tanggal/ }).click();
+        await page
+            .getByRole('button', { name: 'Hari ini', exact: true })
+            .click();
+        await page.getByRole('button', { name: 'Tampilkan' }).click();
+        await expect(page.getByText('Seimbang', { exact: true })).toBeVisible();
     });
 
     await test.step('export the same report as CSV', async () => {

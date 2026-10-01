@@ -1,4 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react';
+import { pickDate } from '@/test/pickers';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -136,13 +137,11 @@ describe('trial balance', () => {
         const typist = userEvent.setup();
 
         await screen.findByText('Kas Kecil');
-        const from = screen.getByLabelText('Dari tanggal');
-        const to = screen.getByLabelText('Sampai tanggal');
+        const from = () => screen.getByRole('button', { name: /Dari tanggal/ });
+        const to = () => screen.getByRole('button', { name: /Sampai tanggal/ });
 
-        await typist.clear(to);
-        await typist.type(to, '2026-03-31');
-        await typist.clear(from);
-        await typist.type(from, '2026-02-01');
+        await pickDate(typist, to(), '2026-03-31');
+        await pickDate(typist, from(), '2026-02-01');
         await typist.click(screen.getByRole('button', { name: 'Tampilkan' }));
 
         await waitFor(() =>
@@ -159,8 +158,7 @@ describe('trial balance', () => {
 
         const before = api.called(`GET ${base}/reports/trial-balance`).length;
 
-        await typist.clear(from);
-        await typist.type(from, '2026-04-01');
+        await pickDate(typist, from(), '2026-04-01');
         await typist.click(screen.getByRole('button', { name: 'Tampilkan' }));
 
         expect(
