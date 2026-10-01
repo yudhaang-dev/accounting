@@ -14,7 +14,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class JournalResource extends JsonResource
 {
     /**
-     * @return array{id: string, number: string, accounting_date: string, period_id: string, document_date: string|null, description: string, source: string, transaction_type_key: string|null, transaction_type_version: int|null, references: array<string, mixed>|null, reverses_journal_id: string|null, entry_id: string|null, posted_by: int|null, posted_at: string, lines: array<int, array{line_number: int, account_id: string, debit: string, credit: string, currency: string, transaction_amount: string, exchange_rate: string, dimension_set_id: string, description: string|null}>}
+     * @return array{id: string, number: string, accounting_date: string, period_id: string, document_date: string|null, description: string, source: string, transaction_type_key: string|null, transaction_type_version: int|null, references: array<string, mixed>|null, reverses_journal_id: string|null, entry_id: string|null, posted_by: int|null, posted_at: string, lines: list<array{line_number: int, account_id: string, debit: string, credit: string, currency: string, transaction_amount: string, exchange_rate: string, dimension_set_id: string, description: string|null}>}
      */
     public function toArray(Request $request): array
     {
@@ -35,18 +35,32 @@ class JournalResource extends JsonResource
             'entry_id' => $journal->entry_id,
             'posted_by' => $journal->posted_by,
             'posted_at' => $journal->posted_at->toIso8601String(),
-            'lines' => array_map(fn ($line): array => [
-                'line_number' => $line->line_number,
-                'account_id' => $line->account_id,
+            'lines' => $this->lines(),
+        ];
+    }
+
+    /**
+     * @return list<array{line_number: int, account_id: string, debit: string, credit: string, currency: string, transaction_amount: string, exchange_rate: string, dimension_set_id: string, description: string|null}>
+     */
+    private function lines(): array
+    {
+        $lines = [];
+
+        foreach ($this->resource->lines as $line) {
+            $lines[] = [
+                'line_number' => (int) $line->line_number,
+                'account_id' => (string) $line->account_id,
                 'debit' => $this->amount($line->debit),
                 'credit' => $this->amount($line->credit),
-                'currency' => $line->currency,
+                'currency' => (string) $line->currency,
                 'transaction_amount' => $this->amount($line->transaction_amount),
                 'exchange_rate' => (string) $line->exchange_rate,
-                'dimension_set_id' => $line->dimension_set_id,
-                'description' => $line->description,
-            ], $journal->lines->all()),
-        ];
+                'dimension_set_id' => (string) $line->dimension_set_id,
+                'description' => $line->description === null ? null : (string) $line->description,
+            ];
+        }
+
+        return $lines;
     }
 
     private function amount(BigDecimal $value): string

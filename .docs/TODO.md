@@ -40,7 +40,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
   - [x] **M1-09b** Wizard setup perusahaan (profil, konfirmasi template COA, kalender) — `/workspaces/new` membuat workspace beserta perusahaan; `/w/$companyId/setup` memuat empat langkah (profil, bagan akun, kalender, aktivasi) yang statusnya dibaca dari server sehingga dapat dilanjutkan; skema OpenAPI template COA dipertegas agar bertipe
   - [x] **M1-09c** Daftar akun dan periode — `/w/$companyId/accounts` (filter, paginasi, tambah, ubah dengan `lock_version`, nonaktif/aktif) dan `/w/$companyId/periods` (per tahun fiskal, tutup, buka kembali beralasan, tambah tahun); menu dan aksi mengikuti permission workspace (`accounts.*`, `periods.*`)
   - [x] **M1-09d** Form dan daftar entri beserta aksinya (submit, approve, post) — `/w/$companyId/entries` (daftar, filter status dan tanggal), `/entries/new`, `/entries/$entryId` (detail, riwayat keputusan, aksi submit/setujui/tolak/posting/revisi/batal) dan `/entries/$entryId/edit`; jumlah dihitung sebagai string desimal eksak; jenis transaksi pertama dapat dibuat dari form oleh pemegang `policies.manage` sampai perancang M5-14
-  - [ ] **M1-09e** Detail jurnal
+  - [x] **M1-09e** Detail jurnal — `/w/$companyId/journals/$journalId` (header, baris bernama akun, total desimal eksak, kurs bila bukan mata uang buku, referensi, tautan ke entri asal dan jurnal yang dibalik); entri yang diposting menaut ke jurnalnya; id entri atau jurnal yang tidak ada (404) menampilkan "tidak ditemukan"
   - [ ] **M1-09f** Neraca saldo (drill-down dan ekspor CSV)
 - [ ] **M1-10** Test feature end-to-end untuk seluruh alur M1
 

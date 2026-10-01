@@ -24,6 +24,20 @@ export const periodsQuery = (companyId: string, fiscalYearId: string) =>
             ).data,
     });
 
+export const periodQuery = (companyId: string, id: string) =>
+    queryOptions({
+        queryKey: ['companies', companyId, 'periods', 'one', id],
+        staleTime: 60_000,
+        queryFn: async (): Promise<Period> =>
+            (
+                await unwrap(
+                    api.GET('/companies/{companyId}/periods/{id}', {
+                        params: { path: { companyId, id } },
+                    }),
+                )
+            ).data,
+    });
+
 export async function closePeriod(
     companyId: string,
     id: string,

@@ -3942,7 +3942,52 @@
                     },
                     "lines": {
                         "type": "array",
-                        "items": {}
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "line_number": {
+                                    "type": "integer"
+                                },
+                                "account_id": {
+                                    "type": "string"
+                                },
+                                "debit": {
+                                    "type": "string"
+                                },
+                                "credit": {
+                                    "type": "string"
+                                },
+                                "currency": {
+                                    "type": "string"
+                                },
+                                "transaction_amount": {
+                                    "type": "string"
+                                },
+                                "exchange_rate": {
+                                    "type": "string"
+                                },
+                                "dimension_set_id": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "line_number",
+                                "account_id",
+                                "debit",
+                                "credit",
+                                "currency",
+                                "transaction_amount",
+                                "exchange_rate",
+                                "dimension_set_id",
+                                "description"
+                            ]
+                        }
                     }
                 },
                 "required": [

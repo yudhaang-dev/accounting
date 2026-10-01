@@ -41,6 +41,8 @@ export type EntryPermissions = {
     approve: boolean;
     reject: boolean;
     post: boolean;
+    /** Links the posted journal. */
+    journals: boolean;
 };
 
 /** One entry with its lines, approval trail and the lifecycle actions the user may take. */
@@ -235,9 +237,24 @@ export function EntryPage({
                                     {t('entries.detail.journal')}
                                 </dt>
                                 <dd className="font-medium">
-                                    {t('entries.detail.journalPosted', {
-                                        number: entry.journal_number,
-                                    })}
+                                    {entry.journal_id && can.journals ? (
+                                        <Link
+                                            to="/w/$companyId/journals/$journalId"
+                                            params={{
+                                                companyId,
+                                                journalId: entry.journal_id,
+                                            }}
+                                            className="underline-offset-4 hover:underline"
+                                        >
+                                            {t('entries.detail.journalPosted', {
+                                                number: entry.journal_number,
+                                            })}
+                                        </Link>
+                                    ) : (
+                                        t('entries.detail.journalPosted', {
+                                            number: entry.journal_number,
+                                        })
+                                    )}
                                 </dd>
                             </div>
                         )}

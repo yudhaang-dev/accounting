@@ -856,7 +856,17 @@ export interface components {
             entry_id: string | null;
             posted_by: number | null;
             posted_at: string;
-            lines: unknown[];
+            lines: {
+                line_number: number;
+                account_id: string;
+                debit: string;
+                credit: string;
+                currency: string;
+                transaction_amount: string;
+                exchange_rate: string;
+                dimension_set_id: string;
+                description: string | null;
+            }[];
         };
         /**
          * JournalSource

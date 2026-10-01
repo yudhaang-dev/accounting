@@ -9,6 +9,8 @@ import {
     type RouterHistory,
 } from '@tanstack/react-router';
 import { AppShell } from '@/app/app-shell';
+import { RecordNotFound } from '@/app/record-not-found';
+import { isApiError } from '@/lib/http';
 import { CompanySetupPage } from '@/app/company-setup-page';
 import { NewWorkspacePage } from '@/app/new-workspace-page';
 import {
@@ -23,6 +25,8 @@ import {
     workspacesQuery,
     type Workspace,
 } from '@/modules/identity-access/workspaces';
+import { journalQuery } from '@/modules/general-ledger/journals';
+import { JournalPage } from '@/modules/general-ledger/pages/journal-page';
 import { AccountsPage } from '@/modules/general-ledger/pages/accounts-page';
 import { PeriodsPage } from '@/modules/general-ledger/pages/periods-page';
 import { can } from '@/modules/identity-access/permissions';
@@ -235,6 +239,19 @@ const companyRoute = createRoute({
     component: Outlet,
 });
 
+// A record that does not exist (404) is "not found", not a failure of the screen.
+const orNotFound = async <T,>(load: Promise<T>): Promise<T> => {
+    try {
+        return await load;
+    } catch (error) {
+        if (isApiError(error) && error.status === 404) {
+            throw notFound();
+        }
+
+        throw error;
+    }
+};
+
 // A screen the user may not open sends them to the company home. The API enforces the permission
 // regardless; this only avoids showing a screen that would fail on every request.
 const requirePermission =
@@ -319,9 +336,12 @@ const entryRoute = createRoute({
     path: '/entries/$entryId',
     beforeLoad: requirePermission('entries.read'),
     loader: ({ context, params }) =>
-        context.queryClient.ensureQueryData(
-            entryQuery(params.companyId, params.entryId),
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                entryQuery(params.companyId, params.entryId),
+            ),
         ),
+    notFoundComponent: RecordNotFound,
     component: function Entry() {
         const { workspace, me } = entryRoute.useRouteContext();
         const { entryId } = entryRoute.useParams();
@@ -337,6 +357,7 @@ const entryRoute = createRoute({
                     approve: can(workspace, 'entries.approve'),
                     reject: can(workspace, 'entries.reject'),
                     post: can(workspace, 'entries.post'),
+                    journals: can(workspace, 'journals.read'),
                 }}
             />
         );
@@ -348,9 +369,12 @@ const editEntryRoute = createRoute({
     path: '/entries/$entryId/edit',
     beforeLoad: requirePermission('entries.create'),
     loader: ({ context, params }) =>
-        context.queryClient.ensureQueryData(
-            entryQuery(params.companyId, params.entryId),
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                entryQuery(params.companyId, params.entryId),
+            ),
         ),
+    notFoundComponent: RecordNotFound,
     component: function EditEntry() {
         const { workspace } = editEntryRoute.useRouteContext();
         const { entryId } = editEntryRoute.useParams();
@@ -360,6 +384,36 @@ const editEntryRoute = createRoute({
                 companyId={workspace.company_id}
                 entryId={entryId}
                 canManageTypes={can(workspace, 'policies.manage')}
+            />
+        );
+    },
+});
+
+const journalRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/journals/$journalId',
+    beforeLoad: requirePermission('journals.read'),
+    loader: ({ context, params }) =>
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                journalQuery(params.companyId, params.journalId),
+            ),
+        ),
+    notFoundComponent: RecordNotFound,
+    component: function Journal() {
+        const { workspace, me } = journalRoute.useRouteContext();
+        const { journalId } = journalRoute.useParams();
+
+        return (
+            <JournalPage
+                companyId={workspace.company_id}
+                journalId={journalId}
+                currentUserId={me.id}
+                access={{
+                    entries: can(workspace, 'entries.read'),
+                    periods: can(workspace, 'periods.read'),
+                    accounts: can(workspace, 'accounts.read'),
+                }}
             />
         );
     },
@@ -430,6 +484,7 @@ const routeTree = rootRoute.addChildren([
                 newEntryRoute,
                 entryRoute,
                 editEntryRoute,
+                journalRoute,
             ]),
         ]),
     ]),
