@@ -437,6 +437,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/journals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Posted journals with their lines, newest first. This is the drill-down of the reports.
+         *     Filters: `filter[account_id]` (journals that touch the account), `filter[from]` and
+         *     `filter[to]` (accounting date), `filter[source]` and `filter[transaction_type_key]`.
+         *     `per_page` defaults to 50, at most 200
+         */
+        get: operations["journals.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/journals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["journals.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -570,6 +608,28 @@ export interface paths {
             cookie?: never;
         };
         get: operations["transaction-types.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/reports/trial-balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and
+         *     closing balance per account, totals and `balanced`. `account_id` narrows it to one account.
+         *     Drill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.
+         *     With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)
+         */
+        get: operations["reports.trial-balance"];
         put?: never;
         post?: never;
         delete?: never;
@@ -773,6 +833,32 @@ export interface components {
             confirmed: "yes" | "on" | "1" | 1 | "true" | true;
             exclude?: string[];
         };
+        /** JournalResource */
+        JournalResource: {
+            id: string;
+            number: string;
+            accounting_date: string;
+            period_id: string;
+            document_date: string | null;
+            description: string;
+            source: string;
+            transaction_type_key: string | null;
+            transaction_type_version: number | null;
+            references: {
+                [key: string]: unknown;
+            } | null;
+            reverses_journal_id: string | null;
+            entry_id: string | null;
+            posted_by: number | null;
+            posted_at: string;
+            lines: unknown[];
+        };
+        /**
+         * JournalSource
+         * @description Where a posting command comes from (GL-FR-05). Which sources an account accepts is decided in M4-01.
+         * @enum {string}
+         */
+        JournalSource: "entry" | "subledger" | "system";
         /** MeResource */
         MeResource: {
             id: number;
@@ -1875,6 +1961,91 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "journals.index": {
+        parameters: {
+            query?: {
+                "filter[account_id]"?: string;
+                "filter[from]"?: string;
+                "filter[to]"?: string;
+                "filter[source]"?: components["schemas"]["JournalSource"];
+                "filter[transaction_type_key]"?: string;
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `JournalResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JournalResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "journals.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `JournalResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JournalResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -2142,6 +2313,47 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "reports.trial-balance": {
+        parameters: {
+            query: {
+                from: string | null;
+                to: string | null;
+                account_id?: string | null;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Transfer-Encoding"?: "chunked";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv; charset=UTF-8": string;
+                    "application/json": {
+                        data: {
+                            parameters: {
+                                from: string;
+                                to: string;
+                                account_id: string | null;
+                            };
+                            functional_currency: string;
+                            balanced: string;
+                            totals: unknown[];
+                            rows: unknown[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "workspaces.store": {

@@ -34,7 +34,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M1-05** Kalender fiskal bulanan, periode tanpa celah (exclusion constraint), status `open`/`closed` — GL-FR-03, GL-FR-04, GL-AC-08
 - [x] **M1-06** Inti posting GL: `Journal`/`JournalLine` dengan kolom mata uang dan `dimension_set_id` (set kosong) sejak awal, trigger keseimbangan dan imutabilitas, nomor jurnal, `AccountBalance` dengan urutan penguncian, idempotensi per entri — GL-FR-05, GL-FR-06, GL-AC-01, GL-AC-03, GL-AC-12, ADR-0007, ADR-0008
 - [x] **M1-07** Entri minimal: Jenis Transaksi mode `free_lines`, siklus entri, validasi lewat `PostingValidator`, approval berbasis permission, posting ke GL — TE-FR-01, TE-FR-03, TE-FR-07, TE-FR-10 — SoD sementara berupa satu saklar `entries.separation_of_duties` (default mati) sampai kebijakan approval per perusahaan (M5-04); `structured` dan versi baru menyusul di M5-01
-- [ ] **M1-08** Neraca saldo dengan drill-down dan ekspor CSV (Platform Export) — RP-FR-05, RP-AC-01, X-FR-02, API-AC-07
+- [x] **M1-08** Neraca saldo dengan drill-down dan ekspor CSV (Platform Export) — RP-FR-05, RP-AC-01, X-FR-02, API-AC-07 — drill-down lewat `journals?filter[account_id]` (baca jurnal dengan baris); ekspor CSV lewat `Accept: text/csv` dengan izin `reports.read` yang sama (X-FR-02); penanda batch saldo konversi menyusul di M4-08
 - [ ] **M1-09** SPA: pemilih workspace, wizard setup perusahaan (profil, konfirmasi template COA, kalender), akun, periode, form dan daftar entri beserta aksinya, detail jurnal, neraca saldo
 - [ ] **M1-10** Test feature end-to-end untuk seluruh alur M1
 

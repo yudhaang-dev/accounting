@@ -2090,6 +2090,276 @@
                 }
             }
         },
+        "/companies/{companyId}/journals": {
+            "get": {
+                "operationId": "journals.index",
+                "summary": "Posted journals with their lines, newest first. This is the drill-down of the reports.\nFilters: `filter[account_id]` (journals that touch the account), `filter[from]` and\n`filter[to]` (accounting date), `filter[source]` and `filter[transaction_type_key]`.\n`per_page` defaults to 50, at most 200",
+                "tags": [
+                    "Journal"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[account_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[from]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[to]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[source]",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/JournalSource"
+                        }
+                    },
+                    {
+                        "name": "filter[transaction_type_key]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 64
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `JournalResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/JournalResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/journals/{id}": {
+            "get": {
+                "operationId": "journals.show",
+                "tags": [
+                    "Journal"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`JournalResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/JournalResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/me": {
             "get": {
                 "operationId": "me",
@@ -2673,6 +2943,146 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/reports/trial-balance": {
+            "get": {
+                "operationId": "reports.trial-balance",
+                "summary": "Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and\nclosing balance per account, totals and `balanced`. `account_id` narrows it to one account.\nDrill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.\nWith `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)",
+                "tags": [
+                    "TrialBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "account_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "parameters": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "from": {
+                                                            "type": "string"
+                                                        },
+                                                        "to": {
+                                                            "type": "string"
+                                                        },
+                                                        "account_id": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "from",
+                                                        "to",
+                                                        "account_id"
+                                                    ]
+                                                },
+                                                "functional_currency": {
+                                                    "type": "string"
+                                                },
+                                                "balanced": {
+                                                    "type": "string"
+                                                },
+                                                "totals": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                "rows": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                }
+                                            },
+                                            "required": [
+                                                "parameters",
+                                                "functional_currency",
+                                                "balanced",
+                                                "totals",
+                                                "rows"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -3371,6 +3781,107 @@
                     "confirmed"
                 ],
                 "title": "ImportTemplateRequest"
+            },
+            "JournalResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "number": {
+                        "type": "string"
+                    },
+                    "accounting_date": {
+                        "type": "string"
+                    },
+                    "period_id": {
+                        "type": "string"
+                    },
+                    "document_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "transaction_type_key": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "transaction_type_version": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "references": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "additionalProperties": {}
+                    },
+                    "reverses_journal_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "entry_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "posted_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "posted_at": {
+                        "type": "string"
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {}
+                    }
+                },
+                "required": [
+                    "id",
+                    "number",
+                    "accounting_date",
+                    "period_id",
+                    "document_date",
+                    "description",
+                    "source",
+                    "transaction_type_key",
+                    "transaction_type_version",
+                    "references",
+                    "reverses_journal_id",
+                    "entry_id",
+                    "posted_by",
+                    "posted_at",
+                    "lines"
+                ],
+                "title": "JournalResource"
+            },
+            "JournalSource": {
+                "type": "string",
+                "description": "Where a posting command comes from (GL-FR-05). Which sources an account accepts is decided in M4-01.\n",
+                "enum": [
+                    "entry",
+                    "subledger",
+                    "system"
+                ],
+                "title": "JournalSource"
             },
             "MeResource": {
                 "type": "object",
