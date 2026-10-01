@@ -99,15 +99,47 @@ export const id = {
     app: {
         pageTitle: 'Beranda',
         welcome: 'Halo, {{name}}',
-        welcomeBack: 'Senang melihat Anda kembali.',
-        emptyTitle: 'Belum ada yang ditampilkan',
-        emptyDescription:
-            'Ruang kerja dan perusahaan Anda akan muncul di sini.',
         navHome: 'Beranda',
         account: 'Akun',
         signOut: 'Keluar',
         signingOut: 'Keluar…',
         openMenu: 'Buka menu akun',
+    },
+    workspace: {
+        pageTitle: 'Pilih ruang kerja',
+        title: 'Pilih ruang kerja',
+        description: 'Pilih ruang kerja yang ingin Anda buka.',
+        emptyTitle: 'Belum ada ruang kerja',
+        emptyDescription:
+            'Anda belum tergabung di ruang kerja mana pun. Ruang kerja baru dapat dibuat bersama perusahaannya.',
+        company: 'Perusahaan: {{name}}',
+        open: 'Buka {{name}}',
+        all: 'Semua ruang kerja',
+        switch: 'Ganti ruang kerja',
+        current: 'Ruang kerja aktif',
+        others: 'Ruang kerja lain',
+        notFoundTitle: 'Ruang kerja tidak ditemukan',
+        notFoundDescription:
+            'Ruang kerja ini tidak ada atau Anda belum menjadi anggotanya.',
+        backToWorkspaces: 'Ke daftar ruang kerja',
+    },
+    company: {
+        pageTitle: '{{name}}',
+        profile: 'Profil perusahaan',
+        legalName: 'Nama badan hukum',
+        taxId: 'NPWP',
+        currency: 'Mata uang fungsional',
+        timezone: 'Zona waktu',
+        notSet: 'Belum diisi',
+        status: {
+            setup: 'Penyiapan',
+            active: 'Aktif',
+            inactive: 'Nonaktif',
+        },
+        setupTitle: 'Perusahaan masih dalam penyiapan',
+        setupDescription:
+            'Pasang bagan akun dan kalender fiskal terlebih dahulu. Perusahaan baru bisa dipakai mencatat transaksi setelah diaktifkan.',
+        loadFailed: 'Profil perusahaan tidak dapat dimuat.',
     },
     notFound: {
         pageTitle: 'Halaman tidak ditemukan',

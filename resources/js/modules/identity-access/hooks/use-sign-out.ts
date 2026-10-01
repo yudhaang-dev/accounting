@@ -2,9 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { authApi } from '@/lib/auth-api';
+import { authApi } from '@/modules/identity-access/auth-api';
 import { isApiError } from '@/lib/http';
-import { clearMe } from '@/lib/session';
+import { clearMe } from '@/modules/identity-access/session';
 
 /**
  * Signs the user out and returns to the login screen with a confirmation toast. If the session is

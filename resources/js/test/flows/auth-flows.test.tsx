@@ -18,6 +18,7 @@ describe('two-step verification', () => {
         const api = mockApi({
             'GET /api/v1/me': () =>
                 session ? json({ data: account }) : json({ message: 'x' }, 401),
+            'GET /api/v1/me/workspaces': () => json({ data: [] }),
             'POST /two-factor-challenge': () => {
                 session = true;
 
@@ -280,6 +281,7 @@ describe('sign out', () => {
         const api = mockApi({
             'GET /api/v1/me': () =>
                 session ? json({ data: account }) : json({ message: 'x' }, 401),
+            'GET /api/v1/me/workspaces': () => json({ data: [] }),
             'POST /logout': () => {
                 session = false;
 
@@ -341,6 +343,6 @@ describe('e-mail verification', () => {
         expect(
             await screen.findByText('Halo, Budi Santoso'),
         ).toBeInTheDocument();
-        expect(router.state.location.pathname).toBe('/');
+        expect(router.state.location.pathname).toBe('/workspaces');
     });
 });

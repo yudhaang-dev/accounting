@@ -1,6 +1,6 @@
 import { useRouter, type ErrorComponentProps } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { AuthLayout } from '@/components/auth/auth-layout';
+import { AuthLayout } from '@/components/auth-layout';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { genericErrorMessage } from '@/lib/errors';

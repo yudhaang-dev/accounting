@@ -28,6 +28,7 @@ describe('login screen', () => {
                 session
                     ? json({ data: account })
                     : json({ message: 'x', code: 'UNAUTHENTICATED' }, 401),
+            'GET /api/v1/me/workspaces': () => json({ data: [] }),
             'POST /login': () => {
                 session = true;
 
@@ -262,7 +263,7 @@ describe('route guards', () => {
         expect(
             await screen.findByText('Halo, Budi Santoso'),
         ).toBeInTheDocument();
-        expect(router.state.location.pathname).toBe('/');
+        expect(router.state.location.pathname).toBe('/workspaces');
     });
 
     it('parks an unverified account on the verification screen', async () => {

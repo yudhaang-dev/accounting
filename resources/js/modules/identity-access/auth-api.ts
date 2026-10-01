@@ -1,4 +1,4 @@
-import { request } from './http';
+import { request } from '@/lib/http';
 
 /**
  * Fortify's headless JSON routes (login, 2FA, password reset, e-mail verification). They live at the

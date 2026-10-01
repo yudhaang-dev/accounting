@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { AuthLayout } from '@/components/auth/auth-layout';
+import { AuthLayout } from '@/components/auth-layout';
 import { Button } from '@/components/ui/button';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 

@@ -5,10 +5,10 @@ import { KeyRoundIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { AuthLayout } from '@/components/auth/auth-layout';
-import { FormAlert } from '@/components/auth/form-alert';
-import { PasswordField } from '@/components/auth/password-field';
-import { SubmitButton } from '@/components/auth/submit-button';
+import { AuthLayout } from '@/components/auth-layout';
+import { FormAlert } from '@/modules/identity-access/components/form-alert';
+import { PasswordField } from '@/modules/identity-access/components/password-field';
+import { SubmitButton } from '@/modules/identity-access/components/submit-button';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -22,10 +22,10 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { useCountdown } from '@/hooks/use-countdown';
 import { useDocumentTitle } from '@/hooks/use-document-title';
-import { authApi } from '@/lib/auth-api';
+import { authApi } from '@/modules/identity-access/auth-api';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
-import { refreshMe } from '@/lib/session';
+import { refreshMe } from '@/modules/identity-access/session';
 
 type Values = { email: string; password: string };
 

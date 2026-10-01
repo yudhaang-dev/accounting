@@ -7,8 +7,8 @@ import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { initI18n } from '@/i18n';
 import { setUnauthenticatedHandler } from '@/lib/http';
-import { clearMe } from '@/lib/session';
-import { createAppRouter } from '@/router';
+import { clearMe } from '@/modules/identity-access/session';
+import { createAppRouter } from '@/app/router';
 
 const i18n = initI18n();
 

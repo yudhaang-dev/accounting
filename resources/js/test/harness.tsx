@@ -4,7 +4,7 @@ import { render } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import { vi } from 'vitest';
 import { i18n } from '@/i18n';
-import { createAppRouter } from '@/router';
+import { createAppRouter } from '@/app/router';
 
 export type Call = { method: string; path: string; body: unknown };
 type Reply = Response | ((call: Call) => Response | Promise<Response>);
@@ -105,6 +105,36 @@ export const signedOut = {
         json({ message: 'Unauthenticated.', code: 'UNAUTHENTICATED' }, 401),
 };
 
+export const workspace = {
+    id: '01JWORKSPACE000000000000001',
+    name: 'Toko Budi',
+    company_id: '01JCOMPANY00000000000000001',
+    company_name: 'PT Toko Budi',
+    permissions: [],
+};
+
+export const company = {
+    id: workspace.company_id,
+    name: workspace.company_name,
+    legal_name: null,
+    tax_id: null,
+    functional_currency: 'IDR',
+    timezone: 'Asia/Jakarta',
+    default_locale: 'id',
+    status: 'setup',
+    lock_version: 1,
+};
+
+/** A signed-in user without any workspace yet. */
 export const signedIn = {
     'GET /api/v1/me': () => json({ data: account }),
+    'GET /api/v1/me/workspaces': () => json({ data: [] }),
+};
+
+/** A signed-in user with a single workspace, so `/` opens its company straight away. */
+export const signedInWithWorkspace = {
+    'GET /api/v1/me': () => json({ data: account }),
+    'GET /api/v1/me/workspaces': () => json({ data: [workspace] }),
+    [`GET /api/v1/companies/${workspace.company_id}`]: () =>
+        json({ data: company }),
 };

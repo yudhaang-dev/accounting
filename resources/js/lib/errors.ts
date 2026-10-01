@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import { isApiError } from './http';
+import { isApiError } from '@/lib/http';
 
 /**
  * Text for a failure that has no screen-specific meaning: no connection, or something unexpected.

@@ -10,7 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { LanguageSwitcher } from './language-switcher';
+import { LanguageSwitcher } from '@/components/language-switcher';
 
 type Props = {
     title: string;

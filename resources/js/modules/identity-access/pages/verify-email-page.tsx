@@ -4,17 +4,17 @@ import { MailIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { AuthLayout } from '@/components/auth/auth-layout';
-import { SubmitButton } from '@/components/auth/submit-button';
+import { AuthLayout } from '@/components/auth-layout';
+import { SubmitButton } from '@/modules/identity-access/components/submit-button';
 import { Button } from '@/components/ui/button';
 import { FieldGroup } from '@/components/ui/field';
 import { useCountdown } from '@/hooks/use-countdown';
 import { useDocumentTitle } from '@/hooks/use-document-title';
-import { authApi } from '@/lib/auth-api';
+import { authApi } from '@/modules/identity-access/auth-api';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
-import { refreshMe, type Me } from '@/lib/session';
-import { useSignOut } from '@/hooks/use-sign-out';
+import { refreshMe, type Me } from '@/modules/identity-access/session';
+import { useSignOut } from '@/modules/identity-access/hooks/use-sign-out';
 
 const RESEND_COOLDOWN_SECONDS = 60;
 

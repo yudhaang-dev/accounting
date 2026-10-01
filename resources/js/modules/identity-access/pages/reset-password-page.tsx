@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { AuthLayout } from '@/components/auth/auth-layout';
-import { FormAlert } from '@/components/auth/form-alert';
-import { PasswordField } from '@/components/auth/password-field';
-import { SubmitButton } from '@/components/auth/submit-button';
+import { AuthLayout } from '@/components/auth-layout';
+import { FormAlert } from '@/modules/identity-access/components/form-alert';
+import { PasswordField } from '@/modules/identity-access/components/password-field';
+import { SubmitButton } from '@/modules/identity-access/components/submit-button';
 import {
     Field,
     FieldError,
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { useDocumentTitle } from '@/hooks/use-document-title';
-import { authApi } from '@/lib/auth-api';
+import { authApi } from '@/modules/identity-access/auth-api';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
 

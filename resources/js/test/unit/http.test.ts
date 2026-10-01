@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiError, request, setUnauthenticatedHandler } from './http';
-import { safeRedirect } from './session';
+import { ApiError, request, setUnauthenticatedHandler } from '@/lib/http';
+import { safeRedirect } from '@/modules/identity-access/session';
 import { json, mockApi } from '@/test/harness';
 
 describe('request', () => {

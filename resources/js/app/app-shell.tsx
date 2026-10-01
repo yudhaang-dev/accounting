@@ -1,10 +1,5 @@
-import { Link } from '@tanstack/react-router';
-import {
-    BookOpenCheckIcon,
-    ChevronsUpDownIcon,
-    HouseIcon,
-    LogOutIcon,
-} from 'lucide-react';
+import { Link, useMatchRoute, useParams } from '@tanstack/react-router';
+import { ChevronsUpDownIcon, HouseIcon, LogOutIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -32,9 +27,11 @@ import {
     SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Spinner } from '@/components/ui/spinner';
-import { LanguageSwitcher } from '@/components/auth/language-switcher';
-import { useSignOut } from '@/hooks/use-sign-out';
-import type { Me } from '@/lib/session';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { useSignOut } from '@/modules/identity-access/hooks/use-sign-out';
+import type { Me } from '@/modules/identity-access/session';
+import type { Workspace } from '@/modules/identity-access/workspaces';
+import { WorkspaceSwitcher } from '@/modules/identity-access/components/workspace-switcher';
 
 function initials(name: string): string {
     return name
@@ -107,46 +104,69 @@ function UserMenu({ me }: { me: Me }) {
     );
 }
 
-/** Frame of every signed-in screen: collapsible sidebar, account menu, content area. */
-export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
+/**
+ * Frame of every signed-in screen: collapsible sidebar, workspace switcher, account menu, content
+ * area. The sidebar navigates the company of the address (`/w/$companyId/...`); outside one, it
+ * only offers the switcher.
+ */
+export function AppShell({
+    me,
+    workspaces,
+    children,
+}: {
+    me: Me;
+    workspaces: Workspace[];
+    children: ReactNode;
+}) {
     const { t } = useTranslation();
+    const { companyId } = useParams({ strict: false });
+    const matchRoute = useMatchRoute();
+    const active = workspaces.find((w) => w.company_id === companyId);
 
     return (
         <SidebarProvider>
             <Sidebar collapsible="icon">
                 <SidebarHeader>
-                    <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton
-                                size="lg"
-                                render={<Link to="/" />}
-                                tooltip={t('common.appName')}
-                            >
-                                <BookOpenCheckIcon />
-                                <span className="font-medium">
-                                    {t('common.appName')}
-                                </span>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
+                    <WorkspaceSwitcher
+                        workspaces={workspaces}
+                        active={active}
+                    />
                 </SidebarHeader>
                 <SidebarContent>
-                    <SidebarGroup>
-                        <SidebarGroupContent>
-                            <SidebarMenu>
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton
-                                        isActive
-                                        render={<Link to="/" />}
-                                        tooltip={t('app.navHome')}
-                                    >
-                                        <HouseIcon />
-                                        <span>{t('app.navHome')}</span>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            </SidebarMenu>
-                        </SidebarGroupContent>
-                    </SidebarGroup>
+                    {active && (
+                        <SidebarGroup>
+                            <SidebarGroupContent>
+                                <SidebarMenu>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton
+                                            isActive={Boolean(
+                                                matchRoute({
+                                                    to: '/w/$companyId',
+                                                    params: {
+                                                        companyId:
+                                                            active.company_id,
+                                                    },
+                                                }),
+                                            )}
+                                            render={
+                                                <Link
+                                                    to="/w/$companyId"
+                                                    params={{
+                                                        companyId:
+                                                            active.company_id,
+                                                    }}
+                                                />
+                                            }
+                                            tooltip={t('app.navHome')}
+                                        >
+                                            <HouseIcon />
+                                            <span>{t('app.navHome')}</span>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    )}
                 </SidebarContent>
                 <SidebarFooter>
                     <UserMenu me={me} />

@@ -3,20 +3,34 @@ import {
     createRootRouteWithContext,
     createRoute,
     createRouter,
+    notFound,
     Outlet,
     redirect,
     type RouterHistory,
 } from '@tanstack/react-router';
-import { AppShell } from '@/components/app/app-shell';
-import { meQuery, safeRedirect, type Me } from '@/lib/session';
-import { ForgotPasswordPage } from '@/pages/forgot-password-page';
-import { HomePage } from '@/pages/home-page';
-import { LoginPage } from '@/pages/login-page';
-import { NotFoundPage } from '@/pages/not-found-page';
-import { ResetPasswordPage } from '@/pages/reset-password-page';
-import { ErrorScreen, PendingScreen } from '@/pages/status-pages';
-import { TwoFactorPage } from '@/pages/two-factor-page';
-import { VerifyEmailPage } from '@/pages/verify-email-page';
+import { AppShell } from '@/app/app-shell';
+import {
+    meQuery,
+    safeRedirect,
+    type Me,
+} from '@/modules/identity-access/session';
+import { companyQuery } from '@/modules/master-data/company';
+import {
+    readLastCompany,
+    rememberLastCompany,
+    workspacesQuery,
+    type Workspace,
+} from '@/modules/identity-access/workspaces';
+import { CompanyHomePage } from '@/modules/master-data/pages/company-home-page';
+import { ForgotPasswordPage } from '@/modules/identity-access/pages/forgot-password-page';
+import { LoginPage } from '@/modules/identity-access/pages/login-page';
+import { NotFoundPage } from '@/app/not-found-page';
+import { ResetPasswordPage } from '@/modules/identity-access/pages/reset-password-page';
+import { ErrorScreen, PendingScreen } from '@/app/status-pages';
+import { TwoFactorPage } from '@/modules/identity-access/pages/two-factor-page';
+import { VerifyEmailPage } from '@/modules/identity-access/pages/verify-email-page';
+import { WorkspaceNotFound } from '@/modules/identity-access/pages/workspace-not-found';
+import { WorkspacesPage } from '@/modules/identity-access/pages/workspaces-page';
 
 type RouterContext = { queryClient: QueryClient };
 
@@ -137,25 +151,86 @@ const verifyEmailRoute = createRoute({
 const verifiedRoute = createRoute({
     getParentRoute: () => authedRoute,
     id: 'verified',
-    beforeLoad: ({ context }) => {
+    beforeLoad: async ({ context }): Promise<{ workspaces: Workspace[] }> => {
         if (!context.me.email_verified) {
             throw redirect({ to: '/email/verify' });
         }
+
+        return {
+            workspaces:
+                await context.queryClient.ensureQueryData(workspacesQuery),
+        };
     },
     component: function Verified() {
+        const { me, workspaces } = verifiedRoute.useRouteContext();
+
         return (
-            <AppShell me={verifiedRoute.useRouteContext().me}>
+            <AppShell me={me} workspaces={workspaces}>
                 <Outlet />
             </AppShell>
         );
     },
 });
 
-const homeRoute = createRoute({
+// `/` only decides where to go: the company last worked in, the only one there is, or the picker.
+const indexRoute = createRoute({
     getParentRoute: () => verifiedRoute,
     path: '/',
-    component: function Home() {
-        return <HomePage me={homeRoute.useRouteContext().me} />;
+    beforeLoad: ({ context }) => {
+        const { me, workspaces } = context;
+        const last = readLastCompany(me.id);
+        const target =
+            workspaces.find((w) => w.company_id === last) ??
+            (workspaces.length === 1 ? workspaces[0] : undefined);
+
+        throw target
+            ? redirect({
+                  to: '/w/$companyId',
+                  params: { companyId: target.company_id },
+              })
+            : redirect({ to: '/workspaces' });
+    },
+});
+
+const workspacesRoute = createRoute({
+    getParentRoute: () => verifiedRoute,
+    path: '/workspaces',
+    component: function Workspaces() {
+        const { me, workspaces } = workspacesRoute.useRouteContext();
+
+        return <WorkspacesPage me={me} workspaces={workspaces} />;
+    },
+});
+
+// Everything about one company lives under its address, so links, reloads and bookmarks keep the
+// workspace; an id the user has no membership for is "not found", never an empty screen.
+const companyRoute = createRoute({
+    getParentRoute: () => verifiedRoute,
+    path: '/w/$companyId',
+    beforeLoad: ({ context, params }) => {
+        if (
+            !context.workspaces.some((w) => w.company_id === params.companyId)
+        ) {
+            throw notFound();
+        }
+
+        rememberLastCompany(context.me.id, params.companyId);
+    },
+    loader: ({ context, params }) =>
+        context.queryClient.ensureQueryData(companyQuery(params.companyId)),
+    notFoundComponent: WorkspaceNotFound,
+    component: Outlet,
+});
+
+const companyHomeRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/',
+    component: function CompanyHome() {
+        return (
+            <CompanyHomePage
+                companyId={companyHomeRoute.useParams().companyId}
+            />
+        );
     },
 });
 
@@ -168,7 +243,11 @@ const routeTree = rootRoute.addChildren([
     ]),
     authedRoute.addChildren([
         verifyEmailRoute,
-        verifiedRoute.addChildren([homeRoute]),
+        verifiedRoute.addChildren([
+            indexRoute,
+            workspacesRoute,
+            companyRoute.addChildren([companyHomeRoute]),
+        ]),
     ]),
 ]);
 
