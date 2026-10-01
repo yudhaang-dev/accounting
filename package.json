@@ -9,6 +9,7 @@
         "check:fix": "vp check --fix",
         "types:check": "tsc --noEmit",
         "test": "vp test run",
+        "e2e": "playwright test",
         "api:types": "openapi-typescript openapi/openapi.json -o resources/js/api/schema.d.ts"
     },
     "dependencies": {
@@ -41,6 +42,7 @@
         "vite": "^8.0.0"
     },
     "devDependencies": {
+        "@playwright/test": "^1.63.0",
         "@rolldown/plugin-babel": "^0.2.3",
         "@testing-library/jest-dom": "^7.0.1",
         "@testing-library/react": "^16.3.3",

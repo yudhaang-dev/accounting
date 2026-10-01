@@ -42,7 +42,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
   - [x] **M1-09d** Form dan daftar entri beserta aksinya (submit, approve, post) — `/w/$companyId/entries` (daftar, filter status dan tanggal), `/entries/new`, `/entries/$entryId` (detail, riwayat keputusan, aksi submit/setujui/tolak/posting/revisi/batal) dan `/entries/$entryId/edit`; jumlah dihitung sebagai string desimal eksak; jenis transaksi pertama dapat dibuat dari form oleh pemegang `policies.manage` sampai perancang M5-14
   - [x] **M1-09e** Detail jurnal — `/w/$companyId/journals/$journalId` (header, baris bernama akun, total desimal eksak, kurs bila bukan mata uang buku, referensi, tautan ke entri asal dan jurnal yang dibalik); entri yang diposting menaut ke jurnalnya; id entri atau jurnal yang tidak ada (404) menampilkan "tidak ditemukan"
   - [x] **M1-09f** Neraca saldo (drill-down dan ekspor CSV) — `/w/$companyId/reports/trial-balance` (rentang tanggal, saldo awal/mutasi/akhir, total, status seimbang yang terlihat, ekspor CSV lewat `Accept: text/csv`) dan daftar jurnal `/w/$companyId/journals` sebagai tujuan drill-down per akun; skema OpenAPI neraca saldo dipertegas
-- [ ] **M1-10** Test feature end-to-end untuk seluruh alur M1
+- [x] **M1-10** Test feature end-to-end untuk seluruh alur M1 — `pnpm e2e` menjalankan browser nyata (Playwright, Chromium) terhadap aplikasi Laravel dan database `accounting_e2e` yang dibangun ulang tiap run: login, buat perusahaan, COA dan kalender, aktivasi, entri hingga posting, neraca saldo, ekspor CSV, dan drill-down; tangkapan layar tiap tahap di `test-results/screens`; belum dijalankan di CI (butuh layanan PostgreSQL dan unduhan browser)
 
 ## M2 — Data induk
 
