@@ -97,6 +97,10 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // Laravel writes datetimes as the clock of `app.timezone` (UTC) with no offset. The session
+            // must read that clock in the same zone, or a server in another zone (its default) stores
+            // every `timestamptz` instant off by the gap, which would corrupt the audit trail.
+            'timezone' => 'UTC',
         ],
 
         'sqlsrv' => [
