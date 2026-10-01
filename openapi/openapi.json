@@ -3068,12 +3068,6 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "text/csv; charset=UTF-8": {
-                                "schema": {
-                                    "type": "string",
-                                    "format": "binary"
-                                }
-                            },
                             "application/json": {
                                 "schema": {
                                     "type": "object",
@@ -3107,15 +3101,88 @@
                                                     "type": "string"
                                                 },
                                                 "balanced": {
-                                                    "type": "string"
+                                                    "type": "boolean"
                                                 },
                                                 "totals": {
-                                                    "type": "array",
-                                                    "items": {}
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "opening_debit": {
+                                                            "type": "string"
+                                                        },
+                                                        "opening_credit": {
+                                                            "type": "string"
+                                                        },
+                                                        "debit": {
+                                                            "type": "string"
+                                                        },
+                                                        "credit": {
+                                                            "type": "string"
+                                                        },
+                                                        "closing_debit": {
+                                                            "type": "string"
+                                                        },
+                                                        "closing_credit": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "opening_debit",
+                                                        "opening_credit",
+                                                        "debit",
+                                                        "credit",
+                                                        "closing_debit",
+                                                        "closing_credit"
+                                                    ]
                                                 },
                                                 "rows": {
                                                     "type": "array",
-                                                    "items": {}
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "account_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "class": {
+                                                                "type": "string"
+                                                            },
+                                                            "opening_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "opening_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_credit": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "account_id",
+                                                            "code",
+                                                            "name",
+                                                            "class",
+                                                            "opening_debit",
+                                                            "opening_credit",
+                                                            "debit",
+                                                            "credit",
+                                                            "closing_debit",
+                                                            "closing_credit"
+                                                        ]
+                                                    }
                                                 }
                                             },
                                             "required": [
@@ -3129,16 +3196,6 @@
                                     },
                                     "required": [
                                         "data"
-                                    ]
-                                }
-                            }
-                        },
-                        "headers": {
-                            "Transfer-Encoding": {
-                                "schema": {
-                                    "type": "string",
-                                    "enum": [
-                                        "chunked"
                                     ]
                                 }
                             }

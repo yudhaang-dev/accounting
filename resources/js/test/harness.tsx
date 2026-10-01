@@ -10,6 +10,7 @@ export type Call = {
     method: string;
     path: string;
     query: Record<string, string>;
+    accept: string | null;
     body: unknown;
 };
 type Reply = Response | ((call: Call) => Response | Promise<Response>);
@@ -60,6 +61,7 @@ export function mockApi(routes: Record<string, Reply>) {
                 method: request.method,
                 path,
                 query: Object.fromEntries(new URL(request.url).searchParams),
+                accept: request.headers.get('Accept'),
                 body: text ? JSON.parse(text) : undefined,
             };
 

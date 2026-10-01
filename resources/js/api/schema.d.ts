@@ -2364,11 +2364,9 @@ export interface operations {
         responses: {
             200: {
                 headers: {
-                    "Transfer-Encoding"?: "chunked";
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/csv; charset=UTF-8": string;
                     "application/json": {
                         data: {
                             parameters: {
@@ -2377,9 +2375,27 @@ export interface operations {
                                 account_id: string | null;
                             };
                             functional_currency: string;
-                            balanced: string;
-                            totals: unknown[];
-                            rows: unknown[];
+                            balanced: boolean;
+                            totals: {
+                                opening_debit: string;
+                                opening_credit: string;
+                                debit: string;
+                                credit: string;
+                                closing_debit: string;
+                                closing_credit: string;
+                            };
+                            rows: {
+                                account_id: string;
+                                code: string;
+                                name: string;
+                                class: string;
+                                opening_debit: string;
+                                opening_credit: string;
+                                debit: string;
+                                credit: string;
+                                closing_debit: string;
+                                closing_credit: string;
+                            }[];
                         };
                     };
                 };

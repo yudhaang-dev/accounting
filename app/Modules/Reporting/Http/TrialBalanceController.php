@@ -15,6 +15,8 @@ class TrialBalanceController
      * closing balance per account, totals and `balanced`. `account_id` narrows it to one account.
      * Drill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.
      * With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).
+     *
+     * @response array{data: array{parameters: array{from: string, to: string, account_id: string|null}, functional_currency: string, balanced: bool, totals: array{opening_debit: string, opening_credit: string, debit: string, credit: string, closing_debit: string, closing_credit: string}, rows: list<array{account_id: string, code: string, name: string, class: string, opening_debit: string, opening_credit: string, debit: string, credit: string, closing_debit: string, closing_credit: string}>}}
      */
     public function show(TrialBalanceRequest $request, TrialBalance $report, string $companyId): JsonResponse|Response
     {

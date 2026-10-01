@@ -1,11 +1,13 @@
 import { Link, useMatchRoute, useParams } from '@tanstack/react-router';
 import {
+    BookTextIcon,
     CalendarRangeIcon,
     FileTextIcon,
     ChevronsUpDownIcon,
     HouseIcon,
     ListTreeIcon,
     LogOutIcon,
+    SigmaIcon,
 } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -66,6 +68,18 @@ const NAV = [
         label: 'app.navEntries',
         icon: FileTextIcon,
         permission: 'entries.read',
+    },
+    {
+        to: '/w/$companyId/journals',
+        label: 'app.navJournals',
+        icon: BookTextIcon,
+        permission: 'journals.read',
+    },
+    {
+        to: '/w/$companyId/reports/trial-balance',
+        label: 'app.navTrialBalance',
+        icon: SigmaIcon,
+        permission: 'reports.read',
     },
 ] as const satisfies readonly {
     to: string;

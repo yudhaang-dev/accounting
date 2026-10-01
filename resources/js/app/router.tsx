@@ -4,6 +4,7 @@ import {
     createRoute,
     createRouter,
     notFound,
+    useNavigate,
     Outlet,
     redirect,
     type RouterHistory,
@@ -27,6 +28,11 @@ import {
 } from '@/modules/identity-access/workspaces';
 import { journalQuery } from '@/modules/general-ledger/journals';
 import { JournalPage } from '@/modules/general-ledger/pages/journal-page';
+import {
+    JournalsPage,
+    type JournalSearch,
+} from '@/modules/general-ledger/pages/journals-page';
+import { TrialBalancePage } from '@/modules/reporting/pages/trial-balance-page';
 import { AccountsPage } from '@/modules/general-ledger/pages/accounts-page';
 import { PeriodsPage } from '@/modules/general-ledger/pages/periods-page';
 import { can } from '@/modules/identity-access/permissions';
@@ -389,6 +395,52 @@ const editEntryRoute = createRoute({
     },
 });
 
+const stringSearch = (value: unknown): string | undefined =>
+    typeof value === 'string' && value !== '' ? value : undefined;
+
+// The list is the drill-down of reports, so what it filters on lives in the address.
+const journalsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/journals',
+    beforeLoad: requirePermission('journals.read'),
+    validateSearch: (search: Record<string, unknown>): JournalSearch => ({
+        account_id: stringSearch(search.account_id),
+        from: stringSearch(search.from),
+        to: stringSearch(search.to),
+    }),
+    component: function Journals() {
+        const { workspace } = journalsRoute.useRouteContext();
+        const navigate = useNavigate();
+
+        return (
+            <JournalsPage
+                companyId={workspace.company_id}
+                search={journalsRoute.useSearch()}
+                canReadAccounts={can(workspace, 'accounts.read')}
+                onSearchChange={(search) =>
+                    void navigate({
+                        to: '/w/$companyId/journals',
+                        params: { companyId: workspace.company_id },
+                        search,
+                        replace: true,
+                    })
+                }
+            />
+        );
+    },
+});
+
+const trialBalanceRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/trial-balance',
+    beforeLoad: requirePermission('reports.read'),
+    component: function TrialBalanceScreen() {
+        const { workspace } = trialBalanceRoute.useRouteContext();
+
+        return <TrialBalancePage companyId={workspace.company_id} />;
+    },
+});
+
 const journalRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/journals/$journalId',
@@ -484,7 +536,9 @@ const routeTree = rootRoute.addChildren([
                 newEntryRoute,
                 entryRoute,
                 editEntryRoute,
+                journalsRoute,
                 journalRoute,
+                trialBalanceRoute,
             ]),
         ]),
     ]),
