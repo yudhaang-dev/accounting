@@ -9,7 +9,7 @@
 ## M0 — Fondasi
 
 - [x] **M0-01** Bersihkan starter kit: hapus Inertia dan Wayfinder (paket PHP/JS, middleware, halaman); Fortify mode headless dengan respons JSON — ADR-0010, ADR-0005
-- [ ] **M0-02** Pindah ke PostgreSQL (`.env.example`, test, ekstensi `btree_gist`) — ADR-0003
+- [x] **M0-02** Pindah ke PostgreSQL (`.env.example`, test, ekstensi `btree_gist`) — ADR-0003
 - [ ] **M0-03** Pasang paket ADR-0004 dan verifikasi kompatibilitasnya dengan Laravel 13 — ADR-0004
 - [ ] **M0-04** Kerangka modul (`app/Modules/*`, `Orchestration`, `Platform`, `Support`), service provider dan route per modul, prefix tabel — ADR-0002
 - [ ] **M0-05** Penjaga arsitektur di CI: deptrac sesuai graf, Pest arch (import lintas modul hanya ke `Contracts`, tanpa pemeriksaan nama role, prefix tabel) — ADR-0002
