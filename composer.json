@@ -79,6 +79,9 @@
         "types:check": [
             "phpstan analyse"
         ],
+        "openapi:export": [
+            "@php artisan scramble:export --path=openapi/openapi.json"
+        ],
         "deps:check": [
             "deptrac analyse --no-progress"
         ],

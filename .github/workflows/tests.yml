@@ -58,5 +58,10 @@ jobs:
       - name: Setup Application
         run: composer setup
 
+      - name: Check generated API client types are up to date
+        run: |
+          npm run api:types
+          git diff --exit-code -- resources/js/api/schema.d.ts
+
       - name: Run CI Checks
         run: composer ci:check

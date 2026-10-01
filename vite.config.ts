@@ -40,6 +40,7 @@ export default defineConfig({
             'public/**',
             'bootstrap/ssr/**',
             'tailwind.config.js',
+            'resources/js/api/schema.d.ts',
             'resources/js/components/ui/*',
         ],
         options: {
@@ -56,6 +57,10 @@ export default defineConfig({
         htmlWhitespaceSensitivity: 'css',
         ignorePatterns: [
             '.github/**',
+            '.docs/**',
+            'openapi/**',
+            'deptrac.yaml',
+            'resources/js/api/schema.d.ts',
             'composer.json',
             'resources/js/components/ui/*',
             'resources/views/mail/*',

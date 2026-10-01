@@ -43,6 +43,8 @@ class ApiServiceProvider extends ModuleServiceProvider
 
         $this->app->make(Router::class)->aliasMiddleware('idempotent', Idempotent::class);
 
+        OpenApiDocumentation::register();
+
         $this->registerRateLimiter();
         $this->registerRouteMacros();
 

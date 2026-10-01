@@ -1,0 +1,48 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Accounting API",
+        "version": "0.1.0",
+        "description": "Accounting API for the first-party SPA and third-party systems. Contract: .docs/API-CONTRACT.md."
+    },
+    "servers": [
+        {
+            "url": "/api/v1"
+        }
+    ],
+    "security": [
+        {
+            "sessionCookie": []
+        },
+        {
+            "bearerAuth": []
+        }
+    ],
+    "paths": {
+        "/csrf-cookie": {
+            "get": {
+                "operationId": "csrf-cookie",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "sessionCookie": {
+                "type": "apiKey",
+                "description": "First-party SPA: session cookie from the login flow, plus the XSRF-TOKEN cookie echoed in the X-XSRF-TOKEN header on writes.",
+                "in": "cookie",
+                "name": "accounting_session"
+            },
+            "bearerAuth": {
+                "type": "http",
+                "description": "Integration clients: OAuth 2.0 client-credentials access token. Treat it as opaque. Writes require an Idempotency-Key header.",
+                "scheme": "bearer"
+            }
+        }
+    }
+}

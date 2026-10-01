@@ -7,7 +7,8 @@
         "dev": "vp dev",
         "check": "vp check",
         "check:fix": "vp check --fix",
-        "types:check": "tsc --noEmit"
+        "types:check": "tsc --noEmit",
+        "api:types": "openapi-typescript openapi/openapi.json -o resources/js/api/schema.d.ts"
     },
     "dependencies": {
         "@radix-ui/react-avatar": "^1.1.3",
@@ -33,6 +34,7 @@
         "input-otp": "^1.4.2",
         "laravel-vite-plugin": "^3.0.0",
         "lucide-react": "^0.475.0",
+        "openapi-fetch": "^0.17.0",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
         "sonner": "^2.0.0",
@@ -46,6 +48,7 @@
         "@rolldown/plugin-babel": "^0.2.3",
         "@types/node": "^22.13.5",
         "babel-plugin-react-compiler": "^1.0.0",
+        "openapi-typescript": "^7.13.0",
         "vite-plus": "0.3.0"
     },
     "optionalDependencies": {
