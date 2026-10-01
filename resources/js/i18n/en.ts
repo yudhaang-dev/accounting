@@ -1,0 +1,119 @@
+import type { id } from './id';
+
+type Widen<T> = { [K in keyof T]: T[K] extends string ? string : Widen<T[K]> };
+
+export const en: Widen<typeof id> = {
+    common: {
+        appName: 'Accounting',
+        language: 'Language',
+        loading: 'Loading…',
+        backToLogin: 'Back to sign in',
+        showPassword: 'Show password',
+        hidePassword: 'Hide password',
+        capsLock: 'Caps Lock is on',
+        retry: 'Try again',
+        required: 'Required',
+        email: 'Email',
+        password: 'Password',
+        retryIn: 'Try again in {{seconds}}s',
+        offline:
+            'Cannot reach the server. Check your internet connection and try again.',
+        unexpected: 'Something went wrong. Please try again.',
+    },
+    session: {
+        expired: 'Your session has ended. Please sign in again.',
+        signedOut: 'You have been signed out.',
+    },
+    login: {
+        title: 'Welcome back',
+        description: 'Sign in to keep your books moving.',
+        emailPlaceholder: 'name@company.com',
+        remember: 'Keep me signed in on this device',
+        forgot: 'Forgot password?',
+        submit: 'Sign in',
+        submitting: 'Checking…',
+        or: 'or',
+        passkey: 'Sign in with a passkey',
+        passkeyWaiting: 'Waiting for your device…',
+        passkeyFailed:
+            'The passkey could not be verified. Try again or sign in with your password.',
+        rateLimited: 'Too many sign-in attempts.',
+        pageTitle: 'Sign in',
+    },
+    twoFactor: {
+        pageTitle: 'Two-step verification',
+        title: 'Two-step verification',
+        description: 'Enter the 6-digit code from your authenticator app.',
+        codeLabel: 'Authentication code',
+        verifying: 'Verifying…',
+        invalid:
+            'That code does not match. Check your authenticator app and try again.',
+        useRecovery: 'Use a recovery code',
+        useCode: 'Use a code from the app',
+        recoveryTitle: 'Recovery code',
+        recoveryDescription:
+            'Enter one of the recovery codes you saved when you turned on two-step verification.',
+        recoveryLabel: 'Recovery code',
+        recoveryInvalid:
+            'That recovery code is invalid or has already been used.',
+        submit: 'Verify',
+        expiredLogin: 'Your sign-in timed out. Please sign in again.',
+    },
+    forgot: {
+        pageTitle: 'Forgot password',
+        title: 'Forgot your password?',
+        description:
+            'Enter your account email and we will send you a link to reset it.',
+        submit: 'Send link',
+        submitting: 'Sending…',
+        sentTitle: 'Check your email',
+        sentDescription:
+            'If {{email}} is registered, a password reset link is on its way. Check your spam folder too.',
+        resend: 'Resend',
+        resendIn: 'Resend in {{seconds}}s',
+        resent: 'Link sent again.',
+        useAnotherEmail: 'Use a different email',
+    },
+    reset: {
+        pageTitle: 'Reset password',
+        title: 'Create a new password',
+        description: 'Pick a strong password you have not used anywhere else.',
+        newPassword: 'New password',
+        confirmPassword: 'Repeat new password',
+        hint: 'At least 8 characters.',
+        mismatch: 'The passwords do not match yet.',
+        submit: 'Save password',
+        submitting: 'Saving…',
+        done: 'Password updated. Please sign in.',
+        invalidLink: 'This link is invalid or has expired. Request a new one.',
+        requestNew: 'Request a new link',
+    },
+    verify: {
+        pageTitle: 'Verify email',
+        title: 'Verify your email',
+        description:
+            'We sent a verification link to {{email}}. Open it to continue.',
+        resend: 'Resend verification email',
+        resendIn: 'Resend in {{seconds}}s',
+        sent: 'Verification email sent again.',
+        signOut: 'Sign out',
+    },
+    app: {
+        pageTitle: 'Home',
+        welcome: 'Hello, {{name}}',
+        welcomeBack: 'Good to see you again.',
+        emptyTitle: 'Nothing to show yet',
+        emptyDescription: 'Your workspaces and companies will appear here.',
+        navHome: 'Home',
+        account: 'Account',
+        signOut: 'Sign out',
+        signingOut: 'Signing out…',
+        openMenu: 'Open account menu',
+    },
+    notFound: {
+        pageTitle: 'Page not found',
+        title: 'Page not found',
+        description: 'The address you followed does not exist or has moved.',
+        home: 'Go home',
+    },
+};

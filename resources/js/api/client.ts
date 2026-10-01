@@ -1,4 +1,5 @@
 import createClient, { type Middleware } from 'openapi-fetch';
+import { defaultHeaders, notifyUnauthenticated } from '@/lib/http';
 import type { paths } from './schema';
 
 /**
@@ -6,59 +7,40 @@ import type { paths } from './schema';
  * Auth is the session cookie (ADR-0011): no token is ever stored in the browser.
  */
 
-export type ApiErrorBody = {
-    message: string;
-    code?: string;
-    errors?: Record<string, string[]>;
-};
-
-const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
-
-function readCookie(name: string): string | null {
-    const match = document.cookie
-        .split('; ')
-        .find((entry) => entry.startsWith(`${name}=`));
-
-    return match ? decodeURIComponent(match.slice(name.length + 1)) : null;
-}
+// The signed-in probe answers 401 by design when nobody is logged in; that is not "session expired".
+const SESSION_PROBES = ['/api/v1/me', '/api/v1/csrf-cookie'];
 
 const defaults: Middleware = {
     onRequest({ request }) {
-        request.headers.set('Accept', 'application/json');
-        request.headers.set(
-            'Accept-Language',
-            document.documentElement.lang || 'id',
-        );
-
-        // Writes echo the XSRF-TOKEN cookie (API-TR-21).
-        const xsrf = readCookie('XSRF-TOKEN');
-
-        if (xsrf && !SAFE_METHODS.includes(request.method)) {
-            request.headers.set('X-XSRF-TOKEN', xsrf);
+        for (const [name, value] of Object.entries(
+            defaultHeaders(request.method),
+        )) {
+            request.headers.set(name, value);
         }
 
         return request;
     },
+    onResponse({ request, response }) {
+        const path = new URL(request.url).pathname;
+
+        if (response.status === 401 && !SESSION_PROBES.includes(path)) {
+            notifyUnauthenticated();
+        }
+
+        return response;
+    },
 };
 
 export const api = createClient<paths>({
-    baseUrl: '/api/v1',
-    credentials: 'include',
+    baseUrl: `${window.location.origin}/api/v1`,
+    credentials: 'same-origin',
+    // Resolved per call, so tests (and polyfills) can replace the global fetch.
+    fetch: (request) => globalThis.fetch(request),
 });
 
 api.use(defaults);
 
-/** Requests the XSRF-TOKEN cookie; call once before the login flow. */
-export async function ensureCsrfCookie(): Promise<void> {
-    await api.GET('/csrf-cookie');
-}
-
 /** Fresh key for a command; reuse the same key when retrying the same user action (API-TR-13). */
 export function newIdempotencyKey(): string {
     return crypto.randomUUID();
-}
-
-/** Business logic must branch on status and `code`, never on `message` (API-TR-06). */
-export function isApiError(error: unknown): error is ApiErrorBody {
-    return typeof error === 'object' && error !== null && 'message' in error;
 }

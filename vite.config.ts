@@ -8,7 +8,7 @@ import { defineConfig, lazyPlugins } from 'vite-plus';
 export default defineConfig({
     plugins: lazyPlugins(() => [
         laravel({
-            input: ['resources/css/app.css'],
+            input: ['resources/css/app.css', 'resources/js/app.tsx'],
             refresh: true,
             fonts: [
                 bunny('Instrument Sans', {
@@ -22,6 +22,13 @@ export default defineConfig({
         }),
         tailwindcss(),
     ]),
+    test: {
+        environment: 'jsdom',
+        setupFiles: ['./resources/js/test/setup.ts'],
+        include: ['resources/js/**/*.test.{ts,tsx}'],
+        css: false,
+        restoreMocks: true,
+    },
     server: {
         watch: {
             ignored: [

@@ -74,6 +74,7 @@
             "Composer\\Config::disableProcessTimeout",
             "pnpm run check",
             "pnpm run types:check",
+            "pnpm run test",
             "@test"
         ],
         "types:check": [

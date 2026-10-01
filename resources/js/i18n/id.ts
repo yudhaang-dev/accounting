@@ -1,0 +1,118 @@
+/** Source of truth for UI text. English (`en.ts`) must mirror this shape; the compiler enforces it. */
+export const id = {
+    common: {
+        appName: 'Accounting',
+        language: 'Bahasa',
+        loading: 'Memuat…',
+        backToLogin: 'Kembali ke halaman masuk',
+        showPassword: 'Tampilkan kata sandi',
+        hidePassword: 'Sembunyikan kata sandi',
+        capsLock: 'Caps Lock sedang aktif',
+        retry: 'Coba lagi',
+        required: 'Wajib diisi',
+        email: 'Email',
+        password: 'Kata sandi',
+        retryIn: 'Coba lagi dalam {{seconds}} detik',
+        offline:
+            'Tidak dapat terhubung ke server. Periksa koneksi internet Anda, lalu coba lagi.',
+        unexpected: 'Terjadi kesalahan. Silakan coba lagi.',
+    },
+    session: {
+        expired: 'Sesi Anda berakhir. Silakan masuk kembali.',
+        signedOut: 'Anda telah keluar.',
+    },
+    login: {
+        title: 'Selamat datang kembali',
+        description: 'Masuk untuk melanjutkan pembukuan Anda.',
+        emailPlaceholder: 'nama@perusahaan.com',
+        remember: 'Ingat saya di perangkat ini',
+        forgot: 'Lupa kata sandi?',
+        submit: 'Masuk',
+        submitting: 'Memeriksa…',
+        or: 'atau',
+        passkey: 'Masuk dengan passkey',
+        passkeyWaiting: 'Menunggu perangkat Anda…',
+        passkeyFailed:
+            'Passkey tidak dapat diverifikasi. Coba lagi atau masuk dengan kata sandi.',
+        rateLimited: 'Terlalu banyak percobaan masuk.',
+        pageTitle: 'Masuk',
+    },
+    twoFactor: {
+        pageTitle: 'Verifikasi dua langkah',
+        title: 'Verifikasi dua langkah',
+        description: 'Masukkan 6 digit kode dari aplikasi autentikator Anda.',
+        codeLabel: 'Kode autentikasi',
+        verifying: 'Memverifikasi…',
+        invalid:
+            'Kode tidak sesuai. Periksa aplikasi autentikator Anda lalu coba lagi.',
+        useRecovery: 'Gunakan kode pemulihan',
+        useCode: 'Gunakan kode dari aplikasi',
+        recoveryTitle: 'Kode pemulihan',
+        recoveryDescription:
+            'Masukkan salah satu kode pemulihan yang Anda simpan saat mengaktifkan verifikasi dua langkah.',
+        recoveryLabel: 'Kode pemulihan',
+        recoveryInvalid: 'Kode pemulihan tidak valid atau sudah dipakai.',
+        submit: 'Verifikasi',
+        expiredLogin: 'Waktu masuk Anda habis. Silakan masuk kembali.',
+    },
+    forgot: {
+        pageTitle: 'Lupa kata sandi',
+        title: 'Lupa kata sandi?',
+        description:
+            'Masukkan email akun Anda. Kami akan mengirim tautan untuk mengatur ulang kata sandi.',
+        submit: 'Kirim tautan',
+        submitting: 'Mengirim…',
+        sentTitle: 'Periksa email Anda',
+        sentDescription:
+            'Jika {{email}} terdaftar, tautan pengaturan ulang kata sandi sudah dalam perjalanan. Periksa juga folder spam.',
+        resend: 'Kirim ulang',
+        resendIn: 'Kirim ulang dalam {{seconds}} detik',
+        resent: 'Tautan dikirim ulang.',
+        useAnotherEmail: 'Gunakan email lain',
+    },
+    reset: {
+        pageTitle: 'Atur ulang kata sandi',
+        title: 'Buat kata sandi baru',
+        description:
+            'Pilih kata sandi yang kuat dan belum pernah Anda pakai di tempat lain.',
+        newPassword: 'Kata sandi baru',
+        confirmPassword: 'Ulangi kata sandi baru',
+        hint: 'Minimal 8 karakter.',
+        mismatch: 'Kata sandi belum sama.',
+        submit: 'Simpan kata sandi',
+        submitting: 'Menyimpan…',
+        done: 'Kata sandi diperbarui. Silakan masuk.',
+        invalidLink:
+            'Tautan ini tidak valid atau sudah kedaluwarsa. Minta tautan baru.',
+        requestNew: 'Minta tautan baru',
+    },
+    verify: {
+        pageTitle: 'Verifikasi email',
+        title: 'Verifikasi email Anda',
+        description:
+            'Kami mengirim tautan verifikasi ke {{email}}. Buka tautan itu untuk melanjutkan.',
+        resend: 'Kirim ulang email verifikasi',
+        resendIn: 'Kirim ulang dalam {{seconds}} detik',
+        sent: 'Email verifikasi dikirim ulang.',
+        signOut: 'Keluar',
+    },
+    app: {
+        pageTitle: 'Beranda',
+        welcome: 'Halo, {{name}}',
+        welcomeBack: 'Senang melihat Anda kembali.',
+        emptyTitle: 'Belum ada yang ditampilkan',
+        emptyDescription:
+            'Ruang kerja dan perusahaan Anda akan muncul di sini.',
+        navHome: 'Beranda',
+        account: 'Akun',
+        signOut: 'Keluar',
+        signingOut: 'Keluar…',
+        openMenu: 'Buka menu akun',
+    },
+    notFound: {
+        pageTitle: 'Halaman tidak ditemukan',
+        title: 'Halaman tidak ditemukan',
+        description: 'Alamat yang Anda tuju tidak ada atau sudah dipindahkan.',
+        home: 'Ke beranda',
+    },
+};

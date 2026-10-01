@@ -81,3 +81,9 @@ it('keeps the id and en language files in sync', function () {
         expect($keys('id', $file))->toEqualCanonicalizing($keys('en', $file));
     }
 });
+
+it('also translates the messages of Fortify auth routes, which live in the web group', function () {
+    $this->postJson('/login', ['email' => 'nobody@example.com', 'password' => 'wrong'], ['Accept-Language' => 'id'])
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.email.0', 'Kredensial ini tidak cocok dengan data kami.');
+});

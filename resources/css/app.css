@@ -190,3 +190,28 @@
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
 }
+
+/* Short horizontal shake for a failed submit; always used behind `motion-safe:`. */
+@keyframes shake {
+    10%,
+    90% {
+        transform: translateX(-1px);
+    }
+    20%,
+    80% {
+        transform: translateX(2px);
+    }
+    30%,
+    50%,
+    70% {
+        transform: translateX(-4px);
+    }
+    40%,
+    60% {
+        transform: translateX(4px);
+    }
+}
+
+@utility animate-shake {
+    animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.27, 0.97) both;
+}
