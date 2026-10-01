@@ -8,6 +8,7 @@ use App\Modules\Reporting\ReportingServiceProvider;
 use App\Modules\Subledger\SubledgerServiceProvider;
 use App\Modules\TransactionEntry\TransactionEntryServiceProvider;
 use App\Platform\Audit\AuditServiceProvider;
+use App\Platform\Localization\LocalizationServiceProvider;
 use App\Platform\Numbering\NumberingServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
@@ -19,6 +20,7 @@ return [
     SupportServiceProvider::class,
     AuditServiceProvider::class,
     NumberingServiceProvider::class,
+    LocalizationServiceProvider::class,
     MasterDataServiceProvider::class,
     IdentityAccessServiceProvider::class,
     TransactionEntryServiceProvider::class,
