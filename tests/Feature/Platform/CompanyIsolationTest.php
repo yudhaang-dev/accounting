@@ -20,10 +20,6 @@ class TestParent extends CompanyScopedModel
 }
 
 beforeEach(function () {
-    Schema::create(CompanyKeys::COMPANIES_TABLE, function (Blueprint $table) {
-        $table->ulid('id')->primary();
-    });
-
     Schema::create('md_companies_parent_test', function (Blueprint $table) {
         $table->ulid('id')->primary();
         CompanyKeys::scoped($table);
@@ -38,7 +34,12 @@ beforeEach(function () {
 
     $this->companyA = (string) Str::ulid();
     $this->companyB = (string) Str::ulid();
-    DB::table(CompanyKeys::COMPANIES_TABLE)->insert([['id' => $this->companyA], ['id' => $this->companyB]]);
+    foreach ([$this->companyA, $this->companyB] as $id) {
+        DB::table(CompanyKeys::COMPANIES_TABLE)->insert([
+            'id' => $id, 'name' => $id, 'functional_currency' => 'IDR', 'timezone' => 'Asia/Jakarta',
+            'default_locale' => 'id', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
 });
 
 it('generates ULID keys', function () {

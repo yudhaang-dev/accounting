@@ -40,10 +40,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/workspaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Workspaces the signed-in user can access right now: active, unexpired memberships only */
+        get: operations["me.workspaces"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creates a workspace together with its company (status `setup`); the caller becomes its first member */
+        post: operations["workspaces.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** CreateWorkspaceRequest */
+        CreateWorkspaceRequest: {
+            workspace_name: string;
+            company_name: string;
+            /** @description Checked against the currency reference data once it exists (M2-03). */
+            functional_currency: string;
+            timezone?: string | null;
+            /** @enum {string|null} */
+            default_locale?: "id" | "en" | null;
+        };
+        /** CreatedWorkspaceResource */
+        CreatedWorkspaceResource: {
+            id: string;
+            name: string;
+            company_id: string;
+            company_name: string;
+        };
         /** MeResource */
         MeResource: {
             id: number;
@@ -51,6 +102,13 @@ export interface components {
             email: string;
             email_verified: boolean;
             two_factor_enabled: boolean;
+        };
+        /** WorkspaceResource */
+        WorkspaceResource: {
+            id: string;
+            name: string;
+            company_id: string;
+            company_name: string;
         };
     };
     responses: {
@@ -63,6 +121,22 @@ export interface components {
                 "application/json": {
                     /** @description Error overview. */
                     message: string;
+                };
+            };
+        };
+        /** @description Validation error */
+        ValidationException: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    /** @description Errors overview. */
+                    message: string;
+                    /** @description A detailed description of each field that failed validation. */
+                    errors: {
+                        [key: string]: string[];
+                    };
                 };
             };
         };
@@ -113,6 +187,57 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "me.workspaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `WorkspaceResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WorkspaceResource"][];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "workspaces.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWorkspaceRequest"];
+            };
+        };
+        responses: {
+            /** @description `CreatedWorkspaceResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CreatedWorkspaceResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
 }

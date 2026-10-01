@@ -45,7 +45,7 @@ return [
         /*
          * API version.
          */
-        'version' => env('API_VERSION', '0.1.0'),
+        'version' => '0.0.0', // overridden per API version from config/api.php
 
         /*
          * Description rendered on the home page of the API documentation (`/docs/api`).

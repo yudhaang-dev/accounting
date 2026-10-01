@@ -2,7 +2,7 @@
     "openapi": "3.1.0",
     "info": {
         "title": "Accounting API",
-        "version": "0.1.0",
+        "version": "1.0.0",
         "description": "Accounting API for the first-party SPA and third-party systems. Contract: .docs/API-CONTRACT.md."
     },
     "servers": [
@@ -60,6 +60,86 @@
                     }
                 }
             }
+        },
+        "/me/workspaces": {
+            "get": {
+                "operationId": "me.workspaces",
+                "summary": "Workspaces the signed-in user can access right now: active, unexpired memberships only",
+                "tags": [
+                    "Me"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `WorkspaceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/WorkspaceResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspaces": {
+            "post": {
+                "operationId": "workspaces.store",
+                "summary": "Creates a workspace together with its company (status `setup`); the caller becomes its first member",
+                "tags": [
+                    "Workspace"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateWorkspaceRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`CreatedWorkspaceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CreatedWorkspaceResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -77,6 +157,71 @@
             }
         },
         "schemas": {
+            "CreateWorkspaceRequest": {
+                "type": "object",
+                "properties": {
+                    "workspace_name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "company_name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "functional_currency": {
+                        "type": "string",
+                        "description": "Checked against the currency reference data once it exists (M2-03).",
+                        "pattern": "^[A-Z]{3}$"
+                    },
+                    "timezone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "default_locale": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "id",
+                            "en",
+                            null
+                        ]
+                    }
+                },
+                "required": [
+                    "workspace_name",
+                    "company_name",
+                    "functional_currency"
+                ],
+                "title": "CreateWorkspaceRequest"
+            },
+            "CreatedWorkspaceResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "company_id": {
+                        "type": "string"
+                    },
+                    "company_name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "company_id",
+                    "company_name"
+                ],
+                "title": "CreatedWorkspaceResource"
+            },
             "MeResource": {
                 "type": "object",
                 "properties": {
@@ -104,6 +249,30 @@
                     "two_factor_enabled"
                 ],
                 "title": "MeResource"
+            },
+            "WorkspaceResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "company_id": {
+                        "type": "string"
+                    },
+                    "company_name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "company_id",
+                    "company_name"
+                ],
+                "title": "WorkspaceResource"
             }
         },
         "responses": {
@@ -121,6 +290,36 @@
                             },
                             "required": [
                                 "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ValidationException": {
+                "description": "Validation error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Errors overview."
+                                },
+                                "errors": {
+                                    "type": "object",
+                                    "description": "A detailed description of each field that failed validation.",
+                                    "additionalProperties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "message",
+                                "errors"
                             ]
                         }
                     }

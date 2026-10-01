@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Artisan;
 
 function generatedSpec(): array
 {
-    Artisan::call('scramble:export', ['--stdout' => true]);
+    Artisan::call('scramble:export', ['--api' => 'v1', '--stdout' => true]);
 
     return json_decode(Artisan::output(), true, flags: JSON_THROW_ON_ERROR);
 }
@@ -33,6 +33,35 @@ it('restricts the rendered docs to local use or authenticated users', function (
 
     $this->get('/docs/api')->assertForbidden();
     $this->get('/docs/api.json')->assertForbidden();
+    $this->get('/docs/v1')->assertForbidden();
+    $this->get('/docs/v1.json')->assertForbidden();
 
-    $this->actingAs(User::factory()->create())->get('/docs/api.json')->assertOk();
+    $this->actingAs(User::factory()->create())->get('/docs/v1.json')->assertOk();
+});
+
+it('serves one document per published API version, with its release number', function () {
+    $this->actingAs(User::factory()->create());
+
+    $this->get('/docs/v1')->assertOk();
+    $this->getJson('/docs/v1.json')
+        ->assertOk()
+        ->assertJsonPath('info.version', config('api.versions.v1.release'))
+        ->assertJsonPath('servers.0.url', '/api/v1')
+        ->assertJsonPath('paths./me.get.operationId', 'me');
+});
+
+it('redirects /docs/api to the current version', function () {
+    $this->actingAs(User::factory()->create());
+
+    $this->get('/docs/api')->assertRedirect('/docs/v1');
+    $this->get('/docs/api.json')->assertRedirect('/docs/v1.json');
+});
+
+it('keeps every published version documented', function () {
+    foreach (array_keys(config('api.versions')) as $name) {
+        expect(route("scramble.docs.{$name}.ui", absolute: false))->toBe("/docs/{$name}")
+            ->and(route("scramble.docs.{$name}.document", absolute: false))->toBe("/docs/{$name}.json");
+    }
+
+    expect(config('api.versions'))->toHaveKey(config('api.current_version'));
 });
