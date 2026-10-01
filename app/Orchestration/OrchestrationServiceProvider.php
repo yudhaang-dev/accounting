@@ -3,6 +3,7 @@
 namespace App\Orchestration;
 
 use App\Orchestration\Company\ActivateCompany;
+use App\Orchestration\Company\ChartOfAccountsRequirement;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,6 +15,8 @@ class OrchestrationServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Prerequisites tagged `company.activation_requirements` are added by the milestones that own them.
+        $this->app->tag([ChartOfAccountsRequirement::class], ActivateCompany::REQUIREMENTS_TAG);
+
         $this->app->when(ActivateCompany::class)
             ->needs('$requirements')
             ->giveTagged(ActivateCompany::REQUIREMENTS_TAG);

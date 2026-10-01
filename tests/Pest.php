@@ -1,5 +1,9 @@
 <?php
 
+use App\Models\User;
+use App\Modules\IdentityAccess\Domain\Membership;
+use App\Modules\IdentityAccess\Domain\Role;
+use App\Modules\IdentityAccess\Domain\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +51,44 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/*
+| Shared helpers for feature tests that need a company with members and roles.
+*/
+
+/** A workspace created through the API, so roles are seeded the way they are in production. */
+function createWorkspaceAs(User $user, string $name = 'Acme'): array
+{
+    $response = test()->actingAs($user)->postJson('/api/v1/workspaces', [
+        'workspace_name' => $name,
+        'company_name' => "PT {$name}",
+        'functional_currency' => 'IDR',
+    ])->assertCreated();
+
+    return [$response->json('data.company_id'), $response];
+}
+
+/** A member of the company workspace who holds exactly the named roles. */
+function memberWithRoles(string $companyId, string ...$roleNames): User
+{
+    $user = User::factory()->create();
+    $workspace = Workspace::where('company_id', $companyId)->firstOrFail();
+    Membership::factory()->create(['workspace_id' => $workspace->id, 'user_id' => $user->id]);
+
+    foreach ($roleNames as $name) {
+        Role::where('company_id', $companyId)->where('name', $name)->firstOrFail()
+            ->users()->attach($user->id, ['company_id' => $companyId]);
+    }
+
+    return $user;
+}
+
+/** Reviews and confirms the standard chart of accounts template, as a user would before activating. */
+function confirmChartOfAccounts(User $admin, string $companyId): void
+{
+    test()->actingAs($admin)->postJson("/api/v1/companies/{$companyId}/accounts/import-template", [
+        'template' => 'general-id',
+        'confirmed' => true,
+    ])->assertCreated();
 }

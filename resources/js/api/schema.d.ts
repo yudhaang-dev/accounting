@@ -20,6 +20,140 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Accounts of the company, ordered by code unless `sort` says otherwise. Filters: `filter[class]`,
+         *     `filter[status]`, `filter[parent_id]` and `filter[search]` (code prefix or part of the name).
+         *     `per_page` defaults to 50, at most 200
+         */
+        get: operations["accounts.index"];
+        put?: never;
+        /**
+         * Adds an account. The saldo normal defaults to that of the class; the parent must be active and
+         *     of the same class
+         */
+        post: operations["accounts.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/accounts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounts.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Changes code, name, saldo normal or parent. `lock_version` is required; the class cannot change */
+        patch: operations["accounts.update"];
+        trace?: never;
+    };
+    "/companies/{companyId}/accounts/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivates the account. Refused while it has active children */
+        post: operations["accounts.deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/accounts/{id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivates the account. Refused while its parent is inactive */
+        post: operations["accounts.reactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/account-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chart of accounts templates the company can review. A template is only a suggestion */
+        get: operations["account-templates.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/account-templates/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every account of a template with its class, saldo normal, parent and whether it is optional,
+         *     for review before the import is confirmed
+         */
+        get: operations["account-templates.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/accounts/import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Creates the accounts of a template in an empty chart. `confirmed` must be true: the template
+         *     is only a suggestion until the company confirms it. Optional leaf accounts can be left out
+         *     with `exclude`
+         */
+        post: operations["accounts.import-template"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}": {
         parameters: {
             query?: never;
@@ -153,6 +287,29 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AccountClass
+         * @description The five classes of the chart of accounts. A parent and its children share one class (GL-FR-01).
+         * @enum {string}
+         */
+        AccountClass: "asset" | "liability" | "equity" | "income" | "expense";
+        /** AccountResource */
+        AccountResource: {
+            id: string;
+            code: string;
+            name: string;
+            class: string;
+            normal_balance: string;
+            parent_id: string | null;
+            is_leaf: boolean;
+            status: string;
+            lock_version: number;
+        };
+        /**
+         * AccountStatus
+         * @enum {string}
+         */
+        AccountStatus: "active" | "inactive";
         /** ActivatedCompanyResource */
         ActivatedCompanyResource: {
             id: string;
@@ -177,6 +334,18 @@ export interface components {
             status: string;
             lock_version: number;
         };
+        /** CreateAccountRequest */
+        CreateAccountRequest: {
+            code: string;
+            name: string;
+            class: components["schemas"]["AccountClass"];
+            /**
+             * @description Defaults to the normal balance of the class; the opposite is allowed for contra accounts.
+             * @enum {string|null}
+             */
+            normal_balance?: "debit" | "credit" | null;
+            parent_id?: string | null;
+        };
         /** CreateWorkspaceRequest */
         CreateWorkspaceRequest: {
             workspace_name: string;
@@ -195,6 +364,13 @@ export interface components {
             company_name: string;
             permissions: string[];
         };
+        /** ImportTemplateRequest */
+        ImportTemplateRequest: {
+            template: string;
+            /** @enum {unknown} */
+            confirmed: "yes" | "on" | "1" | 1 | "true" | true;
+            exclude?: string[];
+        };
         /** MeResource */
         MeResource: {
             id: number;
@@ -202,6 +378,15 @@ export interface components {
             email: string;
             email_verified: boolean;
             two_factor_enabled: boolean;
+        };
+        /** UpdateAccountRequest */
+        UpdateAccountRequest: {
+            lock_version: number;
+            code?: string;
+            name?: string;
+            /** @enum {string} */
+            normal_balance?: "debit" | "credit";
+            parent_id?: string | null;
         };
         /** UpdateCompanyRequest */
         UpdateCompanyRequest: {
@@ -265,6 +450,18 @@ export interface components {
                 };
             };
         };
+        /** @description Not found */
+        ModelNotFoundException: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    /** @description Error overview. */
+                    message: string;
+                };
+            };
+        };
     };
     parameters: never;
     requestBodies: never;
@@ -289,6 +486,292 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    "accounts.index": {
+        parameters: {
+            query?: {
+                "filter[class]"?: components["schemas"]["AccountClass"];
+                "filter[status]"?: components["schemas"]["AccountStatus"];
+                "filter[parent_id]"?: string;
+                "filter[search]"?: string;
+                sort?: "code" | "-code" | "name" | "-name";
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `AccountResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AccountResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "accounts.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description `AccountResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AccountResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "accounts.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `AccountResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AccountResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "accounts.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description `AccountResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AccountResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "accounts.deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `AccountResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AccountResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "accounts.reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `AccountResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AccountResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "account-templates.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "account-templates.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            name: string;
+                            version: string;
+                            accounts: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["NotFoundHttpException"];
+        };
+    };
+    "accounts.import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportTemplateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            template: string;
+                            created: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "company.show": {

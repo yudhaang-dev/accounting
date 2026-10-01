@@ -1,9 +1,6 @@
 <?php
 
 use App\Models\User;
-use App\Modules\IdentityAccess\Domain\Membership;
-use App\Modules\IdentityAccess\Domain\Role;
-use App\Modules\IdentityAccess\Domain\Workspace;
 use App\Modules\MasterData\Domain\Company;
 use App\Orchestration\Company\ActivateCompany;
 use App\Orchestration\Company\ActivationRequirement;
@@ -56,24 +53,10 @@ beforeEach(function () {
 
     $this->companyId = $response->json('data.company_id');
     $this->url = "/api/v1/companies/{$this->companyId}";
+
+    // Activation needs a confirmed chart of accounts (GL-FR-01, X-AC-03).
+    confirmChartOfAccounts($this->admin, $this->companyId);
 });
-
-/** A member of the company who holds exactly the named roles. */
-function companyMember(string $companyId, string ...$roleNames): User
-{
-    $user = User::factory()->create();
-    Membership::factory()->create([
-        'workspace_id' => Workspace::where('company_id', $companyId)->value('id'),
-        'user_id' => $user->id,
-    ]);
-
-    foreach ($roleNames as $name) {
-        Role::where('company_id', $companyId)->where('name', $name)->firstOrFail()
-            ->users()->attach($user->id, ['company_id' => $companyId]);
-    }
-
-    return $user;
-}
 
 describe('GET /companies/{companyId} (MD-FR-01)', function () {
     it('returns the profile with status and lock_version', function () {
@@ -93,11 +76,11 @@ describe('GET /companies/{companyId} (MD-FR-01)', function () {
     });
 
     it('needs company.read and membership', function () {
-        $noRole = companyMember($this->companyId);
+        $noRole = memberWithRoles($this->companyId);
 
         $this->actingAs($noRole)->getJson($this->url)->assertForbidden()->assertJson(['code' => 'FORBIDDEN']);
         $this->actingAs(User::factory()->create())->getJson($this->url)->assertForbidden();
-        $this->actingAs(companyMember($this->companyId, 'viewer'))->getJson($this->url)->assertOk();
+        $this->actingAs(memberWithRoles($this->companyId, 'viewer'))->getJson($this->url)->assertOk();
     });
 });
 
@@ -140,7 +123,7 @@ describe('PATCH /companies/{companyId} (MD-FR-01)', function () {
     });
 
     it('needs company.update', function () {
-        $this->actingAs(companyMember($this->companyId, 'viewer'))
+        $this->actingAs(memberWithRoles($this->companyId, 'viewer'))
             ->patchJson($this->url, ['lock_version' => 1, 'name' => 'Nope'])->assertForbidden();
     });
 });
@@ -198,7 +181,7 @@ describe('activation (MD-FR-01)', function () {
     });
 
     it('needs company.activate', function () {
-        $this->actingAs(companyMember($this->companyId, 'preparer'))->postJson("{$this->url}/activate")->assertForbidden();
+        $this->actingAs(memberWithRoles($this->companyId, 'preparer'))->postJson("{$this->url}/activate")->assertForbidden();
     });
 });
 
@@ -217,7 +200,7 @@ describe('deactivate and reactivate (MD-FR-01)', function () {
 
     it('needs the matching permission', function () {
         $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();
-        $viewer = companyMember($this->companyId, 'viewer');
+        $viewer = memberWithRoles($this->companyId, 'viewer');
 
         $this->actingAs($viewer)->postJson("{$this->url}/deactivate")->assertForbidden();
         $this->actingAs($viewer)->postJson("{$this->url}/reactivate")->assertForbidden();

@@ -19,7 +19,7 @@
 | --- | --- |
 | Identitas | `/api/v1/me`, `/api/v1/me/workspaces`, `memberships`, `roles`, `permissions` (katalog), `integration-clients` |
 | Data induk | profil perusahaan (`/api/v1/companies/{companyId}`), `dimension-types`, `dimension-values`, `currencies`, `rate-types`, `exchange-rates` |
-| Buku besar | `accounts`, `fiscal-calendar`, `fiscal-years`, `periods`, `journals` (baca), `opening-balance-imports`, `revaluation-runs`, `general-ledger/account-role-mappings` |
+| Buku besar | `accounts`, `account-templates`, `fiscal-calendar`, `fiscal-years`, `periods`, `journals` (baca), `opening-balance-imports`, `revaluation-runs`, `general-ledger/account-role-mappings` |
 | Pencatatan | `transaction-types`, `entries`, `financial-events`, `recurring-schedules` |
 | Subledger | `parties`, `posting-profiles`, `cash-accounts`, `open-items`, `allocations`, `reconciliations`, `subledger/account-role-mappings`, `reports/aging` |
 | Perencanaan | `plans`, `plan-versions` |
@@ -29,6 +29,7 @@
 - **API-TR-08 Command.** Transisi status memakai `POST .../{resource}/{id}/{action}`:
   - `entries`: `submit`, `approve`, `reject`, `post`, `revise`, `cancel`.
   - `companies/{companyId}`: `activate`, `deactivate`, `reactivate`.
+  - `accounts`: `deactivate`, `reactivate`; `accounts/import-template` mengimpor template COA yang sudah dikonfirmasi (`confirmed: true`, X-AC-03).
   - `journals/{id}/reverse` membuat entri `system.reversal` yang tunduk pada approval dan mengembalikan entri tersebut.
   - `periods`: `soft-close`, `close`, `reopen`; `fiscal-years`: `close`, `reopen`; `plan-versions`: `publish`, `archive`; `opening-balance-imports` dan `revaluation-runs`: `post`.
   - `PATCH` hanya untuk draf dan konfigurasi; resource yang sudah final tidak dapat diubah.
