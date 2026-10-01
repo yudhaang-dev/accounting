@@ -39,7 +39,7 @@ class ApiServiceProvider extends ModuleServiceProvider
     {
         parent::boot();
 
-        URL::forceHttps($this->app->isProduction());
+        URL::forceHttps($this->app->environment('production'));
 
         $this->app->make(Router::class)->aliasMiddleware('idempotent', Idempotent::class);
 
