@@ -1,6 +1,7 @@
 import { Link, useMatchRoute, useParams } from '@tanstack/react-router';
 import {
     CalendarRangeIcon,
+    FileTextIcon,
     ChevronsUpDownIcon,
     HouseIcon,
     ListTreeIcon,
@@ -59,6 +60,12 @@ const NAV = [
         label: 'app.navPeriods',
         icon: CalendarRangeIcon,
         permission: 'periods.read',
+    },
+    {
+        to: '/w/$companyId/entries',
+        label: 'app.navEntries',
+        icon: FileTextIcon,
+        permission: 'entries.read',
     },
 ] as const satisfies readonly {
     to: string;

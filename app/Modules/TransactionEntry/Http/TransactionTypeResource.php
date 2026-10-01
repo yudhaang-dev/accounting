@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class TransactionTypeResource extends JsonResource
 {
     /**
-     * @return array{id: string, key: string, label: string, versions: array<int, array{version: int, mode: string, status: string}>, lock_version: int}
+     * @return array{id: string, key: string, label: string, versions: list<array{version: int, mode: string, status: string}>, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -20,12 +20,26 @@ class TransactionTypeResource extends JsonResource
             'id' => $this->resource->id,
             'key' => $this->resource->key,
             'label' => $this->resource->label,
-            'versions' => array_map(fn ($version): array => [
-                'version' => $version->version,
-                'mode' => $version->mode->value,
-                'status' => $version->status->value,
-            ], $this->resource->versions->all()),
+            'versions' => $this->versions(),
             'lock_version' => $this->resource->lock_version,
         ];
+    }
+
+    /**
+     * @return list<array{version: int, mode: string, status: string}>
+     */
+    private function versions(): array
+    {
+        $versions = [];
+
+        foreach ($this->resource->versions as $version) {
+            $versions[] = [
+                'version' => (int) $version->version,
+                'mode' => $version->mode->value,
+                'status' => $version->status->value,
+            ];
+        }
+
+        return $versions;
     }
 }

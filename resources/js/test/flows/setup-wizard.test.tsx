@@ -283,6 +283,57 @@ describe('company setup wizard', () => {
         ).not.toHaveAttribute('aria-disabled', 'true');
     });
 
+    it('starts the fiscal year in the month that was chosen', async () => {
+        const server = setupServer();
+        const api = mockApi({
+            ...server.routes,
+            [`POST ${base}/fiscal-calendar`]: (call: { body: unknown }) => {
+                const { start_month } = call.body as { start_month: number };
+
+                server.state.calendar = {
+                    id: 'cal',
+                    pattern: 'monthly',
+                    start_month,
+                    lock_version: 1,
+                };
+
+                return json({ data: server.state.calendar }, 201);
+            },
+        });
+
+        renderApp(setupPath);
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('combobox', {
+                name: 'Tahun fiskal dimulai pada bulan',
+            }),
+        );
+        await typist.click(await screen.findByRole('option', { name: 'Juli' }));
+        await typist.click(
+            screen.getByRole('button', { name: 'Simpan kalender' }),
+        );
+
+        await typist.clear(await screen.findByLabelText('Tahun mulai'));
+        await typist.type(screen.getByLabelText('Tahun mulai'), '2026');
+        await typist.click(
+            screen.getByRole('button', { name: 'Buat tahun fiskal' }),
+        );
+
+        await waitFor(() =>
+            expect(api.called(`POST ${base}/fiscal-years`)).toHaveLength(1),
+        );
+        expect(api.called(`POST ${base}/fiscal-calendar`)[0]?.body).toEqual({
+            pattern: 'monthly',
+            start_month: 7,
+        });
+        // The first year begins on the 1st of the chosen month.
+        expect(api.called(`POST ${base}/fiscal-years`)[0]?.body).toEqual({
+            start_date: '2026-07-01',
+            count: 1,
+        });
+    });
+
     it('sets up the calendar, then the fiscal years', async () => {
         const server = setupServer();
         const api = mockApi(server.routes);

@@ -26,6 +26,10 @@ import {
 import { AccountsPage } from '@/modules/general-ledger/pages/accounts-page';
 import { PeriodsPage } from '@/modules/general-ledger/pages/periods-page';
 import { can } from '@/modules/identity-access/permissions';
+import { entryQuery } from '@/modules/transaction-entry/entries';
+import { EntriesPage } from '@/modules/transaction-entry/pages/entries-page';
+import { EntryFormPage } from '@/modules/transaction-entry/pages/entry-form-page';
+import { EntryPage } from '@/modules/transaction-entry/pages/entry-page';
 import { CompanyHomePage } from '@/modules/master-data/pages/company-home-page';
 import { ForgotPasswordPage } from '@/modules/identity-access/pages/forgot-password-page';
 import { LoginPage } from '@/modules/identity-access/pages/login-page';
@@ -278,6 +282,89 @@ const periodsRoute = createRoute({
     },
 });
 
+const entriesRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/entries',
+    beforeLoad: requirePermission('entries.read'),
+    component: function Entries() {
+        const { workspace } = entriesRoute.useRouteContext();
+
+        return (
+            <EntriesPage
+                companyId={workspace.company_id}
+                canCreate={can(workspace, 'entries.create')}
+            />
+        );
+    },
+});
+
+const newEntryRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/entries/new',
+    beforeLoad: requirePermission('entries.create'),
+    component: function NewEntry() {
+        const { workspace } = newEntryRoute.useRouteContext();
+
+        return (
+            <EntryFormPage
+                companyId={workspace.company_id}
+                canManageTypes={can(workspace, 'policies.manage')}
+            />
+        );
+    },
+});
+
+const entryRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/entries/$entryId',
+    beforeLoad: requirePermission('entries.read'),
+    loader: ({ context, params }) =>
+        context.queryClient.ensureQueryData(
+            entryQuery(params.companyId, params.entryId),
+        ),
+    component: function Entry() {
+        const { workspace, me } = entryRoute.useRouteContext();
+        const { entryId } = entryRoute.useParams();
+
+        return (
+            <EntryPage
+                companyId={workspace.company_id}
+                entryId={entryId}
+                currentUserId={me.id}
+                can={{
+                    create: can(workspace, 'entries.create'),
+                    submit: can(workspace, 'entries.submit'),
+                    approve: can(workspace, 'entries.approve'),
+                    reject: can(workspace, 'entries.reject'),
+                    post: can(workspace, 'entries.post'),
+                }}
+            />
+        );
+    },
+});
+
+const editEntryRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/entries/$entryId/edit',
+    beforeLoad: requirePermission('entries.create'),
+    loader: ({ context, params }) =>
+        context.queryClient.ensureQueryData(
+            entryQuery(params.companyId, params.entryId),
+        ),
+    component: function EditEntry() {
+        const { workspace } = editEntryRoute.useRouteContext();
+        const { entryId } = editEntryRoute.useParams();
+
+        return (
+            <EntryFormPage
+                companyId={workspace.company_id}
+                entryId={entryId}
+                canManageTypes={can(workspace, 'policies.manage')}
+            />
+        );
+    },
+});
+
 const newWorkspaceRoute = createRoute({
     getParentRoute: () => verifiedRoute,
     path: '/workspaces/new',
@@ -339,6 +426,10 @@ const routeTree = rootRoute.addChildren([
                 companySetupRoute,
                 accountsRoute,
                 periodsRoute,
+                entriesRoute,
+                newEntryRoute,
+                entryRoute,
+                editEntryRoute,
             ]),
         ]),
     ]),

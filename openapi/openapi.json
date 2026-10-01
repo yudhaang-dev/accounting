@@ -3711,7 +3711,32 @@
                             "array",
                             "null"
                         ],
-                        "items": {}
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "action": {
+                                    "type": "string"
+                                },
+                                "actor_id": {
+                                    "type": "integer"
+                                },
+                                "reason": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "at": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "action",
+                                "actor_id",
+                                "reason",
+                                "at"
+                            ]
+                        }
                     },
                     "lock_version": {
                         "type": "integer"
@@ -4082,7 +4107,25 @@
                     },
                     "versions": {
                         "type": "array",
-                        "items": {}
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "version": {
+                                    "type": "integer"
+                                },
+                                "mode": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "version",
+                                "mode",
+                                "status"
+                            ]
+                        }
                     },
                     "lock_version": {
                         "type": "integer"

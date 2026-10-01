@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class EntryResource extends JsonResource
 {
     /**
-     * @return array{id: string, number: string, status: string, source: string, transaction_type_key: string, transaction_type_version: int, accounting_date: string, document_date: string|null, description: string, lines: list<array{account_id: string, debit: string, credit: string, description: string|null}>, created_by: int, journal_id: string|null, journal_number: string|null, posted_at: string|null, decisions: array<int, array{action: string, actor_id: int, reason: string|null, at: string}>|null, lock_version: int}
+     * @return array{id: string, number: string, status: string, source: string, transaction_type_key: string, transaction_type_version: int, accounting_date: string, document_date: string|null, description: string, lines: list<array{account_id: string, debit: string, credit: string, description: string|null}>, created_by: int, journal_id: string|null, journal_number: string|null, posted_at: string|null, decisions: list<array{action: string, actor_id: int, reason: string|null, at: string}>|null, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -31,15 +31,27 @@ class EntryResource extends JsonResource
             'journal_id' => $this->resource->journal_id,
             'journal_number' => $this->resource->journal_number,
             'posted_at' => $this->resource->posted_at?->toIso8601String(),
-            'decisions' => $this->resource->relationLoaded('decisions')
-                ? array_map(fn ($decision): array => [
-                    'action' => $decision->action,
-                    'actor_id' => $decision->actor_id,
-                    'reason' => $decision->reason,
-                    'at' => $decision->created_at->toIso8601String(),
-                ], $this->resource->decisions->all())
-                : null,
+            'decisions' => $this->resource->relationLoaded('decisions') ? $this->decisions() : null,
             'lock_version' => $this->resource->lock_version,
         ];
+    }
+
+    /**
+     * @return list<array{action: string, actor_id: int, reason: string|null, at: string}>
+     */
+    private function decisions(): array
+    {
+        $decisions = [];
+
+        foreach ($this->resource->decisions as $decision) {
+            $decisions[] = [
+                'action' => $decision->action,
+                'actor_id' => (int) $decision->actor_id,
+                'reason' => $decision->reason === null ? null : (string) $decision->reason,
+                'at' => $decision->created_at->toIso8601String(),
+            ];
+        }
+
+        return $decisions;
     }
 }

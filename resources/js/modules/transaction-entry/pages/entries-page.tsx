@@ -1,0 +1,290 @@
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
+import { FileTextIcon, PlusIcon } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { FormAlert } from '@/components/form-alert';
+import { Button } from '@/components/ui/button';
+import {
+    Empty,
+    EmptyContent,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@/components/ui/empty';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { useDocumentTitle } from '@/hooks/use-document-title';
+import { formatDecimal, sumDecimals } from '@/lib/decimal';
+import { genericErrorMessage } from '@/lib/errors';
+import { EntryStatusBadge } from '@/modules/transaction-entry/components/entry-status-badge';
+import {
+    ENTRY_STATUSES,
+    entriesQuery,
+    type EntryStatus,
+} from '@/modules/transaction-entry/entries';
+
+const ALL = '__all';
+
+/** Entries of the company (TE-FR-07), newest first, filterable by status and accounting date. */
+export function EntriesPage({
+    companyId,
+    canCreate,
+}: {
+    companyId: string;
+    canCreate: boolean;
+}) {
+    const { t, i18n } = useTranslation();
+    const [status, setStatus] = useState<EntryStatus | undefined>();
+    const [from, setFrom] = useState('');
+    const [to, setTo] = useState('');
+    const [page, setPage] = useState(1);
+
+    useDocumentTitle(t('entries.pageTitle'));
+
+    const list = useQuery(entriesQuery(companyId, { status, from, to, page }));
+    const filtered = Boolean(status || from || to);
+    const statusItems = [
+        { value: ALL, label: t('entries.allStatuses') },
+        ...ENTRY_STATUSES.map((value) => ({
+            value,
+            label: t(`entries.statuses.${value}`),
+        })),
+    ];
+
+    const newEntry = (
+        <Button
+            render={
+                <Link to="/w/$companyId/entries/new" params={{ companyId }} />
+            }
+        >
+            <PlusIcon data-icon="inline-start" />
+            {t('entries.new')}
+        </Button>
+    );
+
+    return (
+        <>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-xl font-semibold tracking-tight">
+                        {t('entries.title')}
+                    </h1>
+                    <p className="max-w-2xl text-sm text-muted-foreground">
+                        {t('entries.description')}
+                    </p>
+                </div>
+                {canCreate && newEntry}
+            </div>
+
+            <div className="flex flex-wrap items-end gap-3">
+                <Field className="w-56">
+                    <FieldLabel htmlFor="entries-status">
+                        {t('entries.status')}
+                    </FieldLabel>
+                    <Select
+                        value={status ?? ALL}
+                        items={statusItems}
+                        onValueChange={(value) => {
+                            setStatus(
+                                value === ALL
+                                    ? undefined
+                                    : (value as EntryStatus),
+                            );
+                            setPage(1);
+                        }}
+                    >
+                        <SelectTrigger id="entries-status" className="w-full">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                {statusItems.map((item) => (
+                                    <SelectItem
+                                        key={item.value}
+                                        value={item.value}
+                                    >
+                                        {item.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </Field>
+                <Field className="w-44">
+                    <FieldLabel htmlFor="entries-from">
+                        {t('entries.from')}
+                    </FieldLabel>
+                    <Input
+                        id="entries-from"
+                        type="date"
+                        value={from}
+                        onChange={(event) => {
+                            setFrom(event.target.value);
+                            setPage(1);
+                        }}
+                    />
+                </Field>
+                <Field className="w-44">
+                    <FieldLabel htmlFor="entries-to">
+                        {t('entries.to')}
+                    </FieldLabel>
+                    <Input
+                        id="entries-to"
+                        type="date"
+                        value={to}
+                        onChange={(event) => {
+                            setTo(event.target.value);
+                            setPage(1);
+                        }}
+                    />
+                </Field>
+            </div>
+
+            {list.isError ? (
+                <FormAlert>{genericErrorMessage(list.error, t)}</FormAlert>
+            ) : list.data === undefined ? (
+                <Skeleton className="h-64 w-full" />
+            ) : list.data.total === 0 && !filtered ? (
+                <Empty className="max-w-xl border">
+                    <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                            <FileTextIcon />
+                        </EmptyMedia>
+                        <EmptyTitle>{t('entries.empty')}</EmptyTitle>
+                        <EmptyDescription>
+                            {t('entries.emptyDescription')}
+                        </EmptyDescription>
+                    </EmptyHeader>
+                    {canCreate && <EmptyContent>{newEntry}</EmptyContent>}
+                </Empty>
+            ) : (
+                <div className="flex flex-col gap-3">
+                    <div className="overflow-x-auto rounded-lg border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>{t('entries.number')}</TableHead>
+                                    <TableHead>{t('entries.date')}</TableHead>
+                                    <TableHead>{t('entries.memo')}</TableHead>
+                                    <TableHead>{t('entries.type')}</TableHead>
+                                    <TableHead className="text-end">
+                                        {t('entries.amount')}
+                                    </TableHead>
+                                    <TableHead>{t('entries.status')}</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {list.data.entries.length === 0 && (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={6}
+                                            className="py-8 text-center text-muted-foreground"
+                                        >
+                                            {t('entries.noMatch')}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                                {list.data.entries.map((entry) => (
+                                    <TableRow key={entry.id}>
+                                        <TableCell className="font-medium">
+                                            <Link
+                                                to="/w/$companyId/entries/$entryId"
+                                                params={{
+                                                    companyId,
+                                                    entryId: entry.id,
+                                                }}
+                                                aria-label={t('entries.open', {
+                                                    number: entry.number,
+                                                })}
+                                                className="underline-offset-4 hover:underline"
+                                            >
+                                                {entry.number}
+                                            </Link>
+                                        </TableCell>
+                                        <TableCell>
+                                            {entry.accounting_date}
+                                        </TableCell>
+                                        <TableCell className="max-w-xs truncate">
+                                            {entry.description}
+                                        </TableCell>
+                                        <TableCell>
+                                            {entry.transaction_type_key}
+                                        </TableCell>
+                                        <TableCell className="text-end tabular-nums">
+                                            {formatDecimal(
+                                                sumDecimals(
+                                                    entry.lines.map(
+                                                        (line) => line.debit,
+                                                    ),
+                                                ),
+                                                i18n.language,
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <EntryStatusBadge
+                                                status={entry.status}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+                        <span aria-live="polite">
+                            {t('entries.count', { count: list.data.total })}
+                        </span>
+                        {list.data.lastPage > 1 && (
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={list.data.page <= 1}
+                                    onClick={() => setPage(list.data.page - 1)}
+                                >
+                                    {t('entries.previous')}
+                                </Button>
+                                <span>
+                                    {t('entries.pageOf', {
+                                        page: list.data.page,
+                                        last: list.data.lastPage,
+                                    })}
+                                </span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={
+                                        list.data.page >= list.data.lastPage
+                                    }
+                                    onClick={() => setPage(list.data.page + 1)}
+                                >
+                                    {t('entries.next')}
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}

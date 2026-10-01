@@ -801,7 +801,12 @@ export interface components {
             journal_id: string | null;
             journal_number: string | null;
             posted_at: string | null;
-            decisions: unknown[] | null;
+            decisions: {
+                action: string;
+                actor_id: number;
+                reason: string | null;
+                at: string;
+            }[] | null;
             lock_version: number;
         };
         /**
@@ -905,7 +910,11 @@ export interface components {
             id: string;
             key: string;
             label: string;
-            versions: unknown[];
+            versions: {
+                version: number;
+                mode: string;
+                status: string;
+            }[];
             lock_version: number;
         };
         /** UpdateAccountRequest */

@@ -135,6 +135,103 @@ describe('chart of accounts', () => {
         );
     });
 
+    it('adds a contra account of another class under a parent', async () => {
+        const api = mockApi({
+            ...withPermissions(['accounts.read', 'accounts.manage']),
+            [`GET ${base}/accounts`]: () => list(accounts),
+            [`POST ${base}/accounts`]: () =>
+                json({ data: row({ code: '2100', name: 'Utang' }) }, 201),
+        });
+
+        renderApp(accountsPath);
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('button', { name: 'Tambah akun' }),
+        );
+        const dialog = await screen.findByRole('dialog');
+
+        await typist.type(within(dialog).getByLabelText('Kode'), '2100');
+        await typist.type(within(dialog).getByLabelText('Nama akun'), 'Utang');
+
+        await typist.click(
+            within(dialog).getByRole('combobox', { name: 'Kelas' }),
+        );
+        await typist.click(
+            await screen.findByRole('option', { name: 'Liabilitas' }),
+        );
+        await typist.click(
+            within(dialog).getByRole('combobox', { name: 'Saldo normal' }),
+        );
+        await typist.click(
+            await screen.findByRole('option', { name: 'Kredit' }),
+        );
+        await typist.click(
+            within(dialog).getByRole('combobox', { name: 'Akun induk' }),
+        );
+        await typist.click(
+            await screen.findByRole('option', { name: '1000 · ASET' }),
+        );
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Simpan' }),
+        );
+
+        await waitFor(() =>
+            expect(api.called(`POST ${base}/accounts`)).toHaveLength(1),
+        );
+        expect(api.called(`POST ${base}/accounts`)[0]?.body).toEqual({
+            code: '2100',
+            name: 'Utang',
+            class: 'liability',
+            normal_balance: 'credit',
+            parent_id: id1,
+        });
+    });
+
+    it('forgets the parent when the class changes', async () => {
+        const api = mockApi({
+            ...withPermissions(['accounts.read', 'accounts.manage']),
+            [`GET ${base}/accounts`]: () => list(accounts),
+            [`POST ${base}/accounts`]: () =>
+                json({ data: row({ code: '2100', name: 'Utang' }) }, 201),
+        });
+
+        renderApp(accountsPath);
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('button', { name: 'Tambah akun' }),
+        );
+        const dialog = await screen.findByRole('dialog');
+
+        await typist.type(within(dialog).getByLabelText('Kode'), '2100');
+        await typist.type(within(dialog).getByLabelText('Nama akun'), 'Utang');
+        await typist.click(
+            within(dialog).getByRole('combobox', { name: 'Akun induk' }),
+        );
+        await typist.click(
+            await screen.findByRole('option', { name: '1000 · ASET' }),
+        );
+        // Switching class drops the parent: a parent must share the class of its children.
+        await typist.click(
+            within(dialog).getByRole('combobox', { name: 'Kelas' }),
+        );
+        await typist.click(
+            await screen.findByRole('option', { name: 'Liabilitas' }),
+        );
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Simpan' }),
+        );
+
+        await waitFor(() =>
+            expect(api.called(`POST ${base}/accounts`)).toHaveLength(1),
+        );
+        expect(api.called(`POST ${base}/accounts`)[0]?.body).toMatchObject({
+            class: 'liability',
+            parent_id: null,
+        });
+    });
+
     it('adds an account', async () => {
         const api = mockApi({
             ...withPermissions(['accounts.read', 'accounts.manage']),
