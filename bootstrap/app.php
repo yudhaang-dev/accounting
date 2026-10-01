@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\HandleAppearance;
+use App\Platform\Api\ApiExceptionRenderer;
+use App\Platform\Api\Http\StatefulUnlessBearer;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,9 +22,16 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        // Cookie session + CSRF for the SPA; Bearer clients bypass it (ADR-0011).
+        $middleware->api(prepend: [StatefulUnlessBearer::class]);
+
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : '/login');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        ApiExceptionRenderer::register($exceptions);
     })->create();

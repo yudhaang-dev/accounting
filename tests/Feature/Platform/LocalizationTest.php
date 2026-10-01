@@ -10,11 +10,12 @@ beforeEach(function () {
 });
 
 it('answers in the language of Accept-Language', function (string $header, string $locale, string $message) {
-    $this->getJson('/api/v1/_locale-probe', ['Accept-Language' => $header])
+    $response = $this->getJson('/api/v1/_locale-probe', ['Accept-Language' => $header])
         ->assertNotFound()
         ->assertHeader('Content-Language', $locale)
-        ->assertHeader('Vary', 'Accept-Language')
         ->assertJson(['code' => 'NOT_FOUND', 'message' => $message]);
+
+    expect($response->headers->get('Vary'))->toContain('Accept-Language');
 })->with([
     'indonesian' => ['id', 'id', 'Resource yang diminta tidak ditemukan.'],
     'english' => ['en', 'en', 'The requested resource was not found.'],

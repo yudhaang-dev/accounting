@@ -7,6 +7,7 @@ use App\Modules\Planning\PlanningServiceProvider;
 use App\Modules\Reporting\ReportingServiceProvider;
 use App\Modules\Subledger\SubledgerServiceProvider;
 use App\Modules\TransactionEntry\TransactionEntryServiceProvider;
+use App\Platform\Api\ApiServiceProvider;
 use App\Platform\Audit\AuditServiceProvider;
 use App\Platform\Localization\LocalizationServiceProvider;
 use App\Platform\Numbering\NumberingServiceProvider;
@@ -18,6 +19,7 @@ return [
     AppServiceProvider::class,
     FortifyServiceProvider::class,
     SupportServiceProvider::class,
+    ApiServiceProvider::class,
     AuditServiceProvider::class,
     NumberingServiceProvider::class,
     LocalizationServiceProvider::class,

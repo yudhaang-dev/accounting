@@ -73,6 +73,12 @@
 | `TRANSACTION_TYPE_NOT_ALLOWED` | 403 | Di luar allowlist klien integrasi |
 | `SEGREGATION_OF_DUTIES` | 403 | Pembuat tidak boleh menyetujui entrinya sendiri |
 | `TWO_FACTOR_REQUIRED` | 403 | Aksi memerlukan 2FA |
+| `UNAUTHENTICATED` | 401 | Kredensial hilang atau tidak valid |
+| `FORBIDDEN` | 403 | Tanpa izin untuk aksi atau perusahaan ini |
+| `NOT_FOUND` | 404 | Resource tidak ada atau tidak terlihat oleh principal |
+| `CSRF_TOKEN_MISMATCH` | 419 | Token CSRF hilang atau tidak cocok (hanya permintaan bersesi) |
+| `TOO_MANY_REQUESTS` | 429 | Melebihi rate limit; lihat `Retry-After` |
+| `SERVER_ERROR` | 500 | Kesalahan tak terduga; detail internal tidak dibocorkan |
 
 Kode baru ditambahkan ke tabel ini sebelum dipakai.
 
