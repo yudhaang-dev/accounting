@@ -17,7 +17,7 @@
 - [ ] **M0-07** Platform Audit: log append-only dengan aktor user/klien dan nilai sebelum/sesudah, dilindungi trigger — X-FR-01, X-AC-05
 - [ ] **M0-08** Platform Numbering: seri berpola (prefix, token tanggal, reset, padding), tanpa celah dalam transaksi; dipakai GL-FR-05 dan TE-FR-16
 - [ ] **M0-09** Platform Localization: `lang/id` dan `lang/en`, middleware `Accept-Language`, locale default dari konfigurasi — API-TR-06, API-AC-10, ADR-0001
-- [ ] **M0-10** Dasar API: prefix `/api/v1`, binding dan validasi scope perusahaan, konvensi resource, command, dan parameter laporan, handler error (422, `code`, 409, 403) beserta katalog kode — API-TR-01, API-TR-02, API-TR-03, API-TR-07, API-TR-08, API-TR-09, API-TR-10, API-TR-11, API-TR-12, API-AC-01, API-AC-02
+- [ ] **M0-10** Dasar API: prefix `/api/v1` dengan middleware sesi + CSRF (ADR-0011), binding dan validasi scope perusahaan, konvensi resource, command, dan parameter laporan, handler error (422, `code`, 409, 403) beserta katalog kode — API-TR-01, API-TR-02, API-TR-03, API-TR-07, API-TR-08, API-TR-09, API-TR-10, API-TR-11, API-TR-12, API-AC-01, API-AC-02
 - [ ] **M0-11** `Idempotency-Key`, `lock_version`, dan rate limit — API-TR-13, API-TR-14, API-TR-15, API-AC-08, API-AC-09
 - [ ] **M0-12** Scramble: publikasi spesifikasi OpenAPI dan pembuatan klien SPA dari spesifikasi di CI — ADR-0004, ADR-0010
 - [ ] **M0-13** Kerangka SPA: React + TypeScript + Vite, TanStack Router/Query, react-i18next, shadcn; alur CSRF, login, 2FA, passkey, dan logout lewat Fortify — API-TR-21, IA-FR-04, ADR-0010

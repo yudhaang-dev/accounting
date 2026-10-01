@@ -10,7 +10,7 @@ Basis kode berasal dari Laravel React starter kit (Laravel 13, PHP ≥ 8.3, Fort
 
 | Kebutuhan | Pilihan |
 | --- | --- |
-| Autentikasi user | Fortify (sudah ada) + Sanctum untuk sesi di `/api/v1` ([ADR-0005](0005-authentication.md)) |
+| Autentikasi user | Fortify (sudah ada); sesi di `/api/v1` lewat middleware `web` ([ADR-0005](0005-authentication.md), diubah [ADR-0011](0011-drop-sanctum.md)) |
 | Autentikasi mesin | Laravel Passport, Client Credentials |
 | Otorisasi | spatie/laravel-permission mode *teams* (team = perusahaan); role sebagai data, pemeriksaan per permission |
 | Kontrak modul dan command | spatie/laravel-data |

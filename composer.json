@@ -17,7 +17,6 @@
         "laravel/framework": "^13.17",
         "laravel/passport": "^13.8",
         "laravel/pulse": "^1.8",
-        "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
         "opis/json-schema": "^2.6",
         "sentry/sentry-laravel": "^4.28",

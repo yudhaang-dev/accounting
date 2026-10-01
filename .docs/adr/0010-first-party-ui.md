@@ -30,7 +30,7 @@ Rekomendasi awal stack SPA:
 
 - Inertia, Wayfinder, dan halaman bawaan starter kit dihapus. Fortify dipertahankan dalam mode headless (tanpa view) dan dipanggil SPA lewat JSON.
 - API langsung teruji oleh UI sendiri, sehingga pihak ketiga mendapat kemampuan dan otorisasi yang sama.
-- Diperlukan konfigurasi CORS dengan credentials, domain stateful Sanctum, dan domain cookie sesi per lingkungan.
+- Diperlukan konfigurasi CORS dengan credentials dan domain cookie sesi per lingkungan.
 
 ## Alternatif ditolak
 
