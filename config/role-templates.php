@@ -18,7 +18,7 @@ return [
             'grant_to_creator' => true,
             'permissions' => [
                 ...$read,
-                'company.update', 'company.activate',
+                'company.update', 'company.activate', 'company.deactivate',
                 'accounts.manage',
                 'periods.manage', 'periods.close', 'periods.reopen',
                 'memberships.read', 'memberships.manage',

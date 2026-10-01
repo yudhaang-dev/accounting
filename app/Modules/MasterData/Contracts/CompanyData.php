@@ -11,5 +11,8 @@ final readonly class CompanyData
         public string $timezone,
         public string $defaultLocale,
         public string $status,
+        public ?string $legalName = null,
+        public ?string $taxId = null,
+        public int $lockVersion = 1,
     ) {}
 }

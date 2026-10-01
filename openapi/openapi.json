@@ -29,6 +29,230 @@
                 }
             }
         },
+        "/companies/{companyId}": {
+            "get": {
+                "operationId": "company.show",
+                "summary": "The company profile and status",
+                "tags": [
+                    "Company"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`CompanyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CompanyResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFoundHttpException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "company.update",
+                "summary": "Changes the profile. `lock_version` is required; the functional currency can only change while\nthe company is in `setup`",
+                "tags": [
+                    "Company"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCompanyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`CompanyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CompanyResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/deactivate": {
+            "post": {
+                "operationId": "company.deactivate",
+                "summary": "Makes the company inactive: its data becomes read-only",
+                "tags": [
+                    "Company"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`CompanyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CompanyResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/reactivate": {
+            "post": {
+                "operationId": "company.reactivate",
+                "summary": "Brings an inactive company back to `active`",
+                "tags": [
+                    "Company"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`CompanyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CompanyResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/activate": {
+            "post": {
+                "operationId": "company.activate",
+                "summary": "Activates the company (`setup` to `active`). Answers 422 `COMPANY_NOT_READY` with the missing\nprerequisites in `errors` when the chart of accounts, calendar or other setup is incomplete",
+                "tags": [
+                    "CompanyActivation"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ActivatedCompanyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ActivatedCompanyResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/me": {
             "get": {
                 "operationId": "me",
@@ -157,6 +381,106 @@
             }
         },
         "schemas": {
+            "ActivatedCompanyResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "legal_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "tax_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "functional_currency": {
+                        "type": "string"
+                    },
+                    "timezone": {
+                        "type": "string"
+                    },
+                    "default_locale": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "legal_name",
+                    "tax_id",
+                    "functional_currency",
+                    "timezone",
+                    "default_locale",
+                    "status",
+                    "lock_version"
+                ],
+                "title": "ActivatedCompanyResource"
+            },
+            "CompanyResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "legal_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "tax_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "functional_currency": {
+                        "type": "string"
+                    },
+                    "timezone": {
+                        "type": "string"
+                    },
+                    "default_locale": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "legal_name",
+                    "tax_id",
+                    "functional_currency",
+                    "timezone",
+                    "default_locale",
+                    "status",
+                    "lock_version"
+                ],
+                "title": "CompanyResource"
+            },
             "CreateWorkspaceRequest": {
                 "type": "object",
                 "properties": {
@@ -257,6 +581,52 @@
                 ],
                 "title": "MeResource"
             },
+            "UpdateCompanyRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "legal_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "tax_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 64
+                    },
+                    "functional_currency": {
+                        "type": "string",
+                        "description": "Only while the company is in setup (MD-AC-05); checked against currency reference data in M2-03.",
+                        "pattern": "^[A-Z]{3}$"
+                    },
+                    "timezone": {
+                        "type": "string"
+                    },
+                    "default_locale": {
+                        "type": "string",
+                        "enum": [
+                            "id",
+                            "en"
+                        ]
+                    }
+                },
+                "required": [
+                    "lock_version"
+                ],
+                "title": "UpdateCompanyRequest"
+            },
             "WorkspaceResource": {
                 "type": "object",
                 "properties": {
@@ -290,6 +660,25 @@
             }
         },
         "responses": {
+            "NotFoundHttpException": {
+                "description": "Not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
             "AuthenticationException": {
                 "description": "Unauthenticated",
                 "content": {

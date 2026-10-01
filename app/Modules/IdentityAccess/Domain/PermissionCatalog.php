@@ -11,7 +11,7 @@ final class PermissionCatalog
 {
     /** @var array<string, list<string>> */
     private const ACTIONS = [
-        'company' => ['read', 'update', 'activate'],
+        'company' => ['read', 'update', 'activate', 'deactivate'],
         'accounts' => ['read', 'manage'],
         'periods' => ['read', 'manage', 'close', 'reopen'],
         'entries' => ['read', 'create', 'submit', 'approve', 'reject', 'post', 'reverse'],

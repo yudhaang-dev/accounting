@@ -20,6 +20,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The company profile and status */
+        get: operations["company.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Changes the profile. `lock_version` is required; the functional currency can only change while
+         *     the company is in `setup`
+         */
+        patch: operations["company.update"];
+        trace?: never;
+    };
+    "/companies/{companyId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Makes the company inactive: its data becomes read-only */
+        post: operations["company.deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Brings an inactive company back to `active` */
+        post: operations["company.reactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activates the company (`setup` to `active`). Answers 422 `COMPANY_NOT_READY` with the missing
+         *     prerequisites in `errors` when the chart of accounts, calendar or other setup is incomplete
+         */
+        post: operations["company.activate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -78,6 +153,30 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ActivatedCompanyResource */
+        ActivatedCompanyResource: {
+            id: string;
+            name: string;
+            legal_name: string | null;
+            tax_id: string | null;
+            functional_currency: string;
+            timezone: string;
+            default_locale: string;
+            status: string;
+            lock_version: number;
+        };
+        /** CompanyResource */
+        CompanyResource: {
+            id: string;
+            name: string;
+            legal_name: string | null;
+            tax_id: string | null;
+            functional_currency: string;
+            timezone: string;
+            default_locale: string;
+            status: string;
+            lock_version: number;
+        };
         /** CreateWorkspaceRequest */
         CreateWorkspaceRequest: {
             workspace_name: string;
@@ -104,6 +203,18 @@ export interface components {
             email_verified: boolean;
             two_factor_enabled: boolean;
         };
+        /** UpdateCompanyRequest */
+        UpdateCompanyRequest: {
+            lock_version: number;
+            name?: string;
+            legal_name?: string | null;
+            tax_id?: string | null;
+            /** @description Only while the company is in setup (MD-AC-05); checked against currency reference data in M2-03. */
+            functional_currency?: string;
+            timezone?: string;
+            /** @enum {string} */
+            default_locale?: "id" | "en";
+        };
         /** WorkspaceResource */
         WorkspaceResource: {
             id: string;
@@ -114,6 +225,18 @@ export interface components {
         };
     };
     responses: {
+        /** @description Not found */
+        NotFoundHttpException: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    /** @description Error overview. */
+                    message: string;
+                };
+            };
+        };
         /** @description Unauthenticated */
         AuthenticationException: {
             headers: {
@@ -166,6 +289,137 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    "company.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `CompanyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CompanyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["NotFoundHttpException"];
+        };
+    };
+    "company.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCompanyRequest"];
+            };
+        };
+        responses: {
+            /** @description `CompanyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CompanyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "company.deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `CompanyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CompanyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "company.reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `CompanyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CompanyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "company.activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ActivatedCompanyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ActivatedCompanyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     me: {

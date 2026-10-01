@@ -6,6 +6,7 @@ use App\Platform\Api\ErrorCode;
 use App\Platform\Api\ReportParameters;
 use App\Support\Company\CompanyAccessGate;
 use App\Support\Company\CompanyContext;
+use App\Support\Company\CompanyStatusLookup;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -53,6 +54,14 @@ beforeEach(function () {
 
 function allowCompanies(): void
 {
+    app()->bind(CompanyStatusLookup::class, fn () => new class implements CompanyStatusLookup
+    {
+        public function isWritable(string $companyId): bool
+        {
+            return true;
+        }
+    });
+
     app()->bind(CompanyAccessGate::class, fn () => new class implements CompanyAccessGate
     {
         public function authorize(Request $request, string $companyId): void

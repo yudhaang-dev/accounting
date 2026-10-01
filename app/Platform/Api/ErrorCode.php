@@ -13,6 +13,9 @@ enum ErrorCode: string
     case RequestInProgress = 'REQUEST_IN_PROGRESS';
     case VersionConflict = 'VERSION_CONFLICT';
     case InvalidStateTransition = 'INVALID_STATE_TRANSITION';
+    case CompanyReadOnly = 'COMPANY_READ_ONLY';
+    case CompanyNotReady = 'COMPANY_NOT_READY';
+    case FunctionalCurrencyLocked = 'FUNCTIONAL_CURRENCY_LOCKED';
     case PeriodNotOpen = 'PERIOD_NOT_OPEN';
     case AccountNotPostable = 'ACCOUNT_NOT_POSTABLE';
     case PostingSourceNotAllowed = 'POSTING_SOURCE_NOT_ALLOWED';
@@ -40,6 +43,9 @@ enum ErrorCode: string
             self::RequestInProgress => 409,
             self::VersionConflict => 409,
             self::InvalidStateTransition => 409,
+            self::CompanyReadOnly => 409,
+            self::CompanyNotReady => 422,
+            self::FunctionalCurrencyLocked => 422,
             self::PeriodNotOpen => 422,
             self::AccountNotPostable => 422,
             self::PostingSourceNotAllowed => 422,

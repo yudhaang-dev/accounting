@@ -28,6 +28,7 @@
 
 - **API-TR-08 Command.** Transisi status memakai `POST .../{resource}/{id}/{action}`:
   - `entries`: `submit`, `approve`, `reject`, `post`, `revise`, `cancel`.
+  - `companies/{companyId}`: `activate`, `deactivate`, `reactivate`.
   - `journals/{id}/reverse` membuat entri `system.reversal` yang tunduk pada approval dan mengembalikan entri tersebut.
   - `periods`: `soft-close`, `close`, `reopen`; `fiscal-years`: `close`, `reopen`; `plan-versions`: `publish`, `archive`; `opening-balance-imports` dan `revaluation-runs`: `post`.
   - `PATCH` hanya untuk draf dan konfigurasi; resource yang sudah final tidak dapat diubah.
@@ -63,6 +64,9 @@
 | `REQUEST_IN_PROGRESS` | 409 | Permintaan dengan `Idempotency-Key` yang sama masih diproses; ulangi nanti |
 | `VERSION_CONFLICT` | 409 | `lock_version` sudah berubah |
 | `INVALID_STATE_TRANSITION` | 409 | Aksi tidak berlaku untuk status saat ini |
+| `COMPANY_READ_ONLY` | 409 | Perusahaan `inactive`; datanya hanya-baca (MD-FR-01) |
+| `COMPANY_NOT_READY` | 422 | Prasyarat aktivasi perusahaan belum terpenuhi; `errors` memuat prasyarat yang kurang |
+| `FUNCTIONAL_CURRENCY_LOCKED` | 422 | Mata uang fungsional hanya dapat diubah saat `setup` (MD-AC-05) |
 | `PERIOD_NOT_OPEN` | 422 | Periode tidak menerima posting untuk entri ini |
 | `ACCOUNT_NOT_POSTABLE` | 422 | Akun induk, nonaktif, atau milik perusahaan lain |
 | `POSTING_SOURCE_NOT_ALLOWED` | 422 | Akun tidak menerima sumber ini |

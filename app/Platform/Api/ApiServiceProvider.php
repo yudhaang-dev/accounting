@@ -4,9 +4,12 @@ namespace App\Platform\Api;
 
 use App\Platform\Api\Console\PurgeIdempotencyKeys;
 use App\Platform\Api\Http\DenyCompanyAccess;
+use App\Platform\Api\Http\DenyCompanyWrites;
 use App\Platform\Api\Http\Idempotent;
+use App\Platform\Api\Http\RejectWritesWhenReadOnly;
 use App\Platform\Api\Http\ResolveCompany;
 use App\Support\Company\CompanyAccessGate;
+use App\Support\Company\CompanyStatusLookup;
 use App\Support\Modules\ModuleServiceProvider;
 use Closure;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -31,6 +34,7 @@ class ApiServiceProvider extends ModuleServiceProvider
     public function register(): void
     {
         $this->app->bind(CompanyAccessGate::class, DenyCompanyAccess::class);
+        $this->app->bind(CompanyStatusLookup::class, DenyCompanyWrites::class);
 
         $this->commands([PurgeIdempotencyKeys::class]);
     }
@@ -74,10 +78,12 @@ class ApiServiceProvider extends ModuleServiceProvider
 
     private function registerRouteMacros(): void
     {
-        // Company-scoped resources: /api/v1/companies/{companyId}/... (API-TR-03). POST commands accept
-        // an Idempotency-Key (API-TR-13); `financial-events` opts out with ->withoutMiddleware('idempotent').
+        // Company-scoped resources: /api/v1/companies/{companyId}/... (API-TR-03). Writes are refused
+        // while the company is read-only (routes that must still work opt out with
+        // ->withoutMiddleware(RejectWritesWhenReadOnly::class)). POST commands accept an
+        // Idempotency-Key (API-TR-13); `financial-events` opts out with ->withoutMiddleware('idempotent').
         Route::macro('companyScoped', function (Closure $routes): void {
-            Route::middleware(['auth', ResolveCompany::class, 'idempotent'])
+            Route::middleware(['auth', ResolveCompany::class, RejectWritesWhenReadOnly::class, 'idempotent'])
                 ->prefix('companies/{companyId}')
                 ->where(['companyId' => ApiServiceProvider::ULID])
                 ->group($routes);
