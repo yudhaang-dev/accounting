@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class WorkspaceResource extends JsonResource
 {
     /**
-     * @return array{id: string, name: string, company_id: string, company_name: string}
+     * @return array{id: string, name: string, company_id: string, company_name: string, permissions: list<string>}
      */
     public function toArray(Request $request): array
     {
@@ -21,6 +21,7 @@ class WorkspaceResource extends JsonResource
             'name' => $this->resource->name,
             'company_id' => $this->resource->companyId,
             'company_name' => $this->resource->companyName,
+            'permissions' => $this->resource->permissions,
         ];
     }
 }

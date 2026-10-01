@@ -212,13 +212,20 @@
                     },
                     "company_name": {
                         "type": "string"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "required": [
                     "id",
                     "name",
                     "company_id",
-                    "company_name"
+                    "company_name",
+                    "permissions"
                 ],
                 "title": "CreatedWorkspaceResource"
             },
@@ -264,13 +271,20 @@
                     },
                     "company_name": {
                         "type": "string"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "required": [
                     "id",
                     "name",
                     "company_id",
-                    "company_name"
+                    "company_name",
+                    "permissions"
                 ],
                 "title": "WorkspaceResource"
             }

@@ -94,6 +94,7 @@ export interface components {
             name: string;
             company_id: string;
             company_name: string;
+            permissions: string[];
         };
         /** MeResource */
         MeResource: {
@@ -109,6 +110,7 @@ export interface components {
             name: string;
             company_id: string;
             company_name: string;
+            permissions: string[];
         };
     };
     responses: {

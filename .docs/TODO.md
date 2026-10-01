@@ -28,7 +28,7 @@
 Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → approval → posting → neraca saldo → ekspor.
 
 - [x] **M1-01** Workspace, membership dasar, `/me`, `/me/workspaces`; pembuatan workspace beserta perusahaan lewat orkestrasi — IA-FR-01, IA-AC-01
-- [ ] **M1-02** Katalog permission, seed role, `AccessContext`, otorisasi per permission — IA-FR-02
+- [x] **M1-02** Katalog permission, seed role, `AccessContext`, otorisasi per permission — IA-FR-02
 - [ ] **M1-03** Profil dan status perusahaan; aktivasi lewat orkestrasi setelah COA dan kalender siap — MD-FR-01, MD-AC-05
 - [ ] **M1-04** Bagan akun dengan seed template yang wajib dikonfirmasi — GL-FR-01, X-AC-03
 - [ ] **M1-05** Kalender fiskal bulanan, periode tanpa celah (exclusion constraint), status `open`/`closed` — GL-FR-03, GL-FR-04, GL-AC-08

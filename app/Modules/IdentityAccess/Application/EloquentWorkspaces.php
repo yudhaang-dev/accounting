@@ -16,6 +16,8 @@ final class EloquentWorkspaces implements Workspaces
     public function __construct(
         private readonly CompanyDirectory $companies,
         private readonly Audit $audit,
+        private readonly SeedCompanyRoles $seedRoles,
+        private readonly EffectiveAccessContexts $contexts,
     ) {}
 
     public function createFor(int $userId, string $name, string $companyId): WorkspaceData
@@ -42,7 +44,27 @@ final class EloquentWorkspaces implements Workspaces
                 companyId: $company->id,
             );
 
-            return new WorkspaceData($workspace->id, $workspace->name, $company->id, $company->name);
+            $roles = ($this->seedRoles)($company->id);
+
+            foreach ($roles as $role) {
+                $role->users()->attach($userId, ['company_id' => $company->id]);
+            }
+
+            $this->audit->record(
+                'roles.assigned',
+                'Workspace creator received the starting roles.',
+                $membership,
+                after: ['roles' => array_map(fn ($role): string => $role->id, $roles)],
+                companyId: $company->id,
+            );
+
+            return new WorkspaceData(
+                $workspace->id,
+                $workspace->name,
+                $company->id,
+                $company->name,
+                $this->contexts->forUser($userId, $company->id)->permissions,
+            );
         });
     }
 
@@ -53,7 +75,9 @@ final class EloquentWorkspaces implements Workspaces
             ->orderBy('name')
             ->get();
 
-        $companies = $this->companies->findMany(array_values($workspaces->pluck('company_id')->all()));
+        $companyIds = array_values($workspaces->pluck('company_id')->all());
+        $companies = $this->companies->findMany($companyIds);
+        $permissions = $this->contexts->permissionsByCompany($userId, $companyIds);
 
         return array_values($workspaces
             ->map(fn (Workspace $workspace): WorkspaceData => new WorkspaceData(
@@ -61,6 +85,7 @@ final class EloquentWorkspaces implements Workspaces
                 $workspace->name,
                 $workspace->company_id,
                 isset($companies[$workspace->company_id]) ? $companies[$workspace->company_id]->name : '',
+                $permissions[$workspace->company_id] ?? [],
             ))
             ->all());
     }
