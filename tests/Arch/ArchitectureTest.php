@@ -6,6 +6,11 @@
 | and table prefixes.
 */
 
+function ns(string ...$parts): string
+{
+    return implode(chr(92), ['App', ...$parts]);
+}
+
 const APP_DIR = __DIR__.'/../../app';
 
 $modules = [
@@ -25,19 +30,19 @@ foreach (array_keys($modules) as $module) {
         }
 
         arch("$module only imports Contracts of $other")
-            ->expect("App\Modules\$module")
-            ->not->toUse("App\Modules\$other")
-            ->ignoring("App\Modules\$other\Contracts");
+            ->expect(ns('Modules', $module))
+            ->not->toUse(ns('Modules', $other))
+            ->ignoring(ns('Modules', $other, 'Contracts'));
     }
 
     arch("$module does not depend on Orchestration")
-        ->expect("App\Modules\$module")
-        ->not->toUse('App\Orchestration');
+        ->expect(ns('Modules', $module))
+        ->not->toUse(ns('Orchestration'));
 }
 
 arch('Platform and Support do not depend on business modules')
-    ->expect(['App\Platform', 'App\Support'])
-    ->not->toUse(['App\Modules', 'App\Orchestration']);
+    ->expect([ns('Platform'), ns('Support')])
+    ->not->toUse([ns('Modules'), ns('Orchestration')]);
 
 /**
  * @return list<string>
