@@ -229,6 +229,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Entries of the company, newest accounting date first unless `sort` says otherwise. Filters:
+         *     `filter[status]`, `filter[transaction_type_key]`, `filter[from]` and `filter[to]` (accounting date).
+         *     `per_page` defaults to 50, at most 200
+         */
+        get: operations["entries.index"];
+        put?: never;
+        /**
+         * Creates a draft entry on the latest published version of the transaction type, or on the
+         *     requested `transaction_type_version`. The entry number is issued now
+         */
+        post: operations["entries.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/entries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One entry with its approval trail */
+        get: operations["entries.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Replaces the content of a draft. `lock_version` is required */
+        patch: operations["entries.update"];
+        trace?: never;
+    };
+    "/companies/{companyId}/entries/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validates the draft against the ledger rules and sends it to approval */
+        post: operations["entries.submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/entries/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["entries.approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/entries/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rejects a submitted entry; `reason` is required */
+        post: operations["entries.reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/entries/{id}/post": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Posts an approved entry to the ledger. Posting again returns the same journal */
+        post: operations["entries.post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/entries/{id}/revise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Takes a rejected entry back to draft */
+        post: operations["entries.revise"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/entries/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancels a draft or rejected entry; it stays readable */
+        post: operations["entries.cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/fiscal-calendar": {
         parameters: {
             query?: never;
@@ -400,6 +544,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/transaction-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Transaction types of the company with their versions, ordered by key */
+        get: operations["transaction-types.index"];
+        put?: never;
+        /** Defines a transaction type with a published first version in `free_lines` mode */
+        post: operations["transaction-types.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/transaction-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["transaction-types.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/workspaces": {
         parameters: {
             query?: never;
@@ -498,6 +676,12 @@ export interface components {
             /** @description Only with count 1; defaults to FY2026, or FY2026/2027 when the year does not start in January. */
             name?: string;
         };
+        /** CreateTransactionTypeRequest */
+        CreateTransactionTypeRequest: {
+            /** @description Keys starting with `system.` are defined by code and contain a dot, which this pattern excludes. */
+            key: string;
+            label: string;
+        };
         /** CreateWorkspaceRequest */
         CreateWorkspaceRequest: {
             workspace_name: string;
@@ -516,6 +700,56 @@ export interface components {
             company_name: string;
             permissions: string[];
         };
+        /**
+         * EntryRequest
+         * @description Content of a draft entry. Only the shape is checked here; accounts, period and balance are
+         *     validated when the entry is submitted (TE-FR-08). Amounts are decimal strings (API-TR-05).
+         */
+        EntryRequest: {
+            transaction_type_key: string;
+            transaction_type_version?: number | null;
+            /** Format: date */
+            accounting_date: string;
+            /** Format: date */
+            document_date?: string | null;
+            description: string;
+            lines: {
+                account_id: string;
+                debit?: string | null;
+                credit?: string | null;
+                description?: string | null;
+            }[];
+        };
+        /** EntryResource */
+        EntryResource: {
+            id: string;
+            number: string;
+            status: string;
+            source: string;
+            transaction_type_key: string;
+            transaction_type_version: number;
+            accounting_date: string;
+            document_date: string | null;
+            description: string;
+            lines: {
+                account_id: string;
+                debit: string;
+                credit: string;
+                description: string | null;
+            }[];
+            created_by: number;
+            journal_id: string | null;
+            journal_number: string | null;
+            posted_at: string | null;
+            decisions: unknown[] | null;
+            lock_version: number;
+        };
+        /**
+         * EntryStatus
+         * @description Lifecycle of an entry (TE-FR-07). `posted` and `cancelled` are final; a rejected manual entry can be revised.
+         * @enum {string}
+         */
+        EntryStatus: "draft" | "submitted" | "approved" | "posted" | "rejected" | "cancelled";
         /** FiscalCalendarResource */
         FiscalCalendarResource: {
             id: string;
@@ -563,6 +797,13 @@ export interface components {
          * @enum {string}
          */
         PeriodStatus: "open" | "closed";
+        /**
+         * ReasonRequest
+         * @description Reason of a rejection (required) or a cancellation (optional), TE-FR-07.
+         */
+        ReasonRequest: {
+            reason?: string | null;
+        };
         /** ReopenPeriodRequest */
         ReopenPeriodRequest: {
             reason: string;
@@ -572,6 +813,14 @@ export interface components {
             pattern: components["schemas"]["CalendarPattern"];
             /** @description Month (1 = January) in which a fiscal year starts; the year always starts on the 1st. */
             start_month: number;
+        };
+        /** TransactionTypeResource */
+        TransactionTypeResource: {
+            id: string;
+            key: string;
+            label: string;
+            versions: unknown[];
+            lock_version: number;
         };
         /** UpdateAccountRequest */
         UpdateAccountRequest: {
@@ -593,6 +842,21 @@ export interface components {
             timezone?: string;
             /** @enum {string} */
             default_locale?: "id" | "en";
+        };
+        /** UpdateEntryRequest */
+        UpdateEntryRequest: {
+            lock_version: number;
+            /** Format: date */
+            accounting_date: string;
+            /** Format: date */
+            document_date?: string | null;
+            description: string;
+            lines: {
+                account_id: string;
+                debit?: string | null;
+                credit?: string | null;
+                description?: string | null;
+            }[];
         };
         /** UpdateFiscalCalendarRequest */
         UpdateFiscalCalendarRequest: {
@@ -1105,6 +1369,318 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "entries.index": {
+        parameters: {
+            query?: {
+                "filter[status]"?: components["schemas"]["EntryStatus"];
+                "filter[transaction_type_key]"?: string;
+                "filter[from]"?: string;
+                "filter[to]"?: string;
+                sort?: "accounting_date" | "-accounting_date" | "number" | "-number";
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `EntryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EntryResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "entries.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryRequest"];
+            };
+        };
+        responses: {
+            /** @description `EntryResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EntryResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "entries.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `EntryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EntryResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "entries.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEntryRequest"];
+            };
+        };
+        responses: {
+            /** @description `EntryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EntryResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "entries.submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `EntryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EntryResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "entries.approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `EntryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EntryResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "entries.reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description `EntryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EntryResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "entries.post": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `EntryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EntryResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "entries.revise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `EntryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EntryResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "entries.cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description `EntryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EntryResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "fiscal-calendar.show": {
         parameters: {
             query?: never;
@@ -1485,6 +2061,87 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "transaction-types.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `TransactionTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TransactionTypeResource"][];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "transaction-types.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTransactionTypeRequest"];
+            };
+        };
+        responses: {
+            /** @description `TransactionTypeResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TransactionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "transaction-types.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `TransactionTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TransactionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "workspaces.store": {
