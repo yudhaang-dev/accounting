@@ -10,6 +10,7 @@ enum ErrorCode: string
 {
     case SourceTransactionConflict = 'SOURCE_TRANSACTION_CONFLICT';
     case IdempotencyKeyReused = 'IDEMPOTENCY_KEY_REUSED';
+    case RequestInProgress = 'REQUEST_IN_PROGRESS';
     case VersionConflict = 'VERSION_CONFLICT';
     case InvalidStateTransition = 'INVALID_STATE_TRANSITION';
     case PeriodNotOpen = 'PERIOD_NOT_OPEN';
@@ -36,6 +37,7 @@ enum ErrorCode: string
         return match ($this) {
             self::SourceTransactionConflict => 409,
             self::IdempotencyKeyReused => 409,
+            self::RequestInProgress => 409,
             self::VersionConflict => 409,
             self::InvalidStateTransition => 409,
             self::PeriodNotOpen => 422,

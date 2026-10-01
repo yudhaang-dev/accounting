@@ -23,8 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        // Cookie session + CSRF for the SPA; Bearer clients bypass it (ADR-0011).
-        $middleware->api(prepend: [StatefulUnlessBearer::class]);
+        // Cookie session + CSRF for the SPA; Bearer clients bypass it (ADR-0011). Rate limit per principal (API-TR-15).
+        $middleware->api(prepend: [StatefulUnlessBearer::class], append: ['throttle:api']);
 
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : '/login');
     })

@@ -12,6 +12,7 @@ return [
     'codes' => [
         'SOURCE_TRANSACTION_CONFLICT' => 'A transaction with this source key already exists with different content.',
         'IDEMPOTENCY_KEY_REUSED' => 'This Idempotency-Key was already used with a different request body.',
+        'REQUEST_IN_PROGRESS' => 'A request with this Idempotency-Key is still being processed.',
         'VERSION_CONFLICT' => 'The resource was changed by someone else. Reload and try again.',
         'INVALID_STATE_TRANSITION' => 'This action is not allowed in the current status.',
         'PERIOD_NOT_OPEN' => 'The period does not accept postings.',

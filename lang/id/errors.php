@@ -11,6 +11,7 @@ return [
     'codes' => [
         'SOURCE_TRANSACTION_CONFLICT' => 'Transaksi dengan kunci sumber ini sudah ada dengan isi yang berbeda.',
         'IDEMPOTENCY_KEY_REUSED' => 'Idempotency-Key ini sudah dipakai dengan isi permintaan yang berbeda.',
+        'REQUEST_IN_PROGRESS' => 'Permintaan dengan Idempotency-Key ini masih diproses.',
         'VERSION_CONFLICT' => 'Resource telah diubah oleh pihak lain. Muat ulang lalu coba lagi.',
         'INVALID_STATE_TRANSITION' => 'Aksi ini tidak diizinkan pada status saat ini.',
         'PERIOD_NOT_OPEN' => 'Periode tidak menerima posting.',

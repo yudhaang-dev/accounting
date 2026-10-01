@@ -60,6 +60,7 @@
 | --- | --- | --- |
 | `SOURCE_TRANSACTION_CONFLICT` | 409 | Kunci sumber sama, isi berbeda (TE-FR-13) |
 | `IDEMPOTENCY_KEY_REUSED` | 409 | `Idempotency-Key` sama, isi berbeda |
+| `REQUEST_IN_PROGRESS` | 409 | Permintaan dengan `Idempotency-Key` yang sama masih diproses; ulangi nanti |
 | `VERSION_CONFLICT` | 409 | `lock_version` sudah berubah |
 | `INVALID_STATE_TRANSITION` | 409 | Aksi tidak berlaku untuk status saat ini |
 | `PERIOD_NOT_OPEN` | 422 | Periode tidak menerima posting untuk entri ini |
