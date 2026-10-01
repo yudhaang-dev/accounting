@@ -9,10 +9,12 @@ use App\Modules\Subledger\SubledgerServiceProvider;
 use App\Modules\TransactionEntry\TransactionEntryServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
+use App\Support\SupportServiceProvider;
 
 return [
     AppServiceProvider::class,
     FortifyServiceProvider::class,
+    SupportServiceProvider::class,
     MasterDataServiceProvider::class,
     IdentityAccessServiceProvider::class,
     TransactionEntryServiceProvider::class,
