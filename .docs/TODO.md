@@ -38,7 +38,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [ ] **M1-09** SPA: pemilih workspace, wizard setup perusahaan (profil, konfirmasi template COA, kalender), akun, periode, form dan daftar entri beserta aksinya, detail jurnal, neraca saldo
   - [x] **M1-09a** Shell SPA dan pemilih workspace — rute `/w/$companyId` memuat seluruh layar per perusahaan; `/` memilih perusahaan terakhir, satu-satunya, atau daftar `/workspaces`; pembuatan workspace baru menyusul di M1-09b
   - [x] **M1-09b** Wizard setup perusahaan (profil, konfirmasi template COA, kalender) — `/workspaces/new` membuat workspace beserta perusahaan; `/w/$companyId/setup` memuat empat langkah (profil, bagan akun, kalender, aktivasi) yang statusnya dibaca dari server sehingga dapat dilanjutkan; skema OpenAPI template COA dipertegas agar bertipe
-  - [ ] **M1-09c** Daftar akun dan periode
+  - [x] **M1-09c** Daftar akun dan periode — `/w/$companyId/accounts` (filter, paginasi, tambah, ubah dengan `lock_version`, nonaktif/aktif) dan `/w/$companyId/periods` (per tahun fiskal, tutup, buka kembali beralasan, tambah tahun); menu dan aksi mengikuti permission workspace (`accounts.*`, `periods.*`)
   - [ ] **M1-09d** Form dan daftar entri beserta aksinya (submit, approve, post)
   - [ ] **M1-09e** Detail jurnal
   - [ ] **M1-09f** Neraca saldo (drill-down dan ekspor CSV)

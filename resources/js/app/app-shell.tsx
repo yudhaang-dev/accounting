@@ -1,6 +1,12 @@
 import { Link, useMatchRoute, useParams } from '@tanstack/react-router';
-import { ChevronsUpDownIcon, HouseIcon, LogOutIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
+import {
+    CalendarRangeIcon,
+    ChevronsUpDownIcon,
+    HouseIcon,
+    ListTreeIcon,
+    LogOutIcon,
+} from 'lucide-react';
+import type { ComponentType, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -29,9 +35,37 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { useSignOut } from '@/modules/identity-access/hooks/use-sign-out';
+import { can } from '@/modules/identity-access/permissions';
 import type { Me } from '@/modules/identity-access/session';
 import type { Workspace } from '@/modules/identity-access/workspaces';
 import { WorkspaceSwitcher } from '@/modules/identity-access/components/workspace-switcher';
+
+/** Company screens in the sidebar; an item shows only for users holding its permission. */
+const NAV = [
+    {
+        to: '/w/$companyId',
+        label: 'app.navHome',
+        icon: HouseIcon,
+        permission: null,
+    },
+    {
+        to: '/w/$companyId/accounts',
+        label: 'app.navAccounts',
+        icon: ListTreeIcon,
+        permission: 'accounts.read',
+    },
+    {
+        to: '/w/$companyId/periods',
+        label: 'app.navPeriods',
+        icon: CalendarRangeIcon,
+        permission: 'periods.read',
+    },
+] as const satisfies readonly {
+    to: string;
+    label: string;
+    icon: ComponentType;
+    permission: string | null;
+}[];
 
 function initials(name: string): string {
     return name
@@ -137,32 +171,38 @@ export function AppShell({
                         <SidebarGroup>
                             <SidebarGroupContent>
                                 <SidebarMenu>
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton
-                                            isActive={Boolean(
-                                                matchRoute({
-                                                    to: '/w/$companyId',
-                                                    params: {
-                                                        companyId:
-                                                            active.company_id,
-                                                    },
-                                                }),
-                                            )}
-                                            render={
-                                                <Link
-                                                    to="/w/$companyId"
-                                                    params={{
-                                                        companyId:
-                                                            active.company_id,
-                                                    }}
-                                                />
-                                            }
-                                            tooltip={t('app.navHome')}
-                                        >
-                                            <HouseIcon />
-                                            <span>{t('app.navHome')}</span>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
+                                    {NAV.filter(
+                                        (item) =>
+                                            !item.permission ||
+                                            can(active, item.permission),
+                                    ).map(({ to, label, icon: Icon }) => (
+                                        <SidebarMenuItem key={to}>
+                                            <SidebarMenuButton
+                                                isActive={Boolean(
+                                                    matchRoute({
+                                                        to,
+                                                        params: {
+                                                            companyId:
+                                                                active.company_id,
+                                                        },
+                                                    }),
+                                                )}
+                                                render={
+                                                    <Link
+                                                        to={to}
+                                                        params={{
+                                                            companyId:
+                                                                active.company_id,
+                                                        }}
+                                                    />
+                                                }
+                                                tooltip={t(label)}
+                                            >
+                                                <Icon />
+                                                <span>{t(label)}</span>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    ))}
                                 </SidebarMenu>
                             </SidebarGroupContent>
                         </SidebarGroup>

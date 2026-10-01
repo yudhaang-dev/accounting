@@ -23,6 +23,9 @@ import {
     workspacesQuery,
     type Workspace,
 } from '@/modules/identity-access/workspaces';
+import { AccountsPage } from '@/modules/general-ledger/pages/accounts-page';
+import { PeriodsPage } from '@/modules/general-ledger/pages/periods-page';
+import { can } from '@/modules/identity-access/permissions';
 import { CompanyHomePage } from '@/modules/master-data/pages/company-home-page';
 import { ForgotPasswordPage } from '@/modules/identity-access/pages/forgot-password-page';
 import { LoginPage } from '@/modules/identity-access/pages/login-page';
@@ -209,19 +212,70 @@ const workspacesRoute = createRoute({
 const companyRoute = createRoute({
     getParentRoute: () => verifiedRoute,
     path: '/w/$companyId',
-    beforeLoad: ({ context, params }) => {
-        if (
-            !context.workspaces.some((w) => w.company_id === params.companyId)
-        ) {
+    beforeLoad: ({ context, params }): { workspace: Workspace } => {
+        const workspace = context.workspaces.find(
+            (w) => w.company_id === params.companyId,
+        );
+
+        if (!workspace) {
             throw notFound();
         }
 
         rememberLastCompany(context.me.id, params.companyId);
+
+        return { workspace };
     },
     loader: ({ context, params }) =>
         context.queryClient.ensureQueryData(companyQuery(params.companyId)),
     notFoundComponent: WorkspaceNotFound,
     component: Outlet,
+});
+
+// A screen the user may not open sends them to the company home. The API enforces the permission
+// regardless; this only avoids showing a screen that would fail on every request.
+const requirePermission =
+    (permission: string) =>
+    ({ context }: { context: { workspace: Workspace } }) => {
+        if (!can(context.workspace, permission)) {
+            throw redirect({
+                to: '/w/$companyId',
+                params: { companyId: context.workspace.company_id },
+            });
+        }
+    };
+
+const accountsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/accounts',
+    beforeLoad: requirePermission('accounts.read'),
+    component: function Accounts() {
+        const { workspace } = accountsRoute.useRouteContext();
+
+        return (
+            <AccountsPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'accounts.manage')}
+            />
+        );
+    },
+});
+
+const periodsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/periods',
+    beforeLoad: requirePermission('periods.read'),
+    component: function Periods() {
+        const { workspace } = periodsRoute.useRouteContext();
+
+        return (
+            <PeriodsPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'periods.manage')}
+                canClose={can(workspace, 'periods.close')}
+                canReopen={can(workspace, 'periods.reopen')}
+            />
+        );
+    },
 });
 
 const newWorkspaceRoute = createRoute({
@@ -280,7 +334,12 @@ const routeTree = rootRoute.addChildren([
             indexRoute,
             workspacesRoute,
             newWorkspaceRoute,
-            companyRoute.addChildren([companyHomeRoute, companySetupRoute]),
+            companyRoute.addChildren([
+                companyHomeRoute,
+                companySetupRoute,
+                accountsRoute,
+                periodsRoute,
+            ]),
         ]),
     ]),
 ]);

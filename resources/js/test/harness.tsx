@@ -6,7 +6,12 @@ import { vi } from 'vitest';
 import { i18n } from '@/i18n';
 import { createAppRouter } from '@/app/router';
 
-export type Call = { method: string; path: string; body: unknown };
+export type Call = {
+    method: string;
+    path: string;
+    query: Record<string, string>;
+    body: unknown;
+};
 type Reply = Response | ((call: Call) => Response | Promise<Response>);
 
 export const json = (
@@ -54,6 +59,7 @@ export function mockApi(routes: Record<string, Reply>) {
             const call: Call = {
                 method: request.method,
                 path,
+                query: Object.fromEntries(new URL(request.url).searchParams),
                 body: text ? JSON.parse(text) : undefined,
             };
 

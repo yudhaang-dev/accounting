@@ -56,10 +56,13 @@ export async function createFiscalCalendar(
     ).data;
 }
 
-/** The first year needs its `start_date` (the 1st of the calendar's start month). */
+/**
+ * The first year needs its `start_date` (the 1st of the calendar's start month); later years
+ * continue the previous one, so the date is left out.
+ */
 export async function createFiscalYears(
     companyId: string,
-    input: { start_date: string; count: number },
+    input: { start_date?: string; count: number },
 ) {
     return (
         await unwrap(
