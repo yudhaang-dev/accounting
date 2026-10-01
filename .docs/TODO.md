@@ -12,7 +12,7 @@
 - [x] **M0-02** Pindah ke PostgreSQL (`.env.example`, test, ekstensi `btree_gist`) — ADR-0003
 - [x] **M0-03** Pasang paket ADR-0004 dan verifikasi kompatibilitasnya dengan Laravel 13 — ADR-0004 — terpasang; `spatie/laravel-webhook-server` ditunda ke B-02 (F2), `laravel/horizon` ditunda ke persiapan produksi Linux (butuh ext-pcntl/posix, tidak ada di Windows)
 - [x] **M0-04** Kerangka modul (`app/Modules/*`, `Orchestration`, `Platform`, `Support`), service provider dan route per modul, prefix tabel — ADR-0002
-- [ ] **M0-05** Penjaga arsitektur di CI: deptrac sesuai graf, Pest arch (import lintas modul hanya ke `Contracts`, tanpa pemeriksaan nama role, prefix tabel) — ADR-0002
+- [x] **M0-05** Penjaga arsitektur di CI: deptrac sesuai graf, Pest arch (import lintas modul hanya ke `Contracts`, tanpa pemeriksaan nama role, prefix tabel) — ADR-0002
 - [ ] **M0-06** Tipe dasar: `Money` (brick/math) dan cast desimal, model berbasis ULID, scope perusahaan dan konvensi composite FK — API-TR-04, API-TR-05
 - [ ] **M0-07** Platform Audit: log append-only dengan aktor user/klien dan nilai sebelum/sesudah, dilindungi trigger — X-FR-01, X-AC-05
 - [ ] **M0-08** Platform Numbering: seri berpola (prefix, token tanggal, reset, padding), tanpa celah dalam transaksi; dipakai GL-FR-05 dan TE-FR-16

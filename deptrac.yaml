@@ -1,0 +1,142 @@
+# Module boundary map. Keep in sync with .docs/DOMAIN-DEPENDENCIES.md (ADR-0002).
+# A module may only use another module's Contracts, and only along the dependency graph.
+deptrac:
+  paths:
+    - ./app
+  layers:
+    - name: MasterData
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\MasterData\\(?!Contracts\\).*#'
+    - name: MasterDataContracts
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\MasterData\\Contracts\\.*#'
+    - name: IdentityAccess
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\IdentityAccess\\(?!Contracts\\).*#'
+    - name: IdentityAccessContracts
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\IdentityAccess\\Contracts\\.*#'
+    - name: TransactionEntry
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\TransactionEntry\\(?!Contracts\\).*#'
+    - name: TransactionEntryContracts
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\TransactionEntry\\Contracts\\.*#'
+    - name: Subledger
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\Subledger\\(?!Contracts\\).*#'
+    - name: SubledgerContracts
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\Subledger\\Contracts\\.*#'
+    - name: GeneralLedger
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\GeneralLedger\\(?!Contracts\\).*#'
+    - name: GeneralLedgerContracts
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\GeneralLedger\\Contracts\\.*#'
+    - name: Planning
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\Planning\\(?!Contracts\\).*#'
+    - name: PlanningContracts
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\Planning\\Contracts\\.*#'
+    - name: Reporting
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\Reporting\\(?!Contracts\\).*#'
+    - name: ReportingContracts
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\Reporting\\Contracts\\.*#'
+    - name: Orchestration
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Orchestration\\.*#'
+    - name: Platform
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Platform\\.*#'
+    - name: Support
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Support\\.*#'
+  ruleset:
+    MasterData:
+      - MasterDataContracts
+      - Platform
+      - Support
+    MasterDataContracts:
+      - Support
+    IdentityAccess:
+      - IdentityAccessContracts
+      - Platform
+      - Support
+      - MasterDataContracts
+    IdentityAccessContracts:
+      - Support
+    TransactionEntry:
+      - TransactionEntryContracts
+      - Platform
+      - Support
+      - SubledgerContracts
+      - GeneralLedgerContracts
+      - MasterDataContracts
+    TransactionEntryContracts:
+      - Support
+    Subledger:
+      - SubledgerContracts
+      - Platform
+      - Support
+      - GeneralLedgerContracts
+      - MasterDataContracts
+    SubledgerContracts:
+      - Support
+    GeneralLedger:
+      - GeneralLedgerContracts
+      - Platform
+      - Support
+      - MasterDataContracts
+    GeneralLedgerContracts:
+      - Support
+    Planning:
+      - PlanningContracts
+      - Platform
+      - Support
+      - GeneralLedgerContracts
+      - MasterDataContracts
+    PlanningContracts:
+      - Support
+    Reporting:
+      - ReportingContracts
+      - Platform
+      - Support
+      - GeneralLedgerContracts
+      - PlanningContracts
+      - MasterDataContracts
+    ReportingContracts:
+      - Support
+    Orchestration:
+      - MasterDataContracts
+      - IdentityAccessContracts
+      - TransactionEntryContracts
+      - SubledgerContracts
+      - GeneralLedgerContracts
+      - PlanningContracts
+      - ReportingContracts
+      - Platform
+      - Support
+    Platform:
+      - Support
+    Support: ~
