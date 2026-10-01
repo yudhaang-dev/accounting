@@ -22,7 +22,7 @@ Rekomendasi awal stack SPA:
 | Routing | TanStack Router |
 | State server | TanStack Query |
 | Klien API | openapi-typescript + openapi-fetch dari spesifikasi Scramble |
-| Komponen UI | Tailwind + shadcn/ui (sudah ada) |
+| Komponen UI | Tailwind + shadcn/ui di atas Base UI, style `base-nova` ([ADR-0012](0012-base-ui-and-pnpm.md)) |
 | Terjemahan | react-i18next (`id`, `en`) |
 | Form | react-hook-form; form dinamis dari skema Jenis Transaksi |
 

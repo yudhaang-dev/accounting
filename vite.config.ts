@@ -58,6 +58,7 @@ export default defineConfig({
         ignorePatterns: [
             '.github/**',
             '.docs/**',
+            '.migration/**',
             'openapi/**',
             'deptrac.yaml',
             'resources/js/api/schema.d.ts',

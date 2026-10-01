@@ -55,12 +55,15 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Enable pnpm (version from package.json packageManager)
+        run: corepack enable
+
       - name: Setup Application
         run: composer setup
 
       - name: Check generated API client types are up to date
         run: |
-          npm run api:types
+          pnpm run api:types
           git diff --exit-code -- resources/js/api/schema.d.ts
 
       - name: Run CI Checks
