@@ -122,6 +122,7 @@ export const id = {
         notFoundDescription:
             'Ruang kerja ini tidak ada atau Anda belum menjadi anggotanya.',
         backToWorkspaces: 'Ke daftar ruang kerja',
+        create: 'Buat ruang kerja baru',
     },
     company: {
         pageTitle: '{{name}}',
@@ -140,6 +141,117 @@ export const id = {
         setupDescription:
             'Pasang bagan akun dan kalender fiskal terlebih dahulu. Perusahaan baru bisa dipakai mencatat transaksi setelah diaktifkan.',
         loadFailed: 'Profil perusahaan tidak dapat dimuat.',
+        name: 'Nama perusahaan',
+        currencyHint:
+            'Kode ISO 4217, misalnya IDR. Hanya dapat diubah selama penyiapan.',
+        locale: 'Bahasa dokumen',
+        localeId: 'Indonesia',
+        localeEn: 'English',
+        continueSetup: 'Lanjutkan penyiapan',
+    },
+    accountClass: {
+        asset: 'Aset',
+        liability: 'Liabilitas',
+        equity: 'Ekuitas',
+        income: 'Pendapatan',
+        expense: 'Beban',
+    },
+    normalBalance: {
+        debit: 'Debit',
+        credit: 'Kredit',
+    },
+    newWorkspace: {
+        pageTitle: 'Ruang kerja baru',
+        title: 'Ruang kerja baru',
+        description:
+            'Ruang kerja dibuat bersama perusahaannya, dan Anda menjadi anggota pertamanya.',
+        workspaceName: 'Nama ruang kerja',
+        companyDetails: 'Perusahaan',
+        submit: 'Buat ruang kerja',
+        submitting: 'Membuat…',
+        cancel: 'Batal',
+    },
+    setup: {
+        pageTitle: 'Penyiapan perusahaan',
+        title: 'Menyiapkan {{name}}',
+        description:
+            'Selesaikan langkah berikut sebelum perusahaan dipakai mencatat transaksi.',
+        steps: {
+            profile: 'Profil perusahaan',
+            chart: 'Bagan akun',
+            calendar: 'Kalender fiskal',
+            activate: 'Aktivasi',
+        },
+        state: {
+            done: 'Selesai',
+            todo: 'Perlu dilakukan',
+            blocked: 'Menunggu langkah sebelumnya',
+        },
+        edit: 'Ubah',
+        close: 'Tutup',
+        loadFailed: 'Langkah ini tidak dapat dimuat.',
+        profile: {
+            save: 'Simpan profil',
+            saving: 'Menyimpan…',
+            saved: 'Profil disimpan.',
+            conflict:
+                'Profil sudah diubah di tempat lain. Data terbaru telah dimuat; periksa lalu simpan lagi.',
+        },
+        chart: {
+            doneTitle: 'Bagan akun terpasang',
+            doneDescription: '{{count}} akun siap dipakai.',
+            intro: 'Pilih template sebagai titik awal. Template hanya saran: tidak ada akun yang dibuat sebelum Anda meninjau dan mengonfirmasinya.',
+            template: 'Template',
+            templateMeta: '{{count}} akun',
+            review: 'Tinjau daftar akun',
+            optionalHint:
+                'Akun bertanda opsional boleh tidak dipasang. Hapus centang untuk melewatinya.',
+            include: 'Pasang',
+            code: 'Kode',
+            accountName: 'Nama akun',
+            class: 'Kelas',
+            normal: 'Saldo normal',
+            note: 'Catatan',
+            optional: 'Opsional',
+            summary: '{{included}} dari {{total}} akun akan dibuat.',
+            confirm:
+                'Saya telah meninjau daftar akun ini dan ingin memasangnya.',
+            submit: 'Pasang bagan akun',
+            submitting: 'Memasang…',
+            includeAccount: 'Pasang akun {{code}}',
+        },
+        calendar: {
+            doneTitle: 'Kalender fiskal siap',
+            doneDescription:
+                'Tahun fiskal dimulai pada bulan {{month}}; {{count}} tahun fiskal terbentuk.',
+            pattern: 'Pola',
+            patternMonthly: 'Bulanan (12 periode per tahun)',
+            startMonth: 'Tahun fiskal dimulai pada bulan',
+            startMonthHint:
+                'Selalu dimulai tanggal 1. Pilih Januari bila tahun fiskal sama dengan tahun kalender.',
+            saveCalendar: 'Simpan kalender',
+            saving: 'Menyimpan…',
+            yearsIntro:
+                'Kalender sudah disimpan. Buat tahun fiskal pertama; periode bulanan terbentuk otomatis tanpa celah.',
+            startYear: 'Tahun mulai',
+            count: 'Jumlah tahun fiskal',
+            createYears: 'Buat tahun fiskal',
+            creating: 'Membuat…',
+            periods: '{{count}} periode',
+        },
+        activate: {
+            description:
+                'Perusahaan dapat diaktifkan setelah bagan akun dan kalender fiskal terpasang. Setelah aktif, mata uang fungsional tidak dapat diubah.',
+            blocked: 'Selesaikan langkah sebelumnya terlebih dahulu.',
+            submit: 'Aktifkan perusahaan',
+            submitting: 'Mengaktifkan…',
+            missing: 'Perusahaan belum dapat diaktifkan.',
+            success: '{{name}} kini aktif.',
+            requirements: {
+                chart_of_accounts: 'Bagan akun',
+                fiscal_calendar: 'Kalender fiskal',
+            },
+        },
     },
     notFound: {
         pageTitle: 'Halaman tidak ditemukan',

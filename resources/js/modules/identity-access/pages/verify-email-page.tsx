@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AuthLayout } from '@/components/auth-layout';
-import { SubmitButton } from '@/modules/identity-access/components/submit-button';
+import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
 import { FieldGroup } from '@/components/ui/field';
 import { useCountdown } from '@/hooks/use-countdown';

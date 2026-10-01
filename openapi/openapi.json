@@ -549,7 +549,29 @@
                                     "properties": {
                                         "data": {
                                             "type": "array",
-                                            "items": {}
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "version": {
+                                                        "type": "integer"
+                                                    },
+                                                    "account_count": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "key",
+                                                    "name",
+                                                    "version",
+                                                    "account_count"
+                                                ]
+                                            }
                                         }
                                     },
                                     "required": [
@@ -608,10 +630,54 @@
                                                     "type": "string"
                                                 },
                                                 "version": {
-                                                    "type": "string"
+                                                    "type": "integer"
                                                 },
                                                 "accounts": {
-                                                    "type": "string"
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "class": {
+                                                                "type": "string"
+                                                            },
+                                                            "normal": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "parent": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "optional": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "note": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "code",
+                                                            "name",
+                                                            "class",
+                                                            "normal",
+                                                            "parent",
+                                                            "optional",
+                                                            "note"
+                                                        ]
+                                                    }
                                                 }
                                             },
                                             "required": [

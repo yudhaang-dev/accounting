@@ -92,15 +92,11 @@ export async function ensureCsrfCookie(): Promise<void> {
     });
 }
 
-async function toApiError(response: Response): Promise<ApiError> {
-    let body: Partial<ApiErrorBody> = {};
-
-    try {
-        body = (await response.json()) as Partial<ApiErrorBody>;
-    } catch {
-        // Not JSON (proxy error page, empty body): fall back to the status below.
-    }
-
+/** Builds the normalised failure from a response and its already-parsed body (if it had one). */
+export function apiErrorFrom(
+    response: Response,
+    body: Partial<ApiErrorBody> = {},
+): ApiError {
     const retryAfter = Number(response.headers.get('Retry-After'));
 
     return new ApiError(
@@ -110,6 +106,18 @@ async function toApiError(response: Response): Promise<ApiError> {
         body.errors,
         Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined,
     );
+}
+
+async function toApiError(response: Response): Promise<ApiError> {
+    let body: Partial<ApiErrorBody> = {};
+
+    try {
+        body = (await response.json()) as Partial<ApiErrorBody>;
+    } catch {
+        // Not JSON (proxy error page, empty body): fall back to the status.
+    }
+
+    return apiErrorFrom(response, body);
 }
 
 export type RequestOptions = {

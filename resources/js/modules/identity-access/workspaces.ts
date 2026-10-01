@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query';
-import { api } from '@/api/client';
+import { api, unwrap } from '@/api/client';
 import type { components } from '@/api/schema';
 
 export type Workspace = components['schemas']['WorkspaceResource'];
@@ -21,6 +21,14 @@ export const workspacesQuery = queryOptions({
         return data.data;
     },
 });
+
+export type CreateWorkspaceInput =
+    components['schemas']['CreateWorkspaceRequest'];
+
+/** Creates a workspace together with its company (status `setup`); the caller becomes a member. */
+export async function createWorkspace(input: CreateWorkspaceInput) {
+    return (await unwrap(api.POST('/workspaces', { body: input }))).data;
+}
 
 // The last company a user worked in is a convenience only; storage may be blocked or empty, so every
 // access is guarded and the app behaves the same without it.

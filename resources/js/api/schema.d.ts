@@ -1254,7 +1254,12 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: unknown[];
+                        data: {
+                            key: string;
+                            name: string;
+                            version: number;
+                            account_count: number;
+                        }[];
                     };
                 };
             };
@@ -1282,8 +1287,16 @@ export interface operations {
                         data: {
                             key: string;
                             name: string;
-                            version: string;
-                            accounts: string;
+                            version: number;
+                            accounts: {
+                                code: string;
+                                name: string;
+                                class: string;
+                                normal: string | null;
+                                parent: string | null;
+                                optional: boolean;
+                                note: string | null;
+                            }[];
                         };
                     };
                 };

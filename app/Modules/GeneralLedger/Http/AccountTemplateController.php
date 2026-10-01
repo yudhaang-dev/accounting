@@ -11,6 +11,8 @@ class AccountTemplateController
 {
     /**
      * Chart of accounts templates the company can review. A template is only a suggestion.
+     *
+     * @response array{data: list<array{key: string, name: string, version: int, account_count: int}>}
      */
     public function index(ChartTemplates $templates): JsonResponse
     {
@@ -25,6 +27,8 @@ class AccountTemplateController
     /**
      * Every account of a template with its class, saldo normal, parent and whether it is optional,
      * for review before the import is confirmed.
+     *
+     * @response array{data: array{key: string, name: string, version: int, accounts: list<array{code: string, name: string, class: string, normal: string|null, parent: string|null, optional: bool, note: string|null}>}}
      */
     public function show(ChartTemplates $templates, string $companyId, string $key): JsonResponse
     {

@@ -1,7 +1,14 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Link } from '@tanstack/react-router';
+import {
+    Alert,
+    AlertAction,
+    AlertDescription,
+    AlertTitle,
+} from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { companyQuery } from '@/modules/master-data/company';
@@ -47,6 +54,19 @@ export function CompanyHomePage({ companyId }: { companyId: string }) {
                     <AlertDescription>
                         {t('company.setupDescription')}
                     </AlertDescription>
+                    <AlertAction>
+                        <Button
+                            size="sm"
+                            render={
+                                <Link
+                                    to="/w/$companyId/setup"
+                                    params={{ companyId }}
+                                />
+                            }
+                        >
+                            {t('company.continueSetup')}
+                        </Button>
+                    </AlertAction>
                 </Alert>
             )}
 

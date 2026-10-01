@@ -124,6 +124,7 @@ export const en: Widen<typeof id> = {
         notFoundDescription:
             'This workspace does not exist or you are not a member of it.',
         backToWorkspaces: 'Back to workspaces',
+        create: 'Create a new workspace',
     },
     company: {
         pageTitle: '{{name}}',
@@ -142,6 +143,117 @@ export const en: Widen<typeof id> = {
         setupDescription:
             'Install a chart of accounts and a fiscal calendar first. A new company can record transactions once it is activated.',
         loadFailed: 'The company profile could not be loaded.',
+        name: 'Company name',
+        currencyHint:
+            'ISO 4217 code, for example IDR. Can only be changed during setup.',
+        locale: 'Document language',
+        localeId: 'Indonesia',
+        localeEn: 'English',
+        continueSetup: 'Continue setup',
+    },
+    accountClass: {
+        asset: 'Asset',
+        liability: 'Liability',
+        equity: 'Equity',
+        income: 'Income',
+        expense: 'Expense',
+    },
+    normalBalance: {
+        debit: 'Debit',
+        credit: 'Credit',
+    },
+    newWorkspace: {
+        pageTitle: 'New workspace',
+        title: 'New workspace',
+        description:
+            'A workspace is created together with its company, and you become its first member.',
+        workspaceName: 'Workspace name',
+        companyDetails: 'Company',
+        submit: 'Create workspace',
+        submitting: 'Creating…',
+        cancel: 'Cancel',
+    },
+    setup: {
+        pageTitle: 'Company setup',
+        title: 'Setting up {{name}}',
+        description:
+            'Complete these steps before the company is used to record transactions.',
+        steps: {
+            profile: 'Company profile',
+            chart: 'Chart of accounts',
+            calendar: 'Fiscal calendar',
+            activate: 'Activation',
+        },
+        state: {
+            done: 'Done',
+            todo: 'To do',
+            blocked: 'Waiting for the previous step',
+        },
+        edit: 'Edit',
+        close: 'Close',
+        loadFailed: 'This step could not be loaded.',
+        profile: {
+            save: 'Save profile',
+            saving: 'Saving…',
+            saved: 'Profile saved.',
+            conflict:
+                'The profile was changed elsewhere. The latest data has been loaded; review it and save again.',
+        },
+        chart: {
+            doneTitle: 'Chart of accounts installed',
+            doneDescription: '{{count}} accounts are ready to use.',
+            intro: 'Pick a template as a starting point. A template is only a suggestion: no account is created until you have reviewed and confirmed it.',
+            template: 'Template',
+            templateMeta: '{{count}} accounts',
+            review: 'Review the accounts',
+            optionalHint:
+                'Accounts marked optional may be left out. Untick them to skip.',
+            include: 'Install',
+            code: 'Code',
+            accountName: 'Account name',
+            class: 'Class',
+            normal: 'Normal balance',
+            note: 'Note',
+            optional: 'Optional',
+            summary: '{{included}} of {{total}} accounts will be created.',
+            confirm:
+                'I have reviewed this list of accounts and want to install it.',
+            submit: 'Install chart of accounts',
+            submitting: 'Installing…',
+            includeAccount: 'Install account {{code}}',
+        },
+        calendar: {
+            doneTitle: 'Fiscal calendar ready',
+            doneDescription:
+                'The fiscal year starts in {{month}}; {{count}} fiscal years have been created.',
+            pattern: 'Pattern',
+            patternMonthly: 'Monthly (12 periods per year)',
+            startMonth: 'Fiscal year starts in',
+            startMonthHint:
+                'Always on the 1st. Pick January when the fiscal year equals the calendar year.',
+            saveCalendar: 'Save calendar',
+            saving: 'Saving…',
+            yearsIntro:
+                'The calendar is saved. Create the first fiscal year; monthly periods are generated automatically without gaps.',
+            startYear: 'Starting year',
+            count: 'Number of fiscal years',
+            createYears: 'Create fiscal years',
+            creating: 'Creating…',
+            periods: '{{count}} periods',
+        },
+        activate: {
+            description:
+                'The company can be activated once the chart of accounts and fiscal calendar are in place. After activation, the functional currency can no longer change.',
+            blocked: 'Complete the previous steps first.',
+            submit: 'Activate company',
+            submitting: 'Activating…',
+            missing: 'The company cannot be activated yet.',
+            success: '{{name}} is now active.',
+            requirements: {
+                chart_of_accounts: 'Chart of accounts',
+                fiscal_calendar: 'Fiscal calendar',
+            },
+        },
     },
     notFound: {
         pageTitle: 'Page not found',

@@ -37,7 +37,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M1-08** Neraca saldo dengan drill-down dan ekspor CSV (Platform Export) — RP-FR-05, RP-AC-01, X-FR-02, API-AC-07 — drill-down lewat `journals?filter[account_id]` (baca jurnal dengan baris); ekspor CSV lewat `Accept: text/csv` dengan izin `reports.read` yang sama (X-FR-02); penanda batch saldo konversi menyusul di M4-08
 - [ ] **M1-09** SPA: pemilih workspace, wizard setup perusahaan (profil, konfirmasi template COA, kalender), akun, periode, form dan daftar entri beserta aksinya, detail jurnal, neraca saldo
   - [x] **M1-09a** Shell SPA dan pemilih workspace — rute `/w/$companyId` memuat seluruh layar per perusahaan; `/` memilih perusahaan terakhir, satu-satunya, atau daftar `/workspaces`; pembuatan workspace baru menyusul di M1-09b
-  - [ ] **M1-09b** Wizard setup perusahaan (profil, konfirmasi template COA, kalender)
+  - [x] **M1-09b** Wizard setup perusahaan (profil, konfirmasi template COA, kalender) — `/workspaces/new` membuat workspace beserta perusahaan; `/w/$companyId/setup` memuat empat langkah (profil, bagan akun, kalender, aktivasi) yang statusnya dibaca dari server sehingga dapat dilanjutkan; skema OpenAPI template COA dipertegas agar bertipe
   - [ ] **M1-09c** Daftar akun dan periode
   - [ ] **M1-09d** Form dan daftar entri beserta aksinya (submit, approve, post)
   - [ ] **M1-09e** Detail jurnal

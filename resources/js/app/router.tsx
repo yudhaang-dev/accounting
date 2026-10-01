@@ -9,6 +9,8 @@ import {
     type RouterHistory,
 } from '@tanstack/react-router';
 import { AppShell } from '@/app/app-shell';
+import { CompanySetupPage } from '@/app/company-setup-page';
+import { NewWorkspacePage } from '@/app/new-workspace-page';
 import {
     meQuery,
     safeRedirect,
@@ -222,6 +224,37 @@ const companyRoute = createRoute({
     component: Outlet,
 });
 
+const newWorkspaceRoute = createRoute({
+    getParentRoute: () => verifiedRoute,
+    path: '/workspaces/new',
+    component: NewWorkspacePage,
+});
+
+// The wizard only exists while the company is in `setup`; afterwards its address leads home.
+const companySetupRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/setup',
+    loader: ({ context, params }) => {
+        const company = context.queryClient.getQueryData(
+            companyQuery(params.companyId).queryKey,
+        );
+
+        if (company && company.status !== 'setup') {
+            throw redirect({
+                to: '/w/$companyId',
+                params: { companyId: params.companyId },
+            });
+        }
+    },
+    component: function CompanySetup() {
+        return (
+            <CompanySetupPage
+                companyId={companySetupRoute.useParams().companyId}
+            />
+        );
+    },
+});
+
 const companyHomeRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/',
@@ -246,7 +279,8 @@ const routeTree = rootRoute.addChildren([
         verifiedRoute.addChildren([
             indexRoute,
             workspacesRoute,
-            companyRoute.addChildren([companyHomeRoute]),
+            newWorkspaceRoute,
+            companyRoute.addChildren([companyHomeRoute, companySetupRoute]),
         ]),
     ]),
 ]);

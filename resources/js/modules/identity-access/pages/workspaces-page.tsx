@@ -1,9 +1,16 @@
 import { Link } from '@tanstack/react-router';
-import { BuildingIcon, ChevronRightIcon, FolderOpenIcon } from 'lucide-react';
+import {
+    BuildingIcon,
+    ChevronRightIcon,
+    FolderOpenIcon,
+    PlusIcon,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
     Empty,
+    EmptyContent,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
@@ -27,13 +34,24 @@ export function WorkspacesPage({
 
     return (
         <>
-            <div className="flex flex-col gap-1">
-                <h1 className="text-xl font-semibold tracking-tight">
-                    {t('app.welcome', { name: me.name })}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                    {t('workspace.description')}
-                </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-xl font-semibold tracking-tight">
+                        {t('app.welcome', { name: me.name })}
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        {t('workspace.description')}
+                    </p>
+                </div>
+                {workspaces.length > 0 && (
+                    <Button
+                        variant="outline"
+                        render={<Link to="/workspaces/new" />}
+                    >
+                        <PlusIcon data-icon="inline-start" />
+                        {t('workspace.create')}
+                    </Button>
+                )}
             </div>
 
             {workspaces.length === 0 ? (
@@ -47,6 +65,12 @@ export function WorkspacesPage({
                             {t('workspace.emptyDescription')}
                         </EmptyDescription>
                     </EmptyHeader>
+                    <EmptyContent>
+                        <Button render={<Link to="/workspaces/new" />}>
+                            <PlusIcon data-icon="inline-start" />
+                            {t('workspace.create')}
+                        </Button>
+                    </EmptyContent>
                 </Empty>
             ) : (
                 <ul className="grid max-w-3xl gap-3 sm:grid-cols-2">

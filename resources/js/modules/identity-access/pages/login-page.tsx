@@ -6,9 +6,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '@/components/auth-layout';
-import { FormAlert } from '@/modules/identity-access/components/form-alert';
+import { FormAlert } from '@/components/form-alert';
 import { PasswordField } from '@/modules/identity-access/components/password-field';
-import { SubmitButton } from '@/modules/identity-access/components/submit-button';
+import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {

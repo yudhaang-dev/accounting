@@ -1,5 +1,11 @@
 import createClient, { type Middleware } from 'openapi-fetch';
-import { defaultHeaders, notifyUnauthenticated } from '@/lib/http';
+import {
+    ApiError,
+    apiErrorFrom,
+    defaultHeaders,
+    notifyUnauthenticated,
+    type ApiErrorBody,
+} from '@/lib/http';
 import type { paths } from './schema';
 
 /**
@@ -39,6 +45,33 @@ export const api = createClient<paths>({
 });
 
 api.use(defaults);
+
+type Result<T> = { data?: T; error?: unknown; response: Response };
+
+/**
+ * Resolves with the body of a typed call, or rejects with an `ApiError` (no connection included),
+ * so every screen branches on `status` and `code` the same way (API-TR-06).
+ */
+export async function unwrap<T>(call: Promise<Result<T>>): Promise<T> {
+    let result: Result<T>;
+
+    try {
+        result = await call;
+    } catch {
+        throw new ApiError(0, 'Network error', 'NETWORK');
+    }
+
+    if (result.error !== undefined) {
+        const body =
+            typeof result.error === 'object' && result.error !== null
+                ? (result.error as Partial<ApiErrorBody>)
+                : {};
+
+        throw apiErrorFrom(result.response, body);
+    }
+
+    return result.data as T;
+}
 
 /** Fresh key for a command; reuse the same key when retrying the same user action (API-TR-13). */
 export function newIdempotencyKey(): string {
