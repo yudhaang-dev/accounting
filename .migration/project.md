@@ -8,6 +8,7 @@
 - 23 wrappers in `resources/js/components/ui` replaced by their `base-nova` variants: alert, avatar, badge, breadcrumb, button, card, checkbox, collapsible, dialog, dropdown-menu, input, input-otp, label, navigation-menu, select, separator, sheet, sidebar, skeleton, spinner, toggle, toggle-group, tooltip.
 - Classification: the local files differed from stock `new-york` and `new-york-v4`, but the differences are registry version drift of an old starter-kit snapshot (checked on tooltip), not user customization, so they were overwritten instead of merged.
 - `hooks/use-mobile.tsx` removed; `hooks/use-mobile.ts` comes from the sidebar registry item.
+- `lib/utils.ts` now re-exports `cn` from the `cn` package, as the `base-nova` registry does; `clsx` and `tailwind-merge` removed.
 - Dependencies: all `@radix-ui/*` removed; `@base-ui/react`, `shadcn`, `@fontsource-variable/geist` added. Package manager switched npm -> pnpm (ADR-0012).
 - Leftover scan: `grep -rn "radix-ui\|@radix-ui\|IconPlaceholder" resources/js` returns nothing.
 

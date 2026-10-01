@@ -11,6 +11,7 @@ Komponen shadcn bawaan starter kit memakai Radix UI (style `new-york`). Belum ad
 - Komponen shadcn memakai **Base UI** (`@base-ui/react`) dengan style **`base-nova`**. `components.json` memuat `style: base-nova`; seluruh komponen di `resources/js/components/ui` diganti varian registry `base-nova`. Paket `@radix-ui/*` dihapus.
 - **Sonner tetap menjadi toast.** Registry Base UI menyediakan komponen `toast` sendiri, tetapi proyek ini sengaja tetap memakai `sonner`; `ui/sonner.tsx` tidak diubah.
 - **pnpm menjadi package manager** (`packageManager` di `package.json`, `pnpm-lock.yaml`); `package-lock.json` dihapus. CI mengaktifkannya lewat `corepack enable`.
+- Helper kelas `cn` berasal dari paket `cn` (`resources/js/lib/utils.ts` hanya mengekspor ulang), sesuai registry `base-nova`; `clsx` dan `tailwind-merge` tidak lagi dipakai langsung.
 - Untuk custom trigger, pakai prop `render` (bukan `asChild`) pada komponen Base UI.
 
 ## Konsekuensi
