@@ -4,6 +4,7 @@ namespace App\Modules\GeneralLedger\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountClass;
 use App\Modules\GeneralLedger\Domain\Account;
+use App\Modules\GeneralLedger\Domain\JournalLine;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -28,7 +29,8 @@ final class AccountRules
     }
 
     /**
-     * The parent must exist in the company, be active and share the class of the child.
+     * The parent must exist in the company, be active, share the class of the child and have no
+     * postings: an account that was posted to stays a leaf (GL-FR-01).
      *
      * @throws ValidationException
      */
@@ -39,6 +41,10 @@ final class AccountRules
 
         if (! $parent->isActive()) {
             throw ValidationException::withMessages(['parent_id' => [__('accounts.parent_inactive')]]);
+        }
+
+        if (JournalLine::query()->where('account_id', $parent->id)->exists()) {
+            throw ValidationException::withMessages(['parent_id' => [__('accounts.parent_has_postings')]]);
         }
 
         if ($parent->class !== $childClass) {
