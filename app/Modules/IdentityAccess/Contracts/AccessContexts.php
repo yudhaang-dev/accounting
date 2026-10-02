@@ -16,4 +16,7 @@ interface AccessContexts
      * @throws LogicException outside a company-scoped route
      */
     public function current(Request $request): AccessContext;
+
+    /** The integration client that made this request, or null when a user did. */
+    public function integrationPrincipal(Request $request): ?IntegrationPrincipal;
 }

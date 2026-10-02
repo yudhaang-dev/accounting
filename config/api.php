@@ -22,6 +22,11 @@ return [
         'guest_per_minute' => (int) env('API_RATE_LIMIT_GUEST', 30),
     ],
 
+    'token' => [
+        // Lifetime of an integration client access token, in seconds; there are no refresh tokens (API-TR-23).
+        'ttl_seconds' => (int) env('API_TOKEN_TTL_SECONDS', 600),
+    ],
+
     'idempotency' => [
         // How long an Idempotency-Key is remembered (API-TR-13).
         'ttl_hours' => (int) env('API_IDEMPOTENCY_TTL_HOURS', 24),

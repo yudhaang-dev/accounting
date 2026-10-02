@@ -17,6 +17,7 @@ final class PermissionCatalog
         'currencies' => ['read', 'manage'],
         'exchange-rates' => ['read', 'manage'],
         'periods' => ['read', 'manage', 'close', 'reopen'],
+        'transaction-types' => ['read'],
         'entries' => ['read', 'create', 'submit', 'approve', 'reject', 'post', 'reverse'],
         'journals' => ['read'],
         'reports' => ['read', 'export'],

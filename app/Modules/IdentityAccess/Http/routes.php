@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\IdentityAccess\Http\IntegrationClientController;
 use App\Modules\IdentityAccess\Http\InvitationController;
 use App\Modules\IdentityAccess\Http\MeController;
 use App\Modules\IdentityAccess\Http\MembershipController;
@@ -8,11 +9,15 @@ use App\Modules\IdentityAccess\Http\RoleController;
 use App\Modules\IdentityAccess\Http\SecurityPolicyController;
 use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Laravel\Passport\Http\Controllers\AccessTokenController;
 
 // API routes for the IdentityAccess module, mounted under /api/v1 (see IdentityAccessServiceProvider).
 
 Route::get('me', [MeController::class, 'show'])->middleware('auth')->name('me');
 Route::get('me/workspaces', [MeController::class, 'workspaces'])->middleware('auth')->name('me.workspaces');
+
+// Client Credentials token request of integration clients (API-TR-22): form-encoded, `client_secret_basic`.
+Route::post('oauth/token', [AccessTokenController::class, 'issueToken'])->name('oauth.token');
 
 Route::post('invitations/accept', [InvitationController::class, 'accept'])->middleware('auth')->name('invitations.accept');
 
@@ -31,6 +36,17 @@ Route::companyScoped(function () {
     Route::post('invitations', [InvitationController::class, 'store'])->middleware('permission:memberships.manage')->name('invitations.store');
     Route::post('invitations/{id}/revoke', [InvitationController::class, 'revoke'])
         ->middleware('permission:memberships.manage')->where('id', $ulid)->name('invitations.revoke');
+
+    Route::get('integration-clients', [IntegrationClientController::class, 'index'])->middleware('permission:integration-clients.manage')->name('integration-clients.index');
+    Route::post('integration-clients', [IntegrationClientController::class, 'store'])->middleware('permission:integration-clients.manage')->name('integration-clients.store');
+    Route::get('integration-clients/{id}', [IntegrationClientController::class, 'show'])
+        ->middleware('permission:integration-clients.manage')->where('id', $ulid)->name('integration-clients.show');
+    Route::patch('integration-clients/{id}', [IntegrationClientController::class, 'update'])
+        ->middleware('permission:integration-clients.manage')->where('id', $ulid)->name('integration-clients.update');
+    Route::post('integration-clients/{id}/rotate-secret', [IntegrationClientController::class, 'rotateSecret'])
+        ->middleware('permission:integration-clients.manage')->where('id', $ulid)->name('integration-clients.rotate-secret');
+    Route::post('integration-clients/{id}/revoke', [IntegrationClientController::class, 'revoke'])
+        ->middleware('permission:integration-clients.manage')->where('id', $ulid)->name('integration-clients.revoke');
 
     Route::get('security-policy', [SecurityPolicyController::class, 'show'])->middleware('permission:policies.manage')->name('security-policy.show');
     Route::put('security-policy', [SecurityPolicyController::class, 'update'])->middleware('permission:policies.manage')->name('security-policy.update');

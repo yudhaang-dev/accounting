@@ -78,12 +78,13 @@ class ApiServiceProvider extends ModuleServiceProvider
 
     private function registerRouteMacros(): void
     {
-        // Company-scoped resources: /api/v1/companies/{companyId}/... (API-TR-03). Writes are refused
+        // Company-scoped resources: /api/v1/companies/{companyId}/... (API-TR-03), for a signed-in user or
+        // an integration client with a Bearer token. Writes are refused
         // while the company is read-only (routes that must still work opt out with
         // ->withoutMiddleware(RejectWritesWhenReadOnly::class)). POST commands accept an
         // Idempotency-Key (API-TR-13); `financial-events` opts out with ->withoutMiddleware('idempotent').
         Route::macro('companyScoped', function (Closure $routes): void {
-            Route::middleware(['auth', ResolveCompany::class, RejectWritesWhenReadOnly::class, 'idempotent'])
+            Route::middleware(['auth:web,integration', ResolveCompany::class, RejectWritesWhenReadOnly::class, 'idempotent'])
                 ->prefix('companies/{companyId}')
                 ->where(['companyId' => ApiServiceProvider::ULID])
                 ->group($routes);

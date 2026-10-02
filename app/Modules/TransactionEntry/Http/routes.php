@@ -8,10 +8,10 @@ use Illuminate\Support\Facades\Route;
 // API routes for the TransactionEntry module, mounted under /api/v1 (see TransactionEntryServiceProvider).
 
 Route::companyScoped(function () {
-    Route::get('transaction-types', [TransactionTypeController::class, 'index'])->middleware('permission:entries.read')->name('transaction-types.index');
+    Route::get('transaction-types', [TransactionTypeController::class, 'index'])->middleware('permission:entries.read|transaction-types.read')->name('transaction-types.index');
     Route::post('transaction-types', [TransactionTypeController::class, 'store'])->middleware('permission:policies.manage')->name('transaction-types.store');
     Route::get('transaction-types/{id}', [TransactionTypeController::class, 'show'])
-        ->middleware('permission:entries.read')->where('id', ApiServiceProvider::ULID)->name('transaction-types.show');
+        ->middleware('permission:entries.read|transaction-types.read')->where('id', ApiServiceProvider::ULID)->name('transaction-types.show');
 
     Route::get('entries', [EntryController::class, 'index'])->middleware('permission:entries.read')->name('entries.index');
     Route::post('entries', [EntryController::class, 'store'])->middleware('permission:entries.create')->name('entries.store');

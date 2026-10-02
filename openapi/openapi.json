@@ -29,6 +29,27 @@
                 }
             }
         },
+        "/oauth/token": {
+            "post": {
+                "operationId": "oauth.token",
+                "summary": "Issue an access token",
+                "tags": [
+                    "AccessToken"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/accounts": {
             "get": {
                 "operationId": "accounts.index",
@@ -4083,6 +4104,458 @@
                 }
             }
         },
+        "/companies/{companyId}/integration-clients": {
+            "get": {
+                "operationId": "integration-clients.index",
+                "summary": "Integration clients of the company, newest first. Filter: `filter[status]` is `active` or\n`revoked`. `per_page` defaults to 50, at most 200. Secrets are never listed",
+                "tags": [
+                    "IntegrationClient"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[status]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "revoked"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `IntegrationClientResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/IntegrationClientResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "integration-clients.store",
+                "summary": "Registers a client for one `source_system`. The response carries `client_id` and\n`client_secret`; the secret is shown this once and only its hash is kept. The client then\nrequests tokens at `POST /api/v1/oauth/token` with `grant_type=client_credentials` and HTTP\nBasic authentication (`client_secret_basic`)",
+                "tags": [
+                    "IntegrationClient"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateIntegrationClientRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`IntegrationClientWithSecretResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/IntegrationClientWithSecretResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/integration-clients/{id}": {
+            "get": {
+                "operationId": "integration-clients.show",
+                "tags": [
+                    "IntegrationClient"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`IntegrationClientResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/IntegrationClientResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "integration-clients.update",
+                "summary": "Renames the client or replaces its scopes or transaction type allowlist. `lock_version` is required",
+                "tags": [
+                    "IntegrationClient"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateIntegrationClientRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`IntegrationClientResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/IntegrationClientResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/integration-clients/{id}/rotate-secret": {
+            "post": {
+                "operationId": "integration-clients.rotate-secret",
+                "summary": "Replaces the secret and revokes all active tokens at once. The new secret is shown this once",
+                "tags": [
+                    "IntegrationClient"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`IntegrationClientWithSecretResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/IntegrationClientWithSecretResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/integration-clients/{id}/revoke": {
+            "post": {
+                "operationId": "integration-clients.revoke",
+                "summary": "Revokes the client for good: its tokens stop at once and no new ones are issued",
+                "tags": [
+                    "IntegrationClient"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`IntegrationClientResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/IntegrationClientResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/invitations/accept": {
             "post": {
                 "operationId": "invitations.accept",
@@ -7511,6 +7984,48 @@
                 },
                 "title": "CreateFiscalYearsRequest"
             },
+            "CreateIntegrationClientRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "source_system": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9_.-]{1,63}$"
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "transaction-types:read",
+                                "financial-events:write",
+                                "financial-events:read:self",
+                                "exchange-rates:write"
+                            ]
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    },
+                    "transaction_type_keys": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "pattern": "^[a-z0-9][a-z0-9_.-]{0,63}$"
+                        },
+                        "maxItems": 200,
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "name",
+                    "source_system",
+                    "scopes"
+                ],
+                "title": "CreateIntegrationClientRequest"
+            },
             "CreateInvitationRequest": {
                 "type": "object",
                 "properties": {
@@ -7613,6 +8128,7 @@
                                 "periods.manage",
                                 "periods.close",
                                 "periods.reopen",
+                                "transaction-types.read",
                                 "entries.read",
                                 "entries.create",
                                 "entries.submit",
@@ -8287,6 +8803,149 @@
                     "confirmed"
                 ],
                 "title": "ImportTemplateRequest"
+            },
+            "IntegrationClientResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "source_system": {
+                        "type": "string"
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "description": "OAuth client ID for the token request; the secret is never readable again."
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "transaction_type_keys": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "`active` or `revoked`."
+                    },
+                    "secret_rotated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "revoked_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "source_system",
+                    "client_id",
+                    "scopes",
+                    "transaction_type_keys",
+                    "status",
+                    "secret_rotated_at",
+                    "revoked_at",
+                    "created_at",
+                    "lock_version"
+                ],
+                "title": "IntegrationClientResource"
+            },
+            "IntegrationClientWithSecretResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "source_system": {
+                        "type": "string"
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "description": "OAuth client ID for the token request; the secret is never readable again."
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "transaction_type_keys": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "`active` or `revoked`."
+                    },
+                    "secret_rotated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "revoked_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    },
+                    "client_secret": {
+                        "type": "string",
+                        "description": "Shown once. Store it now; only a hash is kept."
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "source_system",
+                    "client_id",
+                    "scopes",
+                    "transaction_type_keys",
+                    "status",
+                    "secret_rotated_at",
+                    "revoked_at",
+                    "created_at",
+                    "lock_version",
+                    "client_secret"
+                ],
+                "title": "IntegrationClientWithSecretResource"
             },
             "InvitationResource": {
                 "type": "object",
@@ -9149,6 +9808,46 @@
                 ],
                 "title": "UpdateFiscalCalendarRequest"
             },
+            "UpdateIntegrationClientRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "transaction-types:read",
+                                "financial-events:write",
+                                "financial-events:read:self",
+                                "exchange-rates:write"
+                            ]
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    },
+                    "transaction_type_keys": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "pattern": "^[a-z0-9][a-z0-9_.-]{0,63}$"
+                        },
+                        "maxItems": 200,
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "lock_version"
+                ],
+                "title": "UpdateIntegrationClientRequest"
+            },
             "UpdateMembershipRequest": {
                 "type": "object",
                 "properties": {
@@ -9247,6 +9946,7 @@
                                 "periods.manage",
                                 "periods.close",
                                 "periods.reopen",
+                                "transaction-types.read",
                                 "entries.read",
                                 "entries.create",
                                 "entries.submit",
@@ -9303,6 +10003,7 @@
                                 "periods.manage",
                                 "periods.close",
                                 "periods.reopen",
+                                "transaction-types.read",
                                 "entries.read",
                                 "entries.create",
                                 "entries.submit",

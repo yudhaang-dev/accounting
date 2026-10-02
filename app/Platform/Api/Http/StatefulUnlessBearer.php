@@ -14,8 +14,9 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Cookie session and CSRF protection for the SPA on `/api/v1` (ADR-0011, API-TR-21).
  *
- * Requests carrying a Bearer token (machine clients, API-TR-22) skip cookies, session and CSRF
- * entirely: they are authenticated by the token, not by ambient browser credentials.
+ * Requests carrying a Bearer token (machine clients, API-TR-22), and the token request itself, skip
+ * cookies, session and CSRF entirely: they are authenticated by the token or the client secret, not
+ * by ambient browser credentials.
  */
 final class StatefulUnlessBearer
 {
@@ -23,7 +24,7 @@ final class StatefulUnlessBearer
 
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->bearerToken() !== null) {
+        if ($request->bearerToken() !== null || $request->is('api/v1/oauth/token')) {
             return $next($request);
         }
 

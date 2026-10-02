@@ -42,6 +42,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Integration clients with a Bearer token (API-TR-22); see IdentityAccessServiceProvider.
+        'integration' => [
+            'driver' => 'integration',
+            'provider' => 'users',
+        ],
     ],
 
     /*

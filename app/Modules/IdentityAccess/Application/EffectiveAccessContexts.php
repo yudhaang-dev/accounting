@@ -5,6 +5,7 @@ namespace App\Modules\IdentityAccess\Application;
 use App\Models\User;
 use App\Modules\IdentityAccess\Contracts\AccessContext;
 use App\Modules\IdentityAccess\Contracts\AccessContexts;
+use App\Modules\IdentityAccess\Contracts\IntegrationPrincipal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use LogicException;
@@ -16,6 +17,8 @@ use LogicException;
 final class EffectiveAccessContexts implements AccessContexts
 {
     public const REQUEST_ATTRIBUTE = 'access_context';
+
+    public const PRINCIPAL_ATTRIBUTE = 'integration_principal';
 
     public function __construct(private readonly MembershipDataScopes $dataScopes) {}
 
@@ -36,6 +39,13 @@ final class EffectiveAccessContexts implements AccessContexts
         return $context instanceof AccessContext
             ? $context
             : throw new LogicException('No access context: the route is not company-scoped.');
+    }
+
+    public function integrationPrincipal(Request $request): ?IntegrationPrincipal
+    {
+        $principal = $request->attributes->get(self::PRINCIPAL_ATTRIBUTE);
+
+        return $principal instanceof IntegrationPrincipal ? $principal : null;
     }
 
     /**
