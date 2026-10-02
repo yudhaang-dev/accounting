@@ -55,6 +55,11 @@ import { TwoFactorPage } from '@/modules/identity-access/pages/two-factor-page';
 import { VerifyEmailPage } from '@/modules/identity-access/pages/verify-email-page';
 import { WorkspaceNotFound } from '@/modules/identity-access/pages/workspace-not-found';
 import { WorkspacesPage } from '@/modules/identity-access/pages/workspaces-page';
+import { AcceptInvitationPage } from '@/modules/identity-access/pages/accept-invitation-page';
+import { IntegrationClientsPage } from '@/modules/identity-access/pages/integration-clients-page';
+import { MembersPage } from '@/modules/identity-access/pages/members-page';
+import { RolesPage } from '@/modules/identity-access/pages/roles-page';
+import { SecurityPolicyPage } from '@/modules/identity-access/pages/security-policy-page';
 
 type RouterContext = { queryClient: QueryClient };
 
@@ -419,6 +424,87 @@ const rateTypesRoute = createRoute({
     },
 });
 
+const membersRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/members',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navMembers', href: at(m, '/members') },
+        ],
+    },
+    beforeLoad: requirePermission('memberships.read'),
+    component: function Members() {
+        const { workspace, me } = membersRoute.useRouteContext();
+
+        return (
+            <MembersPage
+                companyId={workspace.company_id}
+                currentUserId={me.id}
+                canManage={can(workspace, 'memberships.manage')}
+                canReadRoles={can(workspace, 'roles.read')}
+                canReadDimensions={can(workspace, 'dimensions.read')}
+            />
+        );
+    },
+});
+
+const rolesRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/roles',
+    staticData: {
+        crumbs: (m) => [{ labelKey: 'app.navRoles', href: at(m, '/roles') }],
+    },
+    beforeLoad: requirePermission('roles.read'),
+    component: function Roles() {
+        const { workspace } = rolesRoute.useRouteContext();
+
+        return (
+            <RolesPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'roles.manage')}
+            />
+        );
+    },
+});
+
+const securityPolicyRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/security-policy',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navSecurityPolicy',
+                href: at(m, '/security-policy'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('policies.manage'),
+    component: function SecurityPolicy() {
+        const { workspace } = securityPolicyRoute.useRouteContext();
+
+        return <SecurityPolicyPage companyId={workspace.company_id} />;
+    },
+});
+
+const integrationClientsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/integration-clients',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navIntegrations',
+                href: at(m, '/integration-clients'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('integration-clients.manage'),
+    component: function IntegrationClients() {
+        const { workspace } = integrationClientsRoute.useRouteContext();
+
+        return <IntegrationClientsPage companyId={workspace.company_id} />;
+    },
+});
+
 const entriesRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/entries',
@@ -644,6 +730,26 @@ const journalRoute = createRoute({
     },
 });
 
+// The link of an invitation e-mail. Outside any company: the invited person does not belong to one yet.
+const acceptInvitationRoute = createRoute({
+    getParentRoute: () => verifiedRoute,
+    path: '/invitations/accept',
+    validateSearch: (search: Record<string, unknown>): { token?: string } =>
+        typeof search.token === 'string' && search.token !== ''
+            ? { token: search.token }
+            : {},
+    staticData: {
+        crumbs: () => [{ labelKey: 'invitation.crumb' }],
+    },
+    component: function AcceptInvitation() {
+        return (
+            <AcceptInvitationPage
+                token={acceptInvitationRoute.useSearch().token}
+            />
+        );
+    },
+});
+
 const newWorkspaceRoute = createRoute({
     getParentRoute: () => verifiedRoute,
     path: '/workspaces/new',
@@ -728,6 +834,7 @@ const routeTree = rootRoute.addChildren([
             indexRoute,
             workspacesRoute,
             newWorkspaceRoute,
+            acceptInvitationRoute,
             companyRoute.addChildren([
                 companyHomeRoute,
                 companySetupRoute,
@@ -744,6 +851,10 @@ const routeTree = rootRoute.addChildren([
                 journalsRoute,
                 journalRoute,
                 trialBalanceRoute,
+                membersRoute,
+                rolesRoute,
+                securityPolicyRoute,
+                integrationClientsRoute,
             ]),
         ]),
     ]),

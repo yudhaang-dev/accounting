@@ -7,10 +7,14 @@ import {
     ChevronsUpDownIcon,
     HouseIcon,
     ListTreeIcon,
+    LockKeyholeIcon,
     LogOutIcon,
+    PlugIcon,
     ShapesIcon,
+    ShieldCheckIcon,
     SigmaIcon,
     TrendingUpIcon,
+    UsersIcon,
 } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -103,6 +107,30 @@ const NAV = [
         label: 'app.navTrialBalance',
         icon: SigmaIcon,
         permission: 'reports.read',
+    },
+    {
+        to: '/w/$companyId/members',
+        label: 'app.navMembers',
+        icon: UsersIcon,
+        permission: 'memberships.read',
+    },
+    {
+        to: '/w/$companyId/roles',
+        label: 'app.navRoles',
+        icon: ShieldCheckIcon,
+        permission: 'roles.read',
+    },
+    {
+        to: '/w/$companyId/security-policy',
+        label: 'app.navSecurityPolicy',
+        icon: LockKeyholeIcon,
+        permission: 'policies.manage',
+    },
+    {
+        to: '/w/$companyId/integration-clients',
+        label: 'app.navIntegrations',
+        icon: PlugIcon,
+        permission: 'integration-clients.manage',
     },
 ] as const satisfies readonly {
     to: string;

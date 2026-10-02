@@ -116,6 +116,10 @@ export const id = {
         navEntries: 'Entri',
         navJournals: 'Jurnal',
         navTrialBalance: 'Neraca saldo',
+        navMembers: 'Anggota',
+        navRoles: 'Role',
+        navSecurityPolicy: 'Kebijakan keamanan',
+        navIntegrations: 'Klien integrasi',
         account: 'Akun',
         signOut: 'Keluar',
         signingOut: 'Keluar…',
@@ -713,7 +717,232 @@ export const id = {
         currency: 'Dalam {{currency}}',
         rangeInvalid: 'Tanggal awal tidak boleh setelah tanggal akhir.',
     },
+    invitation: {
+        pageTitle: 'Undangan',
+        crumb: 'Undangan',
+        title: 'Undangan bergabung',
+        description:
+            'Anda diundang ke sebuah ruang kerja. Terima undangan dengan akun yang email-nya sama dengan alamat yang diundang.',
+        missingToken:
+            'Tautan undangan ini tidak lengkap. Buka tautan dari email undangan sekali lagi.',
+        accept: 'Terima undangan',
+        accepting: 'Memproses…',
+        home: 'Ke beranda',
+    },
+    members: {
+        pageTitle: 'Anggota',
+        title: 'Anggota',
+        description:
+            'Siapa yang dapat masuk ke ruang kerja ini, dengan role apa, sampai kapan, dan atas data apa.',
+        invite: 'Undang anggota',
+        empty: 'Belum ada anggota',
+        emptyDescription:
+            'Undang rekan kerja agar dapat memakai ruang kerja ini.',
+        member: 'Anggota',
+        roles: 'Role',
+        expires: 'Berlaku sampai',
+        status: 'Status',
+        actions: 'Aksi',
+        editAction: 'Ubah',
+        revokeAction: 'Cabut akses',
+        roleInactive: 'Role nonaktif; hanya dapat dilepas.',
+        revoked: 'Akses {{name}} dicabut.',
+        statuses: {
+            active: 'Aktif',
+            revoked: 'Dicabut',
+            expired: 'Kedaluwarsa',
+        },
+        scope: {
+            title: 'Cakupan data',
+            description:
+                'Batasi anggota ke nilai dimensi tertentu beserta turunannya. Tanpa centang, anggota melihat semua data.',
+            unrestricted: 'Tanpa batas',
+            restricted: 'Dibatasi ({{total}} nilai)',
+            noDimensions:
+                'Perusahaan belum punya dimensi untuk dipakai sebagai batas.',
+        },
+        invitations: {
+            title: 'Undangan',
+            empty: 'Tidak ada undangan.',
+            validUntil: 'Berlaku sampai',
+            withdrawAction: 'Tarik undangan',
+            withdrawn: 'Undangan untuk {{email}} ditarik.',
+            statuses: {
+                pending: 'Menunggu',
+                accepted: 'Diterima',
+                revoked: 'Ditarik',
+                expired: 'Kedaluwarsa',
+            },
+        },
+        form: {
+            inviteTitle: 'Undang anggota',
+            editTitle: 'Ubah {{name}}',
+            email: 'Email',
+            emailInvalid: 'Masukkan alamat email yang valid.',
+            roles: 'Role',
+            rolesRequired: 'Pilih setidaknya satu role.',
+            expires: 'Keanggotaan berakhir',
+            noExpiry: 'Tanpa batas waktu',
+            expiresHint:
+                'Akses berhenti di akhir hari ini, mis. untuk auditor eksternal.',
+            invite: 'Kirim undangan',
+            invited: 'Undangan dikirim ke {{email}}.',
+            saved: 'Anggota diperbarui.',
+            conflict:
+                'Data anggota berubah oleh orang lain. Tampilan sudah dimuat ulang; periksa lalu simpan lagi.',
+        },
+    },
+    roles: {
+        pageTitle: 'Role',
+        title: 'Role',
+        description:
+            'Role adalah kumpulan permission. Mengubah role langsung berlaku bagi semua pemegangnya.',
+        create: 'Role baru',
+        empty: 'Belum ada role',
+        emptyDescription:
+            'Buat role untuk mengatur apa yang boleh dilakukan anggota.',
+        name: 'Nama',
+        permissions: 'Permission',
+        status: 'Status',
+        actions: 'Aksi',
+        editAction: 'Ubah',
+        deactivateAction: 'Nonaktifkan',
+        reactivateAction: 'Aktifkan kembali',
+        active: 'Aktif',
+        inactive: 'Nonaktif',
+        deactivated: 'Role {{name}} dinonaktifkan.',
+        reactivated: 'Role {{name}} diaktifkan kembali.',
+        form: {
+            createTitle: 'Role baru',
+            editTitle: 'Ubah role {{name}}',
+            name: 'Nama role',
+            descriptionLabel: 'Keterangan',
+            permissions: 'Permission',
+            permissionsHint:
+                'Anggota dengan role ini boleh melakukan aksi yang dicentang.',
+            create: 'Buat role',
+            created: 'Role {{name}} dibuat.',
+            saved: 'Role {{name}} disimpan.',
+            conflict:
+                'Role berubah oleh orang lain. Tampilan sudah dimuat ulang; periksa lalu simpan lagi.',
+        },
+    },
+    policy: {
+        pageTitle: 'Kebijakan keamanan',
+        title: 'Kebijakan keamanan',
+        description:
+            'Aturan keamanan perusahaan. Setiap penyimpanan menjadi versi baru dan tercatat di audit.',
+        version: 'Versi {{version}}',
+        noVersion: 'Belum pernah diatur',
+        saved: 'Kebijakan disimpan sebagai versi {{version}}.',
+        conflict:
+            'Kebijakan diubah oleh orang lain. Tampilan sudah dimuat ulang dengan versi terbaru; periksa lalu simpan lagi.',
+        twoFactor: {
+            title: 'Aksi yang mewajibkan 2FA',
+            description:
+                'Pengguna tanpa 2FA terpasang di akunnya ditolak saat melakukan aksi yang dicentang.',
+        },
+        idle: {
+            title: 'Batas sesi idle (menit)',
+            never: 'Tanpa batas',
+            description:
+                'Sesi berakhir bila tidak ada aktivitas selama waktu ini (1–{{max}} menit). Kosongkan agar sesi tidak berakhir karena idle.',
+            invalid: 'Isi bilangan bulat 1–{{max}}, atau kosongkan.',
+        },
+        allowlist: {
+            title: 'Alamat IP klien integrasi',
+            description:
+                'Satu alamat IP atau rentang CIDR per baris. Kosong berarti klien integrasi boleh memanggil dari mana saja.',
+        },
+    },
+    integrations: {
+        pageTitle: 'Klien integrasi',
+        title: 'Klien integrasi',
+        description:
+            'Sistem lain yang memanggil API dengan kredensialnya sendiri. Setiap klien terikat pada satu sistem sumber, scope, dan jenis transaksi.',
+        register: 'Daftarkan klien',
+        empty: 'Belum ada klien integrasi',
+        emptyDescription:
+            'Daftarkan klien agar sistem lain dapat mengirim peristiwa keuangan.',
+        name: 'Nama',
+        sourceSystem: 'Sistem sumber',
+        scopesTitle: 'Scope',
+        typeKeys: 'Jenis transaksi',
+        status: 'Status',
+        actions: 'Aksi',
+        editAction: 'Ubah',
+        rotateAction: 'Rotasi secret',
+        revokeAction: 'Cabut klien',
+        active: 'Aktif',
+        revokedStatus: 'Dicabut',
+        revoked: 'Klien {{name}} dicabut.',
+        scopes: {
+            transactionTypesRead: 'Membaca daftar jenis transaksi.',
+            financialEventsWrite: 'Mengirim peristiwa keuangan.',
+            financialEventsReadSelf:
+                'Membaca peristiwa yang dikirimnya sendiri.',
+            exchangeRatesWrite: 'Mencatat kurs.',
+        },
+        form: {
+            registerTitle: 'Daftarkan klien integrasi',
+            editTitle: 'Ubah klien {{name}}',
+            name: 'Nama klien',
+            sourceSystem: 'Sistem sumber',
+            sourceSystemHint:
+                'Huruf kecil, angka, titik, garis bawah, atau tanda hubung (2–64 karakter). Unik per perusahaan dan tidak dapat diubah.',
+            sourceSystemInvalid: 'Format tidak valid.',
+            scopes: 'Scope',
+            scopesRequired: 'Pilih setidaknya satu scope.',
+            typeKeys: 'Jenis transaksi yang diizinkan',
+            typeKeysHint:
+                'Key jenis transaksi, dipisah baris baru, spasi, atau koma. Kosong berarti tidak ada yang diizinkan.',
+            typeKeysInvalid: 'Ada key yang formatnya tidak valid.',
+            register: 'Daftarkan',
+            saved: 'Klien disimpan.',
+            conflict:
+                'Klien berubah oleh orang lain. Tampilan sudah dimuat ulang; periksa lalu simpan lagi.',
+        },
+        secret: {
+            createdTitle: 'Klien terdaftar',
+            rotatedTitle: 'Secret baru',
+            warning:
+                'Simpan secret ini sekarang. Hanya hash-nya yang disimpan, sehingga secret tidak dapat ditampilkan lagi.',
+            clientId: 'Client ID',
+            clientSecret: 'Client secret',
+            copy: 'Salin {{name}}',
+            done: 'Sudah saya simpan',
+        },
+    },
     confirm: {
+        revokeMember: {
+            title: 'Cabut akses {{name}}?',
+            description:
+                'Akses berhenti pada permintaan berikutnya. Catatan audit tetap ada, dan anggota dapat diundang kembali.',
+            action: 'Cabut akses',
+        },
+        withdrawInvitation: {
+            title: 'Tarik undangan untuk {{email}}?',
+            description: 'Tautan di email undangan tidak berlaku lagi.',
+            action: 'Tarik undangan',
+        },
+        deactivateRole: {
+            title: 'Nonaktifkan role {{name}}?',
+            description:
+                'Role nonaktif tidak dapat diberikan kepada anggota baru. Pemegang yang sudah ada tetap memilikinya sampai role dilepas, dan role dapat diaktifkan kembali.',
+            action: 'Nonaktifkan',
+        },
+        rotateSecret: {
+            title: 'Rotasi secret {{name}}?',
+            description:
+                'Secret lama dan semua token aktif langsung ditolak. Sistem yang memakai klien ini harus diberi secret baru.',
+            action: 'Rotasi secret',
+        },
+        revokeClient: {
+            title: 'Cabut klien {{name}}?',
+            description:
+                'Token klien langsung ditolak dan tidak ada token baru yang diterbitkan. Pencabutan tidak dapat dibatalkan.',
+            action: 'Cabut klien',
+        },
         post: {
             title: 'Posting entri {{number}}?',
             description:

@@ -118,6 +118,10 @@ export const en: Widen<typeof id> = {
         navEntries: 'Entries',
         navJournals: 'Journals',
         navTrialBalance: 'Trial balance',
+        navMembers: 'Members',
+        navRoles: 'Roles',
+        navSecurityPolicy: 'Security policy',
+        navIntegrations: 'Integration clients',
         account: 'Account',
         signOut: 'Sign out',
         signingOut: 'Signing out…',
@@ -716,7 +720,229 @@ export const en: Widen<typeof id> = {
         currency: 'In {{currency}}',
         rangeInvalid: 'The start date cannot be after the end date.',
     },
+    invitation: {
+        pageTitle: 'Invitation',
+        crumb: 'Invitation',
+        title: 'Invitation to join',
+        description:
+            'You have been invited to a workspace. Accept it with the account whose email is the address that was invited.',
+        missingToken:
+            'This invitation link is incomplete. Open the link from the invitation email again.',
+        accept: 'Accept invitation',
+        accepting: 'Working…',
+        home: 'Go to home',
+    },
+    members: {
+        pageTitle: 'Members',
+        title: 'Members',
+        description:
+            'Who can sign in to this workspace, with which roles, until when, and over which data.',
+        invite: 'Invite member',
+        empty: 'No members yet',
+        emptyDescription: 'Invite colleagues so they can use this workspace.',
+        member: 'Member',
+        roles: 'Roles',
+        expires: 'Valid until',
+        status: 'Status',
+        actions: 'Actions',
+        editAction: 'Edit',
+        revokeAction: 'Revoke access',
+        roleInactive: 'Inactive role; it can only be removed.',
+        revoked: '{{name}} no longer has access.',
+        statuses: {
+            active: 'Active',
+            revoked: 'Revoked',
+            expired: 'Expired',
+        },
+        scope: {
+            title: 'Data scope',
+            description:
+                'Limit the member to certain dimension values and everything below them. With nothing ticked, the member sees all data.',
+            unrestricted: 'No limit',
+            restricted: 'Limited ({{total}} values)',
+            noDimensions: 'The company has no dimensions to limit by yet.',
+        },
+        invitations: {
+            title: 'Invitations',
+            empty: 'No invitations.',
+            validUntil: 'Valid until',
+            withdrawAction: 'Withdraw invitation',
+            withdrawn: 'The invitation for {{email}} was withdrawn.',
+            statuses: {
+                pending: 'Pending',
+                accepted: 'Accepted',
+                revoked: 'Withdrawn',
+                expired: 'Expired',
+            },
+        },
+        form: {
+            inviteTitle: 'Invite member',
+            editTitle: 'Edit {{name}}',
+            email: 'Email',
+            emailInvalid: 'Enter a valid email address.',
+            roles: 'Roles',
+            rolesRequired: 'Choose at least one role.',
+            expires: 'Membership ends',
+            noExpiry: 'No end date',
+            expiresHint:
+                'Access stops at the end of this day, e.g. for an external auditor.',
+            invite: 'Send invitation',
+            invited: 'Invitation sent to {{email}}.',
+            saved: 'Member updated.',
+            conflict:
+                'Someone else changed this member. The view was reloaded; check it and save again.',
+        },
+    },
+    roles: {
+        pageTitle: 'Roles',
+        title: 'Roles',
+        description:
+            'A role is a set of permissions. Changing a role applies at once to everyone who holds it.',
+        create: 'New role',
+        empty: 'No roles yet',
+        emptyDescription: 'Create a role to set what members may do.',
+        name: 'Name',
+        permissions: 'Permissions',
+        status: 'Status',
+        actions: 'Actions',
+        editAction: 'Edit',
+        deactivateAction: 'Deactivate',
+        reactivateAction: 'Reactivate',
+        active: 'Active',
+        inactive: 'Inactive',
+        deactivated: 'Role {{name}} deactivated.',
+        reactivated: 'Role {{name}} reactivated.',
+        form: {
+            createTitle: 'New role',
+            editTitle: 'Edit role {{name}}',
+            name: 'Role name',
+            descriptionLabel: 'Description',
+            permissions: 'Permissions',
+            permissionsHint:
+                'Members with this role may do the actions ticked.',
+            create: 'Create role',
+            created: 'Role {{name}} created.',
+            saved: 'Role {{name}} saved.',
+            conflict:
+                'Someone else changed this role. The view was reloaded; check it and save again.',
+        },
+    },
+    policy: {
+        pageTitle: 'Security policy',
+        title: 'Security policy',
+        description:
+            "The company's security rules. Every save becomes a new version and is recorded in the audit log.",
+        version: 'Version {{version}}',
+        noVersion: 'Never set',
+        saved: 'Policy saved as version {{version}}.',
+        conflict:
+            'Someone else changed the policy. The view was reloaded with the latest version; check it and save again.',
+        twoFactor: {
+            title: 'Actions that require 2FA',
+            description:
+                'Users without 2FA set up on their account are refused when they do a ticked action.',
+        },
+        idle: {
+            title: 'Idle session limit (minutes)',
+            never: 'No limit',
+            description:
+                'A session ends after this long without activity (1–{{max}} minutes). Leave empty so sessions never end for being idle.',
+            invalid:
+                'Enter a whole number from 1 to {{max}}, or leave it empty.',
+        },
+        allowlist: {
+            title: 'Integration client IP addresses',
+            description:
+                'One IP address or CIDR range per line. Empty means integration clients may call from anywhere.',
+        },
+    },
+    integrations: {
+        pageTitle: 'Integration clients',
+        title: 'Integration clients',
+        description:
+            'Other systems that call the API with credentials of their own. Each client is tied to one source system, its scopes and its transaction types.',
+        register: 'Register client',
+        empty: 'No integration clients yet',
+        emptyDescription:
+            'Register a client so another system can send financial events.',
+        name: 'Name',
+        sourceSystem: 'Source system',
+        scopesTitle: 'Scopes',
+        typeKeys: 'Transaction types',
+        status: 'Status',
+        actions: 'Actions',
+        editAction: 'Edit',
+        rotateAction: 'Rotate secret',
+        revokeAction: 'Revoke client',
+        active: 'Active',
+        revokedStatus: 'Revoked',
+        revoked: 'Client {{name}} revoked.',
+        scopes: {
+            transactionTypesRead: 'Read the list of transaction types.',
+            financialEventsWrite: 'Send financial events.',
+            financialEventsReadSelf: 'Read the events it sent itself.',
+            exchangeRatesWrite: 'Record exchange rates.',
+        },
+        form: {
+            registerTitle: 'Register an integration client',
+            editTitle: 'Edit client {{name}}',
+            name: 'Client name',
+            sourceSystem: 'Source system',
+            sourceSystemHint:
+                'Lowercase letters, digits, dots, underscores or hyphens (2–64 characters). Unique per company and cannot be changed.',
+            sourceSystemInvalid: 'Invalid format.',
+            scopes: 'Scopes',
+            scopesRequired: 'Choose at least one scope.',
+            typeKeys: 'Allowed transaction types',
+            typeKeysHint:
+                'Transaction type keys, separated by new lines, spaces or commas. Empty allows none.',
+            typeKeysInvalid: 'A key has an invalid format.',
+            register: 'Register',
+            saved: 'Client saved.',
+            conflict:
+                'Someone else changed this client. The view was reloaded; check it and save again.',
+        },
+        secret: {
+            createdTitle: 'Client registered',
+            rotatedTitle: 'New secret',
+            warning:
+                'Store this secret now. Only its hash is kept, so it cannot be shown again.',
+            clientId: 'Client ID',
+            clientSecret: 'Client secret',
+            copy: 'Copy {{name}}',
+            done: 'I have stored it',
+        },
+    },
     confirm: {
+        revokeMember: {
+            title: 'Revoke access for {{name}}?',
+            description:
+                'Access stops on the next request. The audit records stay, and the member can be invited again.',
+            action: 'Revoke access',
+        },
+        withdrawInvitation: {
+            title: 'Withdraw the invitation for {{email}}?',
+            description: 'The link in the invitation email stops working.',
+            action: 'Withdraw invitation',
+        },
+        deactivateRole: {
+            title: 'Deactivate role {{name}}?',
+            description:
+                'An inactive role cannot be given to members. Current holders keep it until it is removed, and the role can be reactivated.',
+            action: 'Deactivate',
+        },
+        rotateSecret: {
+            title: 'Rotate the secret of {{name}}?',
+            description:
+                'The old secret and every active token are refused at once. Systems using this client need the new secret.',
+            action: 'Rotate secret',
+        },
+        revokeClient: {
+            title: 'Revoke client {{name}}?',
+            description:
+                'Its tokens are refused at once and no new ones are issued. Revoking cannot be undone.',
+            action: 'Revoke client',
+        },
         post: {
             title: 'Post entry {{number}}?',
             description:
