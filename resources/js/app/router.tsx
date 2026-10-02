@@ -36,6 +36,7 @@ import {
 import { TrialBalancePage } from '@/modules/reporting/pages/trial-balance-page';
 import { AccountsPage } from '@/modules/general-ledger/pages/accounts-page';
 import { LedgerSettingsPage } from '@/modules/general-ledger/pages/ledger-settings-page';
+import { OpeningBalancesPage } from '@/modules/general-ledger/pages/opening-balances-page';
 import { PeriodsPage } from '@/modules/general-ledger/pages/periods-page';
 import { can } from '@/modules/identity-access/permissions';
 import { entryQuery } from '@/modules/transaction-entry/entries';
@@ -368,6 +369,31 @@ const ledgerSettingsRoute = createRoute({
                 companyId={workspace.company_id}
                 canManageRoles={can(workspace, 'accounts.manage')}
                 canManagePolicy={can(workspace, 'policies.manage')}
+            />
+        );
+    },
+});
+
+const openingBalancesRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/opening-balances',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navOpeningBalances',
+                href: at(m, '/opening-balances'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('journals.read'),
+    component: function OpeningBalances() {
+        const { workspace } = openingBalancesRoute.useRouteContext();
+
+        return (
+            <OpeningBalancesPage
+                companyId={workspace.company_id}
+                canImport={can(workspace, 'opening-balances.import')}
+                canReadJournals={can(workspace, 'journals.read')}
             />
         );
     },
@@ -876,6 +902,7 @@ const routeTree = rootRoute.addChildren([
                 accountsRoute,
                 periodsRoute,
                 ledgerSettingsRoute,
+                openingBalancesRoute,
                 dimensionsRoute,
                 currenciesRoute,
                 exchangeRatesRoute,

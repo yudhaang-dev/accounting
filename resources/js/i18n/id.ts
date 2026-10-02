@@ -110,6 +110,7 @@ export const id = {
         navHome: 'Beranda',
         navAccounts: 'Akun',
         navLedgerSettings: 'Pengaturan buku besar',
+        navOpeningBalances: 'Saldo konversi',
         navPeriods: 'Periode',
         navDimensions: 'Dimensi',
         navCurrencies: 'Mata uang',
@@ -352,6 +353,106 @@ export const id = {
         openJournal: 'Lihat jurnal revaluasi',
         openReversal: 'Lihat jurnal pembalik',
         mappingHint: 'Atur jenis kurs dan peran akun di Pengaturan buku besar.',
+    },
+    conversion: {
+        pageTitle: 'Saldo konversi',
+        title: 'Saldo konversi dan histori',
+        description:
+            'Memindahkan pembukuan dari sistem lama: saldo awal per tanggal mulai, lalu histori sampai tanggal cutover bila ada. Setiap impor diposting sebagai jurnal sistem dan hanya dilakukan sekali.',
+        notImported: 'Saldo konversi belum diimpor.',
+        stepsLabel: 'Langkah impor',
+        next: 'Lanjut',
+        back: 'Kembali',
+        importing: 'Mengimpor…',
+        chooseFile: 'Pilih berkas CSV',
+        read: '{{count}} baris saldo terbaca.',
+        lines: 'Jumlah baris',
+        debit: 'Total debit',
+        credit: 'Total kredit',
+        journal: 'Jurnal',
+        sourceCode: 'Kode di sistem lama',
+        account: 'Akun perusahaan',
+        accountFor: 'Akun untuk {{code}}',
+        chooseAccount: 'Pilih akun',
+        mappingHint:
+            'Kode yang sama dengan kode akun perusahaan sudah terisi. Pilih akun untuk sisanya; kode yang belum dipetakan menolak impor.',
+        unmapped: '{{count}} kode belum dipetakan.',
+        unbalanced:
+            'Total debit dan kredit berbeda. Perbaiki berkasnya; saldo yang tidak seimbang ditolak.',
+        problems: {
+            column: 'Kolom {{detail}} tidak ada di baris judul.',
+            amount: 'Baris {{line}}: "{{detail}}" bukan angka. Pakai titik untuk desimal, mis. 1500.50.',
+            date: 'Tanggal "{{detail}}" harus berbentuk TTTT-BB-HH.',
+            code: 'Baris {{line}}: kode akun kosong.',
+            more: '…dan {{count}} masalah lain.',
+        },
+        opening: {
+            steps: {
+                details: 'Data impor',
+                file: 'Berkas saldo',
+                mapping: 'Pemetaan akun',
+                review: 'Tinjau',
+            },
+            sourceKey: 'Kunci sumber',
+            sourceKeyHint:
+                'Pengenal impor ini di sistem lama. Mengirim kunci dan isi yang sama lagi tidak menggandakan saldo.',
+            sourceSystem: 'Sistem sumber',
+            cutover: 'Tanggal cutover',
+            cutoverHint: 'Hari pertama pembukuan di sistem ini.',
+            start: 'Awal histori',
+            startHint:
+                'Tanggal saldo awal, harus hari pertama sebuah periode. Kosong berarti sama dengan cutover (tanpa histori).',
+            startAfterCutover:
+                'Awal histori tidak boleh setelah tanggal cutover.',
+            file: 'Neraca saldo awal',
+            fileHint:
+                'CSV dengan kolom source_code, debit, credit (dan description bila ada), per {{date}}. Pakai titik untuk desimal. Bila mulai di tengah tahun buku, sertakan saldo pendapatan dan beban tahun berjalan.',
+            import: 'Impor saldo konversi',
+            imported: 'Saldo konversi',
+            done: 'Saldo konversi diposting sebagai jurnal {{number}}.',
+        },
+        history: {
+            title: 'Histori',
+            none: 'Awal histori sama dengan tanggal cutover, jadi tidak ada histori untuk diimpor.',
+            notImported: 'Histori belum diimpor.',
+            window: 'Histori bertanggal {{from}} sampai {{to}}, sehari sebelum cutover.',
+            steps: {
+                details: 'Data impor',
+                journals: 'Jurnal histori',
+                balances: 'Saldo cutover',
+                mapping: 'Pemetaan akun',
+                review: 'Tinjau',
+            },
+            sourceKey: 'Kunci sumber',
+            sourceKeyHint: 'Pengenal impor histori ini di sistem lama.',
+            granularityLabel: 'Granularitas',
+            granularity: {
+                period_summary: 'Ringkasan per periode',
+                transactions: 'Per transaksi',
+            },
+            journalsFile: 'Jurnal histori',
+            journalsHint: {
+                period_summary:
+                    'CSV dengan kolom date, journal (opsional), source_code, debit, credit. Satu jurnal per periode, bertanggal di dalam periodenya, mis. akhir bulan.',
+                transactions:
+                    'CSV dengan kolom date, journal, source_code, debit, credit. Baris dengan tanggal dan nomor journal yang sama menjadi satu jurnal.',
+            },
+            unbalancedJournals: '{{count}} jurnal tidak seimbang.',
+            read: '{{count}} jurnal terbaca.',
+            balancesFile: 'Neraca saldo sumber pada cutover',
+            balancesHint:
+                'CSV dengan kolom source_code, debit, credit per {{date}}. Buku besar harus sama dengan neraca ini, akun demi akun, atau impor ditolak.',
+            mappingHint:
+                'Kode yang sudah dipetakan pada saldo konversi tetap dipakai. Pilih akun untuk kode baru.',
+            journals: 'Jumlah jurnal',
+            balanceLines: 'Baris neraca cutover',
+            balancesUnbalanced:
+                'Neraca saldo cutover tidak seimbang. Perbaiki berkasnya.',
+            reviewHint:
+                'Seluruh impor dibatalkan bila buku besar tidak cocok dengan neraca saldo sumber.',
+            import: 'Impor histori',
+            done: '{{count}} jurnal histori diposting.',
+        },
     },
     dimensions: {
         pageTitle: 'Dimensi',

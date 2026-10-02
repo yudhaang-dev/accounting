@@ -79,7 +79,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
   - [x] **M4-12b** Manajemen periode: tutup sementara, tutup, buka kembali
   - [x] **M4-12c** Pengaturan buku besar: kebijakan dan pemetaan peran akun
   - [x] **M4-12d** Revaluasi per periode
-  - [ ] **M4-12e** Wizard saldo konversi dan histori
+  - [x] **M4-12e** Wizard saldo konversi dan histori
   - [ ] **M4-12f** Checklist tutup dan buka kembali tahun buku
 
 ## M5 — Pencatatan transaksi

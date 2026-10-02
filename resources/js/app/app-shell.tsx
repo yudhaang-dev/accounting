@@ -1,5 +1,6 @@
 import { Link, useMatchRoute, useParams } from '@tanstack/react-router';
 import {
+    ArrowDownToLineIcon,
     BookTextIcon,
     CalendarRangeIcon,
     CoinsIcon,
@@ -78,6 +79,12 @@ const NAV = [
         label: 'app.navLedgerSettings',
         icon: SlidersHorizontalIcon,
         permission: 'accounts.read',
+    },
+    {
+        to: '/w/$companyId/opening-balances',
+        label: 'app.navOpeningBalances',
+        icon: ArrowDownToLineIcon,
+        permission: 'journals.read',
     },
     {
         to: '/w/$companyId/dimensions',

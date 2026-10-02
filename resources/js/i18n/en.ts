@@ -112,6 +112,7 @@ export const en: Widen<typeof id> = {
         navHome: 'Home',
         navAccounts: 'Accounts',
         navLedgerSettings: 'Ledger settings',
+        navOpeningBalances: 'Opening balances',
         navPeriods: 'Periods',
         navDimensions: 'Dimensions',
         navCurrencies: 'Currencies',
@@ -355,6 +356,107 @@ export const en: Widen<typeof id> = {
         openJournal: 'View revaluation journal',
         openReversal: 'View reversal journal',
         mappingHint: 'Set the rate type and account roles in Ledger settings.',
+    },
+    conversion: {
+        pageTitle: 'Opening balances',
+        title: 'Opening balances and history',
+        description:
+            'Move the books over from the previous system: the opening balances on the start date, then the history up to the cutover when there is any. Each import is posted as a system journal and happens once.',
+        notImported: 'The opening balances have not been imported.',
+        stepsLabel: 'Import steps',
+        next: 'Next',
+        back: 'Back',
+        importing: 'Importing…',
+        chooseFile: 'Choose a CSV file',
+        read: '{{count}} balance rows read.',
+        lines: 'Rows',
+        debit: 'Total debit',
+        credit: 'Total credit',
+        journal: 'Journal',
+        sourceCode: 'Code in the old system',
+        account: 'Company account',
+        accountFor: 'Account for {{code}}',
+        chooseAccount: 'Choose an account',
+        mappingHint:
+            'Codes that equal an account code of the company are filled in. Choose an account for the rest; a code without a mapping refuses the import.',
+        unmapped: '{{count}} codes not mapped yet.',
+        unbalanced:
+            'Total debit and credit differ. Fix the file; balances that do not balance are refused.',
+        problems: {
+            column: 'The column {{detail}} is missing from the header row.',
+            amount: 'Row {{line}}: "{{detail}}" is not a number. Use a dot for decimals, e.g. 1500.50.',
+            date: 'The date "{{detail}}" must look like YYYY-MM-DD.',
+            code: 'Row {{line}}: the account code is empty.',
+            more: '…and {{count}} more problems.',
+        },
+        opening: {
+            steps: {
+                details: 'Details',
+                file: 'Balances file',
+                mapping: 'Account mapping',
+                review: 'Review',
+            },
+            sourceKey: 'Source key',
+            sourceKeyHint:
+                'The identifier of this import in the old system. Sending the same key and content again does not double the balances.',
+            sourceSystem: 'Source system',
+            cutover: 'Cutover date',
+            cutoverHint: 'The first day the books are kept in this system.',
+            start: 'History start',
+            startHint:
+                'The date of the opening balances, the first day of a period. Empty means the same as the cutover (no history).',
+            startAfterCutover:
+                'The history start cannot be after the cutover date.',
+            file: 'Opening trial balance',
+            fileHint:
+                'CSV with the columns source_code, debit, credit (and description if you have it), as of {{date}}. Use a dot for decimals. When starting in the middle of a fiscal year, include the year-to-date income and expense balances.',
+            import: 'Import opening balances',
+            imported: 'Opening balances',
+            done: 'Opening balances posted as journal {{number}}.',
+        },
+        history: {
+            title: 'History',
+            none: 'The history starts on the cutover date, so there is no history to import.',
+            notImported: 'The history has not been imported.',
+            window: 'History is dated {{from}} to {{to}}, the day before the cutover.',
+            steps: {
+                details: 'Details',
+                journals: 'History journals',
+                balances: 'Cutover balances',
+                mapping: 'Account mapping',
+                review: 'Review',
+            },
+            sourceKey: 'Source key',
+            sourceKeyHint:
+                'The identifier of this history import in the old system.',
+            granularityLabel: 'Granularity',
+            granularity: {
+                period_summary: 'Summary per period',
+                transactions: 'Per transaction',
+            },
+            journalsFile: 'History journals',
+            journalsHint: {
+                period_summary:
+                    'CSV with the columns date, journal (optional), source_code, debit, credit. One journal per period, dated within it, e.g. the month end.',
+                transactions:
+                    'CSV with the columns date, journal, source_code, debit, credit. Rows with the same date and journal become one journal.',
+            },
+            unbalancedJournals: '{{count}} journals do not balance.',
+            read: '{{count}} journals read.',
+            balancesFile: 'Source trial balance at the cutover',
+            balancesHint:
+                'CSV with the columns source_code, debit, credit as of {{date}}. The ledger must equal this trial balance, account by account, or the import is refused.',
+            mappingHint:
+                'Codes already mapped for the opening balances keep their mapping. Choose an account for new codes.',
+            journals: 'Journals',
+            balanceLines: 'Cutover balance rows',
+            balancesUnbalanced:
+                'The cutover trial balance does not balance. Fix the file.',
+            reviewHint:
+                'The whole import is cancelled when the ledger does not match the source trial balance.',
+            import: 'Import history',
+            done: '{{count}} history journals posted.',
+        },
     },
     dimensions: {
         pageTitle: 'Dimensions',
