@@ -13,6 +13,7 @@ import {
     ShapesIcon,
     ShieldCheckIcon,
     SigmaIcon,
+    SlidersHorizontalIcon,
     TrendingUpIcon,
     UsersIcon,
 } from 'lucide-react';
@@ -71,6 +72,12 @@ const NAV = [
         label: 'app.navPeriods',
         icon: CalendarRangeIcon,
         permission: 'periods.read',
+    },
+    {
+        to: '/w/$companyId/ledger-settings',
+        label: 'app.navLedgerSettings',
+        icon: SlidersHorizontalIcon,
+        permission: 'accounts.read',
     },
     {
         to: '/w/$companyId/dimensions',

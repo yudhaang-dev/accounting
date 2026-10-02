@@ -77,7 +77,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [ ] **M4-12** SPA: atribut akun, manajemen periode, revaluasi, wizard saldo konversi, checklist tutup tahun
   - [x] **M4-12a** Atribut posting pada form akun
   - [x] **M4-12b** Manajemen periode: tutup sementara, tutup, buka kembali
-  - [ ] **M4-12c** Pengaturan buku besar: kebijakan dan pemetaan peran akun
+  - [x] **M4-12c** Pengaturan buku besar: kebijakan dan pemetaan peran akun
   - [ ] **M4-12d** Revaluasi per periode
   - [ ] **M4-12e** Wizard saldo konversi dan histori
   - [ ] **M4-12f** Checklist tutup dan buka kembali tahun buku

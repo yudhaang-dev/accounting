@@ -111,6 +111,7 @@ export const en: Widen<typeof id> = {
         welcome: 'Hello, {{name}}',
         navHome: 'Home',
         navAccounts: 'Accounts',
+        navLedgerSettings: 'Ledger settings',
         navPeriods: 'Periods',
         navDimensions: 'Dimensions',
         navCurrencies: 'Currencies',
@@ -261,6 +262,78 @@ export const en: Widen<typeof id> = {
             saved: 'Account {{code}} saved.',
             conflict:
                 'The account was changed elsewhere. The latest data has been loaded; review it and save again.',
+        },
+    },
+    ledgerSettings: {
+        pageTitle: 'Ledger settings',
+        title: 'Ledger settings',
+        description:
+            'The accounts used to close the year and for exchange differences, and the posting policy for soft-closed periods, control accounts and revaluation.',
+        roles: {
+            title: 'Account roles',
+            description:
+                'A role decides which account automatic journals post to. Each change is a new version; journals already posted keep the version they used.',
+            role: 'Role',
+            account: 'Account',
+            statusLabel: 'Status',
+            actions: 'Actions',
+            choose: 'Choose an account',
+            save: 'Save role {{role}}',
+            saved: 'Role {{role}} saved.',
+            conflict:
+                'The mapping was changed elsewhere. The latest data has been loaded; check it and save again.',
+            status: {
+                mapped: 'Mapped',
+                unmapped: 'Not mapped',
+                invalid: 'Account no longer valid',
+            },
+            needed: {
+                year_end_close: 'Required before closing the year.',
+                foreign_currency:
+                    'Required when the company uses foreign currencies.',
+            },
+            names: {
+                retained_earnings: 'Retained earnings',
+                fx_realized_gain: 'Realized exchange gain',
+                fx_realized_loss: 'Realized exchange loss',
+                fx_unrealized_gain: 'Unrealized exchange gain',
+                fx_unrealized_loss: 'Unrealized exchange loss',
+                fx_rounding: 'Currency conversion rounding',
+            },
+        },
+        policy: {
+            title: 'Ledger policy',
+            description: 'Applies to all postings. Each save is a new version.',
+            softClosedKeys:
+                'Transaction types that may post into a soft-closed period',
+            softClosedKeysHint:
+                'Empty means a soft-closed period takes no posting at all. System keys are used by year closing and revaluation.',
+            softClosedPermission:
+                'Extra permission to post into a soft-closed period',
+            softClosedPermissionHint:
+                'The poster must hold this permission as well as the transaction type key. Empty means the key alone is enough.',
+            overridePermission:
+                'Permission to post to a control account from another source',
+            overridePermissionHint:
+                'With a reason, and recorded in the audit log. Empty means nobody may.',
+            rounding: 'Currency conversion rounding tolerance',
+            roundingHint:
+                'The largest difference, in the functional currency, that is booked to the rounding account automatically. 0 means no tolerance.',
+            roundingInvalid:
+                'Enter a non-negative decimal number with at most 6 decimals.',
+            revaluationRate: 'Revaluation closing rate type',
+            revaluationRateHint:
+                'The closing rate at the end of the period comes from this rate type.',
+            autoReverse:
+                'Reverse the revaluation automatically at the start of the next period',
+            autoReverseHint:
+                'This also decides realized exchange differences in the subledger.',
+            none: 'None',
+            saved: 'Policy version {{version}} saved.',
+            conflict:
+                'The policy was changed elsewhere. The latest version has been loaded; check it and save again.',
+            noVersion: 'Never saved.',
+            version: 'Version {{version}}',
         },
     },
     dimensions: {

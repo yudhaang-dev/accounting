@@ -35,6 +35,7 @@ import {
 } from '@/modules/general-ledger/pages/journals-page';
 import { TrialBalancePage } from '@/modules/reporting/pages/trial-balance-page';
 import { AccountsPage } from '@/modules/general-ledger/pages/accounts-page';
+import { LedgerSettingsPage } from '@/modules/general-ledger/pages/ledger-settings-page';
 import { PeriodsPage } from '@/modules/general-ledger/pages/periods-page';
 import { can } from '@/modules/identity-access/permissions';
 import { entryQuery } from '@/modules/transaction-entry/entries';
@@ -337,6 +338,31 @@ const periodsRoute = createRoute({
                 canManage={can(workspace, 'periods.manage')}
                 canClose={can(workspace, 'periods.close')}
                 canReopen={can(workspace, 'periods.reopen')}
+            />
+        );
+    },
+});
+
+const ledgerSettingsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/ledger-settings',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navLedgerSettings',
+                href: at(m, '/ledger-settings'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('accounts.read'),
+    component: function LedgerSettings() {
+        const { workspace } = ledgerSettingsRoute.useRouteContext();
+
+        return (
+            <LedgerSettingsPage
+                companyId={workspace.company_id}
+                canManageRoles={can(workspace, 'accounts.manage')}
+                canManagePolicy={can(workspace, 'policies.manage')}
             />
         );
     },
@@ -844,6 +870,7 @@ const routeTree = rootRoute.addChildren([
                 companySetupRoute,
                 accountsRoute,
                 periodsRoute,
+                ledgerSettingsRoute,
                 dimensionsRoute,
                 currenciesRoute,
                 exchangeRatesRoute,

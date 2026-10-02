@@ -109,6 +109,7 @@ export const id = {
         welcome: 'Halo, {{name}}',
         navHome: 'Beranda',
         navAccounts: 'Akun',
+        navLedgerSettings: 'Pengaturan buku besar',
         navPeriods: 'Periode',
         navDimensions: 'Dimensi',
         navCurrencies: 'Mata uang',
@@ -258,6 +259,77 @@ export const id = {
             saved: 'Akun {{code}} disimpan.',
             conflict:
                 'Akun sudah diubah di tempat lain. Data terbaru telah dimuat; periksa lalu simpan lagi.',
+        },
+    },
+    ledgerSettings: {
+        pageTitle: 'Pengaturan buku besar',
+        title: 'Pengaturan buku besar',
+        description:
+            'Akun yang dipakai untuk menutup tahun dan selisih kurs, serta kebijakan posting untuk periode yang ditutup sementara, akun kontrol, dan revaluasi.',
+        roles: {
+            title: 'Peran akun',
+            description:
+                'Peran menentukan akun tujuan jurnal otomatis. Setiap perubahan menjadi versi baru; jurnal yang sudah diposting tetap mencatat versi yang dipakainya.',
+            role: 'Peran',
+            account: 'Akun',
+            statusLabel: 'Status',
+            actions: 'Aksi',
+            choose: 'Pilih akun',
+            save: 'Simpan peran {{role}}',
+            saved: 'Peran {{role}} disimpan.',
+            conflict:
+                'Pemetaan sudah diubah di tempat lain. Data terbaru telah dimuat; periksa lalu simpan lagi.',
+            status: {
+                mapped: 'Terpetakan',
+                unmapped: 'Belum dipetakan',
+                invalid: 'Akun tidak lagi valid',
+            },
+            needed: {
+                year_end_close: 'Wajib sebelum tutup tahun.',
+                foreign_currency: 'Wajib bila perusahaan memakai valas.',
+            },
+            names: {
+                retained_earnings: 'Saldo laba',
+                fx_realized_gain: 'Laba selisih kurs terealisasi',
+                fx_realized_loss: 'Rugi selisih kurs terealisasi',
+                fx_unrealized_gain: 'Laba selisih kurs belum terealisasi',
+                fx_unrealized_loss: 'Rugi selisih kurs belum terealisasi',
+                fx_rounding: 'Pembulatan konversi kurs',
+            },
+        },
+        policy: {
+            title: 'Kebijakan buku besar',
+            description:
+                'Berlaku untuk seluruh posting. Setiap penyimpanan menjadi versi baru.',
+            softClosedKeys:
+                'Jenis transaksi yang boleh memposting ke periode tutup sementara',
+            softClosedKeysHint:
+                'Kosong berarti periode tutup sementara tidak menerima posting apa pun. Kunci sistem dipakai penutupan tahun dan revaluasi.',
+            softClosedPermission:
+                'Hak tambahan untuk posting ke periode tutup sementara',
+            softClosedPermissionHint:
+                'Pemosting harus memegang hak ini selain kunci jenis transaksi. Kosong berarti kunci saja cukup.',
+            overridePermission:
+                'Hak untuk memposting ke akun kontrol dari sumber lain',
+            overridePermissionHint:
+                'Dengan alasan dan tercatat di audit. Kosong berarti tidak ada yang boleh.',
+            rounding: 'Toleransi pembulatan konversi kurs',
+            roundingHint:
+                'Selisih terbesar, dalam mata uang fungsional, yang dibukukan otomatis ke akun pembulatan. 0 berarti tidak ada toleransi.',
+            roundingInvalid:
+                'Isi angka desimal tidak negatif dengan paling banyak 6 desimal.',
+            revaluationRate: 'Jenis kurs penutup revaluasi',
+            revaluationRateHint:
+                'Kurs penutup pada akhir periode memakai jenis kurs ini.',
+            autoReverse: 'Balik revaluasi otomatis di awal periode berikutnya',
+            autoReverseHint:
+                'Juga menjadi dasar selisih kurs terealisasi di subledger.',
+            none: 'Tidak ada',
+            saved: 'Kebijakan versi {{version}} disimpan.',
+            conflict:
+                'Kebijakan sudah diubah di tempat lain. Versi terbaru telah dimuat; periksa lalu simpan lagi.',
+            noVersion: 'Belum pernah disimpan.',
+            version: 'Versi {{version}}',
         },
     },
     dimensions: {
