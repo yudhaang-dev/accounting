@@ -145,6 +145,7 @@ final class EntryWorkflow
                 debit: $line['debit'],
                 credit: $line['credit'],
                 description: $line['description'],
+                dimensions: $line['dimensions'] ?? [],
             ), $entry->lines),
             documentDate: $entry->document_date?->toDateString(),
             transactionTypeKey: $entry->transaction_type_key,

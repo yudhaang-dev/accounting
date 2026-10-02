@@ -21,7 +21,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $accounting_date
  * @property Carbon|null $document_date
  * @property string $description
- * @property list<array{account_id: string, debit: string, credit: string, description: string|null}> $lines
+ * @property list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions?: array<string, string>}> $lines
  * @property int $created_by
  * @property string|null $journal_id
  * @property string|null $journal_number

@@ -18,6 +18,9 @@ class ListJournalsRequest extends FormRequest
             'filter.account_id' => ['sometimes', 'ulid'],
             'filter.from' => ['sometimes', 'date_format:Y-m-d'],
             'filter.to' => ['sometimes', 'date_format:Y-m-d'],
+            // Dimension type key => value ID; a value also matches its descendants (MD-FR-05).
+            'filter.dimensions' => ['sometimes', 'array'],
+            'filter.dimensions.*' => ['string', 'size:26'],
             'filter.source' => ['sometimes', Rule::enum(JournalSource::class)],
             'filter.transaction_type_key' => ['sometimes', 'string', 'max:64'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:200'],

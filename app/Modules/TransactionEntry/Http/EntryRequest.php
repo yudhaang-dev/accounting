@@ -25,6 +25,10 @@ class EntryRequest extends FormRequest
             'lines.*.debit' => ['nullable', 'string', 'max:40'],
             'lines.*.credit' => ['nullable', 'string', 'max:40'],
             'lines.*.description' => ['nullable', 'string', 'max:500'],
+            // Dimension type key => dimension value ID; resolved to a dimension set on submit and post (MD-FR-04).
+            /** @var array<string, string|null> */
+            'lines.*.dimensions' => ['nullable', 'array'],
+            'lines.*.dimensions.*' => ['nullable', 'string', 'size:26'],
         ];
     }
 

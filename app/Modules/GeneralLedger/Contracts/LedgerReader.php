@@ -13,7 +13,8 @@ interface LedgerReader
      *
      * @param  string  $from  `YYYY-MM-DD`
      * @param  string  $to  `YYYY-MM-DD`
+     * @param  list<string>|null  $dimensionSetIds  only lines in these dimension sets; null means all (MD-FR-05)
      * @return list<TrialBalanceRow>
      */
-    public function trialBalance(string $companyId, string $from, string $to, ?string $accountId = null): array;
+    public function trialBalance(string $companyId, string $from, string $to, ?string $accountId = null, ?array $dimensionSetIds = null): array;
 }

@@ -10,7 +10,8 @@ final readonly class PostJournalLine
 {
     /**
      * @param  string|null  $currency  transaction currency; null or the functional currency until foreign currency lines arrive (M4-05)
-     * @param  string|null  $dimensionSetId  null means the empty dimension set
+     * @param  string|null  $dimensionSetId  an existing set; wins over `$dimensions`. With neither, the empty set
+     * @param  array<string, string|null>|null  $dimensions  dimension type key => value ID, resolved on the accounting date (MD-FR-04)
      */
     public function __construct(
         public string $accountId,
@@ -19,5 +20,6 @@ final readonly class PostJournalLine
         public ?string $description = null,
         public ?string $currency = null,
         public ?string $dimensionSetId = null,
+        public ?array $dimensions = null,
     ) {}
 }

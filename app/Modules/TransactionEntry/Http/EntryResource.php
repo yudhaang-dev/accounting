@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class EntryResource extends JsonResource
 {
     /**
-     * @return array{id: string, number: string, status: string, source: string, transaction_type_key: string, transaction_type_version: int, accounting_date: string, document_date: string|null, description: string, lines: list<array{account_id: string, debit: string, credit: string, description: string|null}>, created_by: int, journal_id: string|null, journal_number: string|null, posted_at: string|null, decisions: list<array{action: string, actor_id: int, reason: string|null, at: string}>|null, lock_version: int}
+     * @return array{id: string, number: string, status: string, source: string, transaction_type_key: string, transaction_type_version: int, accounting_date: string, document_date: string|null, description: string, lines: list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>}>, created_by: int, journal_id: string|null, journal_number: string|null, posted_at: string|null, decisions: list<array{action: string, actor_id: int, reason: string|null, at: string}>|null, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -26,7 +26,7 @@ class EntryResource extends JsonResource
             'accounting_date' => $this->resource->accounting_date->toDateString(),
             'document_date' => $this->resource->document_date?->toDateString(),
             'description' => $this->resource->description,
-            'lines' => $this->resource->lines,
+            'lines' => $this->lines(),
             'created_by' => $this->resource->created_by,
             'journal_id' => $this->resource->journal_id,
             'journal_number' => $this->resource->journal_number,
@@ -34,6 +34,28 @@ class EntryResource extends JsonResource
             'decisions' => $this->resource->relationLoaded('decisions') ? $this->decisions() : null,
             'lock_version' => $this->resource->lock_version,
         ];
+    }
+
+    /**
+     * @return list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>}>
+     */
+    private function lines(): array
+    {
+        $lines = [];
+
+        foreach ($this->resource->lines as $line) {
+            $lines[] = [
+                'account_id' => $line['account_id'],
+                'debit' => $line['debit'],
+                'credit' => $line['credit'],
+                'description' => $line['description'],
+                'dimensions' => (object) ($line['dimensions'] ?? []),
+            ];
+        }
+
+        // `dimensions` is cast to an object so an empty map serializes as {} and not [] (typed as a map for the API spec).
+        // @phpstan-ignore return.type
+        return $lines;
     }
 
     /**

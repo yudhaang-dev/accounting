@@ -22,7 +22,7 @@ use Illuminate\Validation\ValidationException;
  * Creates and edits draft entries (TE-FR-07). A draft is only checked for shape; the full validation
  * of accounts, period and balance happens on submit and again on posting (TE-FR-08).
  *
- * @phpstan-type LineInput array{account_id: string, debit?: string|null, credit?: string|null, description?: string|null}
+ * @phpstan-type LineInput array{account_id: string, debit?: string|null, credit?: string|null, description?: string|null, dimensions?: array<string, string|null>|null}
  * @phpstan-type EntryInput array{accounting_date: string, document_date?: string|null, description: string, lines: list<LineInput>}
  */
 final class EntryDrafts
@@ -123,7 +123,7 @@ final class EntryDrafts
 
     /**
      * @param  list<LineInput>  $lines
-     * @return list<array{account_id: string, debit: string, credit: string, description: string|null}>
+     * @return list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>}>
      */
     private function lines(array $lines): array
     {
@@ -132,6 +132,7 @@ final class EntryDrafts
             'debit' => $line['debit'] ?? '0',
             'credit' => $line['credit'] ?? '0',
             'description' => $line['description'] ?? null,
+            'dimensions' => array_filter($line['dimensions'] ?? [], fn (?string $valueId): bool => $valueId !== null),
         ], $lines);
     }
 

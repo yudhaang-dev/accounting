@@ -23,7 +23,8 @@ use InvalidArgumentException;
 
 /**
  * Checks a posting command in a fixed order and stops at the first group of problems: company,
- * structure, period, accounts, dimensions, balance (GL-FR-05). It has no side effects.
+ * structure, period, accounts, dimensions, balance (GL-FR-05). It changes nothing in the ledger; the only write is finding or creating the
+ * dimension set of a line, which is idempotent (MD-FR-04).
  */
 final class EloquentPostingValidator implements PostingValidator
 {
@@ -55,7 +56,7 @@ final class EloquentPostingValidator implements PostingValidator
         $amounts = $this->structure($command, $company->functionalCurrency);
         $periodId = $this->period($command);
         $this->accounts($command);
-        $emptySet = $this->dimensions($command);
+        $setIds = $this->dimensions($command);
         $this->balance($amounts);
 
         $lines = [];
@@ -66,7 +67,7 @@ final class EloquentPostingValidator implements PostingValidator
                 'debit' => $amounts[$index]['debit'],
                 'credit' => $amounts[$index]['credit'],
                 'description' => $line->description,
-                'dimension_set_id' => $line->dimensionSetId ?? $emptySet,
+                'dimension_set_id' => $setIds[$index],
             ];
         }
 
@@ -211,17 +212,34 @@ final class EloquentPostingValidator implements PostingValidator
     }
 
     /**
-     * @return string ID of the empty dimension set of the company
+     * @return list<string> dimension set ID per line: the given set, the resolved combination or the empty set
      *
      * @throws ApiException DIMENSION_INVALID
      */
-    private function dimensions(PostJournal $command): string
+    private function dimensions(PostJournal $command): array
     {
         $errors = [];
+        $setIds = [];
 
         foreach ($command->lines as $index => $line) {
-            if ($line->dimensionSetId !== null && ! $this->dimensionSets->exists($command->companyId, $line->dimensionSetId)) {
-                $errors["lines.{$index}.dimension_set_id"] = [__('ledger.dimension_set_unknown')];
+            if ($line->dimensionSetId !== null) {
+                if (! $this->dimensionSets->exists($command->companyId, $line->dimensionSetId)) {
+                    $errors["lines.{$index}.dimension_set_id"] = [__('ledger.dimension_set_unknown')];
+                }
+
+                $setIds[] = $line->dimensionSetId;
+
+                continue;
+            }
+
+            try {
+                $setIds[] = $this->dimensionSets->resolve($command->companyId, $line->dimensions ?? [], $command->accountingDate);
+            } catch (ApiException $exception) {
+                foreach ($exception->errors as $field => $messages) {
+                    $errors["lines.{$index}.{$field}"] = $messages;
+                }
+
+                $setIds[] = '';
             }
         }
 
@@ -229,7 +247,7 @@ final class EloquentPostingValidator implements PostingValidator
             throw new ApiException(ErrorCode::DimensionInvalid, errors: $errors);
         }
 
-        return $this->dimensionSets->emptySet($command->companyId);
+        return $setIds;
     }
 
     /**

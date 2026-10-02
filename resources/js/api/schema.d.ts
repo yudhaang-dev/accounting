@@ -605,7 +605,9 @@ export interface paths {
         /**
          * Posted journals with their lines, newest first. This is the drill-down of the reports.
          *     Filters: `filter[account_id]` (journals that touch the account), `filter[from]` and
-         *     `filter[to]` (accounting date), `filter[source]` and `filter[transaction_type_key]`.
+         *     `filter[to]` (accounting date), `filter[source]`, `filter[transaction_type_key]` and
+         *     `filter[dimensions][<type key>]=<value id>` (journals with a line in that value or below it).
+         *     Lines carry their `dimensions` as type key => value ID.
          *     `per_page` defaults to 50, at most 200
          */
         get: operations["journals.index"];
@@ -783,7 +785,8 @@ export interface paths {
         };
         /**
          * Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and
-         *     closing balance per account, totals and `balanced`. `account_id` narrows it to one account.
+         *     closing balance per account, totals and `balanced`. `account_id` narrows it to one account and `dimensions[<type key>]=<value id>` to the lines in that
+         *     value or any value below it (roll-up).
          *     Drill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.
          *     With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)
          */
@@ -983,6 +986,7 @@ export interface components {
                 debit?: string | null;
                 credit?: string | null;
                 description?: string | null;
+                dimensions?: (string | null)[];
             }[];
         };
         /** EntryResource */
@@ -996,11 +1000,13 @@ export interface components {
             accounting_date: string;
             document_date: string | null;
             description: string;
+            /** @description `dimensions` is cast to an object so an empty map serializes as {} and not [] (typed as a map for the API spec). */
             lines: {
                 account_id: string;
                 debit: string;
                 credit: string;
-                description: string | null;
+                description: string;
+                dimensions: string;
             }[];
             created_by: number;
             journal_id: string | null;
@@ -1061,6 +1067,7 @@ export interface components {
             entry_id: string | null;
             posted_by: number | null;
             posted_at: string;
+            /** @description `dimensions` is cast to an object so an empty map serializes as {} and not [] (typed as a map for the API spec). */
             lines: {
                 line_number: number;
                 account_id: string;
@@ -1070,6 +1077,7 @@ export interface components {
                 transaction_amount: string;
                 exchange_rate: string;
                 dimension_set_id: string;
+                dimensions: string;
                 description: string | null;
             }[];
         };
@@ -1184,6 +1192,7 @@ export interface components {
                 debit?: string | null;
                 credit?: string | null;
                 description?: string | null;
+                dimensions?: (string | null)[];
             }[];
         };
         /** UpdateFiscalCalendarRequest */
@@ -2638,6 +2647,7 @@ export interface operations {
                 "filter[account_id]"?: string;
                 "filter[from]"?: string;
                 "filter[to]"?: string;
+                "filter[dimensions][]"?: string[];
                 "filter[source]"?: components["schemas"]["JournalSource"];
                 "filter[transaction_type_key]"?: string;
                 per_page?: number;
@@ -2992,6 +3002,7 @@ export interface operations {
                 from: string | null;
                 to: string | null;
                 account_id?: string | null;
+                "dimensions[]"?: string[];
             };
             header?: never;
             path: {
@@ -3012,6 +3023,9 @@ export interface operations {
                                 from: string;
                                 to: string;
                                 account_id: string | null;
+                                dimensions: {
+                                    [key: string]: string;
+                                };
                             };
                             functional_currency: string;
                             balanced: boolean;

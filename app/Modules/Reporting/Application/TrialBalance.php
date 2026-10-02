@@ -5,6 +5,7 @@ namespace App\Modules\Reporting\Application;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
+use App\Modules\MasterData\Contracts\DimensionSets;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use Brick\Math\BigDecimal;
@@ -21,15 +22,20 @@ final class TrialBalance
     public function __construct(
         private readonly LedgerReader $ledger,
         private readonly CompanyDirectory $companies,
+        private readonly DimensionSets $dimensionSets,
     ) {}
 
     /**
-     * @return array{parameters: array{from: string, to: string, account_id: string|null}, functional_currency: string, balanced: bool, totals: array<string, string>, rows: list<array<string, string>>}
+     * `$dimensions` (type key => value ID) keeps only lines in that value or any value below it.
+     *
+     * @param  array<string, string>  $dimensions
+     * @return array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>}, functional_currency: string, balanced: bool, totals: array<string, string>, rows: list<array<string, string>>}
      */
-    public function __invoke(string $companyId, string $from, string $to, ?string $accountId = null): array
+    public function __invoke(string $companyId, string $from, string $to, ?string $accountId = null, array $dimensions = []): array
     {
         $company = $this->companies->find($companyId) ?? throw new ApiException(ErrorCode::NotFound);
-        $rows = array_map($this->row(...), $this->ledger->trialBalance($companyId, $from, $to, $accountId));
+        $setIds = $dimensions === [] ? null : $this->dimensionSets->setIdsMatching($companyId, $dimensions);
+        $rows = array_map($this->row(...), $this->ledger->trialBalance($companyId, $from, $to, $accountId, $setIds));
 
         $totals = array_fill_keys(self::COLUMNS, BigDecimal::zero());
 
@@ -44,7 +50,7 @@ final class TrialBalance
             && $totals['closing_debit']->isEqualTo($totals['closing_credit']);
 
         return [
-            'parameters' => ['from' => $from, 'to' => $to, 'account_id' => $accountId],
+            'parameters' => ['from' => $from, 'to' => $to, 'account_id' => $accountId, 'dimensions' => $dimensions],
             'functional_currency' => $company->functionalCurrency,
             'balanced' => $balanced,
             'totals' => array_map($this->format(...), $totals),

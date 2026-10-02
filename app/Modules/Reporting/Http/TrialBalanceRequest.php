@@ -18,6 +18,8 @@ class TrialBalanceRequest extends FormRequest
             'from' => ['required', ...$rules['from']],
             'to' => ['required', ...$rules['to']],
             'account_id' => $rules['account_id'],
+            'dimensions' => $rules['dimensions'],
+            'dimensions.*' => ['string', 'size:26'],
         ];
     }
 }

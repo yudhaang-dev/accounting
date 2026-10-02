@@ -3143,7 +3143,7 @@
         "/companies/{companyId}/journals": {
             "get": {
                 "operationId": "journals.index",
-                "summary": "Posted journals with their lines, newest first. This is the drill-down of the reports.\nFilters: `filter[account_id]` (journals that touch the account), `filter[from]` and\n`filter[to]` (accounting date), `filter[source]` and `filter[transaction_type_key]`.\n`per_page` defaults to 50, at most 200",
+                "summary": "Posted journals with their lines, newest first. This is the drill-down of the reports.\nFilters: `filter[account_id]` (journals that touch the account), `filter[from]` and\n`filter[to]` (accounting date), `filter[source]`, `filter[transaction_type_key]` and\n`filter[dimensions][<type key>]=<value id>` (journals with a line in that value or below it).\nLines carry their `dimensions` as type key => value ID.\n`per_page` defaults to 50, at most 200",
                 "tags": [
                     "Journal"
                 ],
@@ -3177,6 +3177,18 @@
                         "schema": {
                             "type": "string",
                             "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[dimensions][]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "minLength": 26,
+                                "maxLength": 26
+                            }
                         }
                     },
                     {
@@ -4000,7 +4012,7 @@
         "/companies/{companyId}/reports/trial-balance": {
             "get": {
                 "operationId": "reports.trial-balance",
-                "summary": "Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and\nclosing balance per account, totals and `balanced`. `account_id` narrows it to one account.\nDrill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.\nWith `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)",
+                "summary": "Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and\nclosing balance per account, totals and `balanced`. `account_id` narrows it to one account and `dimensions[<type key>]=<value id>` to the lines in that\nvalue or any value below it (roll-up).\nDrill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.\nWith `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)",
                 "tags": [
                     "TrialBalance"
                 ],
@@ -4046,6 +4058,18 @@
                                 "null"
                             ]
                         }
+                    },
+                    {
+                        "name": "dimensions[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "minLength": 26,
+                                "maxLength": 26
+                            }
+                        }
                     }
                 ],
                 "responses": {
@@ -4073,12 +4097,19 @@
                                                                 "string",
                                                                 "null"
                                                             ]
+                                                        },
+                                                        "dimensions": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
                                                         }
                                                     },
                                                     "required": [
                                                         "from",
                                                         "to",
-                                                        "account_id"
+                                                        "account_id",
+                                                        "dimensions"
                                                     ]
                                                 },
                                                 "functional_currency": {
@@ -4820,6 +4851,17 @@
                                         "null"
                                     ],
                                     "maxLength": 500
+                                },
+                                "dimensions": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "minLength": 26,
+                                        "maxLength": 26
+                                    }
                                 }
                             },
                             "required": [
@@ -4873,6 +4915,7 @@
                     },
                     "lines": {
                         "type": "array",
+                        "description": "`dimensions` is cast to an object so an empty map serializes as {} and not [] (typed as a map for the API spec).",
                         "items": {
                             "type": "object",
                             "properties": {
@@ -4886,17 +4929,18 @@
                                     "type": "string"
                                 },
                                 "description": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ]
+                                    "type": "string"
+                                },
+                                "dimensions": {
+                                    "type": "string"
                                 }
                             },
                             "required": [
                                 "account_id",
                                 "debit",
                                 "credit",
-                                "description"
+                                "description",
+                                "dimensions"
                             ]
                         }
                     },
@@ -5157,6 +5201,7 @@
                     },
                     "lines": {
                         "type": "array",
+                        "description": "`dimensions` is cast to an object so an empty map serializes as {} and not [] (typed as a map for the API spec).",
                         "items": {
                             "type": "object",
                             "properties": {
@@ -5184,6 +5229,9 @@
                                 "dimension_set_id": {
                                     "type": "string"
                                 },
+                                "dimensions": {
+                                    "type": "string"
+                                },
                                 "description": {
                                     "type": [
                                         "string",
@@ -5200,6 +5248,7 @@
                                 "transaction_amount",
                                 "exchange_rate",
                                 "dimension_set_id",
+                                "dimensions",
                                 "description"
                             ]
                         }
@@ -5602,6 +5651,17 @@
                                         "null"
                                     ],
                                     "maxLength": 500
+                                },
+                                "dimensions": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "minLength": 26,
+                                        "maxLength": 26
+                                    }
                                 }
                             },
                             "required": [
