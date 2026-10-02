@@ -13,6 +13,10 @@ return [
     'account_unknown' => 'Akun tidak ada di perusahaan ini.',
     'account_inactive' => 'Akun nonaktif.',
     'account_parent' => 'Akun ini adalah akun induk; posting ke salah satu akun anaknya.',
+    'source_not_allowed' => 'Akun :account tidak menerima posting dari sumber ":source".',
+    'currency_not_allowed' => 'Akun :account tidak menerima mata uang :currency.',
+    'dimension_required' => 'Akun :account mewajibkan nilai untuk dimensi :type.',
+    'dimension_forbidden' => 'Akun :account tidak mengizinkan dimensi :type.',
     'dimension_set_unknown' => 'Set dimensi tidak ada di perusahaan ini.',
     'unbalanced' => 'Jurnal tidak seimbang: debit :debit, kredit :credit.',
 

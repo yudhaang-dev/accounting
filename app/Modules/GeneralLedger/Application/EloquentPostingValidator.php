@@ -4,6 +4,7 @@ namespace App\Modules\GeneralLedger\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountData;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
+use App\Modules\GeneralLedger\Contracts\DimensionRequirement;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
@@ -24,7 +25,7 @@ use InvalidArgumentException;
 
 /**
  * Checks a posting command in a fixed order and stops at the first group of problems: company,
- * structure, period, accounts, dimensions, balance (GL-FR-05). It changes nothing in the ledger; the only write is finding or creating the
+ * structure, period, accounts, account attributes (sources, currency, dimensions; GL-FR-02), balance (GL-FR-05). It changes nothing in the ledger; the only write is finding or creating the
  * dimension set of a line, which is idempotent (MD-FR-04).
  */
 final class EloquentPostingValidator implements PostingValidator
@@ -57,8 +58,11 @@ final class EloquentPostingValidator implements PostingValidator
 
         $amounts = $this->structure($command, $company->functionalCurrency);
         $periodId = $this->period($command);
-        $this->accounts($command);
+        $accounts = $this->accounts($command);
+        $this->sources($command, $accounts);
+        $this->currencies($command, $accounts, $company->functionalCurrency);
         $setIds = $this->dimensions($command);
+        $this->dimensionRequirements($command, $accounts, $setIds);
         $this->balance($amounts);
 
         $lines = [];
@@ -185,9 +189,11 @@ final class EloquentPostingValidator implements PostingValidator
     }
 
     /**
+     * @return array<string, AccountData> the accounts of the command by ID
+     *
      * @throws ApiException ACCOUNT_NOT_POSTABLE
      */
-    private function accounts(PostJournal $command): void
+    private function accounts(PostJournal $command): array
     {
         $errors = [];
         /** @var array<string, AccountData|null> $known */
@@ -210,6 +216,57 @@ final class EloquentPostingValidator implements PostingValidator
 
         if ($errors !== []) {
             throw new ApiException(ErrorCode::AccountNotPostable, errors: $errors);
+        }
+
+        /** @var array<string, AccountData> $known */
+        return $known;
+    }
+
+    /**
+     * @param  array<string, AccountData>  $accounts
+     *
+     * @throws ApiException POSTING_SOURCE_NOT_ALLOWED
+     */
+    private function sources(PostJournal $command, array $accounts): void
+    {
+        $errors = [];
+
+        foreach ($command->lines as $index => $line) {
+            if (! $accounts[$line->accountId]->acceptsSource($command->source)) {
+                $errors["lines.{$index}.account_id"] = [__('ledger.source_not_allowed', [
+                    'account' => $accounts[$line->accountId]->code,
+                    'source' => $command->source->value,
+                ])];
+            }
+        }
+
+        if ($errors !== []) {
+            throw new ApiException(ErrorCode::PostingSourceNotAllowed, errors: $errors);
+        }
+    }
+
+    /**
+     * @param  array<string, AccountData>  $accounts
+     *
+     * @throws ApiException ACCOUNT_CURRENCY_NOT_ALLOWED
+     */
+    private function currencies(PostJournal $command, array $accounts, string $functionalCurrency): void
+    {
+        $errors = [];
+
+        foreach ($command->lines as $index => $line) {
+            $currency = $line->currency ?? $functionalCurrency;
+
+            if (! $accounts[$line->accountId]->acceptsCurrency($currency, $functionalCurrency)) {
+                $errors["lines.{$index}.currency"] = [__('ledger.currency_not_allowed', [
+                    'account' => $accounts[$line->accountId]->code,
+                    'currency' => $currency,
+                ])];
+            }
+        }
+
+        if ($errors !== []) {
+            throw new ApiException(ErrorCode::AccountCurrencyNotAllowed, errors: $errors);
         }
     }
 
@@ -250,6 +307,44 @@ final class EloquentPostingValidator implements PostingValidator
         }
 
         return $setIds;
+    }
+
+    /**
+     * Required dimension types missing on a line, or forbidden ones present, per the account (GL-FR-02).
+     *
+     * @param  array<string, AccountData>  $accounts
+     * @param  list<string>  $setIds  dimension set per line
+     *
+     * @throws ApiException DIMENSION_REQUIRED, DIMENSION_INVALID
+     */
+    private function dimensionRequirements(PostJournal $command, array $accounts, array $setIds): void
+    {
+        $contents = $this->dimensionSets->describe($command->companyId, array_values(array_unique($setIds)));
+        $missing = [];
+        $forbidden = [];
+
+        foreach ($command->lines as $index => $line) {
+            $account = $accounts[$line->accountId];
+            $present = $contents[$setIds[$index]] ?? [];
+
+            foreach ($account->dimensionRequirements as $key => $requirement) {
+                if ($requirement === DimensionRequirement::Required && ! isset($present[$key])) {
+                    $missing["lines.{$index}.dimensions.{$key}"] = [__('ledger.dimension_required', ['account' => $account->code, 'type' => $key])];
+                }
+
+                if ($requirement === DimensionRequirement::Forbidden && isset($present[$key])) {
+                    $forbidden["lines.{$index}.dimensions.{$key}"] = [__('ledger.dimension_forbidden', ['account' => $account->code, 'type' => $key])];
+                }
+            }
+        }
+
+        if ($missing !== []) {
+            throw new ApiException(ErrorCode::DimensionRequired, errors: $missing + $forbidden);
+        }
+
+        if ($forbidden !== []) {
+            throw new ApiException(ErrorCode::DimensionInvalid, errors: $forbidden);
+        }
     }
 
     /**

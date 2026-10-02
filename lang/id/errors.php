@@ -20,6 +20,7 @@ return [
         'PERIOD_NOT_OPEN' => 'Periode tidak menerima posting.',
         'ACCOUNT_NOT_POSTABLE' => 'Akun tidak dapat menerima posting.',
         'POSTING_SOURCE_NOT_ALLOWED' => 'Akun tidak menerima sumber posting ini.',
+        'ACCOUNT_CURRENCY_NOT_ALLOWED' => 'Akun tidak menerima mata uang baris ini.',
         'DIMENSION_REQUIRED' => 'Dimensi yang wajib diisi belum ada.',
         'DIMENSION_INVALID' => 'Nilai dimensi tidak valid.',
         'UNBALANCED_ENTRY' => 'Entri tidak seimbang dalam mata uang fungsional.',

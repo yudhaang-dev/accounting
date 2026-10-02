@@ -25,6 +25,11 @@ final class EloquentDimensionSets implements DimensionSets
         return DB::table('md_dimension_sets')->where('company_id', $companyId)->where('id', $dimensionSetId)->exists();
     }
 
+    public function activeTypeKeys(string $companyId): array
+    {
+        return array_values(array_map('strval', DB::table('md_dimension_types')->where('company_id', $companyId)->where('status', 'active')->orderBy('key')->pluck('key')->all()));
+    }
+
     public function resolve(string $companyId, array $dimensions, string $date): string
     {
         $dimensions = array_filter($dimensions, fn (?string $valueId): bool => $valueId !== null);

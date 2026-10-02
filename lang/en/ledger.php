@@ -13,6 +13,10 @@ return [
     'account_unknown' => 'The account does not exist in this company.',
     'account_inactive' => 'The account is inactive.',
     'account_parent' => 'The account is a parent account; post to one of its child accounts.',
+    'source_not_allowed' => 'Account :account does not accept postings from the source ":source".',
+    'currency_not_allowed' => 'Account :account does not accept the currency :currency.',
+    'dimension_required' => 'Account :account requires a value for the dimension :type.',
+    'dimension_forbidden' => 'Account :account does not allow the dimension :type.',
     'dimension_set_unknown' => 'The dimension set does not exist in this company.',
     'unbalanced' => 'The journal is not balanced: debit :debit, credit :credit.',
 

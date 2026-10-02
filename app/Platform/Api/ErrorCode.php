@@ -19,6 +19,7 @@ enum ErrorCode: string
     case PeriodNotOpen = 'PERIOD_NOT_OPEN';
     case AccountNotPostable = 'ACCOUNT_NOT_POSTABLE';
     case PostingSourceNotAllowed = 'POSTING_SOURCE_NOT_ALLOWED';
+    case AccountCurrencyNotAllowed = 'ACCOUNT_CURRENCY_NOT_ALLOWED';
     case DimensionRequired = 'DIMENSION_REQUIRED';
     case DimensionInvalid = 'DIMENSION_INVALID';
     case UnbalancedEntry = 'UNBALANCED_ENTRY';
@@ -49,6 +50,7 @@ enum ErrorCode: string
             self::PeriodNotOpen => 422,
             self::AccountNotPostable => 422,
             self::PostingSourceNotAllowed => 422,
+            self::AccountCurrencyNotAllowed => 422,
             self::DimensionRequired => 422,
             self::DimensionInvalid => 422,
             self::UnbalancedEntry => 422,

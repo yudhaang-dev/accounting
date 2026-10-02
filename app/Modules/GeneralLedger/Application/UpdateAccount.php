@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Changes code, name, saldo normal or parent of an account. The class never changes: a different
+ * Changes code, name, saldo normal, parent or posting attributes of an account. The class never changes: a different
  * class is a different account (GL-FR-01).
  */
 final class UpdateAccount
 {
-    private const FIELDS = ['code', 'name', 'normal_balance', 'parent_id'];
+    private const FIELDS = ['code', 'name', 'normal_balance', 'parent_id', 'allowed_sources', 'dimension_requirements', 'currency_restriction', 'restricted_currency', 'is_revaluable'];
 
     public function __construct(
         private readonly AccountRules $rules,
@@ -22,7 +22,7 @@ final class UpdateAccount
     ) {}
 
     /**
-     * @param  array<string, mixed>  $data  any of code, name, normal_balance, parent_id
+     * @param  array<string, mixed>  $data  any of code, name, normal_balance, parent_id and the posting attributes of GL-FR-02
      *
      * @throws ValidationException
      * @throws ApiException VERSION_CONFLICT
@@ -42,11 +42,23 @@ final class UpdateAccount
                 $this->rules->assertNoCycle($account, $parent);
             }
 
+            if (array_intersect_key($changes, AccountRules::POSTING_DEFAULTS) !== []) {
+                $changes = array_replace($changes, $this->rules->resolvePostingAttributes(
+                    $changes,
+                    $account->only(array_keys(AccountRules::POSTING_DEFAULTS)),
+                ));
+            }
+
             $before = $account->only(array_keys($changes));
             $account->updateLocked($changes, $expectedVersion);
             $after = $account->only(array_keys($changes));
 
-            if ($before !== $after) {
+            // Loose comparison: JSON columns come back with their keys in a different order.
+            $differing = array_keys(array_filter($after, fn (mixed $value, string $field): bool => $value != $before[$field], ARRAY_FILTER_USE_BOTH));
+            $before = array_intersect_key($before, array_flip($differing));
+            $after = array_intersect_key($after, array_flip($differing));
+
+            if ($differing !== []) {
                 $this->audit->record(
                     'account.updated',
                     "Account {$account->code} {$account->name} updated.",

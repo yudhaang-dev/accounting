@@ -21,6 +21,7 @@ return [
         'PERIOD_NOT_OPEN' => 'The period does not accept postings.',
         'ACCOUNT_NOT_POSTABLE' => 'The account cannot receive postings.',
         'POSTING_SOURCE_NOT_ALLOWED' => 'The account does not accept this posting source.',
+        'ACCOUNT_CURRENCY_NOT_ALLOWED' => 'The account does not accept the currency of this line.',
         'DIMENSION_REQUIRED' => 'A required dimension is missing.',
         'DIMENSION_INVALID' => 'A dimension value is invalid.',
         'UNBALANCED_ENTRY' => 'The entry is not balanced in the functional currency.',

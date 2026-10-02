@@ -278,7 +278,7 @@
             },
             "post": {
                 "operationId": "accounts.store",
-                "summary": "Adds an account. The saldo normal defaults to that of the class; the parent must be active and\nof the same class",
+                "summary": "Adds an account. The saldo normal defaults to that of the class; the parent must be active and\nof the same class. The posting attributes default to an account that restricts nothing:\n`allowed_sources`, `dimension_requirements` (dimension type key => `required`/`optional`/`forbidden`),\n`currency_restriction` (with `restricted_currency` for `specific`) and `is_revaluable`",
                 "tags": [
                     "Account"
                 ],
@@ -383,7 +383,7 @@
             },
             "patch": {
                 "operationId": "accounts.update",
-                "summary": "Changes code, name, saldo normal or parent. `lock_version` is required; the class cannot change",
+                "summary": "Changes code, name, saldo normal, parent or posting attributes. `lock_version` is required; the class\ncannot change. Posting attributes apply to postings from now on; existing journals are not re-checked",
                 "tags": [
                     "Account"
                 ],
@@ -7682,6 +7682,27 @@
                     "status": {
                         "type": "string"
                     },
+                    "allowed_sources": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "dimension_requirements": {
+                        "type": "string"
+                    },
+                    "currency_restriction": {
+                        "type": "string"
+                    },
+                    "restricted_currency": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "is_revaluable": {
+                        "type": "boolean"
+                    },
                     "lock_version": {
                         "type": "integer"
                     }
@@ -7695,6 +7716,11 @@
                     "parent_id",
                     "is_leaf",
                     "status",
+                    "allowed_sources",
+                    "dimension_requirements",
+                    "currency_restriction",
+                    "restricted_currency",
+                    "is_revaluable",
                     "lock_version"
                 ],
                 "title": "AccountResource"
@@ -7850,6 +7876,36 @@
             "CreateAccountRequest": {
                 "type": "object",
                 "properties": {
+                    "allowed_sources": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/JournalSource"
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    },
+                    "dimension_requirements": {
+                        "type": "array",
+                        "description": "Dimension type key => `required`, `optional` or `forbidden`; types not listed are optional.",
+                        "items": {
+                            "$ref": "#/components/schemas/DimensionRequirement"
+                        }
+                    },
+                    "currency_restriction": {
+                        "$ref": "#/components/schemas/CurrencyRestriction"
+                    },
+                    "restricted_currency": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "ISO 4217 code of the one foreign currency; only with the restriction `specific`.",
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "is_revaluable": {
+                        "type": "boolean"
+                    },
                     "code": {
                         "type": "string",
                         "pattern": "^\\S+$",
@@ -8288,6 +8344,16 @@
                 ],
                 "title": "CurrencyResource"
             },
+            "CurrencyRestriction": {
+                "type": "string",
+                "description": "Which transaction currencies an account accepts (GL-FR-02): the functional currency only, one specific foreign currency, or any.\n",
+                "enum": [
+                    "functional_only",
+                    "specific",
+                    "any"
+                ],
+                "title": "CurrencyRestriction"
+            },
             "CurrencyRounding": {
                 "type": "string",
                 "description": "How amounts of a currency are rounded to its scale (MD-FR-06).\n",
@@ -8298,6 +8364,16 @@
                     "down"
                 ],
                 "title": "CurrencyRounding"
+            },
+            "DimensionRequirement": {
+                "type": "string",
+                "description": "Whether lines on an account must, may or must not carry a value of a dimension type (GL-FR-02).\n",
+                "enum": [
+                    "required",
+                    "optional",
+                    "forbidden"
+                ],
+                "title": "DimensionRequirement"
             },
             "DimensionStatus": {
                 "type": "string",
@@ -9538,6 +9614,36 @@
             "UpdateAccountRequest": {
                 "type": "object",
                 "properties": {
+                    "allowed_sources": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/JournalSource"
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    },
+                    "dimension_requirements": {
+                        "type": "array",
+                        "description": "Dimension type key => `required`, `optional` or `forbidden`; types not listed are optional.",
+                        "items": {
+                            "$ref": "#/components/schemas/DimensionRequirement"
+                        }
+                    },
+                    "currency_restriction": {
+                        "$ref": "#/components/schemas/CurrencyRestriction"
+                    },
+                    "restricted_currency": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "ISO 4217 code of the one foreign currency; only with the restriction `specific`.",
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "is_revaluable": {
+                        "type": "boolean"
+                    },
                     "lock_version": {
                         "type": "integer",
                         "minimum": 1

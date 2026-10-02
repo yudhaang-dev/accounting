@@ -53,7 +53,9 @@ export interface paths {
         put?: never;
         /**
          * Adds an account. The saldo normal defaults to that of the class; the parent must be active and
-         *     of the same class
+         *     of the same class. The posting attributes default to an account that restricts nothing:
+         *     `allowed_sources`, `dimension_requirements` (dimension type key => `required`/`optional`/`forbidden`),
+         *     `currency_restriction` (with `restricted_currency` for `specific`) and `is_revaluable`
          */
         post: operations["accounts.store"];
         delete?: never;
@@ -75,7 +77,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Changes code, name, saldo normal or parent. `lock_version` is required; the class cannot change */
+        /**
+         * Changes code, name, saldo normal, parent or posting attributes. `lock_version` is required; the class
+         *     cannot change. Posting attributes apply to postings from now on; existing journals are not re-checked
+         */
         patch: operations["accounts.update"];
         trace?: never;
     };
@@ -1434,6 +1439,11 @@ export interface components {
             parent_id: string | null;
             is_leaf: boolean;
             status: string;
+            allowed_sources: string[];
+            dimension_requirements: string;
+            currency_restriction: string;
+            restricted_currency: string | null;
+            is_revaluable: boolean;
             lock_version: number;
         };
         /**
@@ -1480,6 +1490,13 @@ export interface components {
         };
         /** CreateAccountRequest */
         CreateAccountRequest: {
+            allowed_sources?: components["schemas"]["JournalSource"][];
+            /** @description Dimension type key => `required`, `optional` or `forbidden`; types not listed are optional. */
+            dimension_requirements?: components["schemas"]["DimensionRequirement"][];
+            currency_restriction?: components["schemas"]["CurrencyRestriction"];
+            /** @description ISO 4217 code of the one foreign currency; only with the restriction `specific`. */
+            restricted_currency?: string | null;
+            is_revaluable?: boolean;
             code: string;
             name: string;
             class: components["schemas"]["AccountClass"];
@@ -1588,11 +1605,23 @@ export interface components {
             lock_version: number;
         };
         /**
+         * CurrencyRestriction
+         * @description Which transaction currencies an account accepts (GL-FR-02): the functional currency only, one specific foreign currency, or any.
+         * @enum {string}
+         */
+        CurrencyRestriction: "functional_only" | "specific" | "any";
+        /**
          * CurrencyRounding
          * @description How amounts of a currency are rounded to its scale (MD-FR-06).
          * @enum {string}
          */
         CurrencyRounding: "half_up" | "half_even" | "up" | "down";
+        /**
+         * DimensionRequirement
+         * @description Whether lines on an account must, may or must not carry a value of a dimension type (GL-FR-02).
+         * @enum {string}
+         */
+        DimensionRequirement: "required" | "optional" | "forbidden";
         /**
          * DimensionStatus
          * @enum {string}
@@ -1918,6 +1947,13 @@ export interface components {
         };
         /** UpdateAccountRequest */
         UpdateAccountRequest: {
+            allowed_sources?: components["schemas"]["JournalSource"][];
+            /** @description Dimension type key => `required`, `optional` or `forbidden`; types not listed are optional. */
+            dimension_requirements?: components["schemas"]["DimensionRequirement"][];
+            currency_restriction?: components["schemas"]["CurrencyRestriction"];
+            /** @description ISO 4217 code of the one foreign currency; only with the restriction `specific`. */
+            restricted_currency?: string | null;
+            is_revaluable?: boolean;
             lock_version: number;
             code?: string;
             name?: string;

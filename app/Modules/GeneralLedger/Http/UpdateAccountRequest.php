@@ -15,6 +15,7 @@ class UpdateAccountRequest extends FormRequest
     public function rules(): array
     {
         return [
+            ...AccountPostingRules::rules(),
             'lock_version' => ['required', 'integer', 'min:1'],
             'code' => ['sometimes', 'string', 'max:32', 'regex:/^\S+$/'],
             'name' => ['sometimes', 'string', 'max:255'],

@@ -5,6 +5,8 @@ namespace App\Modules\GeneralLedger\Application;
 use App\Modules\GeneralLedger\Contracts\AccountClass;
 use App\Modules\GeneralLedger\Contracts\AccountData;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
+use App\Modules\GeneralLedger\Contracts\DimensionRequirement;
+use App\Modules\GeneralLedger\Contracts\JournalSource;
 use App\Modules\GeneralLedger\Domain\Account;
 use App\Modules\GeneralLedger\Domain\AccountStatus;
 use App\Support\Company\CompanyScope;
@@ -33,6 +35,11 @@ final class EloquentAccountDirectory implements AccountDirectory
             $account->parent_id,
             ! $account->children()->withoutGlobalScope(CompanyScope::class)->exists(),
             $account->isActive(),
+            array_map(JournalSource::from(...), $account->allowed_sources),
+            array_map(DimensionRequirement::from(...), $account->dimension_requirements),
+            $account->currency_restriction,
+            $account->restricted_currency,
+            $account->is_revaluable,
         );
     }
 

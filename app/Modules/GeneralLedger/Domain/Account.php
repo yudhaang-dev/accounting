@@ -3,6 +3,7 @@
 namespace App\Modules\GeneralLedger\Domain;
 
 use App\Modules\GeneralLedger\Contracts\AccountClass;
+use App\Modules\GeneralLedger\Contracts\CurrencyRestriction;
 use App\Modules\GeneralLedger\Database\Factories\AccountFactory;
 use App\Platform\Api\VersionedCompanyModel;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
@@ -22,6 +23,11 @@ use Illuminate\Support\Carbon;
  * @property string $normal_balance
  * @property string|null $parent_id
  * @property AccountStatus $status
+ * @property list<string> $allowed_sources
+ * @property array<string, string> $dimension_requirements
+ * @property CurrencyRestriction $currency_restriction
+ * @property string|null $restricted_currency
+ * @property bool $is_revaluable
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -33,15 +39,28 @@ class Account extends VersionedCompanyModel
 
     protected $table = 'gl_accounts';
 
-    protected $attributes = ['status' => 'active'];
+    protected $attributes = [
+        'status' => 'active',
+        'allowed_sources' => '["entry","subledger","system"]',
+        'dimension_requirements' => '{}',
+        'currency_restriction' => 'any',
+        'is_revaluable' => false,
+    ];
 
-    protected $fillable = ['code', 'name', 'class', 'normal_balance', 'parent_id', 'status'];
+    protected $fillable = [
+        'code', 'name', 'class', 'normal_balance', 'parent_id', 'status',
+        'allowed_sources', 'dimension_requirements', 'currency_restriction', 'restricted_currency', 'is_revaluable',
+    ];
 
     protected function casts(): array
     {
         return [
             'class' => AccountClass::class,
             'status' => AccountStatus::class,
+            'allowed_sources' => 'array',
+            'dimension_requirements' => JsonObjectCast::class,
+            'currency_restriction' => CurrencyRestriction::class,
+            'is_revaluable' => 'boolean',
         ];
     }
 

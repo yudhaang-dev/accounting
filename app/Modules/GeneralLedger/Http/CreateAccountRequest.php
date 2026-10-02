@@ -14,6 +14,7 @@ class CreateAccountRequest extends FormRequest
     public function rules(): array
     {
         return [
+            ...AccountPostingRules::rules(),
             'code' => ['required', 'string', 'max:32', 'regex:/^\S+$/'],
             'name' => ['required', 'string', 'max:255'],
             'class' => ['required', Rule::enum(AccountClass::class)],

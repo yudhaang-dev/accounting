@@ -45,18 +45,21 @@ class AccountController
 
     /**
      * Adds an account. The saldo normal defaults to that of the class; the parent must be active and
-     * of the same class.
+     * of the same class. The posting attributes default to an account that restricts nothing:
+     * `allowed_sources`, `dimension_requirements` (dimension type key => `required`/`optional`/`forbidden`),
+     * `currency_restriction` (with `restricted_currency` for `specific`) and `is_revaluable`.
      */
     public function store(CreateAccountRequest $request, CreateAccount $createAccount): JsonResponse
     {
-        /** @var array{code: string, name: string, class: string, normal_balance?: string|null, parent_id?: string|null} $data */
+        /** @var array{code: string, name: string, class: string, normal_balance?: string|null, parent_id?: string|null, allowed_sources?: list<string>, dimension_requirements?: array<string, string>, currency_restriction?: string, restricted_currency?: string|null, is_revaluable?: bool} $data */
         $data = $request->validated();
 
         return (new AccountResource($createAccount($data)))->response()->setStatusCode(201);
     }
 
     /**
-     * Changes code, name, saldo normal or parent. `lock_version` is required; the class cannot change.
+     * Changes code, name, saldo normal, parent or posting attributes. `lock_version` is required; the class
+     * cannot change. Posting attributes apply to postings from now on; existing journals are not re-checked.
      */
     public function update(UpdateAccountRequest $request, UpdateAccount $updateAccount, string $companyId, string $id): AccountResource
     {

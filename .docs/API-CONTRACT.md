@@ -72,6 +72,7 @@
 | `PERIOD_NOT_OPEN` | 422 | Periode tidak menerima posting untuk entri ini |
 | `ACCOUNT_NOT_POSTABLE` | 422 | Akun induk, nonaktif, atau milik perusahaan lain |
 | `POSTING_SOURCE_NOT_ALLOWED` | 422 | Akun tidak menerima sumber ini |
+| `ACCOUNT_CURRENCY_NOT_ALLOWED` | 422 | Akun tidak menerima mata uang baris ini (GL-FR-02) |
 | `DIMENSION_REQUIRED`, `DIMENSION_INVALID` | 422 | Dimensi wajib hilang atau nilainya tidak valid |
 | `UNBALANCED_ENTRY` | 422 | Tidak seimbang dalam mata uang fungsional |
 | `EXCHANGE_RATE_NOT_FOUND` | 422 | Kurs tidak tersedia (MD-FR-08) |

@@ -15,6 +15,13 @@ interface DimensionSets
     public function exists(string $companyId, string $dimensionSetId): bool;
 
     /**
+     * Keys of the active dimension types of the company; what an account may impose requirements on (GL-FR-02).
+     *
+     * @return list<string>
+     */
+    public function activeTypeKeys(string $companyId): array;
+
+    /**
      * Resolves a combination given as dimension type key => dimension value ID (`null` means none) into
      * its set, creating the set on first use. The same combination always gives the same ID, in any
      * order, and the empty combination gives `emptySet()`. Every value must belong to its type, be

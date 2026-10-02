@@ -63,7 +63,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 ## M4 — Buku besar
 
-- [ ] **M4-01** Atribut posting akun: sumber yang diizinkan, kewajiban dimensi, batasan mata uang, penanda revaluasi — GL-FR-02, GL-AC-02
+- [x] **M4-01** Atribut posting akun: sumber yang diizinkan, kewajiban dimensi, batasan mata uang, penanda revaluasi — GL-FR-02, GL-AC-02 — kolom di `gl_accounts` (default tanpa pembatasan) dengan CHECK di database; kewajiban dimensi per key tipe dimensi aktif (`required`/`forbidden`, `optional` tidak disimpan); `PostingValidator` menolak dengan `POSTING_SOURCE_NOT_ALLOWED`, `DIMENSION_REQUIRED`/`DIMENSION_INVALID`, dan kode baru `ACCOUNT_CURRENCY_NOT_ALLOWED`. Batasan `specific` menolak baris mata uang fungsional; baris valas baru ada di M4-05, dan penegakan penanda revaluasi di M4-07. Perubahan atribut hanya berlaku untuk posting berikutnya. Skema OpenAPI mengetik `dimension_requirements` sebagai `string` (respons) dan larik (request), keterbatasan Scramble; klien SPA di M4-12 perlu menimpanya dengan tipe lokal. Layar SPA menyusul di M4-12
 - [ ] **M4-02** Status `soft_closed` dengan kebijakan per key Jenis Transaksi, tutup/buka periode beralasan, pola kalender 4-4-5 dan rentang bebas — GL-FR-03, GL-FR-04, GL-AC-04
 - [ ] **M4-03** Pembalikan jurnal di sisi GL — GL-FR-06, GL-AC-11
 - [ ] **M4-04** Kebijakan override akun kontrol — GL-FR-07
