@@ -43,6 +43,10 @@ import {
 } from '@/modules/general-ledger/calendar';
 import { ReopenPeriodDialog } from '@/modules/general-ledger/components/reopen-period-dialog';
 import {
+    RevaluationDialog,
+    type RevaluationAccess,
+} from '@/modules/general-ledger/components/revaluation-dialog';
+import {
     closePeriod,
     periodsQuery,
     softClosePeriod,
@@ -74,11 +78,15 @@ export function PeriodsPage({
     canManage,
     canClose,
     canReopen,
+    canRevalue,
+    revaluationAccess,
 }: {
     companyId: string;
     canManage: boolean;
     canClose: boolean;
     canReopen: boolean;
+    canRevalue: boolean;
+    revaluationAccess: RevaluationAccess;
 }) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
@@ -86,6 +94,7 @@ export function PeriodsPage({
     const [reopening, setReopening] = useState<Period | null>(null);
     const [closing, setClosing] = useState<Period | null>(null);
     const asking = useLastDefined(closing);
+    const [revaluing, setRevaluing] = useState<Period | null>(null);
     const [softClosing, setSoftClosing] = useState<Period | null>(null);
     const askingSoft = useLastDefined(softClosing);
 
@@ -258,7 +267,9 @@ export function PeriodsPage({
                                         <TableHead>
                                             {t('periods.status')}
                                         </TableHead>
-                                        {(canClose || canReopen) && (
+                                        {(canClose ||
+                                            canReopen ||
+                                            canRevalue) && (
                                             <TableHead className="text-end">
                                                 {t('periods.actions')}
                                             </TableHead>
@@ -297,8 +308,33 @@ export function PeriodsPage({
                                                     )}
                                                 </Badge>
                                             </TableCell>
-                                            {(canClose || canReopen) && (
+                                            {(canClose ||
+                                                canReopen ||
+                                                canRevalue) && (
                                                 <TableCell className="text-end">
+                                                    {period.status !==
+                                                        'closed' &&
+                                                        canRevalue && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                aria-label={t(
+                                                                    'periods.revalue',
+                                                                    {
+                                                                        name: period.name,
+                                                                    },
+                                                                )}
+                                                                onClick={() =>
+                                                                    setRevaluing(
+                                                                        period,
+                                                                    )
+                                                                }
+                                                            >
+                                                                {t(
+                                                                    'periods.revalueAction',
+                                                                )}
+                                                            </Button>
+                                                        )}
                                                     {period.status === 'open' &&
                                                         canClose && (
                                                             <Button
@@ -408,6 +444,12 @@ export function PeriodsPage({
                 confirmLabel={t('confirm.closePeriod.action')}
                 pending={close.isPending}
                 onConfirm={() => closing && close.mutate(closing)}
+            />
+            <RevaluationDialog
+                companyId={companyId}
+                period={revaluing}
+                access={revaluationAccess}
+                onClose={() => setRevaluing(null)}
             />
             <ReopenPeriodDialog
                 companyId={companyId}

@@ -338,6 +338,11 @@ const periodsRoute = createRoute({
                 canManage={can(workspace, 'periods.manage')}
                 canClose={can(workspace, 'periods.close')}
                 canReopen={can(workspace, 'periods.reopen')}
+                canRevalue={can(workspace, 'periods.revalue')}
+                revaluationAccess={{
+                    accounts: can(workspace, 'accounts.read'),
+                    journals: can(workspace, 'journals.read'),
+                }}
             />
         );
     },

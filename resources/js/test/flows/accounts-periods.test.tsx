@@ -871,6 +871,187 @@ describe('fiscal periods', () => {
         ).not.toBeInTheDocument();
     });
 
+    describe('revaluation (GL-FR-09)', () => {
+        const bank = '01JACCOUNT0000000000000001';
+        const run = `POST ${base}/periods/${period(2, 'open').id}/revaluation`;
+        const revalueRoutes = (permissions: string[]) => ({
+            ...periodRoutes(['periods.read', ...permissions]),
+            [`GET ${base}/accounts`]: () =>
+                list([row({ id: bank, code: '1112', name: 'Bank USD' })]),
+        });
+
+        it('shows what was adjusted and links to the journals', async () => {
+            const api = mockApi({
+                ...revalueRoutes([
+                    'periods.revalue',
+                    'journals.read',
+                    'accounts.read',
+                ]),
+                [run]: () =>
+                    json(
+                        {
+                            data: {
+                                id: '01JRUN',
+                                period_id: period(2, 'open').id,
+                                journal_id: '01JJOURNAL000000000000001',
+                                reversal_journal_id:
+                                    '01JJOURNAL000000000000002',
+                                adjustments: [
+                                    {
+                                        account_id: bank,
+                                        currency: 'USD',
+                                        dimension_set_id: '01JSET',
+                                        transaction_balance: '1000.00',
+                                        carried: '15000000.00',
+                                        revalued: '15200000.00',
+                                        adjustment: '200000.00',
+                                    },
+                                ],
+                            },
+                        },
+                        201,
+                    ),
+            });
+
+            renderApp(periodsPath);
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('button', {
+                    name: 'Revaluasi 2026-02',
+                }),
+            );
+            const dialog = await screen.findByRole('dialog');
+
+            await typist.click(
+                within(dialog).getByRole('button', {
+                    name: 'Jalankan revaluasi',
+                }),
+            );
+
+            expect(
+                await within(dialog).findByText('1112 · Bank USD'),
+            ).toBeInTheDocument();
+            expect(within(dialog).getByText('+200.000,00')).toBeInTheDocument();
+            expect(
+                within(dialog).getByText('15.200.000,00'),
+            ).toBeInTheDocument();
+            expect(
+                within(dialog).getByRole('link', {
+                    name: 'Lihat jurnal revaluasi',
+                }),
+            ).toHaveAttribute(
+                'href',
+                `/w/${workspace.company_id}/journals/01JJOURNAL000000000000001`,
+            );
+            expect(
+                within(dialog).getByRole('link', {
+                    name: 'Lihat jurnal pembalik',
+                }),
+            ).toBeInTheDocument();
+            expect(api.called(run)).toHaveLength(1);
+        });
+
+        it('says so when nothing needed adjusting', async () => {
+            mockApi({
+                ...revalueRoutes(['periods.revalue']),
+                [run]: () =>
+                    json({
+                        data: {
+                            id: null,
+                            period_id: period(2, 'open').id,
+                            journal_id: null,
+                            reversal_journal_id: null,
+                            adjustments: [],
+                        },
+                    }),
+            });
+
+            renderApp(periodsPath);
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('button', {
+                    name: 'Revaluasi 2026-02',
+                }),
+            );
+            const dialog = await screen.findByRole('dialog');
+
+            await typist.click(
+                within(dialog).getByRole('button', {
+                    name: 'Jalankan revaluasi',
+                }),
+            );
+
+            expect(
+                await within(dialog).findByText(
+                    /Tidak ada selisih yang perlu disesuaikan/,
+                ),
+            ).toBeInTheDocument();
+        });
+
+        it('points to the settings when the policy or a role is missing', async () => {
+            mockApi({
+                ...revalueRoutes(['periods.revalue']),
+                [run]: () =>
+                    json(
+                        {
+                            message: 'Kebijakan belum menetapkan jenis kurs.',
+                            code: 'MAPPING_REQUIRED',
+                        },
+                        422,
+                    ),
+            });
+
+            renderApp(periodsPath);
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('button', {
+                    name: 'Revaluasi 2026-02',
+                }),
+            );
+            const dialog = await screen.findByRole('dialog');
+
+            await typist.click(
+                within(dialog).getByRole('button', {
+                    name: 'Jalankan revaluasi',
+                }),
+            );
+
+            expect(
+                await within(dialog).findByText(
+                    /jenis kurs\. Atur jenis kurs dan peran akun di Pengaturan buku besar/,
+                ),
+            ).toBeInTheDocument();
+        });
+
+        it('offers no revaluation without the permission or for a closed period', async () => {
+            mockApi(revalueRoutes(['periods.close']));
+
+            renderApp(periodsPath);
+
+            await screen.findByText('2026-02');
+            expect(
+                screen.queryByRole('button', { name: /^Revaluasi/ }),
+            ).not.toBeInTheDocument();
+        });
+
+        it('does not offer it for a closed period', async () => {
+            mockApi(revalueRoutes(['periods.revalue']));
+
+            renderApp(periodsPath);
+
+            await screen.findByText('2026-02');
+            expect(
+                screen.getAllByRole('button', { name: /^Revaluasi/ }),
+            ).toHaveLength(1);
+            expect(
+                screen.queryByRole('button', { name: 'Revaluasi 2026-01' }),
+            ).not.toBeInTheDocument();
+        });
+    });
+
     it('will not reopen a period without a reason', async () => {
         const reopen = `POST ${base}/periods/${period(1, 'closed').id}/reopen`;
         const api = mockApi({
