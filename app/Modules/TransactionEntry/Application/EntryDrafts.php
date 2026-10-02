@@ -5,6 +5,7 @@ namespace App\Modules\TransactionEntry\Application;
 use App\Modules\TransactionEntry\Domain\Entry;
 use App\Modules\TransactionEntry\Domain\EntryStatus;
 use App\Modules\TransactionEntry\Domain\TransactionType;
+use App\Modules\TransactionEntry\Domain\TransactionTypeMode;
 use App\Modules\TransactionEntry\Domain\TransactionTypeVersion;
 use App\Modules\TransactionEntry\Domain\VersionStatus;
 use App\Platform\Api\ApiException;
@@ -141,6 +142,10 @@ final class EntryDrafts
 
         if ($found->status !== VersionStatus::Published) {
             throw ValidationException::withMessages(['transaction_type_version' => [__('entries.version_unpublished', ['version' => $found->version])]]);
+        }
+
+        if ($found->mode === TransactionTypeMode::Structured) {
+            throw ValidationException::withMessages(['transaction_type_version' => [__('entries.structured_not_supported')]]);
         }
 
         return $found;

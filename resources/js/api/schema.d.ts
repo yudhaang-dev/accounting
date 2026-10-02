@@ -1614,6 +1614,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/transaction-types/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Starts a draft with the next version number */
+        post: operations["transaction-types.versions.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/transaction-types/{id}/versions/{version}/schema": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The field schema of a version as a JSON Schema document; a free-lines version has no schema */
+        get: operations["transaction-types.versions.schema"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/transaction-types/{id}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replaces the content of a draft version */
+        put: operations["transaction-types.versions.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/transaction-types/{id}/versions/{version}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["transaction-types.versions.publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/transaction-types/{id}/versions/{version}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["transaction-types.versions.retire"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/reports/trial-balance": {
         parameters: {
             query?: never;
@@ -1995,6 +2078,12 @@ export interface components {
             actor_id: string | null;
             created_at: string | null;
         };
+        /**
+         * FieldType
+         * @description Types a field of a `structured` version can have (TE-FR-04).
+         * @enum {string}
+         */
+        FieldType: "amount" | "date" | "text" | "reference" | "account" | "party" | "cash_account" | "dimension" | "allocations";
         /** FiscalCalendarResource */
         FiscalCalendarResource: {
             id: string;
@@ -2333,6 +2422,12 @@ export interface components {
              */
             start_month?: number;
         };
+        /**
+         * TransactionTypeMode
+         * @description How an entry becomes a journal (TE-FR-03).
+         * @enum {string}
+         */
+        TransactionTypeMode: "structured" | "free_lines";
         /** TransactionTypeResource */
         TransactionTypeResource: {
             id: string;
@@ -2342,6 +2437,7 @@ export interface components {
                 version: number;
                 mode: string;
                 status: string;
+                fields: string;
             }[];
             lock_version: number;
         };
@@ -2471,6 +2567,22 @@ export interface components {
             two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
+        };
+        /**
+         * VersionRequest
+         * @description Content of a draft version: the mode and, for `structured`, its field definitions (TE-FR-04).
+         *     Whether referenced accounts and dimension types exist is checked by the application layer.
+         */
+        VersionRequest: {
+            mode: components["schemas"]["TransactionTypeMode"];
+            fields: {
+                name: string;
+                type: components["schemas"]["FieldType"];
+                label: string;
+                required?: boolean;
+                account_ids?: string[];
+                dimension_type?: string;
+            }[];
         };
         /** WorkspaceResource */
         WorkspaceResource: {
@@ -6002,6 +6114,159 @@ export interface operations {
             path: {
                 companyId: string;
                 id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `TransactionTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TransactionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "transaction-types.versions.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description `TransactionTypeResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TransactionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "transaction-types.versions.schema": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @constant */
+                            $schema: "https://json-schema.org/draft/2020-12/schema";
+                            /** @constant */
+                            type: "object";
+                            properties: string;
+                            required: string[];
+                            additionalProperties: boolean;
+                        } | null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "transaction-types.versions.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description `TransactionTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TransactionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "transaction-types.versions.publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `TransactionTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TransactionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "transaction-types.versions.retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+                version: number;
             };
             cookie?: never;
         };

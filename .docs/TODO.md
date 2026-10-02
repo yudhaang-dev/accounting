@@ -84,7 +84,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 ## M5 — Pencatatan transaksi
 
-- [ ] **M5-01** Mode `structured`: skema field (subset JSON Schema), penerbitan dan penghentian versi — TE-FR-02, TE-FR-04, TE-AC-01, TE-AC-06
+- [x] **M5-01** Mode `structured`: skema field (subset JSON Schema), penerbitan dan penghentian versi — TE-FR-02, TE-FR-04, TE-AC-01, TE-AC-06 — satu field di dua baris tanpa pernyataan eksplisit ditolak saat terbit di M5-02; entri pada versi `structured` dibuka di M5-02; perancang SPA di M5-14
 - [ ] **M5-02** Aturan posting: sumber akun, penerapan dimensi, pemakaian ulang eksplisit, baris nol dilewati, baris `fx_difference` — TE-FR-05, TE-AC-02
 - [ ] **M5-03** Mata uang dan kurs entri — TE-FR-06
 - [ ] **M5-04** Kebijakan approval/SoD: aturan per key, sumber, dan ambang; tahap dan permission; posting otomatis setelah approval — TE-FR-09, TE-AC-05

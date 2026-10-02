@@ -6,7 +6,8 @@ use App\Support\Company\CompanyScopedModel;
 use Illuminate\Support\Carbon;
 
 /**
- * An immutable package of a transaction type (TE-FR-02). Only the status changes, when the version is retired.
+ * An immutable package of a transaction type (TE-FR-02). A draft can still be edited; once published only
+ * the status changes, when the version is retired.
  *
  * @property string $id
  * @property string $company_id
@@ -14,19 +15,21 @@ use Illuminate\Support\Carbon;
  * @property int $version
  * @property TransactionTypeMode $mode
  * @property VersionStatus $status
+ * @property list<array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, dimension_type?: string}>|null $fields
  * @property Carbon|null $created_at
  */
 class TransactionTypeVersion extends CompanyScopedModel
 {
     protected $table = 'te_transaction_type_versions';
 
-    protected $fillable = ['transaction_type_id', 'version', 'mode', 'status'];
+    protected $fillable = ['transaction_type_id', 'version', 'mode', 'status', 'fields'];
 
     protected function casts(): array
     {
         return [
             'mode' => TransactionTypeMode::class,
             'status' => VersionStatus::class,
+            'fields' => 'array',
         ];
     }
 }

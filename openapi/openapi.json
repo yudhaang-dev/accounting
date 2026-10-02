@@ -8059,6 +8059,350 @@
                 }
             }
         },
+        "/companies/{companyId}/transaction-types/{id}/versions": {
+            "post": {
+                "operationId": "transaction-types.versions.store",
+                "summary": "Starts a draft with the next version number",
+                "tags": [
+                    "TransactionTypeVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VersionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`TransactionTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/TransactionTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/transaction-types/{id}/versions/{version}/schema": {
+            "get": {
+                "operationId": "transaction-types.versions.schema",
+                "summary": "The field schema of a version as a JSON Schema document; a free-lines version has no schema",
+                "tags": [
+                    "TransactionTypeVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": [
+                                                "object",
+                                                "null"
+                                            ],
+                                            "properties": {
+                                                "$schema": {
+                                                    "type": "string",
+                                                    "const": "https://json-schema.org/draft/2020-12/schema"
+                                                },
+                                                "type": {
+                                                    "type": "string",
+                                                    "const": "object"
+                                                },
+                                                "properties": {
+                                                    "type": "string"
+                                                },
+                                                "required": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "additionalProperties": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "$schema",
+                                                "type",
+                                                "properties",
+                                                "required",
+                                                "additionalProperties"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/transaction-types/{id}/versions/{version}": {
+            "put": {
+                "operationId": "transaction-types.versions.update",
+                "summary": "Replaces the content of a draft version",
+                "tags": [
+                    "TransactionTypeVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VersionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`TransactionTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/TransactionTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/transaction-types/{id}/versions/{version}/publish": {
+            "post": {
+                "operationId": "transaction-types.versions.publish",
+                "tags": [
+                    "TransactionTypeVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`TransactionTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/TransactionTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/transaction-types/{id}/versions/{version}/retire": {
+            "post": {
+                "operationId": "transaction-types.versions.retire",
+                "tags": [
+                    "TransactionTypeVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`TransactionTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/TransactionTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/reports/trial-balance": {
             "get": {
                 "operationId": "reports.trial-balance",
@@ -9610,6 +9954,22 @@
                 ],
                 "title": "ExchangeRateResource"
             },
+            "FieldType": {
+                "type": "string",
+                "description": "Types a field of a `structured` version can have (TE-FR-04).\n",
+                "enum": [
+                    "amount",
+                    "date",
+                    "text",
+                    "reference",
+                    "account",
+                    "party",
+                    "cash_account",
+                    "dimension",
+                    "allocations"
+                ],
+                "title": "FieldType"
+            },
             "FiscalCalendarResource": {
                 "type": "object",
                 "properties": {
@@ -10975,6 +11335,15 @@
                 ],
                 "title": "StoreFiscalCalendarRequest"
             },
+            "TransactionTypeMode": {
+                "type": "string",
+                "description": "How an entry becomes a journal (TE-FR-03).\n",
+                "enum": [
+                    "structured",
+                    "free_lines"
+                ],
+                "title": "TransactionTypeMode"
+            },
             "TransactionTypeResource": {
                 "type": "object",
                 "properties": {
@@ -11000,12 +11369,16 @@
                                 },
                                 "status": {
                                     "type": "string"
+                                },
+                                "fields": {
+                                    "type": "string"
                                 }
                             },
                             "required": [
                                 "version",
                                 "mode",
-                                "status"
+                                "status",
+                                "fields"
                             ]
                         }
                     },
@@ -11663,6 +12036,63 @@
                     "client_ip_allowlist"
                 ],
                 "title": "UpdateSecurityPolicyRequest"
+            },
+            "VersionRequest": {
+                "type": "object",
+                "description": "Content of a draft version: the mode and, for `structured`, its field definitions (TE-FR-04).\nWhether referenced accounts and dimension types exist is checked by the application layer.",
+                "properties": {
+                    "mode": {
+                        "$ref": "#/components/schemas/TransactionTypeMode"
+                    },
+                    "fields": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "pattern": "^[a-z][a-z0-9_]*$",
+                                    "maxLength": 64
+                                },
+                                "type": {
+                                    "$ref": "#/components/schemas/FieldType"
+                                },
+                                "label": {
+                                    "type": "string",
+                                    "maxLength": 255
+                                },
+                                "required": {
+                                    "type": "boolean"
+                                },
+                                "account_ids": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "minLength": 26,
+                                        "maxLength": 26
+                                    },
+                                    "minItems": 1,
+                                    "maxItems": 500
+                                },
+                                "dimension_type": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                }
+                            },
+                            "required": [
+                                "name",
+                                "type",
+                                "label"
+                            ]
+                        },
+                        "maxItems": 50
+                    }
+                },
+                "required": [
+                    "mode",
+                    "fields"
+                ],
+                "title": "VersionRequest"
             },
             "WorkspaceResource": {
                 "type": "object",

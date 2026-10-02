@@ -2,6 +2,7 @@
 
 use App\Modules\TransactionEntry\Http\EntryController;
 use App\Modules\TransactionEntry\Http\TransactionTypeController;
+use App\Modules\TransactionEntry\Http\TransactionTypeVersionController;
 use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,17 @@ Route::companyScoped(function () {
     Route::post('transaction-types', [TransactionTypeController::class, 'store'])->middleware('permission:policies.manage')->name('transaction-types.store');
     Route::get('transaction-types/{id}', [TransactionTypeController::class, 'show'])
         ->middleware('permission:entries.read|transaction-types.read')->where('id', ApiServiceProvider::ULID)->name('transaction-types.show');
+
+    Route::post('transaction-types/{id}/versions', [TransactionTypeVersionController::class, 'store'])
+        ->middleware('permission:policies.manage')->where('id', ApiServiceProvider::ULID)->name('transaction-types.versions.store');
+    Route::get('transaction-types/{id}/versions/{version}/schema', [TransactionTypeVersionController::class, 'schema'])
+        ->middleware('permission:entries.read|transaction-types.read')->where('id', ApiServiceProvider::ULID)->whereNumber('version')->name('transaction-types.versions.schema');
+    Route::put('transaction-types/{id}/versions/{version}', [TransactionTypeVersionController::class, 'update'])
+        ->middleware('permission:policies.manage')->where('id', ApiServiceProvider::ULID)->whereNumber('version')->name('transaction-types.versions.update');
+    Route::post('transaction-types/{id}/versions/{version}/publish', [TransactionTypeVersionController::class, 'publish'])
+        ->middleware('permission:policies.manage')->where('id', ApiServiceProvider::ULID)->whereNumber('version')->name('transaction-types.versions.publish');
+    Route::post('transaction-types/{id}/versions/{version}/retire', [TransactionTypeVersionController::class, 'retire'])
+        ->middleware('permission:policies.manage')->where('id', ApiServiceProvider::ULID)->whereNumber('version')->name('transaction-types.versions.retire');
 
     Route::get('entries', [EntryController::class, 'index'])->middleware('permission:entries.read')->name('entries.index');
     Route::post('entries', [EntryController::class, 'store'])->middleware('permission:entries.create')->name('entries.store');
