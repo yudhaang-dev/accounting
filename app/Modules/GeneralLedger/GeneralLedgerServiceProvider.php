@@ -7,6 +7,7 @@ use App\Modules\GeneralLedger\Application\EloquentAccountRoles;
 use App\Modules\GeneralLedger\Application\EloquentCurrencyUsage;
 use App\Modules\GeneralLedger\Application\EloquentLedgerPolicies;
 use App\Modules\GeneralLedger\Application\EloquentLedgerReader;
+use App\Modules\GeneralLedger\Application\EloquentOpeningBalances;
 use App\Modules\GeneralLedger\Application\EloquentPeriodDirectory;
 use App\Modules\GeneralLedger\Application\EloquentPostingService;
 use App\Modules\GeneralLedger\Application\EloquentPostingValidator;
@@ -14,6 +15,7 @@ use App\Modules\GeneralLedger\Contracts\AccountDirectory;
 use App\Modules\GeneralLedger\Contracts\AccountRoles;
 use App\Modules\GeneralLedger\Contracts\LedgerPolicies;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
+use App\Modules\GeneralLedger\Contracts\OpeningBalances;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
@@ -37,5 +39,6 @@ class GeneralLedgerServiceProvider extends ModuleServiceProvider
         $this->app->bind(PostingValidator::class, EloquentPostingValidator::class);
         $this->app->bind(PostingService::class, EloquentPostingService::class);
         $this->app->bind(LedgerPolicies::class, EloquentLedgerPolicies::class);
+        $this->app->bind(OpeningBalances::class, EloquentOpeningBalances::class);
     }
 }

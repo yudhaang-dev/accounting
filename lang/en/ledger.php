@@ -36,5 +36,17 @@ return [
     'reversal_of' => 'Reversal of journal :number',
     'override_reason_required' => 'A reason is required to post to account :account from the source ":source".',
     'unbalanced' => 'The journal is not balanced: debit :debit, credit :credit.',
+    'opening_description' => 'Opening balances :date',
+    'opening_already_imported' => 'The company already has opening balances, imported as :key.',
+    'opening_key_reused' => 'The source key :key was imported with other content.',
+    'opening_start_after_cutover' => 'The ledger start date cannot be after the cutover date.',
+    'opening_start_not_period_start' => 'The ledger start date must be the first day of a period; period :period starts on :start.',
+    'opening_account_unmapped' => 'The source account :code has no mapping to an account of the company.',
+    'opening_account_unknown' => 'The source account :source is mapped to :code, which is not an account of this company.',
+    'opening_dimension_unmapped' => 'The source value :code of the dimension :type has no mapping to a dimension value.',
+    'opening_duplicate_line' => 'The source account :code repeats the account, currency and dimensions of line :first.',
+    'opening_year_to_date_at_year_start' => 'Account :account carries income or expense, which has no year to date when the ledger starts on the first day of a fiscal year.',
+    'opening_control_total_missing' => 'Control account :account needs the total of its open items, which was not provided.',
+    'opening_control_total_differs' => 'Control account :account carries :balance but its open items total :open_items.',
 
 ];

@@ -66,7 +66,7 @@ final class EloquentPostingValidator implements PostingValidator
         $periodId = $this->periodFor($command->companyId, $command->accountingDate, $command->transactionTypeKey, $command->actorPermissions);
         $converted = $this->convert($command, $amounts, $company->functionalCurrency);
         $accounts = $this->accounts($command);
-        $overridden = $this->sources($command, $accounts);
+        $overridden = $command->openingBalance ? [] : $this->sources($command, $accounts);
         $this->currencies($command, $accounts, $company->functionalCurrency);
         $setIds = $this->dimensions($command);
         $this->dimensionRequirements($command, $accounts, $setIds);

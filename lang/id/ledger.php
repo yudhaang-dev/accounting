@@ -36,5 +36,17 @@ return [
     'reversal_of' => 'Pembalikan jurnal :number',
     'override_reason_required' => 'Alasan wajib diisi untuk memposting ke akun :account dari sumber ":source".',
     'unbalanced' => 'Jurnal tidak seimbang: debit :debit, kredit :credit.',
+    'opening_description' => 'Saldo konversi :date',
+    'opening_already_imported' => 'Perusahaan sudah memiliki saldo konversi, diimpor sebagai :key.',
+    'opening_key_reused' => 'Kunci sumber :key sudah diimpor dengan isi yang berbeda.',
+    'opening_start_after_cutover' => 'Awal histori tidak boleh setelah tanggal cutover.',
+    'opening_start_not_period_start' => 'Awal histori harus hari pertama sebuah periode; periode :period dimulai pada :start.',
+    'opening_account_unmapped' => 'Akun sumber :code belum dipetakan ke akun perusahaan.',
+    'opening_account_unknown' => 'Akun sumber :source dipetakan ke :code, yang bukan akun perusahaan ini.',
+    'opening_dimension_unmapped' => 'Nilai sumber :code pada dimensi :type belum dipetakan ke nilai dimensi.',
+    'opening_duplicate_line' => 'Akun sumber :code mengulang akun, mata uang, dan dimensi baris :first.',
+    'opening_year_to_date_at_year_start' => 'Akun :account memuat pendapatan atau beban, yang tidak punya saldo tahun berjalan bila pembukuan dimulai pada hari pertama tahun buku.',
+    'opening_control_total_missing' => 'Akun kontrol :account memerlukan total open item-nya, yang belum diberikan.',
+    'opening_control_total_differs' => 'Akun kontrol :account bersaldo :balance tetapi total open item-nya :open_items.',
 
 ];

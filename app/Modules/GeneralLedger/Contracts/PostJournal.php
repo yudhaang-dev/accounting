@@ -15,6 +15,7 @@ final readonly class PostJournal
      * @param  int|null  $postedBy  user who caused the posting, when there is one
      * @param  string|null  $sourceOverrideReason  why the poster posts to an account from a source it does not accept (GL-FR-07); only used when the policy and the actor allow the override
      * @param  list<string>  $actorPermissions  permissions the application layer found the actor to hold; the ledger only looks at the one its policy names for soft-closed periods (GL-FR-04), and for source overrides (GL-FR-07)
+     * @param  bool  $openingBalance  the opening balances of the company (GL-FR-11): accounts take them whatever sources they accept, because the control accounts of a subledger carry their opening balance without a subledger posting; only the opening balance import sets it
      * @param  list<PostJournalLine>  $lines
      */
     public function __construct(
@@ -31,5 +32,6 @@ final readonly class PostJournal
         public ?int $postedBy = null,
         public array $actorPermissions = [],
         public ?string $sourceOverrideReason = null,
+        public bool $openingBalance = false,
     ) {}
 }

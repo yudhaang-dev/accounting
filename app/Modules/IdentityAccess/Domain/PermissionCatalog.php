@@ -20,6 +20,7 @@ final class PermissionCatalog
         'transaction-types' => ['read'],
         'entries' => ['read', 'create', 'submit', 'approve', 'reject', 'post', 'reverse'],
         'journals' => ['read', 'post-soft-closed', 'override-source'],
+        'opening-balances' => ['import'],
         'reports' => ['read', 'export'],
         'audit' => ['read'],
         'memberships' => ['read', 'manage'],

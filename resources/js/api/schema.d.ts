@@ -1145,6 +1145,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/opening-balance-imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The opening balance batch of the company (GL-FR-11); 404 before the import */
+        get: operations["opening-balance-imports.show"];
+        put?: never;
+        /**
+         * Imports the opening balances as one `system.opening_balance` journal dated `ledger_start_date`,
+         *     atomically (GL-FR-11). Answers 201 with the batch, or 200 when the same `source_key` and content
+         *     were imported before and nothing was posted. Answers 422 `MAPPING_REQUIRED` for a source account
+         *     or dimension value code without a mapping, 422 for a batch that does not balance, for accounts
+         *     or dimensions that the posting rules refuse, or for a line on a control account of a subledger
+         *     that differs from its open items; 409 `IDEMPOTENCY_KEY_REUSED` for a known `source_key` with other
+         *     content and 409 `INVALID_STATE_TRANSITION` when the company already has opening balances
+         */
+        post: operations["opening-balance-imports.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/periods": {
         parameters: {
             query?: never;
@@ -1699,7 +1725,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -1871,6 +1897,33 @@ export interface components {
             period_count: string | number;
             periods?: components["schemas"]["PeriodResource"][];
         };
+        /** ImportOpeningBalancesRequest */
+        ImportOpeningBalancesRequest: {
+            source_key: string;
+            source_system?: string | null;
+            /** Format: date */
+            cutover_date: string;
+            /** Format: date */
+            ledger_start_date?: string | null;
+            account_mapping: {
+                source_code: string;
+                account_code: string;
+            }[];
+            dimension_mapping?: {
+                type: string;
+                source_code: string;
+                value_id: string;
+            }[];
+            lines: {
+                source_account_code: string;
+                debit: string;
+                credit: string;
+                currency?: string | null;
+                exchange_rate?: string | null;
+                dimensions?: string[] | null;
+                description?: string | null;
+            }[];
+        };
         /** ImportTemplateRequest */
         ImportTemplateRequest: {
             template: string;
@@ -2008,6 +2061,21 @@ export interface components {
             /** @description Dimension values the member is limited to, each with its descendants; empty means no limit. */
             data_scope: string;
             lock_version: number;
+        };
+        /** OpeningBalanceBatchResource */
+        OpeningBalanceBatchResource: {
+            id: string;
+            source_key: string;
+            source_system: string | null;
+            cutover_date: string;
+            ledger_start_date: string;
+            /** @description How the history between the two dates was imported; null until it is (GL-FR-11). */
+            history_granularity: string | null;
+            status: string;
+            journal_id: string;
+            journal_number: string;
+            line_count: number;
+            created_at: string;
         };
         /** PeriodResource */
         PeriodResource: {
@@ -2211,13 +2279,13 @@ export interface components {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -4831,6 +4899,58 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["MembershipResource"];
                     };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "opening-balance-imports.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `OpeningBalanceBatchResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OpeningBalanceBatchResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "opening-balance-imports.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportOpeningBalancesRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
             401: components["responses"]["AuthenticationException"];

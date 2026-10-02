@@ -6054,6 +6054,93 @@
                 }
             }
         },
+        "/companies/{companyId}/opening-balance-imports": {
+            "get": {
+                "operationId": "opening-balance-imports.show",
+                "summary": "The opening balance batch of the company (GL-FR-11); 404 before the import",
+                "tags": [
+                    "OpeningBalanceImport"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`OpeningBalanceBatchResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/OpeningBalanceBatchResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "opening-balance-imports.store",
+                "summary": "Imports the opening balances as one `system.opening_balance` journal dated `ledger_start_date`,\natomically (GL-FR-11). Answers 201 with the batch, or 200 when the same `source_key` and content\nwere imported before and nothing was posted. Answers 422 `MAPPING_REQUIRED` for a source account\nor dimension value code without a mapping, 422 for a batch that does not balance, for accounts\nor dimensions that the posting rules refuse, or for a line on a control account of a subledger\nthat differs from its open items; 409 `IDEMPOTENCY_KEY_REUSED` for a known `source_key` with other\ncontent and 409 `INVALID_STATE_TRANSITION` when the company already has opening balances",
+                "tags": [
+                    "OpeningBalanceImport"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportOpeningBalancesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/periods": {
             "get": {
                 "operationId": "periods.index",
@@ -8629,6 +8716,7 @@
                                 "journals.read",
                                 "journals.post-soft-closed",
                                 "journals.override-source",
+                                "opening-balances.import",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",
@@ -9287,6 +9375,149 @@
                 ],
                 "title": "FiscalYearResource"
             },
+            "ImportOpeningBalancesRequest": {
+                "type": "object",
+                "properties": {
+                    "source_key": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "source_system": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 64
+                    },
+                    "cutover_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "ledger_start_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    },
+                    "account_mapping": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "source_code": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                },
+                                "account_code": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                }
+                            },
+                            "required": [
+                                "source_code",
+                                "account_code"
+                            ]
+                        },
+                        "minItems": 1,
+                        "maxItems": 5000,
+                        "uniqueItems": true
+                    },
+                    "dimension_mapping": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                },
+                                "source_code": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                },
+                                "value_id": {
+                                    "type": "string",
+                                    "minLength": 26,
+                                    "maxLength": 26
+                                }
+                            },
+                            "required": [
+                                "type",
+                                "source_code",
+                                "value_id"
+                            ]
+                        },
+                        "maxItems": 20000
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "source_account_code": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                },
+                                "debit": {
+                                    "type": "string",
+                                    "pattern": "^\\d+(\\.\\d+)?$"
+                                },
+                                "credit": {
+                                    "type": "string",
+                                    "pattern": "^\\d+(\\.\\d+)?$"
+                                },
+                                "currency": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "minLength": 3,
+                                    "maxLength": 3
+                                },
+                                "exchange_rate": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "pattern": "^\\d+(\\.\\d+)?$"
+                                },
+                                "dimensions": {
+                                    "type": [
+                                        "array",
+                                        "null"
+                                    ],
+                                    "items": {
+                                        "type": "string",
+                                        "maxLength": 64
+                                    }
+                                },
+                                "description": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 500
+                                }
+                            },
+                            "required": [
+                                "source_account_code",
+                                "debit",
+                                "credit"
+                            ]
+                        },
+                        "minItems": 2,
+                        "maxItems": 20000
+                    }
+                },
+                "required": [
+                    "source_key",
+                    "cutover_date",
+                    "account_mapping",
+                    "lines"
+                ],
+                "title": "ImportOpeningBalancesRequest"
+            },
             "ImportTemplateRequest": {
                 "type": "object",
                 "properties": {
@@ -9832,6 +10063,65 @@
                     "lock_version"
                 ],
                 "title": "MembershipResource"
+            },
+            "OpeningBalanceBatchResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "source_key": {
+                        "type": "string"
+                    },
+                    "source_system": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "cutover_date": {
+                        "type": "string"
+                    },
+                    "ledger_start_date": {
+                        "type": "string"
+                    },
+                    "history_granularity": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "How the history between the two dates was imported; null until it is (GL-FR-11)."
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "journal_id": {
+                        "type": "string"
+                    },
+                    "journal_number": {
+                        "type": "string"
+                    },
+                    "line_count": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "source_key",
+                    "source_system",
+                    "cutover_date",
+                    "ledger_start_date",
+                    "history_granularity",
+                    "status",
+                    "journal_id",
+                    "journal_number",
+                    "line_count",
+                    "created_at"
+                ],
+                "title": "OpeningBalanceBatchResource"
             },
             "PeriodResource": {
                 "type": "object",
@@ -10649,6 +10939,7 @@
                                 "journals.read",
                                 "journals.post-soft-closed",
                                 "journals.override-source",
+                                "opening-balances.import",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",
@@ -10709,6 +11000,7 @@
                                 "journals.read",
                                 "journals.post-soft-closed",
                                 "journals.override-source",
+                                "opening-balances.import",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",
