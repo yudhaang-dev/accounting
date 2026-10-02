@@ -65,7 +65,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 - [x] **M4-01** Atribut posting akun: sumber yang diizinkan, kewajiban dimensi, batasan mata uang, penanda revaluasi — GL-FR-02, GL-AC-02 — layar SPA di M4-12, yang perlu menimpa tipe `dimension_requirements` dari OpenAPI
 - [x] **M4-02** Status `soft_closed` dengan kebijakan per key Jenis Transaksi, tutup/buka periode beralasan, pola kalender 4-4-5 dan rentang bebas — GL-FR-03, GL-FR-04, GL-AC-04 — penandaan hasil turunan saat membuka kembali di M8-11; layar SPA di M4-12
-- [x] **M4-03** Pembalikan jurnal di sisi GL — GL-FR-06, GL-AC-11 — endpoint pembalikan ada di M5-06
+- [x] **M4-03** Pembalikan jurnal di sisi GL — GL-FR-06, GL-AC-11
 - [x] **M4-04** Kebijakan override akun kontrol — GL-FR-07 — alur entri membawa alasan override di M5
 - [x] **M4-05** Baris valas, pembulatan ke `fx_rounding`, saldo per mata uang — GL-FR-08, GL-AC-05 — endpoint saldo per mata uang belum ada; penolakan aktivasi mata uang tanpa pemetaan peran belum
 - [x] **M4-06** Pemetaan peran GL berversi dan interface validasi target peran — GL-FR-10, X-AC-02, X-AC-03
