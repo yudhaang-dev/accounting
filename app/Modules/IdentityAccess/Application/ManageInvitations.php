@@ -30,6 +30,7 @@ final class ManageInvitations
     public function __construct(
         private readonly CompanyContext $company,
         private readonly AssignRoles $assignRoles,
+        private readonly MembershipDataScopes $dataScopes,
         private readonly Audit $audit,
     ) {}
 
@@ -44,12 +45,21 @@ final class ManageInvitations
 
     /**
      * @param  list<string>  $roleIds
+     * @param  list<string>  $dataScope  dimension values the member is limited to once they accept; empty means unrestricted
      *
      * @throws ValidationException
+     * @throws ApiException FORBIDDEN when the inviter is limited themselves, DIMENSION_INVALID
      */
-    public function invite(string $email, array $roleIds, ?string $membershipExpiresAt, User $inviter): Invitation
+    public function invite(string $email, array $roleIds, ?string $membershipExpiresAt, User $inviter, array $dataScope = []): Invitation
     {
+        $this->dataScopes->assertActorUnrestricted();
+
         $companyId = $this->company->require();
+        $dataScope = array_values(array_unique($dataScope));
+
+        // Fails now, not at acceptance, for a value that is not in this company.
+        $this->dataScopes->assertValid($companyId, $dataScope);
+
         $email = Str::lower($email);
         $workspace = Workspace::query()->where('company_id', $companyId)->firstOrFail();
 
@@ -59,7 +69,7 @@ final class ManageInvitations
 
         $token = Str::random(48);
 
-        $invitation = DB::transaction(function () use ($workspace, $email, $roleIds, $membershipExpiresAt, $inviter, $token, $companyId): Invitation {
+        $invitation = DB::transaction(function () use ($workspace, $email, $roleIds, $dataScope, $membershipExpiresAt, $inviter, $token, $companyId): Invitation {
             // One open invitation per address: a new one replaces the previous.
             $this->query()->usable()->where('email', $email)->update(['status' => InvitationStatus::Revoked->value]);
 
@@ -68,6 +78,7 @@ final class ManageInvitations
                 'email' => $email,
                 'token_hash' => Invitation::hashToken($token),
                 'role_ids' => array_values(array_unique($roleIds)),
+                'dimension_value_ids' => $dataScope,
                 'membership_expires_at' => $membershipExpiresAt,
                 'expires_at' => now()->addDays((int) config('access.invitation_days', 7)),
                 'invited_by' => $inviter->id,
@@ -77,7 +88,7 @@ final class ManageInvitations
                 'invitation.created',
                 "Invitation sent to {$email}.",
                 $invitation,
-                after: ['email' => $email, 'role_ids' => $invitation->role_ids, 'membership_expires_at' => $membershipExpiresAt],
+                after: ['email' => $email, 'role_ids' => $invitation->role_ids, 'data_scope' => $dataScope, 'membership_expires_at' => $membershipExpiresAt],
                 companyId: $companyId,
             );
 
@@ -138,6 +149,7 @@ final class ManageInvitations
             /** @var list<string> $roleIds */
             $roleIds = Role::query()->where('company_id', $workspace->company_id)->whereIn('id', $invitation->role_ids)->pluck('id')->all();
             ($this->assignRoles)($user->id, $workspace->company_id, $roleIds);
+            $this->dataScopes->replace($membership->id, $workspace->company_id, $invitation->dimension_value_ids);
 
             $invitation->update(['status' => InvitationStatus::Accepted, 'accepted_at' => now()]);
 
@@ -145,7 +157,7 @@ final class ManageInvitations
                 'invitation.accepted',
                 "Invitation accepted by {$user->email}.",
                 $invitation,
-                after: ['membership_id' => $membership->id, 'role_ids' => $roleIds],
+                after: ['membership_id' => $membership->id, 'role_ids' => $roleIds, 'data_scope' => $invitation->dimension_value_ids],
                 actor: $user,
                 companyId: $workspace->company_id,
             );

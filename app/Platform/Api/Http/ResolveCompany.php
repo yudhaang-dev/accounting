@@ -2,6 +2,7 @@
 
 namespace App\Platform\Api\Http;
 
+use App\Support\Access\DataScopeContext;
 use App\Support\Company\CompanyAccessGate;
 use App\Support\Company\CompanyContext;
 use Closure;
@@ -17,6 +18,7 @@ final class ResolveCompany
     public function __construct(
         private readonly CompanyAccessGate $gate,
         private readonly CompanyContext $context,
+        private readonly DataScopeContext $scope,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -30,6 +32,7 @@ final class ResolveCompany
             return $next($request);
         } finally {
             $this->context->forget();
+            $this->scope->forget();
         }
     }
 }

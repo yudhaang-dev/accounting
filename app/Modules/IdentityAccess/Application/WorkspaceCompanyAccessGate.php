@@ -5,6 +5,7 @@ namespace App\Modules\IdentityAccess\Application;
 use App\Modules\IdentityAccess\Domain\Membership;
 use App\Modules\IdentityAccess\Domain\Workspace;
 use App\Platform\Api\Principal;
+use App\Support\Access\DataScopeContext;
 use App\Support\Company\CompanyAccessGate;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
@@ -17,7 +18,10 @@ use Illuminate\Http\Request;
  */
 final class WorkspaceCompanyAccessGate implements CompanyAccessGate
 {
-    public function __construct(private readonly EffectiveAccessContexts $contexts) {}
+    public function __construct(
+        private readonly EffectiveAccessContexts $contexts,
+        private readonly DataScopeContext $dataScope,
+    ) {}
 
     public function authorize(Request $request, string $companyId): void
     {
@@ -39,6 +43,10 @@ final class WorkspaceCompanyAccessGate implements CompanyAccessGate
             throw new AuthorizationException;
         }
 
-        $request->attributes->set(EffectiveAccessContexts::REQUEST_ATTRIBUTE, $this->contexts->forUser($userId, $companyId));
+        $context = $this->contexts->forUser($userId, $companyId);
+
+        $request->attributes->set(EffectiveAccessContexts::REQUEST_ATTRIBUTE, $context);
+        // Business modules apply the scope as a filter without knowing this module (IA-FR-03).
+        $this->dataScope->set($context->dataScope);
     }
 }

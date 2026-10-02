@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property string $email
  * @property string $token_hash
  * @property list<string> $role_ids
+ * @property list<string> $dimension_value_ids
  * @property Carbon|null $membership_expires_at
  * @property Carbon $expires_at
  * @property InvitationStatus $status
@@ -32,6 +33,7 @@ class Invitation extends UlidModel
     {
         return [
             'role_ids' => 'array',
+            'dimension_value_ids' => 'array',
             'status' => InvitationStatus::class,
             'membership_expires_at' => 'datetime',
             'expires_at' => 'datetime',

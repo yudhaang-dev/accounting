@@ -22,6 +22,7 @@ final class ManageMemberships
     public function __construct(
         private readonly CompanyContext $company,
         private readonly AssignRoles $assignRoles,
+        private readonly MembershipDataScopes $dataScopes,
         private readonly Audit $audit,
     ) {}
 
@@ -35,12 +36,16 @@ final class ManageMemberships
     }
 
     /**
-     * @param  array{expires_at?: string|null, role_ids?: list<string>}  $data
+     * @param  array{expires_at?: string|null, role_ids?: list<string>, data_scope?: list<string>}  $data
      *
-     * @throws ApiException VERSION_CONFLICT
+     * @throws ApiException VERSION_CONFLICT, FORBIDDEN when a data scope is set by a user who is limited themselves, DIMENSION_INVALID
      */
     public function update(string $membershipId, array $data, int $expectedVersion): Membership
     {
+        if (array_key_exists('data_scope', $data)) {
+            $this->dataScopes->assertActorUnrestricted();
+        }
+
         return DB::transaction(function () use ($membershipId, $data, $expectedVersion): Membership {
             $membership = $this->query()->lockForUpdate()->findOrFail($membershipId);
             $companyId = $this->company->require();
@@ -50,6 +55,10 @@ final class ManageMemberships
 
             if (array_key_exists('role_ids', $data)) {
                 ($this->assignRoles)($membership->user_id, $companyId, $data['role_ids']);
+            }
+
+            if (array_key_exists('data_scope', $data)) {
+                $this->dataScopes->replace($membership->id, $companyId, $data['data_scope']);
             }
 
             $after = $this->snapshot($membership, $companyId);
@@ -100,7 +109,7 @@ final class ManageMemberships
         });
     }
 
-    /** @return array{expires_at: string|null, status: string, role_ids: list<string>} */
+    /** @return array{expires_at: string|null, status: string, role_ids: list<string>, data_scope: list<string>} */
     private function snapshot(Membership $membership, string $companyId): array
     {
         /** @var list<string> $roleIds */
@@ -115,6 +124,7 @@ final class ManageMemberships
             'expires_at' => $membership->expires_at?->toIso8601String(),
             'status' => $membership->status->value,
             'role_ids' => $roleIds,
+            'data_scope' => $this->dataScopes->valueIds([$membership->id])[$membership->id],
         ];
     }
 }

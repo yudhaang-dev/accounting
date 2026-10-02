@@ -69,4 +69,24 @@ interface DimensionSets
      * @return list<string>
      */
     public function setIdsMatching(string $companyId, array $filters): array;
+
+    /**
+     * The given values grouped by the key of their dimension type, each together with all its
+     * descendants, using the current hierarchy. Builds the allowed values of a data scope (MD-FR-05).
+     *
+     * Fails with ApiException DIMENSION_INVALID, with errors keyed `dimensions.<value ID>`, for an unknown value.
+     *
+     * @param  list<string>  $valueIds
+     * @return array<string, list<string>> dimension type key => value IDs
+     */
+    public function expandValues(string $companyId, array $valueIds): array;
+
+    /**
+     * IDs of the sets that, for every given type key, contain one of the allowed values. A set without
+     * a value for one of the types is left out. Unlike `setIdsMatching()` the values are not expanded.
+     *
+     * @param  array<string, list<string>>  $allowed  dimension type key => allowed value IDs
+     * @return list<string>
+     */
+    public function setIdsWithin(string $companyId, array $allowed): array;
 }

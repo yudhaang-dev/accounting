@@ -9,6 +9,8 @@ class UpdateMembershipRequest extends FormRequest
 {
     /**
      * `role_ids` replaces all roles of the member; `expires_at: null` removes the expiry.
+     * `data_scope` replaces the dimension values the member is limited to, each standing for itself and
+     * its descendants (IA-FR-03); an empty list removes the limit. Only a user without a limit may set it.
      *
      * @return array<string, array<int, mixed>>
      */
@@ -19,6 +21,8 @@ class UpdateMembershipRequest extends FormRequest
             'expires_at' => ['sometimes', 'nullable', 'date', 'after:now'],
             'role_ids' => ['sometimes', 'array'],
             'role_ids.*' => ['string', 'distinct', Rule::exists('ia_roles', 'id')->where('company_id', $this->route('companyId'))],
+            'data_scope' => ['sometimes', 'array'],
+            'data_scope.*' => ['string', 'distinct'],
         ];
     }
 }

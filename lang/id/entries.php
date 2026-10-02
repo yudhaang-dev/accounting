@@ -8,5 +8,6 @@ return [
     'version_unknown' => 'Versi :version Jenis Transaksi ini tidak ada.',
     'version_unpublished' => 'Versi :version Jenis Transaksi ini belum terbit.',
     'invalid_transition' => 'Aksi tidak berlaku untuk entri yang berstatus :status.',
+    'line_outside_scope' => 'Baris ini di luar cakupan data Anda: baris harus memuat nilai untuk setiap dimensi yang membatasi Anda, di dalam cakupan Anda.',
 
 ];

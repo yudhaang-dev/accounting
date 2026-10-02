@@ -13,7 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class InvitationResource extends JsonResource
 {
     /**
-     * @return array{id: string, email: string, status: string, role_ids: list<string>, membership_expires_at: string|null, expires_at: string}
+     * @return array{id: string, email: string, status: string, role_ids: list<string>, data_scope: list<string>, membership_expires_at: string|null, expires_at: string}
      */
     public function toArray(Request $request): array
     {
@@ -25,6 +25,8 @@ class InvitationResource extends JsonResource
                 ? 'expired'
                 : $this->resource->status->value,
             'role_ids' => $this->resource->role_ids,
+            // Dimension values the member is limited to once they accept; empty means unrestricted.
+            'data_scope' => $this->resource->dimension_value_ids,
             'membership_expires_at' => $this->resource->membership_expires_at?->toIso8601String(),
             'expires_at' => $this->resource->expires_at->toIso8601String(),
         ];

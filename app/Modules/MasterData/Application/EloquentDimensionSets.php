@@ -182,6 +182,55 @@ final class EloquentDimensionSets implements DimensionSets
         return array_values(array_map('strval', $query->pluck('s.id')->all()));
     }
 
+    public function expandValues(string $companyId, array $valueIds): array
+    {
+        $found = DB::table('md_dimension_values as v')
+            ->join('md_dimension_types as t', fn ($join) => $join->on('t.company_id', '=', 'v.company_id')->on('t.id', '=', 'v.dimension_type_id'))
+            ->where('v.company_id', $companyId)
+            ->whereIn('v.id', $valueIds)
+            ->pluck('t.key', 'v.id');
+
+        $errors = [];
+
+        foreach (array_diff($valueIds, $found->keys()->all()) as $unknown) {
+            $errors["dimensions.{$unknown}"] = [__('dimensions.value_unknown_id')];
+        }
+
+        if ($errors !== []) {
+            throw new ApiException(ErrorCode::DimensionInvalid, errors: $errors);
+        }
+
+        /** @var array<string, list<string>> $expanded */
+        $expanded = [];
+
+        foreach ($found as $valueId => $typeKey) {
+            $expanded[$typeKey] = [...($expanded[$typeKey] ?? []), (string) $valueId, ...$this->descendants($companyId, (string) $valueId)];
+        }
+
+        return array_map(fn (array $ids): array => array_values(array_unique($ids)), $expanded);
+    }
+
+    public function setIdsWithin(string $companyId, array $allowed): array
+    {
+        $query = DB::table('md_dimension_sets as s')->where('s.company_id', $companyId);
+
+        foreach ($allowed as $key => $valueIds) {
+            $typeId = DB::table('md_dimension_types')->where('company_id', $companyId)->where('key', $key)->value('id');
+
+            if ($typeId === null) {
+                return [];
+            }
+
+            $query->whereExists(fn ($sub) => $sub->from('md_dimension_set_items as i')
+                ->whereColumn('i.company_id', 's.company_id')
+                ->whereColumn('i.dimension_set_id', 's.id')
+                ->where('i.dimension_type_id', $typeId)
+                ->whereIn('i.dimension_value_id', $valueIds));
+        }
+
+        return array_values(array_map('strval', $query->pluck('s.id')->all()));
+    }
+
     /**
      * Finds or creates the set for these items (type ID => value ID). Concurrent callers converge on
      * one row through the unique signature; only the creator writes the items.

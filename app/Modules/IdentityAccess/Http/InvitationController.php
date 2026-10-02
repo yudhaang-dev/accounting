@@ -29,10 +29,10 @@ class InvitationController
     {
         /** @var User $user */
         $user = $request->user();
-        /** @var array{email: string, role_ids: list<string>, expires_at?: string|null} $data */
+        /** @var array{email: string, role_ids: list<string>, expires_at?: string|null, data_scope?: list<string>} $data */
         $data = $request->validated();
 
-        return (new InvitationResource($invitations->invite($data['email'], $data['role_ids'], $data['expires_at'] ?? null, $user)))
+        return (new InvitationResource($invitations->invite($data['email'], $data['role_ids'], $data['expires_at'] ?? null, $user, $data['data_scope'] ?? [])))
             ->response()->setStatusCode(201);
     }
 

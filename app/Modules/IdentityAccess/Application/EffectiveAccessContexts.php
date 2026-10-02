@@ -17,9 +17,16 @@ final class EffectiveAccessContexts implements AccessContexts
 {
     public const REQUEST_ATTRIBUTE = 'access_context';
 
+    public function __construct(private readonly MembershipDataScopes $dataScopes) {}
+
     public function forUser(int $userId, string $companyId): AccessContext
     {
-        return new AccessContext($userId, $companyId, $this->permissionsByCompany($userId, [$companyId])[$companyId] ?? []);
+        return new AccessContext(
+            $userId,
+            $companyId,
+            $this->permissionsByCompany($userId, [$companyId])[$companyId] ?? [],
+            $this->dataScopes->forUser($userId, $companyId),
+        );
     }
 
     public function current(Request $request): AccessContext

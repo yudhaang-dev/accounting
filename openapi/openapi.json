@@ -4617,7 +4617,7 @@
         "/companies/{companyId}/journals": {
             "get": {
                 "operationId": "journals.index",
-                "summary": "Posted journals with their lines, newest first. This is the drill-down of the reports.\nFilters: `filter[account_id]` (journals that touch the account), `filter[from]` and\n`filter[to]` (accounting date), `filter[source]`, `filter[transaction_type_key]` and\n`filter[dimensions][<type key>]=<value id>` (journals with a line in that value or below it).\nLines carry their `dimensions` as type key => value ID.\n`per_page` defaults to 50, at most 200",
+                "summary": "Posted journals with their lines, newest first. This is the drill-down of the reports.\nFilters: `filter[account_id]` (journals that touch the account), `filter[from]` and\n`filter[to]` (accounting date), `filter[source]`, `filter[transaction_type_key]` and\n`filter[dimensions][<type key>]=<value id>` (journals with a line in that value or below it).\nLines carry their `dimensions` as type key => value ID.\nA user limited to some dimension values (IA-FR-03) sees only journals with a line inside that\nscope, and only those lines; such journals have `scope_restricted` true.\n`per_page` defaults to 50, at most 200",
                 "tags": [
                     "Journal"
                 ],
@@ -4850,6 +4850,7 @@
         "/companies/{companyId}/journals/{id}": {
             "get": {
                 "operationId": "journals.show",
+                "summary": "One journal with its lines; for a user with a data scope only the lines inside it, and 404 when there are none",
                 "tags": [
                     "Journal"
                 ],
@@ -5200,7 +5201,7 @@
             },
             "patch": {
                 "operationId": "memberships.update",
-                "summary": "Changes the expiry date or replaces the roles of a member. `lock_version` is required",
+                "summary": "Changes the expiry date, replaces the roles or replaces the data scope of a member.\n`lock_version` is required",
                 "tags": [
                     "Membership"
                 ],
@@ -6780,7 +6781,7 @@
         "/companies/{companyId}/reports/trial-balance": {
             "get": {
                 "operationId": "reports.trial-balance",
-                "summary": "Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and\nclosing balance per account, totals and `balanced`. `account_id` narrows it to one account and `dimensions[<type key>]=<value id>` to the lines in that\nvalue or any value below it (roll-up).\nDrill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.\nWith `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)",
+                "summary": "Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and\nclosing balance per account, totals and `balanced`. `account_id` narrows it to one account and `dimensions[<type key>]=<value id>` to the lines in that\nvalue or any value below it (roll-up).\nDrill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.\nWith `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).\nFor a user limited to some dimension values only the lines inside that scope are added up and\n`restricted` is true (IA-FR-03); the download is limited the same way",
                 "tags": [
                     "TrialBalance"
                 ],
@@ -6883,6 +6884,9 @@
                                                 "functional_currency": {
                                                     "type": "string"
                                                 },
+                                                "restricted": {
+                                                    "type": "boolean"
+                                                },
                                                 "balanced": {
                                                     "type": "boolean"
                                                 },
@@ -6971,6 +6975,7 @@
                                             "required": [
                                                 "parameters",
                                                 "functional_currency",
+                                                "restricted",
                                                 "balanced",
                                                 "totals",
                                                 "rows"
@@ -7433,6 +7438,13 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "data_scope": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "uniqueItems": true
                     }
                 },
                 "required": [
@@ -8200,6 +8212,13 @@
                             "type": "string"
                         }
                     },
+                    "data_scope": {
+                        "type": "array",
+                        "description": "Dimension values the member is limited to once they accept; empty means unrestricted.",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
                     "membership_expires_at": {
                         "type": [
                             "string",
@@ -8215,6 +8234,7 @@
                     "email",
                     "status",
                     "role_ids",
+                    "data_scope",
                     "membership_expires_at",
                     "expires_at"
                 ],
@@ -8307,6 +8327,10 @@
                     "posted_at": {
                         "type": "string"
                     },
+                    "scope_restricted": {
+                        "type": "boolean",
+                        "description": "True when the user's data scope hides lines, so `lines` may not add up to a balanced journal."
+                    },
                     "lines": {
                         "type": "array",
                         "items": {
@@ -8379,6 +8403,7 @@
                     "entry_id",
                     "posted_by",
                     "posted_at",
+                    "scope_restricted",
                     "lines"
                 ],
                 "title": "JournalResource"
@@ -8459,6 +8484,10 @@
                     "roles": {
                         "type": "string"
                     },
+                    "data_scope": {
+                        "type": "string",
+                        "description": "Dimension values the member is limited to, each with its descendants; empty means no limit."
+                    },
                     "lock_version": {
                         "type": "integer"
                     }
@@ -8469,6 +8498,7 @@
                     "status",
                     "expires_at",
                     "roles",
+                    "data_scope",
                     "lock_version"
                 ],
                 "title": "MembershipResource"
@@ -9000,6 +9030,13 @@
                         "format": "date-time"
                     },
                     "role_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "uniqueItems": true
+                    },
+                    "data_scope": {
                         "type": "array",
                         "items": {
                             "type": "string"

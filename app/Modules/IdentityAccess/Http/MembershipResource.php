@@ -7,14 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Expects `user` and `roles` loaded (see MembershipRoles).
+ * Expects `user`, `roles` and `data_scope` loaded (see MembershipRoles and MembershipDataScopes).
  *
  * @property-read Membership $resource
  */
 class MembershipResource extends JsonResource
 {
     /**
-     * @return array{id: string, user: array{id: int, name: string, email: string}, status: string, expires_at: string|null, roles: list<array{id: string, name: string, is_active: bool}>, lock_version: int}
+     * @return array{id: string, user: array{id: int, name: string, email: string}, status: string, expires_at: string|null, roles: list<array{id: string, name: string, is_active: bool}>, data_scope: list<string>, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -32,6 +32,8 @@ class MembershipResource extends JsonResource
             'status' => $this->resource->effectiveStatus(),
             'expires_at' => $this->resource->expires_at?->toIso8601String(),
             'roles' => $roles,
+            // Dimension values the member is limited to, each with its descendants; empty means no limit.
+            'data_scope' => $this->resource->getRelation('data_scope')->all(),
             'lock_version' => $this->resource->lock_version,
         ];
     }

@@ -33,6 +33,11 @@ class Entry extends VersionedCompanyModel
 {
     protected $table = 'te_entries';
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new WithinDataScope);
+    }
+
     protected $attributes = ['status' => 'draft', 'source' => 'manual'];
 
     protected $fillable = [

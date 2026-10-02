@@ -851,6 +851,8 @@ export interface paths {
          *     `filter[to]` (accounting date), `filter[source]`, `filter[transaction_type_key]` and
          *     `filter[dimensions][<type key>]=<value id>` (journals with a line in that value or below it).
          *     Lines carry their `dimensions` as type key => value ID.
+         *     A user limited to some dimension values (IA-FR-03) sees only journals with a line inside that
+         *     scope, and only those lines; such journals have `scope_restricted` true.
          *     `per_page` defaults to 50, at most 200
          */
         get: operations["journals.index"];
@@ -869,6 +871,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** One journal with its lines; for a user with a data scope only the lines inside it, and 404 when there are none */
         get: operations["journals.show"];
         put?: never;
         post?: never;
@@ -948,7 +951,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Changes the expiry date or replaces the roles of a member. `lock_version` is required */
+        /**
+         * Changes the expiry date, replaces the roles or replaces the data scope of a member.
+         *     `lock_version` is required
+         */
         patch: operations["memberships.update"];
         trace?: never;
     };
@@ -1255,7 +1261,9 @@ export interface paths {
          *     closing balance per account, totals and `balanced`. `account_id` narrows it to one account and `dimensions[<type key>]=<value id>` to the lines in that
          *     value or any value below it (roll-up).
          *     Drill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.
-         *     With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)
+         *     With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).
+         *     For a user limited to some dimension values only the lines inside that scope are added up and
+         *     `restricted` is true (IA-FR-03); the download is limited the same way
          */
         get: operations["reports.trial-balance"];
         put?: never;
@@ -1401,6 +1409,7 @@ export interface components {
             role_ids: string[];
             /** Format: date-time */
             expires_at?: string | null;
+            data_scope?: string[];
         };
         /** CreateRateTypeRequest */
         CreateRateTypeRequest: {
@@ -1589,6 +1598,8 @@ export interface components {
             /** @description `pending`, `accepted`, `revoked`, or `expired` once the invitation lapsed unanswered. */
             status: string;
             role_ids: string[];
+            /** @description Dimension values the member is limited to once they accept; empty means unrestricted. */
+            data_scope: string[];
             membership_expires_at: string | null;
             expires_at: string;
         };
@@ -1616,6 +1627,8 @@ export interface components {
             entry_id: string | null;
             posted_by: number | null;
             posted_at: string;
+            /** @description True when the user's data scope hides lines, so `lines` may not add up to a balanced journal. */
+            scope_restricted: boolean;
             lines: {
                 line_number: number;
                 account_id: string;
@@ -1657,6 +1670,8 @@ export interface components {
             status: string;
             expires_at: string | null;
             roles: string;
+            /** @description Dimension values the member is limited to, each with its descendants; empty means no limit. */
+            data_scope: string;
             lock_version: number;
         };
         /** PeriodResource */
@@ -1804,6 +1819,7 @@ export interface components {
             /** Format: date-time */
             expires_at?: string | null;
             role_ids?: string[];
+            data_scope?: string[];
         };
         /** UpdateRateTypeRequest */
         UpdateRateTypeRequest: {
@@ -4764,6 +4780,7 @@ export interface operations {
                                 };
                             };
                             functional_currency: string;
+                            restricted: boolean;
                             balanced: boolean;
                             totals: {
                                 opening_debit: string;

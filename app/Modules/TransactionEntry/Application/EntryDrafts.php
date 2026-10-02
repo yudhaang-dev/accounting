@@ -13,6 +13,7 @@ use App\Platform\Audit\Audit;
 use App\Platform\Numbering\Numbering;
 use App\Platform\Numbering\NumberSeriesNotFound;
 use App\Platform\Numbering\ResetPeriod;
+use App\Support\Access\DataScopeContext;
 use App\Support\Company\CompanyContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -31,16 +32,19 @@ final class EntryDrafts
         private readonly Numbering $numbering,
         private readonly Audit $audit,
         private readonly CompanyContext $company,
+        private readonly DataScopeContext $scope,
     ) {}
 
     /**
      * @param  EntryInput  $data
      *
      * @throws ValidationException when the transaction type or version does not exist
-     * @throws ApiException TRANSACTION_TYPE_VERSION_RETIRED
+     * @throws ApiException TRANSACTION_TYPE_VERSION_RETIRED, FORBIDDEN when a line is outside the data scope of the user
      */
     public function create(string $typeKey, ?int $version, array $data, int $userId): Entry
     {
+        $this->assertWithinDataScope($data['lines']);
+
         return DB::transaction(function () use ($typeKey, $version, $data, $userId): Entry {
             $type = TransactionType::query()->where('key', $typeKey)->first()
                 ?? throw ValidationException::withMessages(['transaction_type_key' => [__('entries.type_unknown', ['key' => $typeKey])]]);
@@ -70,10 +74,12 @@ final class EntryDrafts
      *
      * @param  EntryInput  $data
      *
-     * @throws ApiException INVALID_STATE_TRANSITION when the entry is not a draft, VERSION_CONFLICT
+     * @throws ApiException INVALID_STATE_TRANSITION when the entry is not a draft, VERSION_CONFLICT, FORBIDDEN when a line is outside the data scope of the user
      */
     public function update(string $id, array $data, int $expectedVersion): Entry
     {
+        $this->assertWithinDataScope($data['lines']);
+
         return DB::transaction(function () use ($id, $data, $expectedVersion): Entry {
             $entry = Entry::query()->lockForUpdate()->findOrFail($id);
 
@@ -92,6 +98,25 @@ final class EntryDrafts
 
             return $entry->refresh();
         });
+    }
+
+    /**
+     * Every line must carry a value inside the data scope for each dimension the scope limits
+     * (IA-FR-03); a line without such a dimension is outside it.
+     *
+     * @param  list<LineInput>  $lines
+     *
+     * @throws ApiException FORBIDDEN
+     */
+    private function assertWithinDataScope(array $lines): void
+    {
+        $scope = $this->scope->current();
+
+        foreach ($lines as $index => $line) {
+            if (! $scope->allows($line['dimensions'] ?? [])) {
+                throw new ApiException(ErrorCode::Forbidden, errors: ["lines.{$index}.dimensions" => [__('entries.line_outside_scope')]]);
+            }
+        }
     }
 
     /**

@@ -8,5 +8,6 @@ return [
     'version_unknown' => 'Version :version of this transaction type does not exist.',
     'version_unpublished' => 'Version :version of this transaction type is not published.',
     'invalid_transition' => 'The action does not apply to an entry that is :status.',
+    'line_outside_scope' => 'This line is outside your data scope: it needs a value of each dimension you are limited to, within your scope.',
 
 ];
