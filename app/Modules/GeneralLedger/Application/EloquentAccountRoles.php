@@ -97,7 +97,8 @@ final class EloquentAccountRoles implements AccountRoles
                     'account_role' => $role->value,
                     'version' => $expectedVersion + 1,
                     'account_id' => $accountId,
-                    'effective_date' => $effectiveDate ?? now()->toDateString(),
+                    // The first mapping of a role holds for all dates, so back-dated postings find it; later ones start today.
+                    'effective_date' => $effectiveDate ?? ($before === null ? '1970-01-01' : now()->toDateString()),
                     'created_by' => $actorId,
                     'created_at' => now(),
                 ]);

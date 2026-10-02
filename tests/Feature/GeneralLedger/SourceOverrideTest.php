@@ -41,6 +41,7 @@ function allowOverride(?string $permission = OVERRIDE_PERMISSION, int $version =
         'soft_closed_transaction_type_keys' => [],
         'soft_closed_permission' => null,
         'source_override_permission' => $permission,
+        'fx_rounding_tolerance' => '0',
     ]);
 }
 

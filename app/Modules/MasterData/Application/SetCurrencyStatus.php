@@ -7,6 +7,8 @@ use App\Modules\MasterData\Domain\DimensionStatus;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Platform\Audit\Audit;
+use App\Support\Company\CompanyContext;
+use App\Support\Currency\CurrencyUsage;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,6 +20,8 @@ final class SetCurrencyStatus
     public function __construct(
         private readonly CurrencyRules $rules,
         private readonly Audit $audit,
+        private readonly CurrencyUsage $usage,
+        private readonly CompanyContext $context,
     ) {}
 
     /** @throws ApiException INVALID_STATE_TRANSITION */
@@ -25,6 +29,10 @@ final class SetCurrencyStatus
     {
         if ($this->rules->isFunctional($code)) {
             throw new ApiException(ErrorCode::InvalidStateTransition, __('currencies.functional_always_active'));
+        }
+
+        if ($this->usage->isUsed($this->context->require(), $code)) {
+            throw new ApiException(ErrorCode::InvalidStateTransition, __('currencies.in_use', ['code' => $code]));
         }
 
         return $this->change($code, DimensionStatus::Active, DimensionStatus::Inactive, 'currency.deactivated');

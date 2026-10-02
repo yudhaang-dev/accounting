@@ -4,6 +4,8 @@ namespace App\Modules\GeneralLedger\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountData;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
+use App\Modules\GeneralLedger\Contracts\AccountRole;
+use App\Modules\GeneralLedger\Contracts\AccountRoles;
 use App\Modules\GeneralLedger\Contracts\DimensionRequirement;
 use App\Modules\GeneralLedger\Contracts\LedgerPolicies;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
@@ -12,7 +14,10 @@ use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\MasterData\Contracts\CompanyData;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
+use App\Modules\MasterData\Contracts\CurrencyRounding;
 use App\Modules\MasterData\Contracts\DimensionSets;
+use App\Modules\MasterData\Contracts\ExchangeRateData;
+use App\Modules\MasterData\Contracts\ExchangeRates;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Support\Company\CompanyStatusLookup;
@@ -40,6 +45,8 @@ final class EloquentPostingValidator implements PostingValidator
         private readonly DimensionSets $dimensionSets,
         private readonly Currencies $currencies,
         private readonly LedgerPolicies $policies,
+        private readonly ExchangeRates $rates,
+        private readonly AccountRoles $roles,
     ) {}
 
     public function validate(PostJournal $command): void
@@ -56,24 +63,24 @@ final class EloquentPostingValidator implements PostingValidator
         $company = $this->company($command->companyId);
         $amounts = $this->structure($command, $company->functionalCurrency);
         $periodId = $this->periodFor($command->companyId, $command->accountingDate, $command->transactionTypeKey, $command->actorPermissions);
+        $converted = $this->convert($command, $amounts, $company->functionalCurrency);
         $accounts = $this->accounts($command);
         $overridden = $this->sources($command, $accounts);
         $this->currencies($command, $accounts, $company->functionalCurrency);
         $setIds = $this->dimensions($command);
         $this->dimensionRequirements($command, $accounts, $setIds);
-        $this->balance($amounts);
 
         $lines = [];
 
         foreach ($command->lines as $index => $line) {
-            $lines[] = [
+            $lines[] = $converted[$index] + [
                 'account_id' => $line->accountId,
-                'debit' => $amounts[$index]['debit'],
-                'credit' => $amounts[$index]['credit'],
                 'description' => $line->description,
                 'dimension_set_id' => $setIds[$index],
             ];
         }
+
+        $lines = $this->balance($command, $lines, $company->functionalCurrency);
 
         return new ResolvedPosting($periodId, $company->functionalCurrency, $lines, $overridden === [] ? null : trim((string) $command->sourceOverrideReason), $overridden);
     }
@@ -101,15 +108,30 @@ final class EloquentPostingValidator implements PostingValidator
         foreach ($command->lines as $index => $line) {
             $debit = null;
             $credit = null;
+            $currency = $line->currency ?? $functionalCurrency;
+            $lineScale = $scale;
+
+            // Amounts of a foreign line are in its currency, so they follow that currency's scale.
+            if ($currency !== $functionalCurrency) {
+                $config = $this->currencies->find($command->companyId, $currency);
+
+                if ($config === null || ! $config->active) {
+                    $errors["lines.{$index}.currency"][] = __('ledger.currency_inactive', ['currency' => $currency]);
+
+                    continue;
+                }
+
+                $lineScale = $config->scale;
+            }
 
             try {
-                $debit = $this->amount($line->debit, $scale);
+                $debit = $this->amount($line->debit, $lineScale);
             } catch (InvalidArgumentException $e) {
                 $errors["lines.{$index}.debit"][] = $e->getMessage();
             }
 
             try {
-                $credit = $this->amount($line->credit, $scale);
+                $credit = $this->amount($line->credit, $lineScale);
             } catch (InvalidArgumentException $e) {
                 $errors["lines.{$index}.credit"][] = $e->getMessage();
             }
@@ -120,10 +142,6 @@ final class EloquentPostingValidator implements PostingValidator
                 if ($debit->isZero() === $credit->isZero()) {
                     $errors["lines.{$index}.debit"][] = __('ledger.one_side');
                 }
-            }
-
-            if ($line->currency !== null && $line->currency !== $functionalCurrency) {
-                $errors["lines.{$index}.currency"][] = __('ledger.currency_unsupported', ['currency' => $functionalCurrency]);
             }
         }
 
@@ -397,19 +415,129 @@ final class EloquentPostingValidator implements PostingValidator
     }
 
     /**
-     * @param  list<array{debit: BigDecimal, credit: BigDecimal}>  $amounts
+     * Converts every line to the functional currency (GL-FR-08): a foreign amount times the rate,
+     * rounded with the rounding mode and scale of the functional currency. The rate is the one given
+     * on the line or the one found in its rate type on the accounting date (MD-FR-08), never a guess.
      *
-     * @throws ApiException UNBALANCED_ENTRY
+     * @param  list<array{debit: BigDecimal, credit: BigDecimal}>  $amounts  in the currency of each line
+     * @return list<array{debit: BigDecimal, credit: BigDecimal, currency: string, transaction_amount: BigDecimal, exchange_rate: BigDecimal, rate_type_id: string|null, rate_date: string|null}>
+     *
+     * @throws ValidationException
+     * @throws ApiException EXCHANGE_RATE_NOT_FOUND
      */
-    private function balance(array $amounts): void
+    private function convert(PostJournal $command, array $amounts, string $functionalCurrency): array
     {
-        $debit = BigDecimal::sum(...array_column($amounts, 'debit'));
-        $credit = BigDecimal::sum(...array_column($amounts, 'credit'));
+        $scale = $this->currencies->functionalScale($command->companyId);
+        $mode = ($this->currencies->find($command->companyId, $functionalCurrency)->rounding ?? CurrencyRounding::HalfUp)->brick();
+        $errors = [];
+        $converted = [];
+        /** @var array<string, ExchangeRateData> $found */
+        $found = [];
 
-        if (! $debit->isEqualTo($credit)) {
+        foreach ($command->lines as $index => $line) {
+            $debit = $amounts[$index]['debit'];
+            $credit = $amounts[$index]['credit'];
+            $currency = $line->currency ?? $functionalCurrency;
+            $transaction = $debit->plus($credit);
+
+            if ($currency === $functionalCurrency) {
+                $converted[] = ['debit' => $debit, 'credit' => $credit, 'currency' => $currency, 'transaction_amount' => $transaction, 'exchange_rate' => BigDecimal::one(), 'rate_type_id' => null, 'rate_date' => null];
+
+                continue;
+            }
+
+            try {
+                if ($line->exchangeRate !== null) {
+                    if (preg_match('/^\d+(\.\d{1,12})?$/', $line->exchangeRate) !== 1 || BigDecimal::of($line->exchangeRate)->isZero()) {
+                        throw new InvalidArgumentException(__('ledger.rate_invalid'));
+                    }
+
+                    $rate = BigDecimal::of($line->exchangeRate);
+                    $typeId = $date = null;
+                } elseif ($line->rateTypeKey !== null) {
+                    $entry = $found["{$line->rateTypeKey}|{$currency}"] ??= $this->rates->find($command->companyId, $line->rateTypeKey, $currency, $command->accountingDate);
+                    [$rate, $typeId, $date] = [BigDecimal::of($entry->rate), $entry->rateTypeId, $entry->effectiveDate];
+                } else {
+                    throw new InvalidArgumentException(__('ledger.rate_required', ['currency' => $currency]));
+                }
+            } catch (InvalidArgumentException $e) {
+                $errors["lines.{$index}.exchange_rate"][] = $e->getMessage();
+
+                continue;
+            }
+
+            $functional = $transaction->multipliedBy($rate)->toScale($scale, $mode);
+
+            if ($functional->isZero()) {
+                $errors["lines.{$index}.debit"][] = __('ledger.converted_zero');
+
+                continue;
+            }
+
+            $zero = BigDecimal::zero()->toScale($scale);
+            $converted[] = [
+                'debit' => $debit->isZero() ? $zero : $functional,
+                'credit' => $credit->isZero() ? $zero : $functional,
+                'currency' => $currency,
+                'transaction_amount' => $transaction,
+                'exchange_rate' => $rate,
+                'rate_type_id' => $typeId,
+                'rate_date' => $date,
+            ];
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $converted;
+    }
+
+    /**
+     * The journal must balance exactly in the functional currency. A difference that comes from
+     * converting foreign lines, up to the tolerance of the policy, is booked to the `fx_rounding`
+     * account as one more line (GL-FR-05); anything else is refused.
+     *
+     * @param  list<array{debit: BigDecimal, credit: BigDecimal, currency: string, transaction_amount: BigDecimal, exchange_rate: BigDecimal, rate_type_id: string|null, rate_date: string|null, account_id: string, description: string|null, dimension_set_id: string}>  $lines
+     * @return list<array{debit: BigDecimal, credit: BigDecimal, currency: string, transaction_amount: BigDecimal, exchange_rate: BigDecimal, rate_type_id: string|null, rate_date: string|null, account_id: string, description: string|null, dimension_set_id: string}>
+     *
+     * @throws ApiException UNBALANCED_ENTRY, MAPPING_REQUIRED
+     */
+    private function balance(PostJournal $command, array $lines, string $functionalCurrency): array
+    {
+        $debit = BigDecimal::sum(...array_column($lines, 'debit'));
+        $credit = BigDecimal::sum(...array_column($lines, 'credit'));
+
+        if ($debit->isEqualTo($credit)) {
+            return $lines;
+        }
+
+        $difference = $debit->minus($credit);
+        $converted = array_filter($lines, fn (array $line): bool => $line['currency'] !== $functionalCurrency) !== [];
+
+        if (! $converted || $difference->abs()->isGreaterThan(BigDecimal::of($this->policies->current($command->companyId)->fxRoundingTolerance))) {
             throw new ApiException(ErrorCode::UnbalancedEntry, errors: [
                 'lines' => [__('ledger.unbalanced', ['debit' => $debit->toString(), 'credit' => $credit->toString()])],
             ]);
         }
+
+        $amount = $difference->abs();
+        $zero = BigDecimal::zero()->toScale($amount->getScale());
+
+        // Added by the system, so the attributes of the account (dimensions, sources) are not asked of it.
+        $lines[] = [
+            'account_id' => $this->roles->require($command->companyId, AccountRole::FxRounding, $command->accountingDate)->accountId,
+            'debit' => $difference->isNegative() ? $amount : $zero,
+            'credit' => $difference->isNegative() ? $zero : $amount,
+            'currency' => $functionalCurrency,
+            'transaction_amount' => $amount,
+            'exchange_rate' => BigDecimal::one(),
+            'rate_type_id' => null,
+            'rate_date' => null,
+            'description' => (string) __('ledger.rounding_line'),
+            'dimension_set_id' => $this->dimensionSets->emptySet($command->companyId),
+        ];
+
+        return $lines;
     }
 }

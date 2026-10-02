@@ -13,6 +13,7 @@ final readonly class ExchangeRateData
      */
     public function __construct(
         public string $id,
+        public string $rateTypeId,
         public string $rateTypeKey,
         public string $currency,
         public string $effectiveDate,

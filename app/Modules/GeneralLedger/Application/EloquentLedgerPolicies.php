@@ -27,10 +27,10 @@ final class EloquentLedgerPolicies implements LedgerPolicies
         return $row === null ? LedgerPolicyData::none() : $this->data($row);
     }
 
-    public function change(string $companyId, array $softClosedTransactionTypeKeys, ?string $softClosedPermission, ?string $sourceOverridePermission, int $expectedVersion, int $actorId): LedgerPolicyData
+    public function change(string $companyId, array $softClosedTransactionTypeKeys, ?string $softClosedPermission, ?string $sourceOverridePermission, string $fxRoundingTolerance, int $expectedVersion, int $actorId): LedgerPolicyData
     {
         try {
-            return DB::transaction(function () use ($companyId, $softClosedTransactionTypeKeys, $softClosedPermission, $sourceOverridePermission, $expectedVersion, $actorId): LedgerPolicyData {
+            return DB::transaction(function () use ($companyId, $softClosedTransactionTypeKeys, $softClosedPermission, $sourceOverridePermission, $fxRoundingTolerance, $expectedVersion, $actorId): LedgerPolicyData {
                 $before = $this->current($companyId);
 
                 if ($before->version !== $expectedVersion) {
@@ -47,6 +47,7 @@ final class EloquentLedgerPolicies implements LedgerPolicies
                     'soft_closed_transaction_type_keys' => json_encode($keys, JSON_THROW_ON_ERROR),
                     'soft_closed_permission' => $softClosedPermission,
                     'source_override_permission' => $sourceOverridePermission,
+                    'fx_rounding_tolerance' => $fxRoundingTolerance,
                     'created_by' => $actorId,
                     'created_at' => now(),
                 ]);
@@ -69,7 +70,7 @@ final class EloquentLedgerPolicies implements LedgerPolicies
         }
     }
 
-    /** @return array{version: int, soft_closed_transaction_type_keys: list<string>, soft_closed_permission: string|null, source_override_permission: string|null} */
+    /** @return array{version: int, soft_closed_transaction_type_keys: list<string>, soft_closed_permission: string|null, source_override_permission: string|null, fx_rounding_tolerance: string} */
     private function snapshot(LedgerPolicyData $policy): array
     {
         return [
@@ -77,7 +78,15 @@ final class EloquentLedgerPolicies implements LedgerPolicies
             'soft_closed_transaction_type_keys' => $policy->softClosedTransactionTypeKeys,
             'soft_closed_permission' => $policy->softClosedPermission,
             'source_override_permission' => $policy->sourceOverridePermission,
+            'fx_rounding_tolerance' => $policy->fxRoundingTolerance,
         ];
+    }
+
+    private static function tolerance(mixed $value): string
+    {
+        $text = (string) $value;
+
+        return str_contains($text, '.') ? rtrim(rtrim($text, '0'), '.') : $text;
     }
 
     private function data(stdClass $row): LedgerPolicyData
@@ -85,6 +94,6 @@ final class EloquentLedgerPolicies implements LedgerPolicies
         /** @var list<string> $keys */
         $keys = json_decode((string) $row->soft_closed_transaction_type_keys, true, flags: JSON_THROW_ON_ERROR);
 
-        return new LedgerPolicyData((int) $row->version, $keys, $row->soft_closed_permission, $row->source_override_permission);
+        return new LedgerPolicyData((int) $row->version, $keys, $row->soft_closed_permission, $row->source_override_permission, self::tolerance($row->fx_rounding_tolerance));
     }
 }

@@ -31,7 +31,7 @@ final class UpdateLedgerPolicy
      * @throws ValidationException
      * @throws ApiException VERSION_CONFLICT
      */
-    public function __invoke(string $companyId, array $softClosedTransactionTypeKeys, ?string $softClosedPermission, ?string $sourceOverridePermission, int $expectedVersion, int $actorId): LedgerPolicyData
+    public function __invoke(string $companyId, array $softClosedTransactionTypeKeys, ?string $softClosedPermission, ?string $sourceOverridePermission, string $fxRoundingTolerance, int $expectedVersion, int $actorId): LedgerPolicyData
     {
         $errors = [];
 
@@ -54,6 +54,6 @@ final class UpdateLedgerPolicy
             throw ValidationException::withMessages($errors);
         }
 
-        return $this->policies->change($companyId, $softClosedTransactionTypeKeys, $softClosedPermission, $sourceOverridePermission, $expectedVersion, $actorId);
+        return $this->policies->change($companyId, $softClosedTransactionTypeKeys, $softClosedPermission, $sourceOverridePermission, $fxRoundingTolerance, $expectedVersion, $actorId);
     }
 }

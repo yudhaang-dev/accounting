@@ -42,7 +42,7 @@ class AccountRoleController
     /**
      * Maps the role to an account as a new version; the change is audited. The account must be an active
      * leaf of the company in a class the role accepts. `lock_version` is the one you read (0 when the role
-     * is not mapped yet) and `effective_date` defaults to today.
+     * is not mapped yet) and `effective_date` defaults to today, or to all dates for the first mapping of a role.
      */
     public function update(UpdateAccountRoleRequest $request, AccountRoles $roles, string $companyId, string $role): JsonResponse
     {

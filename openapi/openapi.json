@@ -635,7 +635,7 @@
         "/companies/{companyId}/account-roles/{role}": {
             "put": {
                 "operationId": "account-roles.update",
-                "summary": "Maps the role to an account as a new version; the change is audited. The account must be an active\nleaf of the company in a class the role accepts. `lock_version` is the one you read (0 when the role\nis not mapped yet) and `effective_date` defaults to today",
+                "summary": "Maps the role to an account as a new version; the change is audited. The account must be an active\nleaf of the company in a class the role accepts. `lock_version` is the one you read (0 when the role\nis not mapped yet) and `effective_date` defaults to today, or to all dates for the first mapping of a role",
                 "tags": [
                     "AccountRole"
                 ],
@@ -9675,6 +9675,9 @@
                             "null"
                         ]
                     },
+                    "fx_rounding_tolerance": {
+                        "type": "string"
+                    },
                     "lock_version": {
                         "type": "integer",
                         "description": "Same as `version`, named as the concurrency field the update expects (API-TR-14)."
@@ -9685,6 +9688,7 @@
                     "soft_closed_transaction_type_keys",
                     "soft_closed_permission",
                     "source_override_permission",
+                    "fx_rounding_tolerance",
                     "lock_version"
                 ],
                 "title": "LedgerPolicyResource"
@@ -10454,13 +10458,18 @@
                             "null"
                         ],
                         "maxLength": 64
+                    },
+                    "fx_rounding_tolerance": {
+                        "type": "number",
+                        "minimum": 0
                     }
                 },
                 "required": [
                     "lock_version",
                     "soft_closed_transaction_type_keys",
                     "soft_closed_permission",
-                    "source_override_permission"
+                    "source_override_permission",
+                    "fx_rounding_tolerance"
                 ],
                 "title": "UpdateLedgerPolicyRequest"
             },

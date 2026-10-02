@@ -3,6 +3,7 @@
 namespace App\Modules\GeneralLedger\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountClass;
+use App\Modules\GeneralLedger\Contracts\CurrencyBalanceRow;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
 use App\Modules\MasterData\Contracts\Currencies;
@@ -59,6 +60,45 @@ final class EloquentLedgerReader implements LedgerReader
                 $this->amount($credit, $scale),
                 $this->side($closing, true, $scale),
                 $this->side($closing, false, $scale),
+            );
+        }
+
+        return $result;
+    }
+
+    public function currencyBalances(string $companyId, string $asOf, ?string $accountId = null, ?array $dimensionSetIds = null): array
+    {
+        $rows = DB::table('gl_journal_lines as l')
+            ->join('gl_accounts as a', fn ($join) => $join->on('a.company_id', '=', 'l.company_id')->on('a.id', '=', 'l.account_id'))
+            ->where('l.company_id', $companyId)
+            ->where('l.accounting_date', '<=', $asOf)
+            ->when($accountId !== null, fn ($query) => $query->where('l.account_id', $accountId))
+            ->when($dimensionSetIds !== null, fn ($query) => $query->whereIn('l.dimension_set_id', $dimensionSetIds))
+            ->groupBy('a.id', 'a.code', 'a.name', 'l.currency')
+            ->orderBy('a.code')
+            ->orderBy('l.currency')
+            ->selectRaw('a.id, a.code, a.name, l.currency')
+            ->selectRaw('sum(case when l.debit > 0 then l.transaction_amount else 0 end) as transaction_debit')
+            ->selectRaw('sum(case when l.credit > 0 then l.transaction_amount else 0 end) as transaction_credit')
+            ->selectRaw('sum(l.debit) as debit, sum(l.credit) as credit')
+            ->get();
+
+        $functionalScale = $this->currencies->functionalScale($companyId);
+        $scales = [];
+        $result = [];
+
+        foreach ($rows as $row) {
+            $scale = $scales[$row->currency] ??= $this->currencies->find($companyId, $row->currency)->scale ?? $functionalScale;
+
+            $result[] = new CurrencyBalanceRow(
+                $row->id,
+                $row->code,
+                $row->name,
+                $row->currency,
+                $this->amount(BigDecimal::of($row->transaction_debit), $scale),
+                $this->amount(BigDecimal::of($row->transaction_credit), $scale),
+                $this->amount(BigDecimal::of($row->debit), $functionalScale),
+                $this->amount(BigDecimal::of($row->credit), $functionalScale),
             );
         }
 

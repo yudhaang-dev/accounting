@@ -45,6 +45,7 @@ final class EloquentExchangeRates implements ExchangeRates
 
         return new ExchangeRateData(
             (string) $row->id,
+            (string) $type->id,
             $rateTypeKey,
             $currency,
             $effective,

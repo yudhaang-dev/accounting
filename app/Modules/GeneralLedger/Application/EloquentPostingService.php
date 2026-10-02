@@ -74,7 +74,7 @@ final class EloquentPostingService implements PostingService
             $movements = [];
 
             foreach ($resolved->lines as $index => $line) {
-                $amount = $line['debit']->plus($line['credit']);
+                $onDebit = ! $line['debit']->isZero();
 
                 JournalLine::create([
                     'journal_id' => $journal->id,
@@ -84,9 +84,11 @@ final class EloquentPostingService implements PostingService
                     'accounting_date' => $command->accountingDate,
                     'debit' => $line['debit'],
                     'credit' => $line['credit'],
-                    'currency' => $resolved->currency,
-                    'transaction_amount' => $amount,
-                    'exchange_rate' => 1,
+                    'currency' => $line['currency'],
+                    'transaction_amount' => $line['transaction_amount'],
+                    'exchange_rate' => $line['exchange_rate'],
+                    'rate_type_id' => $line['rate_type_id'],
+                    'rate_date' => $line['rate_date'],
                     'dimension_set_id' => $line['dimension_set_id'],
                     'description' => $line['description'],
                 ]);
@@ -95,11 +97,11 @@ final class EloquentPostingService implements PostingService
                     'account_id' => $line['account_id'],
                     'period_id' => $resolved->periodId,
                     'dimension_set_id' => $line['dimension_set_id'],
-                    'currency' => $resolved->currency,
+                    'currency' => $line['currency'],
                     'debit' => $line['debit'],
                     'credit' => $line['credit'],
-                    'transaction_debit' => $line['debit'],
-                    'transaction_credit' => $line['credit'],
+                    'transaction_debit' => $onDebit ? $line['transaction_amount'] : BigDecimal::zero(),
+                    'transaction_credit' => $onDebit ? BigDecimal::zero() : $line['transaction_amount'],
                 ];
             }
 

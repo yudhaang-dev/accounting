@@ -150,7 +150,7 @@ export interface paths {
         /**
          * Maps the role to an account as a new version; the change is audited. The account must be an active
          *     leaf of the company in a class the role accepts. `lock_version` is the one you read (0 when the role
-         *     is not mapped yet) and `effective_date` defaults to today
+         *     is not mapped yet) and `effective_date` defaults to today, or to all dates for the first mapping of a role
          */
         put: operations["account-roles.update"];
         post?: never;
@@ -1953,6 +1953,7 @@ export interface components {
             soft_closed_transaction_type_keys: string[];
             soft_closed_permission: string | null;
             source_override_permission: string | null;
+            fx_rounding_tolerance: string;
             /** @description Same as `version`, named as the concurrency field the update expects (API-TR-14). */
             lock_version: number;
         };
@@ -2159,6 +2160,7 @@ export interface components {
             soft_closed_transaction_type_keys: string[];
             soft_closed_permission: string | null;
             source_override_permission: string | null;
+            fx_rounding_tolerance: number;
         };
         /** UpdateMembershipRequest */
         UpdateMembershipRequest: {

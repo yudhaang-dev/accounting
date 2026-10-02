@@ -4,6 +4,7 @@ namespace App\Modules\GeneralLedger;
 
 use App\Modules\GeneralLedger\Application\EloquentAccountDirectory;
 use App\Modules\GeneralLedger\Application\EloquentAccountRoles;
+use App\Modules\GeneralLedger\Application\EloquentCurrencyUsage;
 use App\Modules\GeneralLedger\Application\EloquentLedgerPolicies;
 use App\Modules\GeneralLedger\Application\EloquentLedgerReader;
 use App\Modules\GeneralLedger\Application\EloquentPeriodDirectory;
@@ -16,6 +17,7 @@ use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
+use App\Support\Currency\CurrencyUsage;
 use App\Support\Modules\ModuleServiceProvider;
 
 class GeneralLedgerServiceProvider extends ModuleServiceProvider
@@ -29,6 +31,7 @@ class GeneralLedgerServiceProvider extends ModuleServiceProvider
     {
         $this->app->bind(AccountDirectory::class, EloquentAccountDirectory::class);
         $this->app->bind(AccountRoles::class, EloquentAccountRoles::class);
+        $this->app->bind(CurrencyUsage::class, EloquentCurrencyUsage::class);
         $this->app->bind(PeriodDirectory::class, EloquentPeriodDirectory::class);
         $this->app->bind(LedgerReader::class, EloquentLedgerReader::class);
         $this->app->bind(PostingValidator::class, EloquentPostingValidator::class);
