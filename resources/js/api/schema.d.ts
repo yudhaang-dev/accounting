@@ -229,6 +229,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/currencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Currencies the company has activated, functional currency first. Filters: `filter[status]` and
+         *     `filter[search]` (code prefix or part of the name). `per_page` defaults to 50, at most 200
+         */
+        get: operations["currencies.index"];
+        put?: never;
+        /**
+         * Activates a currency from the ISO 4217 reference. `scale` defaults to the ISO minor unit and
+         *     `rounding_mode` to `half_up`
+         */
+        post: operations["currencies.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/currencies/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["currencies.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Changes the scale or rounding mode. `lock_version` is required; the scale of the functional
+         *     currency can only change while the company is in `setup`
+         */
+        patch: operations["currencies.update"];
+        trace?: never;
+    };
+    "/companies/{companyId}/currencies/{code}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivates the currency. The functional currency is always active */
+        post: operations["currencies.deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/currencies/{code}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivates the currency */
+        post: operations["currencies.reactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/dimension-types": {
         parameters: {
             query?: never;
@@ -595,6 +673,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/iso-currencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The ISO 4217 reference a company activates currencies from, ordered by code. Filter:
+         *     `filter[search]` (code prefix or part of the name). `per_page` defaults to 50, at most 200
+         */
+        get: operations["iso-currencies.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/journals": {
         parameters: {
             query?: never;
@@ -843,6 +941,13 @@ export interface components {
          * @enum {string}
          */
         AccountStatus: "active" | "inactive";
+        /** ActivateCurrencyRequest */
+        ActivateCurrencyRequest: {
+            currency: string;
+            /** @description Defaults to the ISO minor unit of the currency. */
+            scale?: number | null;
+            rounding_mode?: components["schemas"]["CurrencyRounding"] | null;
+        };
         /** ActivatedCompanyResource */
         ActivatedCompanyResource: {
             id: string;
@@ -926,7 +1031,7 @@ export interface components {
         CreateWorkspaceRequest: {
             workspace_name: string;
             company_name: string;
-            /** @description Checked against the currency reference data once it exists (M2-03). */
+            /** @description Must be an ISO 4217 currency (MD-FR-06). */
             functional_currency: string;
             timezone?: string | null;
             /** @enum {string|null} */
@@ -940,6 +1045,23 @@ export interface components {
             company_name: string;
             permissions: string[];
         };
+        /** CurrencyResource */
+        CurrencyResource: {
+            code: string;
+            name: string;
+            minor_unit: number;
+            scale: number;
+            rounding_mode: string;
+            is_functional: boolean;
+            status: string;
+            lock_version: number;
+        };
+        /**
+         * CurrencyRounding
+         * @description How amounts of a currency are rounded to its scale (MD-FR-06).
+         * @enum {string}
+         */
+        CurrencyRounding: "half_up" | "half_even" | "up" | "down";
         /**
          * DimensionStatus
          * @enum {string}
@@ -1049,6 +1171,12 @@ export interface components {
             confirmed: "yes" | "on" | "1" | 1 | "true" | true;
             exclude?: string[];
         };
+        /** IsoCurrencyResource */
+        IsoCurrencyResource: {
+            code: string;
+            name: string;
+            minor_unit: number;
+        };
         /** JournalResource */
         JournalResource: {
             id: string;
@@ -1155,11 +1283,17 @@ export interface components {
             name?: string;
             legal_name?: string | null;
             tax_id?: string | null;
-            /** @description Only while the company is in setup (MD-AC-05); checked against currency reference data in M2-03. */
+            /** @description Only while the company is in setup (MD-AC-05); must be an ISO 4217 currency (MD-FR-06). */
             functional_currency?: string;
             timezone?: string;
             /** @enum {string} */
             default_locale?: "id" | "en";
+        };
+        /** UpdateCurrencyRequest */
+        UpdateCurrencyRequest: {
+            lock_version: number;
+            scale?: number;
+            rounding_mode?: components["schemas"]["CurrencyRounding"];
         };
         /** UpdateDimensionTypeRequest */
         UpdateDimensionTypeRequest: {
@@ -1713,6 +1847,201 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["ActivatedCompanyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "currencies.index": {
+        parameters: {
+            query?: {
+                "filter[status]"?: components["schemas"]["DimensionStatus"];
+                "filter[search]"?: string;
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `CurrencyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CurrencyResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "currencies.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivateCurrencyRequest"];
+            };
+        };
+        responses: {
+            /** @description `CurrencyResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CurrencyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "currencies.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `CurrencyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CurrencyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "currencies.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCurrencyRequest"];
+            };
+        };
+        responses: {
+            /** @description `CurrencyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CurrencyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "currencies.deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `CurrencyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CurrencyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "currencies.reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `CurrencyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CurrencyResource"];
                     };
                 };
             };
@@ -2639,6 +2968,62 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "iso-currencies.index": {
+        parameters: {
+            query?: {
+                "filter[status]"?: components["schemas"]["DimensionStatus"];
+                "filter[search]"?: string;
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `IsoCurrencyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["IsoCurrencyResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "journals.index": {

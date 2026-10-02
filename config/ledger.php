@@ -3,8 +3,9 @@
 return [
 
     /*
-    | Decimal places of ledger amounts until currencies and their scale become company data (M2-03,
-    | MD-FR-06). Amounts with more decimals than this are refused, never rounded.
+    | Decimal places of ledger amounts for a company without a configured functional currency. Normally
+    | the scale is that of the functional currency of the company (MD-FR-06). Amounts with more
+    | decimals than the scale are refused, never rounded.
     */
     'default_scale' => 2,
 

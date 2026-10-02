@@ -17,8 +17,8 @@ class UpdateCompanyRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:255'],
             'legal_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'tax_id' => ['sometimes', 'nullable', 'string', 'max:64'],
-            // Only while the company is in setup (MD-AC-05); checked against currency reference data in M2-03.
-            'functional_currency' => ['sometimes', 'string', 'regex:/^[A-Z]{3}$/'],
+            // Only while the company is in setup (MD-AC-05); must be an ISO 4217 currency (MD-FR-06).
+            'functional_currency' => ['sometimes', 'string', 'regex:/^[A-Z]{3}$/', Rule::exists('md_currencies', 'code')],
             'timezone' => ['sometimes', 'string', 'timezone:all'],
             'default_locale' => ['sometimes', 'string', Rule::in(config('localization.supported'))],
         ];

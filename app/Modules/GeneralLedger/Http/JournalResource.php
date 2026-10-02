@@ -68,6 +68,7 @@ class JournalResource extends JsonResource
 
     private function amount(BigDecimal $value): string
     {
-        return (string) $value->toScale(max(0, (int) config('ledger.default_scale')), RoundingMode::HalfUp);
+        // The controller sets the scale of the company functional currency; the config value is the fallback.
+        return (string) $value->toScale(max(0, (int) ($this->resource->getAttribute('amount_scale') ?? config('ledger.default_scale'))), RoundingMode::HalfUp);
     }
 }

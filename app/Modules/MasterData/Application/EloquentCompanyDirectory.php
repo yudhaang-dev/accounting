@@ -21,6 +21,7 @@ final class EloquentCompanyDirectory implements CompanyDirectory, CompanyStatusL
     public function __construct(
         private readonly Audit $audit,
         private readonly SeedDimensionTypes $seedDimensionTypes,
+        private readonly EnsureFunctionalCurrency $ensureFunctionalCurrency,
     ) {}
 
     public function create(NewCompany $company): CompanyData
@@ -33,6 +34,7 @@ final class EloquentCompanyDirectory implements CompanyDirectory, CompanyStatusL
         ])->refresh();
 
         ($this->seedDimensionTypes)($model->id);
+        ($this->ensureFunctionalCurrency)($model->id, $model->functional_currency);
 
         $this->audit->record(
             'company.created',
@@ -77,6 +79,10 @@ final class EloquentCompanyDirectory implements CompanyDirectory, CompanyStatusL
 
             $before = $company->only(array_keys($attributes));
             $company->updateLocked($attributes, $expectedVersion);
+
+            if (isset($attributes['functional_currency']) && $before['functional_currency'] !== $company->functional_currency) {
+                ($this->ensureFunctionalCurrency)($company->id, $company->functional_currency);
+            }
 
             if ($before !== $company->only(array_keys($attributes))) {
                 $this->audit->record(

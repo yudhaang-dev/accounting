@@ -8,6 +8,7 @@ use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
+use App\Modules\MasterData\Contracts\Currencies;
 use App\Modules\MasterData\Contracts\DimensionSets;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
@@ -34,6 +35,7 @@ final class EloquentPostingValidator implements PostingValidator
         private readonly PeriodDirectory $periods,
         private readonly AccountDirectory $accounts,
         private readonly DimensionSets $dimensionSets,
+        private readonly Currencies $currencies,
     ) {}
 
     public function validate(PostJournal $command): void
@@ -84,7 +86,7 @@ final class EloquentPostingValidator implements PostingValidator
         /** @var array<string, list<string>> $errors */
         $errors = [];
         $amounts = [];
-        $scale = max(0, (int) config('ledger.default_scale'));
+        $scale = $this->currencies->functionalScale($command->companyId);
 
         if (count($command->lines) < 2) {
             $errors['lines'][] = __('ledger.lines_required');

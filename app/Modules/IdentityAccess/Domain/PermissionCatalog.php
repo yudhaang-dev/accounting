@@ -14,6 +14,7 @@ final class PermissionCatalog
         'company' => ['read', 'update', 'activate', 'deactivate'],
         'accounts' => ['read', 'manage'],
         'dimensions' => ['read', 'manage'],
+        'currencies' => ['read', 'manage'],
         'periods' => ['read', 'manage', 'close', 'reopen'],
         'entries' => ['read', 'create', 'submit', 'approve', 'reject', 'post', 'reverse'],
         'journals' => ['read'],

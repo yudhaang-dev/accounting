@@ -1,8 +1,10 @@
 <?php
 
 use App\Modules\MasterData\Http\CompanyController;
+use App\Modules\MasterData\Http\CurrencyController;
 use App\Modules\MasterData\Http\DimensionTypeController;
 use App\Modules\MasterData\Http\DimensionValueController;
+use App\Modules\MasterData\Http\IsoCurrencyController;
 use App\Platform\Api\ApiServiceProvider;
 use App\Platform\Api\Http\RejectWritesWhenReadOnly;
 use Illuminate\Support\Facades\Route;
@@ -40,5 +42,20 @@ Route::companyScoped(function () {
             Route::post("{$resource}/{id}/{$action}", [$controller, $action])
                 ->middleware('permission:dimensions.manage')->where('id', ApiServiceProvider::ULID)->name("{$resource}.{$action}");
         }
+    }
+
+    Route::get('iso-currencies', [IsoCurrencyController::class, 'index'])->middleware('permission:currencies.read')->name('iso-currencies.index');
+
+    $code = '[A-Z]{3}';
+    Route::get('currencies', [CurrencyController::class, 'index'])->middleware('permission:currencies.read')->name('currencies.index');
+    Route::post('currencies', [CurrencyController::class, 'store'])->middleware('permission:currencies.manage')->name('currencies.store');
+    Route::get('currencies/{code}', [CurrencyController::class, 'show'])
+        ->middleware('permission:currencies.read')->where('code', $code)->name('currencies.show');
+    Route::patch('currencies/{code}', [CurrencyController::class, 'update'])
+        ->middleware('permission:currencies.manage')->where('code', $code)->name('currencies.update');
+
+    foreach (['deactivate', 'reactivate'] as $action) {
+        Route::post("currencies/{code}/{$action}", [CurrencyController::class, $action])
+            ->middleware('permission:currencies.manage')->where('code', $code)->name("currencies.{$action}");
     }
 });

@@ -5,6 +5,7 @@ namespace App\Modules\Reporting\Application;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
+use App\Modules\MasterData\Contracts\Currencies;
 use App\Modules\MasterData\Contracts\DimensionSets;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
@@ -23,6 +24,7 @@ final class TrialBalance
         private readonly LedgerReader $ledger,
         private readonly CompanyDirectory $companies,
         private readonly DimensionSets $dimensionSets,
+        private readonly Currencies $currencies,
     ) {}
 
     /**
@@ -37,6 +39,7 @@ final class TrialBalance
         $setIds = $dimensions === [] ? null : $this->dimensionSets->setIdsMatching($companyId, $dimensions);
         $rows = array_map($this->row(...), $this->ledger->trialBalance($companyId, $from, $to, $accountId, $setIds));
 
+        $scale = $this->currencies->functionalScale($companyId);
         $totals = array_fill_keys(self::COLUMNS, BigDecimal::zero());
 
         foreach ($rows as $row) {
@@ -53,9 +56,9 @@ final class TrialBalance
             'parameters' => ['from' => $from, 'to' => $to, 'account_id' => $accountId, 'dimensions' => $dimensions],
             'functional_currency' => $company->functionalCurrency,
             'balanced' => $balanced,
-            'totals' => array_map($this->format(...), $totals),
+            'totals' => array_map(fn (BigDecimal $total): string => $this->format($total, $scale), $totals),
             'rows' => array_map(fn (array $row): array => array_map(
-                fn (string|BigDecimal $value): string => $value instanceof BigDecimal ? $this->format($value) : $value,
+                fn (string|BigDecimal $value): string => $value instanceof BigDecimal ? $this->format($value, $scale) : $value,
                 $row,
             ), $rows),
         ];
@@ -80,8 +83,11 @@ final class TrialBalance
         ];
     }
 
-    private function format(BigDecimal $value): string
+    /**
+     * @param  int<0, max>  $scale
+     */
+    private function format(BigDecimal $value, int $scale): string
     {
-        return (string) $value->toScale(max(0, (int) config('ledger.default_scale')), RoundingMode::HalfUp);
+        return (string) $value->toScale($scale, RoundingMode::HalfUp);
     }
 }

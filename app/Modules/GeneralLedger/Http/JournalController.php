@@ -3,6 +3,7 @@
 namespace App\Modules\GeneralLedger\Http;
 
 use App\Modules\GeneralLedger\Domain\Journal;
+use App\Modules\MasterData\Contracts\Currencies;
 use App\Modules\MasterData\Contracts\DimensionSets;
 use App\Support\Company\CompanyContext;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,6 +14,7 @@ class JournalController
 {
     public function __construct(
         private readonly DimensionSets $dimensionSets,
+        private readonly Currencies $currencies,
         private readonly CompanyContext $company,
     ) {}
 
@@ -46,7 +48,7 @@ class JournalController
             ->paginate($request->integer('per_page', 50))
             ->appends($request->query());
 
-        $this->attachDimensions($journals->getCollection());
+        $this->prepare($journals->getCollection());
 
         return JournalResource::collection($journals);
     }
@@ -54,18 +56,22 @@ class JournalController
     public function show(string $companyId, string $id): JournalResource
     {
         $journal = Journal::query()->with('lines')->findOrFail($id);
-        $this->attachDimensions(collect([$journal]));
+        $this->prepare(collect([$journal]));
 
         return new JournalResource($journal);
     }
 
     /**
-     * Gives every line its dimensions, read for the whole page in one query.
+     * Gives every line its dimensions, read for the whole page in one query, and every journal the
+     * amount scale of the functional currency.
      *
      * @param  Collection<int, Journal>  $journals
      */
-    private function attachDimensions(Collection $journals): void
+    private function prepare(Collection $journals): void
     {
+        $scale = $this->currencies->functionalScale($this->company->require());
+        $journals->each(fn (Journal $journal) => $journal->setAttribute('amount_scale', $scale));
+
         $lines = $journals->flatMap(fn (Journal $journal) => $journal->lines);
         $described = $this->dimensionSets->describe($this->company->require(), array_values(array_map('strval', $lines->pluck('dimension_set_id')->unique()->all())));
 

@@ -5,6 +5,7 @@ namespace App\Modules\GeneralLedger\Application;
 use App\Modules\GeneralLedger\Contracts\AccountClass;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
+use App\Modules\MasterData\Contracts\Currencies;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class EloquentLedgerReader implements LedgerReader
 {
+    public function __construct(private readonly Currencies $currencies) {}
+
     public function trialBalance(string $companyId, string $from, string $to, ?string $accountId = null, ?array $dimensionSetIds = null): array
     {
         $rows = DB::table('gl_journal_lines as l')
@@ -31,6 +34,7 @@ final class EloquentLedgerReader implements LedgerReader
             ->selectRaw('coalesce(sum(case when l.accounting_date >= ? then l.credit else 0 end), 0) as credit', [$from])
             ->get();
 
+        $scale = $this->currencies->functionalScale($companyId);
         $result = [];
 
         foreach ($rows as $row) {
@@ -49,27 +53,33 @@ final class EloquentLedgerReader implements LedgerReader
                 $row->code,
                 $row->name,
                 AccountClass::from($row->class),
-                $this->side($opening, true),
-                $this->side($opening, false),
-                $this->amount($debit),
-                $this->amount($credit),
-                $this->side($closing, true),
-                $this->side($closing, false),
+                $this->side($opening, true, $scale),
+                $this->side($opening, false, $scale),
+                $this->amount($debit, $scale),
+                $this->amount($credit, $scale),
+                $this->side($closing, true, $scale),
+                $this->side($closing, false, $scale),
             );
         }
 
         return $result;
     }
 
-    private function side(BigDecimal $net, bool $debitSide): string
+    /**
+     * @param  int<0, max>  $scale
+     */
+    private function side(BigDecimal $net, bool $debitSide, int $scale): string
     {
         $onThisSide = $debitSide ? $net->isPositive() : $net->isNegative();
 
-        return $this->amount($onThisSide ? $net->abs() : BigDecimal::zero());
+        return $this->amount($onThisSide ? $net->abs() : BigDecimal::zero(), $scale);
     }
 
-    private function amount(BigDecimal $value): string
+    /**
+     * @param  int<0, max>  $scale
+     */
+    private function amount(BigDecimal $value, int $scale): string
     {
-        return (string) $value->toScale(max(0, (int) config('ledger.default_scale')), RoundingMode::HalfUp);
+        return (string) $value->toScale($scale, RoundingMode::HalfUp);
     }
 }
