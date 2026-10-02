@@ -4,6 +4,8 @@ namespace App\Orchestration\Ledger\Http;
 
 use App\Models\User;
 use App\Modules\GeneralLedger\Contracts\FiscalYearClose;
+use App\Modules\GeneralLedger\Contracts\FiscalYearClosing;
+use App\Modules\GeneralLedger\Contracts\FiscalYearReopen;
 use App\Orchestration\Ledger\CloseFiscalYear;
 use App\Support\Access\ActorPermissions;
 use Illuminate\Http\JsonResponse;
@@ -28,5 +30,20 @@ class FiscalYearClosingController
         $run = $close(new FiscalYearClose($companyId, $id, $user->id, $permissions->current()));
 
         return (new ClosingRunResource($run))->response()->setStatusCode($run->replayed ? 200 : 201);
+    }
+
+    /**
+     * Reopens a closed fiscal year (GL-FR-14): the closing journal is reversed on the last day of the
+     * year, and the year can be closed again with a new closing. Needs a `reason`, which is audited.
+     * Answers 409 `INVALID_STATE_TRANSITION` when the year is not closed and 422 `PERIOD_NOT_OPEN` when
+     * the period of the last day does not accept the reversal: reopen that period first. While a year is
+     * closed, the ledger accepts no posting into it.
+     */
+    public function reopen(ReopenFiscalYearRequest $request, FiscalYearClosing $closing, ActorPermissions $permissions, string $companyId, string $id): ClosingRunResource
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return new ClosingRunResource($closing->reopen(new FiscalYearReopen($companyId, $id, $request->validated('reason'), $user->id, $permissions->current())));
     }
 }

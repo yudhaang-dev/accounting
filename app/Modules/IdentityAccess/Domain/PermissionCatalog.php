@@ -21,7 +21,7 @@ final class PermissionCatalog
         'entries' => ['read', 'create', 'submit', 'approve', 'reject', 'post', 'reverse'],
         'journals' => ['read', 'post-soft-closed', 'override-source'],
         'opening-balances' => ['import'],
-        'fiscal-years' => ['close'],
+        'fiscal-years' => ['close', 'reopen'],
         'reports' => ['read', 'export'],
         'audit' => ['read'],
         'memberships' => ['read', 'manage'],

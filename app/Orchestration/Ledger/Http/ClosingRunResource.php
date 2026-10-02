@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class ClosingRunResource extends JsonResource
 {
     /**
-     * @return array{id: string, fiscal_year_id: string, status: string, journal_id: string|null, journal_number: string|null, line_count: int, result: string, retained_earnings_mapping_version: int, created_at: string}
+     * @return array{id: string, fiscal_year_id: string, status: string, journal_id: string|null, journal_number: string|null, line_count: int, result: string, retained_earnings_mapping_version: int, reversal_journal_id: string|null, created_at: string}
      */
     public function toArray(Request $request): array
     {
@@ -27,6 +27,8 @@ class ClosingRunResource extends JsonResource
             // Profit (positive) or loss (negative) of the year moved to retained earnings.
             'result' => $this->resource->result,
             'retained_earnings_mapping_version' => $this->resource->retainedEarningsMappingVersion,
+            // Set once the year was reopened and the closing journal reversed.
+            'reversal_journal_id' => $this->resource->reversalJournalId,
             'created_at' => $this->resource->createdAt,
         ];
     }

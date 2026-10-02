@@ -7,6 +7,7 @@ use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\GeneralLedger\Contracts\PostJournalLine;
 use App\Modules\GeneralLedger\Domain\Account;
+use App\Platform\Api\ApiException;
 use App\Platform\Audit\AuditEntry;
 use App\Support\Company\CompanyScope;
 use Illuminate\Support\Facades\DB;
@@ -220,5 +221,80 @@ describe('closing a fiscal year (GL-FR-12, GL-FR-13, GL-AC-09)', function () {
 
         closeYear(as: $viewer)->assertForbidden();
         closeYear('01ARZ3NDEKTSV4RRFFQ69G5FAV')->assertNotFound();
+    });
+});
+
+function reopenYear(array $body = ['reason' => 'Audit adjustment found'], ?User $as = null): TestResponse
+{
+    return test()->actingAs($as ?? test()->admin)->postJson(test()->url.'/fiscal-years/'.test()->year.'/reopen', $body);
+}
+
+describe('reopening a fiscal year (GL-FR-14, GL-AC-10)', function () {
+    beforeEach(function () {
+        mapRetainedEarnings();
+        closingJournal('2026-03-10', $this->bank, $this->sales, '1000000.00');
+        $this->closing = closeYear()->assertCreated();
+    });
+
+    it('reverses the closing journal and records who reopened the year and why', function () {
+        $response = reopenYear()->assertOk()->assertJsonPath('data.status', 'reopened');
+
+        $reversal = DB::table('gl_journals')->find($response->json('data.reversal_journal_id'));
+        $run = DB::table('gl_closing_runs')->find($this->closing->json('data.id'));
+
+        expect($reversal->reverses_journal_id)->toBe($this->closing->json('data.journal_id'))
+            ->and($reversal->accounting_date)->toBe('2026-12-31')
+            ->and($run->status)->toBe('reopened')
+            ->and($run->reopen_reason)->toBe('Audit adjustment found')
+            ->and($run->reopened_by)->toBe($this->admin->id)
+            ->and($run->reopen_journal_id)->toBe($reversal->id)
+            // Income is back and retained earnings hold nothing of the year.
+            ->and(closingBalance($this->sales))->toBe(-1000000.0)
+            ->and(closingBalance($this->retained))->toBe(0.0);
+
+        $audit = AuditEntry::where('company_id', $this->companyId)->where('event', 'fiscal_year.reopened')->sole();
+        expect($audit->properties['reason'])->toBe('Audit adjustment found');
+    });
+
+    it('lets the year be closed again with a new closing journal', function () {
+        reopenYear()->assertOk();
+        closingJournal('2026-05-10', $this->cost, $this->cash, '250000.00');
+
+        $second = closeYear()->assertCreated()->assertJsonPath('data.result', '750000.00');
+
+        expect($second->json('data.id'))->not->toBe($this->closing->json('data.id'))
+            ->and(DB::table('gl_closing_runs')->where('status', 'closed')->count())->toBe(1)
+            ->and(DB::table('gl_closing_runs')->count())->toBe(2)
+            ->and(closingBalance($this->sales))->toBe(0.0)
+            ->and(closingBalance($this->cost))->toBe(0.0)
+            ->and(closingBalance($this->retained))->toBe(-750000.0);
+    });
+
+    it('refuses postings into a closed year until it is reopened', function () {
+        $post = fn () => closingJournal('2026-06-10', $this->bank, $this->sales, '10.00');
+
+        expect($post)->toThrow(ApiException::class);
+
+        reopenYear()->assertOk();
+        $post();
+
+        expect(closingBalance($this->sales))->toBe(-1000010.0);
+    });
+
+    it('needs a reason, a closed year and the fiscal-years.reopen permission', function () {
+        reopenYear([])->assertUnprocessable()->assertJsonValidationErrors(['reason']);
+        reopenYear(as: memberWithRoles($this->companyId, 'viewer'))->assertForbidden();
+
+        reopenYear()->assertOk();
+        reopenYear()->assertConflict()->assertJsonPath('code', 'INVALID_STATE_TRANSITION');
+    });
+
+    it('stays closed when the last period does not accept the reversal', function () {
+        $december = (string) DB::table('gl_periods')->where('company_id', $this->companyId)->where('name', '2026-12')->value('id');
+        $this->actingAs($this->admin)->postJson("{$this->url}/periods/{$december}/close")->assertOk();
+
+        reopenYear()->assertUnprocessable()->assertJsonPath('code', 'PERIOD_NOT_OPEN');
+
+        expect(DB::table('gl_closing_runs')->where('id', $this->closing->json('data.id'))->value('status'))->toBe('closed');
     });
 });

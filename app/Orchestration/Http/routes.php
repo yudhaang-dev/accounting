@@ -32,4 +32,6 @@ Route::companyScoped(function () {
 
     Route::post('fiscal-years/{id}/close', [FiscalYearClosingController::class, 'store'])
         ->middleware('permission:fiscal-years.close')->where('id', ApiServiceProvider::ULID)->name('fiscal-years.close');
+    Route::post('fiscal-years/{id}/reopen', [FiscalYearClosingController::class, 'reopen'])
+        ->middleware('permission:fiscal-years.reopen')->where('id', ApiServiceProvider::ULID)->name('fiscal-years.reopen');
 });

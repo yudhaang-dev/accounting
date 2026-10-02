@@ -4318,6 +4318,69 @@
                 }
             }
         },
+        "/companies/{companyId}/fiscal-years/{id}/reopen": {
+            "post": {
+                "operationId": "fiscal-years.reopen",
+                "summary": "Reopens a closed fiscal year (GL-FR-14): the closing journal is reversed on the last day of the\nyear, and the year can be closed again with a new closing. Needs a `reason`, which is audited.\nAnswers 409 `INVALID_STATE_TRANSITION` when the year is not closed and 422 `PERIOD_NOT_OPEN` when\nthe period of the last day does not accept the reversal: reopen that period first. While a year is\nclosed, the ledger accepts no posting into it",
+                "tags": [
+                    "FiscalYearClosing"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReopenFiscalYearRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ClosingRunResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ClosingRunResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/history-imports": {
             "get": {
                 "operationId": "history-imports.show",
@@ -8473,6 +8536,13 @@
                     "retained_earnings_mapping_version": {
                         "type": "integer"
                     },
+                    "reversal_journal_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Set once the year was reopened and the closing journal reversed."
+                    },
                     "created_at": {
                         "type": "string"
                     }
@@ -8486,6 +8556,7 @@
                     "line_count",
                     "result",
                     "retained_earnings_mapping_version",
+                    "reversal_journal_id",
                     "created_at"
                 ],
                 "title": "ClosingRunResource"
@@ -8899,6 +8970,7 @@
                                 "journals.override-source",
                                 "opening-balances.import",
                                 "fiscal-years.close",
+                                "fiscal-years.reopen",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",
@@ -10646,6 +10718,19 @@
                 ],
                 "title": "RecordExchangeRateRequest"
             },
+            "ReopenFiscalYearRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 500
+                    }
+                },
+                "required": [
+                    "reason"
+                ],
+                "title": "ReopenFiscalYearRequest"
+            },
             "ReopenPeriodRequest": {
                 "type": "object",
                 "properties": {
@@ -11339,6 +11424,7 @@
                                 "journals.override-source",
                                 "opening-balances.import",
                                 "fiscal-years.close",
+                                "fiscal-years.reopen",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",
@@ -11401,6 +11487,7 @@
                                 "journals.override-source",
                                 "opening-balances.import",
                                 "fiscal-years.close",
+                                "fiscal-years.reopen",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",

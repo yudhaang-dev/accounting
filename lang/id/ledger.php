@@ -61,6 +61,9 @@ return [
     'closing_line' => 'Penutupan tahun',
     'closing_unbalanced' => 'Buku besar tidak seimbang sampai akhir tahun: debit :debit, kredit :credit.',
     'closing_entries_unfinished' => 'Tahun buku belum dapat ditutup: :count entri bertanggal sampai :date belum selesai (draf, diajukan, disetujui, atau ditolak).',
+    'fiscal_year_not_closed' => 'Tahun buku :year tidak dalam keadaan ditutup.',
+    'reopen_description' => 'Pembukaan kembali tahun buku :year',
+    'fiscal_year_closed' => 'Periode :period termasuk tahun buku yang sudah ditutup; buka kembali tahunnya untuk memposting.',
     'opening_control_total_differs' => 'Akun kontrol :account bersaldo :balance tetapi total open item-nya :open_items.',
 
 ];

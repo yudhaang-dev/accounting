@@ -61,6 +61,9 @@ return [
     'closing_line' => 'Closing of the year',
     'closing_unbalanced' => 'The ledger does not balance up to the end of the year: debit :debit, credit :credit.',
     'closing_entries_unfinished' => 'The fiscal year cannot close: :count entries dated up to :date are not finished (draft, submitted, approved or rejected).',
+    'fiscal_year_not_closed' => 'Fiscal year :year is not closed.',
+    'reopen_description' => 'Reopening of fiscal year :year',
+    'fiscal_year_closed' => 'Period :period belongs to a closed fiscal year; reopen the year to post into it.',
     'opening_control_total_differs' => 'Control account :account carries :balance but its open items total :open_items.',
 
 ];

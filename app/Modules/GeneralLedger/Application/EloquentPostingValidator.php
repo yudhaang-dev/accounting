@@ -28,6 +28,7 @@ use Brick\Math\Exception\RoundingNecessaryException;
 use Brick\Math\RoundingMode;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
@@ -219,6 +220,13 @@ final class EloquentPostingValidator implements PostingValidator
         if ($period === null) {
             throw new ApiException(ErrorCode::PeriodNotOpen, errors: [
                 'accounting_date' => [__('ledger.period_missing', ['date' => $accountingDate])],
+            ]);
+        }
+
+        // A closed year has its income and expense at zero; only reopening it lets the ledger change (GL-FR-12, GL-FR-14).
+        if (DB::table('gl_closing_runs')->where('company_id', $companyId)->where('fiscal_year_id', $period->fiscalYearId)->where('status', 'closed')->exists()) {
+            throw new ApiException(ErrorCode::PeriodNotOpen, errors: [
+                'accounting_date' => [__('ledger.fiscal_year_closed', ['period' => $period->name])],
             ]);
         }
 

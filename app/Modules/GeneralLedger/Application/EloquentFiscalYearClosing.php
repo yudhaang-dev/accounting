@@ -7,11 +7,13 @@ use App\Modules\GeneralLedger\Contracts\AccountRoles;
 use App\Modules\GeneralLedger\Contracts\ClosingRunData;
 use App\Modules\GeneralLedger\Contracts\FiscalYearClose;
 use App\Modules\GeneralLedger\Contracts\FiscalYearClosing;
+use App\Modules\GeneralLedger\Contracts\FiscalYearReopen;
 use App\Modules\GeneralLedger\Contracts\JournalSource;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\GeneralLedger\Contracts\PostJournalLine;
+use App\Modules\GeneralLedger\Contracts\ReverseJournal;
 use App\Modules\MasterData\Contracts\Currencies;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
@@ -19,6 +21,7 @@ use App\Platform\Audit\Audit;
 use App\Support\Company\CompanyContext;
 use Brick\Math\BigDecimal;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use stdClass;
@@ -141,15 +144,65 @@ final class EloquentFiscalYearClosing implements FiscalYearClosing
         }));
     }
 
+    public function reopen(FiscalYearReopen $command): ClosingRunData
+    {
+        return $this->company->run($command->companyId, fn (): ClosingRunData => DB::transaction(function () use ($command): ClosingRunData {
+            $this->validator->company($command->companyId);
+
+            $year = $this->periods->fiscalYear($command->companyId, $command->fiscalYearId)
+                ?? throw new ApiException(ErrorCode::NotFound);
+
+            DB::select('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))', ["{$command->companyId}:close-year:{$year->id}"]);
+
+            $run = $this->runs($command->companyId, $year->id)->where('r.status', 'closed')->first()
+                ?? throw new ApiException(ErrorCode::InvalidStateTransition, errors: [
+                    'fiscal_year' => [__('ledger.fiscal_year_not_closed', ['year' => $year->name])],
+                ]);
+
+            // Marked first: while the year counts as closed, the ledger refuses the reversal itself.
+            DB::table('gl_closing_runs')->where('company_id', $command->companyId)->where('id', $run->id)->update([
+                'status' => 'reopened',
+                'reopened_by' => $command->reopenedBy,
+                'reopen_reason' => $command->reason,
+                'reopened_at' => now(),
+            ]);
+
+            $reversal = $run->journal_id === null ? null : $this->posting->reverse(new ReverseJournal(
+                companyId: $command->companyId,
+                journalId: $run->journal_id,
+                accountingDate: $year->endDate,
+                description: (string) __('ledger.reopen_description', ['year' => $year->name]),
+                entryId: "reopen:{$run->id}",
+                postedBy: $command->reopenedBy,
+                actorPermissions: $command->actorPermissions,
+            ));
+
+            DB::table('gl_closing_runs')->where('company_id', $command->companyId)->where('id', $run->id)->update(['reopen_journal_id' => $reversal?->id]);
+
+            $this->audit->record(
+                'fiscal_year.reopened',
+                "Fiscal year {$year->name} reopened".($reversal === null ? '.' : ", closing journal reversed by {$reversal->number}."),
+                properties: ['run_id' => $run->id, 'fiscal_year_id' => $year->id, 'reason' => $command->reason, 'journal_id' => $run->journal_id, 'reversal_journal_id' => $reversal?->id],
+                companyId: $command->companyId,
+            );
+
+            return $this->data($this->runs($command->companyId, $year->id)->where('r.id', $run->id)->sole());
+        }));
+    }
+
     public function current(string $companyId, string $fiscalYearId): ?ClosingRunData
     {
-        $run = DB::table('gl_closing_runs as r')
-            ->leftJoin('gl_journals as j', fn ($join) => $join->on('j.company_id', '=', 'r.company_id')->on('j.id', '=', 'r.journal_id'))
-            ->where('r.company_id', $companyId)->where('r.fiscal_year_id', $fiscalYearId)->where('r.status', 'closed')
-            ->select('r.*', 'j.number as journal_number')
-            ->first();
+        $run = $this->runs($companyId, $fiscalYearId)->where('r.status', 'closed')->first();
 
         return $run === null ? null : $this->data($run);
+    }
+
+    private function runs(string $companyId, string $fiscalYearId): Builder
+    {
+        return DB::table('gl_closing_runs as r')
+            ->leftJoin('gl_journals as j', fn ($join) => $join->on('j.company_id', '=', 'r.company_id')->on('j.id', '=', 'r.journal_id'))
+            ->where('r.company_id', $companyId)->where('r.fiscal_year_id', $fiscalYearId)
+            ->select('r.*', 'j.number as journal_number');
     }
 
     private function data(stdClass $run): ClosingRunData
@@ -169,6 +222,7 @@ final class EloquentFiscalYearClosing implements FiscalYearClosing
             (string) BigDecimal::of($result)->toScale(2),
             (int) $run->retained_earnings_mapping_version,
             CarbonImmutable::parse($run->created_at)->toIso8601String(),
+            reversalJournalId: $run->reopen_journal_id,
         );
     }
 

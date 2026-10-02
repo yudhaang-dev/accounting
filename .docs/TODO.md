@@ -64,7 +64,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 ## M4 — Buku besar
 
 - [x] **M4-01** Atribut posting akun: sumber yang diizinkan, kewajiban dimensi, batasan mata uang, penanda revaluasi — GL-FR-02, GL-AC-02 — layar SPA di M4-12, yang perlu menimpa tipe `dimension_requirements` dari OpenAPI
-- [x] **M4-02** Status `soft_closed` dengan kebijakan per key Jenis Transaksi, tutup/buka periode beralasan, pola kalender 4-4-5 dan rentang bebas — GL-FR-03, GL-FR-04, GL-AC-04 — penandaan hasil turunan saat membuka kembali di M4-10/M4-11 dan M8-11; layar SPA di M4-12
+- [x] **M4-02** Status `soft_closed` dengan kebijakan per key Jenis Transaksi, tutup/buka periode beralasan, pola kalender 4-4-5 dan rentang bebas — GL-FR-03, GL-FR-04, GL-AC-04 — penandaan hasil turunan saat membuka kembali di M8-11; layar SPA di M4-12
 - [x] **M4-03** Pembalikan jurnal di sisi GL — GL-FR-06, GL-AC-11 — endpoint pembalikan ada di M5-06
 - [x] **M4-04** Kebijakan override akun kontrol — GL-FR-07 — alur entri membawa alasan override di M5
 - [x] **M4-05** Baris valas, pembulatan ke `fx_rounding`, saldo per mata uang — GL-FR-08, GL-AC-05 — endpoint saldo per mata uang belum ada; penolakan aktivasi mata uang tanpa pemetaan peran belum
@@ -72,8 +72,8 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M4-07** Revaluasi akun non-kontrol dengan kebijakan pembalikan otomatis — GL-FR-09, GL-AC-06 — revaluasi open item di M6-07
 - [x] **M4-08** Impor saldo konversi: `cutover_date`, `ledger_start_date`, pemetaan kode sumber, saldo YTD, idempoten — GL-FR-11, GL-AC-07 — baris akun kontrol baru dapat diimpor setelah Subledger menyuplai total open item (M6-10); penanda batch di neraca saldo menyusul di M8-08
 - [x] **M4-09** Impor histori (ringkasan per periode atau transaksi) dan pencocokan dengan neraca saldo sumber pada cutover — GL-FR-11 — histori pada akun kontrol baru dapat diimpor setelah Subledger menyuplai total open item (M6-10)
-- [x] **M4-10** Tutup tahun: orkestrasi kesiapan, jurnal penutup per akun × set dimensi, saldo tahun berikutnya — GL-FR-12, GL-FR-13, GL-AC-09 — kesiapan baru memeriksa entri belum selesai; rekonsiliasi subledger menyusul di M6-09. Posting ke tahun yang sudah ditutup belum ditolak, ditangani bersama M4-11
-- [ ] **M4-11** Buka kembali tahun buku — GL-FR-14, GL-AC-10
+- [x] **M4-10** Tutup tahun: orkestrasi kesiapan, jurnal penutup per akun × set dimensi, saldo tahun berikutnya — GL-FR-12, GL-FR-13, GL-AC-09 — kesiapan baru memeriksa entri belum selesai; rekonsiliasi subledger menyusul di M6-09
+- [x] **M4-11** Buka kembali tahun buku — GL-FR-14, GL-AC-10 — penandaan snapshot laporan untuk dihitung ulang menyusul di M8-11
 - [ ] **M4-12** SPA: atribut akun, manajemen periode, revaluasi, wizard saldo konversi, checklist tutup tahun
 
 ## M5 — Pencatatan transaksi
