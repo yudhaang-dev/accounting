@@ -18,7 +18,7 @@ class TransactionTypeVersionController
     /** Starts a draft with the next version number. */
     public function store(VersionRequest $request, string $companyId, string $id, TransactionTypeVersions $versions): JsonResponse
     {
-        $versions->createDraft($id, TransactionTypeMode::from($request->string('mode')->toString()), $this->fields($request), $this->rules($request));
+        $versions->createDraft($id, TransactionTypeMode::from($request->string('mode')->toString()), $this->fields($request), $this->rules($request), $this->currencyPolicy($request));
 
         return $this->type($id)->response()->setStatusCode(201);
     }
@@ -26,7 +26,7 @@ class TransactionTypeVersionController
     /** Replaces the content of a draft version. */
     public function update(VersionRequest $request, string $companyId, string $id, int $version, TransactionTypeVersions $versions): TransactionTypeResource
     {
-        $versions->updateDraft($id, $version, TransactionTypeMode::from($request->string('mode')->toString()), $this->fields($request), $this->rules($request));
+        $versions->updateDraft($id, $version, TransactionTypeMode::from($request->string('mode')->toString()), $this->fields($request), $this->rules($request), $this->currencyPolicy($request));
 
         return $this->type($id);
     }
@@ -64,6 +64,21 @@ class TransactionTypeVersionController
     {
         /** @var list<array<string, mixed>> */
         return $request->validated('posting_rules', []);
+    }
+
+    /**
+     * @return array{allowed_currencies: list<string>|null, rate_type_key: string|null, allow_rate_input: bool}
+     */
+    private function currencyPolicy(VersionRequest $request): array
+    {
+        /** @var list<string>|null $currencies */
+        $currencies = $request->validated('allowed_currencies');
+
+        return [
+            'allowed_currencies' => $currencies === null ? null : array_values(array_unique($currencies)),
+            'rate_type_key' => $request->validated('rate_type_key'),
+            'allow_rate_input' => (bool) $request->validated('allow_rate_input', false),
+        ];
     }
 
     private function type(string $id): TransactionTypeResource

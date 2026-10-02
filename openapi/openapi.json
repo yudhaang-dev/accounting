@@ -9720,6 +9720,20 @@
                                         "minLength": 26,
                                         "maxLength": 26
                                     }
+                                },
+                                "currency": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "pattern": "^[A-Z]{3}$"
+                                },
+                                "exchange_rate": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 40
                                 }
                             },
                             "required": [
@@ -9727,6 +9741,21 @@
                             ]
                         },
                         "maxItems": 500
+                    },
+                    "currency": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The currency and the rate a structured entry brings; a free-lines entry has them on each line (TE-FR-06).",
+                        "pattern": "^[A-Z]{3}$"
+                    },
+                    "exchange_rate": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 40
                     },
                     "values": {
                         "type": "array",
@@ -9798,6 +9827,24 @@
                                     "additionalProperties": {
                                         "type": "string"
                                     }
+                                },
+                                "currency": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "exchange_rate": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "applied_rate": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
                                 }
                             },
                             "required": [
@@ -9805,7 +9852,10 @@
                                 "debit",
                                 "credit",
                                 "description",
-                                "dimensions"
+                                "dimensions",
+                                "currency",
+                                "exchange_rate",
+                                "applied_rate"
                             ]
                         }
                     },
@@ -9815,6 +9865,18 @@
                             "null"
                         ],
                         "additionalProperties": {}
+                    },
+                    "currency": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "exchange_rate": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "created_by": {
                         "type": "integer"
@@ -9885,6 +9947,8 @@
                     "description",
                     "lines",
                     "values",
+                    "currency",
+                    "exchange_rate",
                     "created_by",
                     "journal_id",
                     "journal_number",
@@ -11389,6 +11453,15 @@
                                 },
                                 "posting_rules": {
                                     "type": "string"
+                                },
+                                "allowed_currencies": {
+                                    "type": "string"
+                                },
+                                "rate_type_key": {
+                                    "type": "string"
+                                },
+                                "allow_rate_input": {
+                                    "type": "string"
                                 }
                             },
                             "required": [
@@ -11396,7 +11469,10 @@
                                 "mode",
                                 "status",
                                 "fields",
-                                "posting_rules"
+                                "posting_rules",
+                                "allowed_currencies",
+                                "rate_type_key",
+                                "allow_rate_input"
                             ]
                         }
                     },
@@ -11704,6 +11780,20 @@
                                         "minLength": 26,
                                         "maxLength": 26
                                     }
+                                },
+                                "currency": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "pattern": "^[A-Z]{3}$"
+                                },
+                                "exchange_rate": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 40
                                 }
                             },
                             "required": [
@@ -11711,6 +11801,21 @@
                             ]
                         },
                         "maxItems": 500
+                    },
+                    "currency": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The currency and the rate a structured entry brings; a free-lines entry has them on each line (TE-FR-06).",
+                        "pattern": "^[A-Z]{3}$"
+                    },
+                    "exchange_rate": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 40
                     },
                     "values": {
                         "type": "array",
@@ -12110,6 +12215,28 @@
                             ]
                         },
                         "maxItems": 50
+                    },
+                    "allowed_currencies": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "Currencies and rates of entries (TE-FR-06); whether the currencies are active is checked by the application layer.",
+                        "items": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                        },
+                        "maxItems": 50
+                    },
+                    "rate_type_key": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 32
+                    },
+                    "allow_rate_input": {
+                        "type": "boolean"
                     },
                     "posting_rules": {
                         "type": "array",

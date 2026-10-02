@@ -140,15 +140,13 @@ final class EntryWorkflow
     }
 
     /**
-     * A structured entry takes its lines from the posting rules and role mappings as they stand when it
-     * is submitted and again when it is posted (TE-FR-05, TE-FR-08); the transaction rolls this back with
-     * a refusal.
+     * The lines are settled when the entry is submitted and again when it is posted (TE-FR-08): a
+     * structured entry takes them from the posting rules and role mappings as they stand then (TE-FR-05)
+     * and foreign lines get the rate that applies then (TE-FR-06). A refusal rolls this back.
      */
     private function refreshLines(Entry $entry): void
     {
-        if ($entry->field_values !== null) {
-            $entry->forceFill(['lines' => $this->lines->of($entry)])->save();
-        }
+        $entry->forceFill(['lines' => $this->lines->of($entry)])->save();
     }
 
     private function command(Entry $entry, int $userId): PostJournal
@@ -163,7 +161,10 @@ final class EntryWorkflow
                 debit: $line['debit'],
                 credit: $line['credit'],
                 description: $line['description'],
+                currency: $line['currency'] ?? null,
                 dimensions: $line['dimensions'] ?? [],
+                exchangeRate: $line['exchange_rate'] ?? null,
+                rateTypeKey: $line['rate_type_key'] ?? null,
             ), $entry->lines),
             documentDate: $entry->document_date?->toDateString(),
             transactionTypeKey: $entry->transaction_type_key,

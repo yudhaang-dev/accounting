@@ -30,6 +30,11 @@ class EntryRequest extends FormRequest
             /** @var array<string, string|null> */
             'lines.*.dimensions' => ['nullable', 'array'],
             'lines.*.dimensions.*' => ['nullable', 'string', 'size:26'],
+            // The currency and the rate a structured entry brings; a free-lines entry has them on each line (TE-FR-06).
+            'currency' => ['nullable', 'string', 'regex:/^[A-Z]{3}$/'],
+            'exchange_rate' => ['nullable', 'string', 'max:40'],
+            'lines.*.currency' => ['nullable', 'string', 'regex:/^[A-Z]{3}$/'],
+            'lines.*.exchange_rate' => ['nullable', 'string', 'max:40'],
             // Field name => value, by the field schema of the version (TE-FR-04).
             'values' => ['sometimes', 'array'],
         ];

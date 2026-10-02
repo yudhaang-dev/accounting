@@ -29,6 +29,11 @@ class VersionRequest extends FormRequest
             'fields.*.account_ids' => ['sometimes', 'array', 'min:1', 'max:500'],
             'fields.*.account_ids.*' => ['string', 'size:26'],
             'fields.*.dimension_type' => ['sometimes', 'string', 'max:64'],
+            // Currencies and rates of entries (TE-FR-06); whether the currencies are active is checked by the application layer.
+            'allowed_currencies' => ['sometimes', 'nullable', 'array', 'max:50'],
+            'allowed_currencies.*' => ['string', 'regex:/^[A-Z]{3}$/'],
+            'rate_type_key' => ['sometimes', 'nullable', 'string', 'max:32'],
+            'allow_rate_input' => ['sometimes', 'boolean'],
             // Posting rules of a structured version (TE-FR-05); what they refer to is checked by the application layer.
             'posting_rules' => ['sometimes', 'array', 'max:50'],
             'posting_rules.*.type' => ['required', Rule::in([PostingRules::AMOUNT, PostingRules::FX_DIFFERENCE])],

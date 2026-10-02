@@ -2026,7 +2026,12 @@ export interface components {
                 credit?: string | null;
                 description?: string | null;
                 dimensions?: (string | null)[];
+                currency?: string | null;
+                exchange_rate?: string | null;
             }[];
+            /** @description The currency and the rate a structured entry brings; a free-lines entry has them on each line (TE-FR-06). */
+            currency?: string | null;
+            exchange_rate?: string | null;
             /** @description Field name => value, by the field schema of the version (TE-FR-04). */
             values?: string[];
         };
@@ -2049,10 +2054,15 @@ export interface components {
                 dimensions: {
                     [key: string]: string;
                 };
+                currency: string | null;
+                exchange_rate: string | null;
+                applied_rate: string | null;
             }[];
             values: {
                 [key: string]: unknown;
             } | null;
+            currency: string | null;
+            exchange_rate: string | null;
             created_by: number;
             journal_id: string | null;
             journal_number: string | null;
@@ -2446,6 +2456,9 @@ export interface components {
                 status: string;
                 fields: string;
                 posting_rules: string;
+                allowed_currencies: string;
+                rate_type_key: string;
+                allow_rate_input: string;
             }[];
             lock_version: number;
         };
@@ -2523,7 +2536,12 @@ export interface components {
                 credit?: string | null;
                 description?: string | null;
                 dimensions?: (string | null)[];
+                currency?: string | null;
+                exchange_rate?: string | null;
             }[];
+            /** @description The currency and the rate a structured entry brings; a free-lines entry has them on each line (TE-FR-06). */
+            currency?: string | null;
+            exchange_rate?: string | null;
             /** @description Field name => value, by the field schema of the version (TE-FR-04). */
             values?: string[];
         };
@@ -2594,6 +2612,10 @@ export interface components {
                 account_ids?: string[];
                 dimension_type?: string;
             }[];
+            /** @description Currencies and rates of entries (TE-FR-06); whether the currencies are active is checked by the application layer. */
+            allowed_currencies?: string[] | null;
+            rate_type_key?: string | null;
+            allow_rate_input?: boolean;
             /** @description Posting rules of a structured version (TE-FR-05); what they refer to is checked by the application layer. */
             posting_rules?: {
                 /** @enum {string} */

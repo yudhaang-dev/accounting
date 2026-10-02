@@ -3,6 +3,7 @@
 namespace App\Modules\TransactionEntry\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
+use App\Modules\MasterData\Contracts\Currencies;
 use App\Modules\MasterData\Contracts\DimensionSets;
 use App\Modules\TransactionEntry\Domain\FieldType;
 use App\Modules\TransactionEntry\Domain\PostingRules;
@@ -32,17 +33,19 @@ final class TransactionTypeVersions
         private readonly CompanyContext $company,
         private readonly AccountDirectory $accounts,
         private readonly DimensionSets $dimensions,
+        private readonly Currencies $currencies,
     ) {}
 
     /**
      * @param  list<FieldDefinition>  $fields
      * @param  list<array<string, mixed>>  $rules
+     * @param  array{allowed_currencies?: list<string>|null, rate_type_key?: string|null, allow_rate_input?: bool}  $currencyPolicy
      *
      * @throws ValidationException
      */
-    public function createDraft(string $typeId, TransactionTypeMode $mode, array $fields, array $rules = []): TransactionTypeVersion
+    public function createDraft(string $typeId, TransactionTypeMode $mode, array $fields, array $rules = [], array $currencyPolicy = []): TransactionTypeVersion
     {
-        return DB::transaction(function () use ($typeId, $mode, $fields, $rules): TransactionTypeVersion {
+        return DB::transaction(function () use ($typeId, $mode, $fields, $rules, $currencyPolicy): TransactionTypeVersion {
             $type = TransactionType::query()->lockForUpdate()->findOrFail($typeId);
 
             $checked = $this->checkedFields($mode, $fields);
@@ -54,6 +57,7 @@ final class TransactionTypeVersions
                 'status' => VersionStatus::Draft,
                 'fields' => $checked,
                 'posting_rules' => $this->checkedRules($mode, $checked, $rules),
+                ...$this->checkedCurrencyPolicy($currencyPolicy),
             ])->refresh();
 
             $this->audit->record('transaction_type.version_drafted', "Version {$version->version} of {$type->key} drafted.", $version, after: ['version' => $version->version, 'mode' => $mode->value], companyId: $type->company_id);
@@ -65,13 +69,14 @@ final class TransactionTypeVersions
     /**
      * @param  list<FieldDefinition>  $fields
      * @param  list<array<string, mixed>>  $rules
+     * @param  array{allowed_currencies?: list<string>|null, rate_type_key?: string|null, allow_rate_input?: bool}  $currencyPolicy
      *
      * @throws ApiException INVALID_STATE_TRANSITION when the version is not a draft
      * @throws ValidationException
      */
-    public function updateDraft(string $typeId, int $number, TransactionTypeMode $mode, array $fields, array $rules = []): TransactionTypeVersion
+    public function updateDraft(string $typeId, int $number, TransactionTypeMode $mode, array $fields, array $rules = [], array $currencyPolicy = []): TransactionTypeVersion
     {
-        return DB::transaction(function () use ($typeId, $number, $mode, $fields, $rules): TransactionTypeVersion {
+        return DB::transaction(function () use ($typeId, $number, $mode, $fields, $rules, $currencyPolicy): TransactionTypeVersion {
             $version = $this->lockedVersion($typeId, $number);
 
             if ($version->status !== VersionStatus::Draft) {
@@ -80,7 +85,7 @@ final class TransactionTypeVersions
 
             $checked = $this->checkedFields($mode, $fields);
 
-            $version->update(['mode' => $mode, 'fields' => $checked, 'posting_rules' => $this->checkedRules($mode, $checked, $rules)]);
+            $version->update(['mode' => $mode, 'fields' => $checked, 'posting_rules' => $this->checkedRules($mode, $checked, $rules), ...$this->checkedCurrencyPolicy($currencyPolicy)]);
 
             return $version->refresh();
         });
@@ -129,6 +134,38 @@ final class TransactionTypeVersions
 
             return $version->refresh();
         });
+    }
+
+    /**
+     * The currencies a version accepts must be active in the company (TE-FR-06). Without a policy a
+     * version accepts any active currency and takes no rate from the entry.
+     *
+     * @param  array{allowed_currencies?: list<string>|null, rate_type_key?: string|null, allow_rate_input?: bool}  $policy
+     * @return array{allowed_currencies: list<string>|null, rate_type_key: string|null, allow_rate_input: bool}
+     *
+     * @throws ValidationException
+     */
+    private function checkedCurrencyPolicy(array $policy): array
+    {
+        $companyId = $this->company->require();
+        $currencies = $policy['allowed_currencies'] ?? null;
+        $errors = [];
+
+        foreach ($currencies ?? [] as $index => $code) {
+            if (! $this->currencies->isActive($companyId, $code)) {
+                $errors["allowed_currencies.{$index}"] = [__('entries.currency_inactive', ['currency' => $code])];
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return [
+            'allowed_currencies' => $currencies,
+            'rate_type_key' => $policy['rate_type_key'] ?? null,
+            'allow_rate_input' => $policy['allow_rate_input'] ?? false,
+        ];
     }
 
     /**

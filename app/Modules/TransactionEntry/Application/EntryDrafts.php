@@ -25,8 +25,8 @@ use Illuminate\Validation\ValidationException;
  * Creates and edits draft entries (TE-FR-07). A draft is only checked for shape; the full validation
  * of accounts, period and balance happens on submit and again on posting (TE-FR-08).
  *
- * @phpstan-type LineInput array{account_id: string, debit?: string|null, credit?: string|null, description?: string|null, dimensions?: array<string, string|null>|null}
- * @phpstan-type EntryInput array{accounting_date: string, document_date?: string|null, description: string, lines?: list<LineInput>, values?: array<string, mixed>}
+ * @phpstan-type LineInput array{account_id: string, debit?: string|null, credit?: string|null, description?: string|null, dimensions?: array<string, string|null>|null, currency?: string|null, exchange_rate?: string|null}
+ * @phpstan-type EntryInput array{accounting_date: string, document_date?: string|null, description: string, currency?: string|null, exchange_rate?: string|null, lines?: list<LineInput>, values?: array<string, mixed>}
  */
 final class EntryDrafts
 {
@@ -36,6 +36,7 @@ final class EntryDrafts
         private readonly CompanyContext $company,
         private readonly DataScopeContext $scope,
         private readonly EntryLines $entryLines,
+        private readonly EntryRates $rates,
     ) {}
 
     /**
@@ -175,10 +176,14 @@ final class EntryDrafts
                 throw ValidationException::withMessages($errors);
             }
 
-            $lines = $this->entryLines->generate($version, $values, $data['accounting_date']);
+            $currency = $this->rates->foreign($data['currency'] ?? null);
+            $rate = $data['exchange_rate'] ?? null;
+            $this->rates->assertAllowed($version, $currency, $rate, 'currency', 'exchange_rate');
+
+            $lines = $this->entryLines->generate($version, $values, $data['accounting_date'], $currency, $rate, strict: false);
             $this->assertWithinDataScope($lines);
 
-            return ['lines' => $lines, 'field_values' => $values];
+            return ['lines' => $lines, 'field_values' => $values, 'currency' => $currency, 'exchange_rate' => $rate];
         }
 
         if (isset($data['values'])) {
@@ -189,9 +194,17 @@ final class EntryDrafts
             throw ValidationException::withMessages(['lines' => [__('entries.lines_required')]]);
         }
 
+        if (isset($data['currency']) || isset($data['exchange_rate'])) {
+            throw ValidationException::withMessages([isset($data['currency']) ? 'currency' : 'exchange_rate' => [__('entries.currency_per_line')]]);
+        }
+
+        foreach ($data['lines'] as $index => $line) {
+            $this->rates->assertAllowed($version, $line['currency'] ?? null, $line['exchange_rate'] ?? null, "lines.{$index}.currency", "lines.{$index}.exchange_rate");
+        }
+
         $this->assertWithinDataScope($data['lines']);
 
-        return ['lines' => $this->lines($data['lines']), 'field_values' => null];
+        return ['lines' => $this->lines($data['lines']), 'field_values' => null, 'currency' => null, 'exchange_rate' => null];
     }
 
     /**
@@ -206,6 +219,8 @@ final class EntryDrafts
             'credit' => $line['credit'] ?? '0',
             'description' => $line['description'] ?? null,
             'dimensions' => array_filter($line['dimensions'] ?? [], fn (?string $valueId): bool => $valueId !== null),
+            'currency' => $this->rates->foreign($line['currency'] ?? null),
+            'exchange_rate' => $this->rates->foreign($line['currency'] ?? null) === null ? null : ($line['exchange_rate'] ?? null),
         ], $lines);
     }
 

@@ -13,7 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class EntryResource extends JsonResource
 {
     /**
-     * @return array{id: string, number: string, status: string, source: string, transaction_type_key: string, transaction_type_version: int, accounting_date: string, document_date: string|null, description: string, lines: list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>}>, values: array<string, mixed>|null, created_by: int, journal_id: string|null, journal_number: string|null, posted_at: string|null, decisions: list<array{action: string, actor_id: int, reason: string|null, at: string}>|null, lock_version: int}
+     * @return array{id: string, number: string, status: string, source: string, transaction_type_key: string, transaction_type_version: int, accounting_date: string, document_date: string|null, description: string, lines: list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>, currency: string|null, exchange_rate: string|null, applied_rate: string|null}>, values: array<string, mixed>|null, currency: string|null, exchange_rate: string|null, created_by: int, journal_id: string|null, journal_number: string|null, posted_at: string|null, decisions: list<array{action: string, actor_id: int, reason: string|null, at: string}>|null, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -29,6 +29,8 @@ class EntryResource extends JsonResource
             'description' => $this->resource->description,
             'lines' => $this->lines(),
             'values' => $this->resource->field_values === null ? null : JsonMap::ofMixed($this->resource->field_values),
+            'currency' => $this->resource->currency,
+            'exchange_rate' => $this->resource->exchange_rate,
             'created_by' => $this->resource->created_by,
             'journal_id' => $this->resource->journal_id,
             'journal_number' => $this->resource->journal_number,
@@ -39,7 +41,7 @@ class EntryResource extends JsonResource
     }
 
     /**
-     * @return list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>}>
+     * @return list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>, currency: string|null, exchange_rate: string|null, applied_rate: string|null}>
      */
     private function lines(): array
     {
@@ -52,6 +54,9 @@ class EntryResource extends JsonResource
                 'credit' => $line['credit'],
                 'description' => $line['description'],
                 'dimensions' => JsonMap::of($line['dimensions'] ?? []),
+                'currency' => $line['currency'] ?? null,
+                'exchange_rate' => $line['exchange_rate'] ?? null,
+                'applied_rate' => $line['applied_rate'] ?? null,
             ];
         }
 

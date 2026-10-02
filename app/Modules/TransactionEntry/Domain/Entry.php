@@ -21,8 +21,10 @@ use Illuminate\Support\Carbon;
  * @property Carbon $accounting_date
  * @property Carbon|null $document_date
  * @property string $description
- * @property list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions?: array<string, string>}> $lines
+ * @property list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions?: array<string, string>, currency?: string|null, exchange_rate?: string|null, applied_rate?: string|null, rate_type_key?: string|null}> $lines
  * @property array<string, mixed>|null $field_values values of the fields of a `structured` version; null for `free_lines`
+ * @property string|null $currency currency of a structured entry; null for the functional currency
+ * @property string|null $exchange_rate the rate a structured entry brought, if it did
  * @property int $created_by
  * @property string|null $journal_id
  * @property string|null $journal_number
@@ -43,7 +45,7 @@ class Entry extends VersionedCompanyModel
 
     protected $fillable = [
         'transaction_type_id', 'transaction_type_key', 'transaction_type_version', 'number', 'status', 'source',
-        'accounting_date', 'document_date', 'description', 'lines', 'field_values', 'created_by', 'journal_id', 'journal_number', 'posted_at',
+        'accounting_date', 'document_date', 'description', 'lines', 'field_values', 'currency', 'exchange_rate', 'created_by', 'journal_id', 'journal_number', 'posted_at',
     ];
 
     protected function casts(): array

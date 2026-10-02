@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class TransactionTypeResource extends JsonResource
 {
     /**
-     * @return array{id: string, key: string, label: string, versions: list<array{version: int, mode: string, status: string, fields: list<array<string, mixed>>|null, posting_rules: list<array<string, mixed>>|null}>, lock_version: int}
+     * @return array{id: string, key: string, label: string, versions: list<array{version: int, mode: string, status: string, fields: list<array<string, mixed>>|null, posting_rules: list<array<string, mixed>>|null, allowed_currencies: list<string>|null, rate_type_key: string|null, allow_rate_input: bool}>, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -26,7 +26,7 @@ class TransactionTypeResource extends JsonResource
     }
 
     /**
-     * @return list<array{version: int, mode: string, status: string, fields: list<array<string, mixed>>|null, posting_rules: list<array<string, mixed>>|null}>
+     * @return list<array{version: int, mode: string, status: string, fields: list<array<string, mixed>>|null, posting_rules: list<array<string, mixed>>|null, allowed_currencies: list<string>|null, rate_type_key: string|null, allow_rate_input: bool}>
      */
     private function versions(): array
     {
@@ -39,6 +39,9 @@ class TransactionTypeResource extends JsonResource
                 'status' => $version->status->value,
                 'fields' => $version->fields,
                 'posting_rules' => $version->posting_rules,
+                'allowed_currencies' => $version->allowed_currencies,
+                'rate_type_key' => $version->rate_type_key,
+                'allow_rate_input' => $version->allow_rate_input,
             ];
         }
 
