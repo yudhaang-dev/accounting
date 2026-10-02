@@ -33,7 +33,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M1-04** Bagan akun dengan seed template yang wajib dikonfirmasi — GL-FR-01, X-AC-03
 - [x] **M1-05** Kalender fiskal bulanan, periode tanpa celah (exclusion constraint), status `open`/`closed` — GL-FR-03, GL-FR-04, GL-AC-08
 - [x] **M1-06** Inti posting GL: `Journal`/`JournalLine` dengan kolom mata uang dan `dimension_set_id` (set kosong) sejak awal, trigger keseimbangan dan imutabilitas, nomor jurnal, `AccountBalance` dengan urutan penguncian, idempotensi per entri — GL-FR-05, GL-FR-06, GL-AC-01, GL-AC-03, GL-AC-12, ADR-0007, ADR-0008
-- [x] **M1-07** Entri minimal: Jenis Transaksi mode `free_lines`, siklus entri, validasi lewat `PostingValidator`, approval berbasis permission, posting ke GL — TE-FR-01, TE-FR-03, TE-FR-07, TE-FR-10 — SoD baru berupa satu saklar sampai M5-04; `structured` dan versi baru di M5-01
+- [x] **M1-07** Entri minimal: Jenis Transaksi mode `free_lines`, siklus entri, validasi lewat `PostingValidator`, approval berbasis permission, posting ke GL — TE-FR-01, TE-FR-03, TE-FR-07, TE-FR-10
 - [x] **M1-08** Neraca saldo dengan drill-down dan ekspor CSV (Platform Export) — RP-FR-05, RP-AC-01, X-FR-02, API-AC-07 — penanda batch saldo konversi di M8-08
 - [x] **M1-09** SPA: pemilih workspace, wizard setup perusahaan (profil, konfirmasi template COA, kalender), akun, periode, form dan daftar entri beserta aksinya, detail jurnal, neraca saldo
   - [x] **M1-09a** Shell SPA dan pemilih workspace
@@ -87,7 +87,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M5-01** Mode `structured`: skema field (subset JSON Schema), penerbitan dan penghentian versi — TE-FR-02, TE-FR-04, TE-AC-01, TE-AC-06 — perancang SPA di M5-14
 - [x] **M5-02** Aturan posting: sumber akun, penerapan dimensi, pemakaian ulang eksplisit, baris nol dilewati, baris `fx_difference` — TE-FR-05, TE-AC-02
 - [x] **M5-03** Mata uang dan kurs entri — TE-FR-06
-- [ ] **M5-04** Kebijakan approval/SoD: aturan per key, sumber, dan ambang; tahap dan permission; posting otomatis setelah approval — TE-FR-09, TE-AC-05
+- [x] **M5-04** Kebijakan approval/SoD: aturan per key, sumber, dan ambang; tahap dan permission; posting otomatis setelah approval — TE-FR-09, TE-AC-05
 - [ ] **M5-05** Validasi lengkap saat submit dan posting — TE-FR-08, TE-AC-03
 - [ ] **M5-06** Pembalikan, penggantian, dan pembalikan terjadwal — TE-FR-11, TE-AC-09
 - [ ] **M5-07** Endpoint Peristiwa Keuangan beserta status HTTP-nya — TE-FR-12, API-TR-16, API-TR-17, API-TR-18, API-TR-19, API-TR-20, API-AC-03, API-AC-05, API-AC-06

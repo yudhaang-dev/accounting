@@ -13,7 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class EntryResource extends JsonResource
 {
     /**
-     * @return array{id: string, number: string, status: string, source: string, transaction_type_key: string, transaction_type_version: int, accounting_date: string, document_date: string|null, description: string, lines: list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>, currency: string|null, exchange_rate: string|null, applied_rate: string|null}>, values: array<string, mixed>|null, currency: string|null, exchange_rate: string|null, created_by: int, journal_id: string|null, journal_number: string|null, posted_at: string|null, decisions: list<array{action: string, actor_id: int, reason: string|null, at: string}>|null, lock_version: int}
+     * @return array{id: string, number: string, status: string, source: string, transaction_type_key: string, transaction_type_version: int, accounting_date: string, document_date: string|null, description: string, lines: list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>, currency: string|null, exchange_rate: string|null, applied_rate: string|null}>, values: array<string, mixed>|null, currency: string|null, exchange_rate: string|null, approval: array{stages: list<string>, approved: int, auto_post: bool, separation_of_duties: bool}|null, created_by: int, journal_id: string|null, journal_number: string|null, posted_at: string|null, decisions: list<array{action: string, actor_id: int, reason: string|null, at: string}>|null, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -31,12 +31,30 @@ class EntryResource extends JsonResource
             'values' => $this->resource->field_values === null ? null : JsonMap::ofMixed($this->resource->field_values),
             'currency' => $this->resource->currency,
             'exchange_rate' => $this->resource->exchange_rate,
+            'approval' => $this->approval(),
             'created_by' => $this->resource->created_by,
             'journal_id' => $this->resource->journal_id,
             'journal_number' => $this->resource->journal_number,
             'posted_at' => $this->resource->posted_at?->toIso8601String(),
             'decisions' => $this->resource->relationLoaded('decisions') ? $this->decisions() : null,
             'lock_version' => $this->resource->lock_version,
+        ];
+    }
+
+    /**
+     * Where the entry stands in its approval: the permission each stage needs and how many are done.
+     *
+     * @return array{stages: list<string>, approved: int, auto_post: bool, separation_of_duties: bool}|null
+     */
+    private function approval(): ?array
+    {
+        $plan = $this->resource->approval;
+
+        return $plan === null ? null : [
+            'stages' => $plan['stages'],
+            'approved' => count($plan['approvals']),
+            'auto_post' => $plan['auto_post'],
+            'separation_of_duties' => $plan['separation_of_duties'],
         ];
     }
 

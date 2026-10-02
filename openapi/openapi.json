@@ -964,6 +964,101 @@
                 }
             }
         },
+        "/companies/{companyId}/approval-policy": {
+            "get": {
+                "operationId": "approval-policy.show",
+                "summary": "The current approval policy (TE-FR-09). A company that never set one has version 0 and no rules:\nevery entry then needs one approval by a holder of `entries.approve`",
+                "tags": [
+                    "ApprovalPolicy"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ApprovalPolicyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ApprovalPolicyResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "approval-policy.update",
+                "summary": "Replaces the policy as a new version; the change is audited. Answers 422 for a transaction type\nkey or permission that does not exist. `lock_version` is required",
+                "tags": [
+                    "ApprovalPolicy"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateApprovalPolicyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ApprovalPolicyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ApprovalPolicyResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}": {
             "get": {
                 "operationId": "company.show",
@@ -8872,6 +8967,59 @@
                 ],
                 "title": "ActivatedCompanyResource"
             },
+            "ApprovalPolicyResource": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "integer",
+                        "description": "0 while the company has never set a policy."
+                    },
+                    "separation_of_duties": {
+                        "type": "boolean"
+                    },
+                    "rules": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "transaction_type_key": {
+                                    "type": "string"
+                                },
+                                "source": {
+                                    "type": "string"
+                                },
+                                "threshold": {
+                                    "type": "string"
+                                },
+                                "stages": {
+                                    "type": "string"
+                                },
+                                "auto_post": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "transaction_type_key",
+                                "source",
+                                "threshold",
+                                "stages",
+                                "auto_post"
+                            ]
+                        }
+                    },
+                    "lock_version": {
+                        "type": "integer",
+                        "description": "Same as `version`, named as the concurrency field the update expects (API-TR-14)."
+                    }
+                },
+                "required": [
+                    "version",
+                    "separation_of_duties",
+                    "rules",
+                    "lock_version"
+                ],
+                "title": "ApprovalPolicyResource"
+            },
             "CalendarPattern": {
                 "type": "string",
                 "description": "How a fiscal year is cut into periods (GL-FR-03): calendar months, twelve periods of 4, 4 and 5 weeks per quarter, or periods the user gives explicitly.\n",
@@ -9878,6 +10026,32 @@
                             "null"
                         ]
                     },
+                    "approval": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "stages": {
+                                "type": "string"
+                            },
+                            "approved": {
+                                "type": "integer"
+                            },
+                            "auto_post": {
+                                "type": "string"
+                            },
+                            "separation_of_duties": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "stages",
+                            "approved",
+                            "auto_post",
+                            "separation_of_duties"
+                        ]
+                    },
                     "created_by": {
                         "type": "integer"
                     },
@@ -9949,6 +10123,7 @@
                     "values",
                     "currency",
                     "exchange_rate",
+                    "approval",
                     "created_by",
                     "journal_id",
                     "journal_number",
@@ -11581,6 +11756,78 @@
                     "account_id"
                 ],
                 "title": "UpdateAccountRoleRequest"
+            },
+            "UpdateApprovalPolicyRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "separation_of_duties": {
+                        "type": "boolean"
+                    },
+                    "rules": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "transaction_type_key": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "pattern": "^[a-z][a-z0-9_.]*$",
+                                    "maxLength": 64
+                                },
+                                "source": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "enum": [
+                                        "manual",
+                                        "integration",
+                                        "recurring",
+                                        null
+                                    ]
+                                },
+                                "threshold": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "minimum": 0
+                                },
+                                "stages": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "maxLength": 64
+                                    },
+                                    "maxItems": 5
+                                },
+                                "auto_post": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "transaction_type_key",
+                                "source",
+                                "threshold",
+                                "stages",
+                                "auto_post"
+                            ]
+                        },
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "lock_version",
+                    "separation_of_duties",
+                    "rules"
+                ],
+                "title": "UpdateApprovalPolicyRequest"
             },
             "UpdateCompanyRequest": {
                 "type": "object",

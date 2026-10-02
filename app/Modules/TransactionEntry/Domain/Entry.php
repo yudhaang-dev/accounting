@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed>|null $field_values values of the fields of a `structured` version; null for `free_lines`
  * @property string|null $currency currency of a structured entry; null for the functional currency
  * @property string|null $exchange_rate the rate a structured entry brought, if it did
+ * @property array{policy_version: int, rule: int|null, amount: string, stages: list<string>, auto_post: bool, separation_of_duties: bool, approvals: list<int>}|null $approval the approval plan given when the entry was submitted, and who has approved so far
  * @property int $created_by
  * @property string|null $journal_id
  * @property string|null $journal_number
@@ -45,7 +46,7 @@ class Entry extends VersionedCompanyModel
 
     protected $fillable = [
         'transaction_type_id', 'transaction_type_key', 'transaction_type_version', 'number', 'status', 'source',
-        'accounting_date', 'document_date', 'description', 'lines', 'field_values', 'currency', 'exchange_rate', 'created_by', 'journal_id', 'journal_number', 'posted_at',
+        'accounting_date', 'document_date', 'description', 'lines', 'field_values', 'currency', 'exchange_rate', 'approval', 'created_by', 'journal_id', 'journal_number', 'posted_at',
     ];
 
     protected function casts(): array
@@ -56,6 +57,7 @@ class Entry extends VersionedCompanyModel
             'document_date' => 'date',
             'lines' => 'array',
             'field_values' => 'array',
+            'approval' => 'array',
             'posted_at' => 'datetime',
         ];
     }

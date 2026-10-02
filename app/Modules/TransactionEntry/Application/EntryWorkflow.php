@@ -29,24 +29,76 @@ final class EntryWorkflow
         private readonly Audit $audit,
         private readonly ActorPermissions $permissions,
         private readonly EntryLines $lines,
+        private readonly ApprovalPlanner $planner,
     ) {}
 
     /**
-     * Validates the entry against the ledger rules and sends it to approval (TE-FR-08).
+     * Validates the entry against the ledger rules and sends it to approval by the plan the policy gives
+     * it (TE-FR-08, TE-FR-09). An entry the policy approves automatically goes straight to `approved`, and
+     * on to the ledger when the policy says so.
      *
      * @throws ApiException INVALID_STATE_TRANSITION, or any code of PostingValidator
      */
     public function submit(string $id, int $userId): Entry
     {
-        return $this->transition($id, [EntryStatus::Draft], EntryStatus::Submitted, 'submit', $userId, validate: true);
+        return DB::transaction(function () use ($id, $userId): Entry {
+            $entry = Entry::query()->lockForUpdate()->findOrFail($id);
+
+            $this->assertStatus($entry, [EntryStatus::Draft]);
+            $this->refreshLines($entry);
+            $this->validator->validate($this->command($entry, $userId));
+
+            $plan = $this->planner->plan($entry);
+            $entry->forceFill(['status' => EntryStatus::Submitted, 'approval' => $plan])->save();
+            $this->record($entry, 'submit', $userId, null, EntryStatus::Draft);
+
+            if ($plan['stages'] === []) {
+                $entry->forceFill(['status' => EntryStatus::Approved])->save();
+                $this->record($entry, 'auto_approve', $userId, null, EntryStatus::Submitted);
+
+                if ($plan['auto_post']) {
+                    return $this->postLocked($entry, $userId);
+                }
+            }
+
+            return $entry->refresh();
+        });
     }
 
     /**
-     * @throws ApiException INVALID_STATE_TRANSITION, SEGREGATION_OF_DUTIES
+     * Gives the next stage of the plan its approval. The actor must hold the permission of that stage,
+     * must not be the creator when separation of duties is on, and must not have approved an earlier
+     * stage of the same entry. After the last stage the entry is approved, and posted when the plan says so.
+     *
+     * @throws ApiException INVALID_STATE_TRANSITION, SEGREGATION_OF_DUTIES, FORBIDDEN
      */
     public function approve(string $id, int $userId): Entry
     {
-        return $this->transition($id, [EntryStatus::Submitted], EntryStatus::Approved, 'approve', $userId);
+        return DB::transaction(function () use ($id, $userId): Entry {
+            $entry = Entry::query()->lockForUpdate()->findOrFail($id);
+
+            $this->assertStatus($entry, [EntryStatus::Submitted]);
+
+            $plan = $entry->approval ?? $this->planner->fallback();
+            $stage = count($plan['approvals']);
+            $permission = $plan['stages'][$stage] ?? ApprovalPlanner::DEFAULT_PERMISSION;
+
+            if (! in_array($permission, $this->permissions->current(), true)) {
+                throw new ApiException(ErrorCode::Forbidden, errors: ['permission' => [__('entries.stage_permission_missing', ['permission' => $permission])]]);
+            }
+
+            if (($plan['separation_of_duties'] && $entry->created_by === $userId) || in_array($userId, $plan['approvals'], true)) {
+                throw new ApiException(ErrorCode::SegregationOfDuties);
+            }
+
+            $plan['approvals'][] = $userId;
+            $last = count($plan['approvals']) >= count($plan['stages']);
+
+            $entry->forceFill(['approval' => $plan, 'status' => $last ? EntryStatus::Approved : EntryStatus::Submitted])->save();
+            $this->record($entry, 'approve', $userId, null, EntryStatus::Submitted);
+
+            return $last && $plan['auto_post'] ? $this->postLocked($entry, $userId) : $entry->refresh();
+        });
     }
 
     /**
@@ -86,37 +138,34 @@ final class EntryWorkflow
 
             $this->assertStatus($entry, [EntryStatus::Approved]);
 
-            $this->refreshLines($entry);
-
-            $journal = $this->posting->post($this->command($entry, $userId));
-
-            $entry->forceFill(['status' => EntryStatus::Posted, 'journal_id' => $journal->id, 'journal_number' => $journal->number, 'posted_at' => now()])->save();
-
-            $this->record($entry, 'post', $userId, null, EntryStatus::Approved);
-
-            return $entry->refresh();
+            return $this->postLocked($entry, $userId);
         });
+    }
+
+    /** Posts a locked, approved entry: the ledger validates again inside this transaction (TE-FR-08). */
+    private function postLocked(Entry $entry, int $userId): Entry
+    {
+        $this->refreshLines($entry);
+
+        $journal = $this->posting->post($this->command($entry, $userId));
+
+        $entry->forceFill(['status' => EntryStatus::Posted, 'journal_id' => $journal->id, 'journal_number' => $journal->number, 'posted_at' => now()])->save();
+
+        $this->record($entry, 'post', $userId, null, EntryStatus::Approved);
+
+        return $entry->refresh();
     }
 
     /**
      * @param  list<EntryStatus>  $from
      */
-    private function transition(string $id, array $from, EntryStatus $to, string $action, int $userId, ?string $reason = null, bool $validate = false): Entry
+    private function transition(string $id, array $from, EntryStatus $to, string $action, int $userId, ?string $reason = null): Entry
     {
-        return DB::transaction(function () use ($id, $from, $to, $action, $userId, $reason, $validate): Entry {
+        return DB::transaction(function () use ($id, $from, $to, $action, $userId, $reason): Entry {
             $entry = Entry::query()->lockForUpdate()->findOrFail($id);
             $previous = $entry->status;
 
             $this->assertStatus($entry, $from);
-
-            if ($action === 'approve' && config('entries.separation_of_duties') && $entry->created_by === $userId) {
-                throw new ApiException(ErrorCode::SegregationOfDuties);
-            }
-
-            if ($validate) {
-                $this->refreshLines($entry);
-                $this->validator->validate($this->command($entry, $userId));
-            }
 
             $entry->forceFill(['status' => $to])->save();
             $this->record($entry, $action, $userId, $reason, $previous);

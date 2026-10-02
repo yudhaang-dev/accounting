@@ -258,7 +258,7 @@ describe('approval and permissions (TE-FR-09)', function () {
     });
 
     it('blocks self-approval when separation of duties is on', function () {
-        config(['entries.separation_of_duties' => true]);
+        $this->actingAs($this->admin)->putJson("{$this->url}/approval-policy", ['lock_version' => 0, 'separation_of_duties' => true, 'rules' => []])->assertOk();
         $both = memberWithRoles($this->companyId, 'preparer', 'approver');
 
         $id = $this->actingAs($both)->postJson("{$this->url}/entries", entryPayload())->assertCreated()->json('data.id');

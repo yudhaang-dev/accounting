@@ -218,6 +218,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/approval-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The current approval policy (TE-FR-09). A company that never set one has version 0 and no rules:
+         *     every entry then needs one approval by a holder of `entries.approve`
+         */
+        get: operations["approval-policy.show"];
+        /**
+         * Replaces the policy as a new version; the change is audited. Answers 422 for a transaction type
+         *     key or permission that does not exist. `lock_version` is required
+         */
+        put: operations["approval-policy.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}": {
         parameters: {
             query?: never;
@@ -1795,6 +1819,21 @@ export interface components {
             status: string;
             lock_version: number;
         };
+        /** ApprovalPolicyResource */
+        ApprovalPolicyResource: {
+            /** @description 0 while the company has never set a policy. */
+            version: number;
+            separation_of_duties: boolean;
+            rules: {
+                transaction_type_key: string;
+                source: string;
+                threshold: string;
+                stages: string;
+                auto_post: string;
+            }[];
+            /** @description Same as `version`, named as the concurrency field the update expects (API-TR-14). */
+            lock_version: number;
+        };
         /**
          * CalendarPattern
          * @description How a fiscal year is cut into periods (GL-FR-03): calendar months, twelve periods of 4, 4 and 5 weeks per quarter, or periods the user gives explicitly.
@@ -2063,6 +2102,12 @@ export interface components {
             } | null;
             currency: string | null;
             exchange_rate: string | null;
+            approval: {
+                stages: string;
+                approved: number;
+                auto_post: string;
+                separation_of_duties: string;
+            } | null;
             created_by: number;
             journal_id: string | null;
             journal_number: string | null;
@@ -2484,6 +2529,19 @@ export interface components {
             account_id: string;
             /** Format: date */
             effective_date?: string | null;
+        };
+        /** UpdateApprovalPolicyRequest */
+        UpdateApprovalPolicyRequest: {
+            lock_version: number;
+            separation_of_duties: boolean;
+            rules: {
+                transaction_type_key: string | null;
+                /** @enum {string|null} */
+                source: "manual" | "integration" | "recurring" | null;
+                threshold: number | null;
+                stages: string[];
+                auto_post: boolean;
+            }[];
         };
         /** UpdateCompanyRequest */
         UpdateCompanyRequest: {
@@ -3101,6 +3159,61 @@ export interface operations {
                             template: string;
                             created: number;
                         };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "approval-policy.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ApprovalPolicyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ApprovalPolicyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "approval-policy.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateApprovalPolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApprovalPolicyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ApprovalPolicyResource"];
                     };
                 };
             };
