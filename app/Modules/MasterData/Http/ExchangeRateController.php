@@ -84,6 +84,10 @@ class ExchangeRateController
      * currency per 1 unit. A different rate for the same type, currency and date is recorded as a
      * new version (a correction); the same rate again changes nothing and answers 200 with the
      * existing version. The functional currency and currencies that are not activated are refused.
+     *
+     * @status 201
+     *
+     * @response ExchangeRateResource
      */
     public function store(RecordExchangeRateRequest $request, RecordExchangeRate $record): JsonResponse
     {

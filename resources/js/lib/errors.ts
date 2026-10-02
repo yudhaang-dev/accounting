@@ -12,3 +12,13 @@ export function genericErrorMessage(error: unknown, t: TFunction): string {
 
     return t('common.unexpected');
 }
+
+/**
+ * Text for a failure of an action: what the server said when it answered (already in the user's
+ * language, e.g. why a value cannot be deleted), or the generic text when it did not.
+ */
+export function actionErrorMessage(error: unknown, t: TFunction): string {
+    return isApiError(error) && error.status !== 0
+        ? error.message
+        : genericErrorMessage(error, t);
+}

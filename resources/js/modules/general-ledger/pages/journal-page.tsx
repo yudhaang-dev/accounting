@@ -14,6 +14,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { DimensionTags, dimensionTags } from '@/components/dimension-tags';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import {
     compareDecimals,
@@ -23,6 +24,7 @@ import {
 } from '@/lib/decimal';
 import {
     accountNamesQuery,
+    dimensionNamesQuery,
     journalQuery,
 } from '@/modules/general-ledger/journals';
 import { periodQuery } from '@/modules/general-ledger/periods';
@@ -34,6 +36,8 @@ export type JournalAccess = {
     periods: boolean;
     /** Names the accounts instead of showing their ids. */
     accounts: boolean;
+    /** Names the dimensions of the lines instead of leaving them out. */
+    dimensions: boolean;
 };
 
 function Fact({
@@ -74,6 +78,14 @@ export function JournalPage({
     const accounts = useQuery({
         ...accountNamesQuery(companyId),
         enabled: access.accounts,
+    });
+    const dimensionNames = useQuery({
+        ...dimensionNamesQuery(companyId),
+        enabled:
+            access.dimensions &&
+            journal.lines.some(
+                (line) => Object.keys(line.dimensions).length > 0,
+            ),
     });
 
     useDocumentTitle(t('journals.pageTitle', { number: journal.number }));
@@ -228,6 +240,12 @@ export function JournalPage({
                                                             {line.description}
                                                         </span>
                                                     )}
+                                                    <DimensionTags
+                                                        tags={dimensionTags(
+                                                            line.dimensions,
+                                                            dimensionNames.data,
+                                                        )}
+                                                    />
                                                     {foreign && (
                                                         <span className="text-xs text-muted-foreground">
                                                             {line.currency}{' '}

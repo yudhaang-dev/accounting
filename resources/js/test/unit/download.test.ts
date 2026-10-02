@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { fileNameFrom } from '@/lib/download';
+import { describe, expect, it, vi } from 'vitest';
+import { downloadFile, fileNameFrom } from '@/lib/download';
+import { ApiError } from '@/lib/http';
 
 describe('file name of a download', () => {
     it('reads a quoted name', () => {
@@ -25,5 +26,28 @@ describe('file name of a download', () => {
     it('has none when the header is missing or has no name', () => {
         expect(fileNameFrom(null)).toBeUndefined();
         expect(fileNameFrom('attachment')).toBeUndefined();
+    });
+});
+
+describe('a download without a connection', () => {
+    it('fails as a network ApiError instead of crashing', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async () => {
+                throw new TypeError('Failed to fetch');
+            }),
+        );
+
+        await expect(
+            downloadFile('/api/v1/x', 'text/csv', 'x.csv'),
+        ).rejects.toMatchObject({
+            status: 0,
+            code: 'NETWORK',
+        });
+        await expect(
+            downloadFile('/api/v1/x', 'text/csv', 'x.csv'),
+        ).rejects.toBeInstanceOf(ApiError);
+
+        vi.unstubAllGlobals();
     });
 });

@@ -18,6 +18,8 @@ type Props = Omit<
     value: string;
     /** Receives the canonical string, never the text with separators. */
     onChange: (value: string) => void;
+    /** Decimal places the field accepts; an exchange rate needs more than an amount. */
+    maxDecimals?: number;
 };
 
 /**
@@ -26,7 +28,13 @@ type Props = Omit<
  * separator is inserted, and a value set from outside (a loaded draft, a reset form) is shown
  * grouped too.
  */
-export function MoneyInput({ value, onChange, className, ...props }: Props) {
+export function MoneyInput({
+    value,
+    onChange,
+    maxDecimals,
+    className,
+    ...props
+}: Props) {
     const { i18n } = useTranslation();
     const separators = separatorsFor(i18n.language);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -53,6 +61,7 @@ export function MoneyInput({ value, onChange, className, ...props }: Props) {
             event.target.value,
             event.target.selectionStart ?? event.target.value.length,
             separators,
+            maxDecimals,
         );
 
         caret.current = typed.caret;

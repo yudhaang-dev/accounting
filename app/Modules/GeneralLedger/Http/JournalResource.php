@@ -3,6 +3,7 @@
 namespace App\Modules\GeneralLedger\Http;
 
 use App\Modules\GeneralLedger\Domain\Journal;
+use App\Platform\Api\JsonMap;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use Illuminate\Http\Request;
@@ -56,13 +57,11 @@ class JournalResource extends JsonResource
                 'transaction_amount' => $this->amount($line->transaction_amount),
                 'exchange_rate' => (string) $line->exchange_rate,
                 'dimension_set_id' => (string) $line->dimension_set_id,
-                'dimensions' => (object) ($line->getAttribute('dimensions') ?? []),
+                'dimensions' => JsonMap::of($line->getAttribute('dimensions') ?? []),
                 'description' => $line->description === null ? null : (string) $line->description,
             ];
         }
 
-        // `dimensions` is cast to an object so an empty map serializes as {} and not [] (typed as a map for the API spec).
-        // @phpstan-ignore return.type
         return $lines;
     }
 

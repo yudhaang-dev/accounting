@@ -1,4 +1,9 @@
-import { apiErrorFrom, defaultHeaders, type ApiErrorBody } from '@/lib/http';
+import {
+    ApiError,
+    apiErrorFrom,
+    defaultHeaders,
+    type ApiErrorBody,
+} from '@/lib/http';
 
 /** File name from a `Content-Disposition` header, if it carries one. */
 export function fileNameFrom(header: string | null): string | undefined {
@@ -24,10 +29,8 @@ export async function downloadFile(
             headers: { ...defaultHeaders('GET'), Accept: accept },
         });
     } catch {
-        throw apiErrorFrom(new Response(null, { status: 0 }), {
-            message: 'Network error',
-            code: 'NETWORK',
-        });
+        // A `Response` cannot have status 0, so the offline failure is built directly.
+        throw new ApiError(0, 'Network error', 'NETWORK');
     }
 
     if (!response.ok) {

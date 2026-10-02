@@ -62,7 +62,12 @@ export function mockApi(routes: Record<string, Reply>) {
                 path,
                 query: Object.fromEntries(new URL(request.url).searchParams),
                 accept: request.headers.get('Accept'),
-                body: text ? JSON.parse(text) : undefined,
+                // A JSON body is parsed; anything else (a CSV upload) is kept as the text that was sent.
+                body: !text
+                    ? undefined
+                    : request.headers.get('Content-Type')?.includes('json')
+                      ? JSON.parse(text)
+                      : text,
             };
 
             calls.push(call);

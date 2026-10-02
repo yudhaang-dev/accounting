@@ -48,12 +48,15 @@ import { isApiError } from '@/lib/http';
 import { TransactionTypeForm } from '@/modules/transaction-entry/components/transaction-type-form';
 import {
     createEntry,
+    dimensionsBody,
     entryQuery,
     lineAccountsQuery,
+    lineDimensionsQuery,
     transactionTypesQuery,
     updateEntry,
     type Entry,
     type LineAccount,
+    type LineDimensionType,
     type TransactionType,
 } from '@/modules/transaction-entry/entries';
 
@@ -62,6 +65,8 @@ type Line = {
     debit: string;
     credit: string;
     description: string;
+    /** Dimension type key to value id; a type left out has no value. */
+    dimensions: Record<string, string>;
 };
 
 type Values = {
@@ -77,6 +82,7 @@ const blankLine = (): Line => ({
     debit: '',
     credit: '',
     description: '',
+    dimensions: {},
 });
 
 const valuesOf = (entry: Entry | undefined, typeKey: string): Values =>
@@ -92,6 +98,7 @@ const valuesOf = (entry: Entry | undefined, typeKey: string): Values =>
                   debit: isPositive(line.debit) ? line.debit : '',
                   credit: isPositive(line.credit) ? line.credit : '',
                   description: line.description ?? '',
+                  dimensions: { ...line.dimensions },
               })),
           }
         : {
@@ -142,16 +149,80 @@ function Totals({ control }: { control: Control<Values> }) {
     );
 }
 
+/**
+ * One picker per dimension type under a line (MD-FR-04). Only values valid on the entry's accounting
+ * date are offered, plus the one already chosen, so a value that stopped being valid stays visible and
+ * the server can say why it is refused.
+ */
+function LineDimensions({
+    control,
+    index,
+    types,
+    rowErrors,
+}: {
+    control: Control<Values>;
+    index: number;
+    types: LineDimensionType[];
+    rowErrors: Record<string, { message?: string } | undefined> | undefined;
+}) {
+    const { t } = useTranslation();
+    const date = useWatch({ control, name: 'accounting_date' });
+    const chosen = useWatch({ control, name: `lines.${index}.dimensions` });
+
+    return (
+        <div className="flex flex-wrap gap-2">
+            {types.map((type) => {
+                const items = type.values
+                    .filter(
+                        (value) =>
+                            value.id === chosen?.[type.key] ||
+                            ((!value.valid_from || value.valid_from <= date) &&
+                                (!value.valid_to || value.valid_to >= date)),
+                    )
+                    .map((value) => ({
+                        value: value.id,
+                        label: `${value.code} · ${value.name}`,
+                    }));
+
+                return (
+                    <Controller
+                        key={type.key}
+                        control={control}
+                        name={`lines.${index}.dimensions.${type.key}`}
+                        render={({ field }) => (
+                            <SearchableSelect
+                                items={items}
+                                value={field.value ?? ''}
+                                onValueChange={field.onChange}
+                                placeholder={type.label}
+                                emptyText={t('common.noMatch')}
+                                clearable
+                                className="w-52"
+                                aria-label={`${type.label} ${t('entries.form.line', { n: index + 1 })}`}
+                                aria-invalid={
+                                    rowErrors?.[type.key] ? true : undefined
+                                }
+                            />
+                        )}
+                    />
+                );
+            })}
+        </div>
+    );
+}
+
 function EntryFields({
     companyId,
     entry,
     types,
     accounts,
+    dimensionTypes,
 }: {
     companyId: string;
     entry?: Entry;
     types: TransactionType[];
     accounts: LineAccount[];
+    dimensionTypes: LineDimensionType[];
 }) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
@@ -187,6 +258,7 @@ function EntryFields({
                 debit: line.debit || null,
                 credit: line.credit || null,
                 description: line.description || null,
+                dimensions: dimensionsBody(line.dimensions),
             }));
             const common = {
                 accounting_date: values.accounting_date,
@@ -430,6 +502,12 @@ function EntryFields({
                                         row?.debit?.message,
                                         row?.credit?.message,
                                         row?.description?.message,
+                                        ...Object.values(
+                                            (row?.dimensions ?? {}) as Record<
+                                                string,
+                                                { message?: string } | undefined
+                                            >,
+                                        ).map((error) => error?.message),
                                     ].filter((message): message is string =>
                                         Boolean(message),
                                     ),
@@ -538,6 +616,22 @@ function EntryFields({
                                             <Trash2Icon aria-hidden />
                                         </Button>
                                     </div>
+                                    {dimensionTypes.length > 0 && (
+                                        <LineDimensions
+                                            control={control}
+                                            index={index}
+                                            types={dimensionTypes}
+                                            rowErrors={
+                                                row?.dimensions as
+                                                    | Record<
+                                                          string,
+                                                          | { message?: string }
+                                                          | undefined
+                                                      >
+                                                    | undefined
+                                            }
+                                        />
+                                    )}
                                     {rowMessages.length > 0 && (
                                         <ul
                                             role="alert"
@@ -608,14 +702,22 @@ export function EntryForm({
     companyId,
     entry,
     canManageTypes,
+    canUseDimensions,
 }: {
     companyId: string;
     entry?: Entry;
     canManageTypes: boolean;
+    /** Whether the user may read dimensions, and so pick them on a line. */
+    canUseDimensions: boolean;
 }) {
     const { t } = useTranslation();
     const types = useQuery(transactionTypesQuery(companyId));
     const accounts = useQuery(lineAccountsQuery(companyId));
+    // Dimensions are optional on a line: if they cannot be loaded the form still works without them.
+    const dimensions = useQuery({
+        ...lineDimensionsQuery(companyId),
+        enabled: canUseDimensions,
+    });
 
     if (types.isError || accounts.isError) {
         return (
@@ -625,7 +727,11 @@ export function EntryForm({
         );
     }
 
-    if (types.data === undefined || accounts.data === undefined) {
+    if (
+        types.data === undefined ||
+        accounts.data === undefined ||
+        (canUseDimensions && dimensions.isPending)
+    ) {
         return <Skeleton className="h-96 w-full" />;
     }
 
@@ -643,6 +749,7 @@ export function EntryForm({
             entry={entry}
             types={types.data}
             accounts={accounts.data}
+            dimensionTypes={dimensions.data ?? []}
         />
     );
 }

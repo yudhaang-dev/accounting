@@ -22,6 +22,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useLastDefined } from '@/hooks/use-last-defined';
+import { DimensionTags, dimensionTags } from '@/components/dimension-tags';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { formatDecimal, isPositive, sumDecimals } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
@@ -31,6 +32,7 @@ import { EntryStatusBadge } from '@/modules/transaction-entry/components/entry-s
 import { ReasonDialog } from '@/modules/transaction-entry/components/reason-dialog';
 import {
     accountNamesQuery,
+    dimensionNamesQuery,
     entryQuery,
     runEntryAction,
     type EntryAction,
@@ -45,6 +47,8 @@ export type EntryPermissions = {
     post: boolean;
     /** Links the posted journal. */
     journals: boolean;
+    /** Names the dimensions of the lines instead of leaving them out. */
+    dimensions: boolean;
 };
 
 /** One entry with its lines, approval trail and the lifecycle actions the user may take. */
@@ -64,6 +68,12 @@ export function EntryPage({
     const queryClient = useQueryClient();
     const { data: entry } = useSuspenseQuery(entryQuery(companyId, entryId));
     const accounts = useQuery(accountNamesQuery(companyId));
+    const dimensionNames = useQuery({
+        ...dimensionNamesQuery(companyId),
+        enabled:
+            can.dimensions &&
+            entry.lines.some((line) => Object.keys(line.dimensions).length > 0),
+    });
     const [reasonMode, setReasonMode] = useState<'reject' | 'cancel' | null>(
         null,
     );
@@ -308,6 +318,12 @@ export function EntryPage({
                                                             {line.description}
                                                         </span>
                                                     )}
+                                                    <DimensionTags
+                                                        tags={dimensionTags(
+                                                            line.dimensions,
+                                                            dimensionNames.data,
+                                                        )}
+                                                    />
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-end tabular-nums">

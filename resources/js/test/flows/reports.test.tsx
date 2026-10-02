@@ -272,6 +272,7 @@ const journal = (
             exchange_rate: '1',
             dimension_set_id: 'd',
             description: null,
+            dimensions: {},
         },
         {
             line_number: 2,
@@ -283,6 +284,7 @@ const journal = (
             exchange_rate: '1',
             dimension_set_id: 'd',
             description: null,
+            dimensions: {},
         },
     ],
 });

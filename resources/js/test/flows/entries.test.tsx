@@ -63,12 +63,14 @@ const entry = (overrides: Record<string, unknown> = {}) => ({
             debit: '1500000.50',
             credit: '0',
             description: null,
+            dimensions: {},
         },
         {
             account_id: sales,
             debit: '0',
             credit: '1500000.50',
             description: 'Modal awal',
+            dimensions: {},
         },
     ],
     created_by: 1,
@@ -390,12 +392,14 @@ describe('entry form', () => {
                     debit: '1500000.50',
                     credit: null,
                     description: null,
+                    dimensions: {},
                 },
                 {
                     account_id: sales,
                     debit: null,
                     credit: '1500000.50',
                     description: 'Modal awal',
+                    dimensions: {},
                 },
             ],
         });
@@ -843,5 +847,194 @@ describe('entry lifecycle', () => {
         expect(await screen.findByText(/Anda/)).toBeInTheDocument();
         expect(screen.getByText(/Pengguna #7/)).toBeInTheDocument();
         expect(screen.getByText('Alasan: Nominal salah')).toBeInTheDocument();
+    });
+});
+
+describe('dimensions on entry lines', () => {
+    const branch = '01JDIMTYPE0000000000000001';
+    const jakarta = '01JDIMVALUE000000000000001';
+    const expired = '01JDIMVALUE000000000000002';
+
+    const dimensionValue = (overrides: Record<string, unknown>) => ({
+        id: jakarta,
+        dimension_type_id: branch,
+        code: 'JKT',
+        name: 'Jakarta',
+        parent_id: null,
+        is_leaf: true,
+        valid_from: null,
+        valid_to: null,
+        status: 'active',
+        lock_version: 1,
+        ...overrides,
+    });
+
+    const dimensionRoutes = (permissions: string[]) => ({
+        ...withPermissions(permissions),
+        [`GET ${base}/transaction-types`]: () => json({ data: [type] }),
+        [`GET ${base}/accounts`]: accountList,
+        [`GET ${base}/dimension-types`]: () =>
+            page([
+                {
+                    id: branch,
+                    key: 'branch',
+                    label: 'Cabang',
+                    is_hierarchical: false,
+                    leaf_only: false,
+                    status: 'active',
+                    lock_version: 1,
+                },
+            ]),
+        [`GET ${base}/dimension-values`]: () =>
+            page([
+                dimensionValue({}),
+                dimensionValue({
+                    id: expired,
+                    code: 'OLD',
+                    name: 'Cabang Lama',
+                    valid_to: '2020-01-01',
+                }),
+            ]),
+    });
+
+    it('offers each line the dimension values valid on the entry date and sends the choice as an object', async () => {
+        const create = `POST ${base}/entries`;
+        const api = mockApi({
+            ...dimensionRoutes([
+                'entries.read',
+                'entries.create',
+                'dimensions.read',
+            ]),
+            [create]: () => json({ data: entry() }, 201),
+            [`GET ${entryPath()}`]: () => json({ data: entry() }),
+        });
+
+        renderApp(`${entriesPath}/new`);
+        const typist = userEvent.setup();
+
+        await typist.type(
+            await screen.findByLabelText('Keterangan'),
+            'Setoran modal',
+        );
+        await typist.click(
+            screen.getByRole('combobox', { name: 'Akun Baris 1' }),
+        );
+        await typist.click(
+            await screen.findByRole('option', { name: '1111 · Kas Kecil' }),
+        );
+        await typist.type(screen.getByLabelText('Debit Baris 1'), '1500000,50');
+        await typist.click(
+            screen.getByRole('combobox', { name: 'Akun Baris 2' }),
+        );
+        await typist.click(
+            await screen.findByRole('option', { name: '4100 · Penjualan' }),
+        );
+        await typist.type(
+            screen.getByLabelText('Kredit Baris 2'),
+            '1500000,50',
+        );
+
+        await typist.click(
+            screen.getByRole('combobox', { name: 'Cabang Baris 1' }),
+        );
+
+        expect(
+            await screen.findByRole('option', { name: 'JKT · Jakarta' }),
+        ).toBeInTheDocument();
+        // A value that stopped being valid before the entry date is not offered.
+        expect(
+            screen.queryByRole('option', { name: 'OLD · Cabang Lama' }),
+        ).not.toBeInTheDocument();
+
+        await typist.click(
+            screen.getByRole('option', { name: 'JKT · Jakarta' }),
+        );
+        await typist.click(screen.getByRole('button', { name: 'Simpan draf' }));
+
+        await waitFor(() => expect(api.called(create)).toHaveLength(1));
+
+        const body = api.called(create)[0]?.body as
+            | { lines: { dimensions: unknown }[] }
+            | undefined;
+        const lines = body?.lines ?? [];
+
+        expect(lines[0]?.dimensions).toEqual({ branch: jakarta });
+        expect(lines[1]?.dimensions).toEqual({});
+        expect(
+            api.called(`GET ${base}/dimension-values`)[0]?.query[
+                'filter[status]'
+            ],
+        ).toBe('active');
+    });
+
+    it('shows no pickers to someone who may not read dimensions', async () => {
+        const api = mockApi({
+            ...withPermissions(['entries.read', 'entries.create']),
+            [`GET ${base}/transaction-types`]: () => json({ data: [type] }),
+            [`GET ${base}/accounts`]: accountList,
+        });
+
+        renderApp(`${entriesPath}/new`);
+
+        await screen.findByLabelText('Keterangan');
+        expect(
+            screen.queryByRole('combobox', { name: 'Cabang Baris 1' }),
+        ).not.toBeInTheDocument();
+        expect(api.called(`GET ${base}/dimension-types`)).toHaveLength(0);
+    });
+
+    it('still lets the entry be written when dimensions cannot be loaded', async () => {
+        mockApi({
+            ...withPermissions([
+                'entries.read',
+                'entries.create',
+                'dimensions.read',
+            ]),
+            [`GET ${base}/transaction-types`]: () => json({ data: [type] }),
+            [`GET ${base}/accounts`]: accountList,
+            [`GET ${base}/dimension-types`]: () =>
+                json({ message: 'Forbidden', code: 'FORBIDDEN' }, 403),
+            [`GET ${base}/dimension-values`]: () =>
+                json({ message: 'Forbidden', code: 'FORBIDDEN' }, 403),
+        });
+
+        renderApp(`${entriesPath}/new`);
+
+        expect(await screen.findByLabelText('Keterangan')).toBeInTheDocument();
+        expect(
+            screen.queryByRole('combobox', { name: 'Cabang Baris 1' }),
+        ).not.toBeInTheDocument();
+    });
+
+    it('names the dimensions of the lines on the entry', async () => {
+        mockApi({
+            ...dimensionRoutes(['entries.read', 'dimensions.read']),
+            [`GET ${entryPath()}`]: () =>
+                json({
+                    data: entry({
+                        lines: [
+                            {
+                                account_id: cash,
+                                debit: '1500000.50',
+                                credit: '0',
+                                description: null,
+                                dimensions: { branch: jakarta },
+                            },
+                            {
+                                account_id: sales,
+                                debit: '0',
+                                credit: '1500000.50',
+                                description: null,
+                                dimensions: {},
+                            },
+                        ],
+                    }),
+                }),
+        });
+
+        renderApp(`${entriesPath}/${entry().id}`);
+
+        expect(await screen.findByText('JKT · Jakarta')).toBeInTheDocument();
+        expect(screen.getByText(/Cabang:/)).toBeInTheDocument();
     });
 });

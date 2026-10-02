@@ -12,10 +12,12 @@ function EditEntry({
     companyId,
     entryId,
     canManageTypes,
+    canUseDimensions,
 }: {
     companyId: string;
     entryId: string;
     canManageTypes: boolean;
+    canUseDimensions: boolean;
 }) {
     const { t } = useTranslation();
     const { data: entry } = useSuspenseQuery(entryQuery(companyId, entryId));
@@ -35,6 +37,7 @@ function EditEntry({
                         companyId={companyId}
                         entry={entry}
                         canManageTypes={canManageTypes}
+                        canUseDimensions={canUseDimensions}
                     />
                 ) : (
                     <div className="flex flex-col items-start gap-3">
@@ -62,10 +65,12 @@ export function EntryFormPage({
     companyId,
     entryId,
     canManageTypes,
+    canUseDimensions,
 }: {
     companyId: string;
     entryId?: string;
     canManageTypes: boolean;
+    canUseDimensions: boolean;
 }) {
     const { t } = useTranslation();
 
@@ -77,6 +82,7 @@ export function EntryFormPage({
                 companyId={companyId}
                 entryId={entryId}
                 canManageTypes={canManageTypes}
+                canUseDimensions={canUseDimensions}
             />
         );
     }
@@ -92,6 +98,7 @@ export function EntryFormPage({
                 <EntryForm
                     companyId={companyId}
                     canManageTypes={canManageTypes}
+                    canUseDimensions={canUseDimensions}
                 />
             </CardContent>
         </Card>

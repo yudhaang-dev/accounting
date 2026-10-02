@@ -2,12 +2,15 @@ import { Link, useMatchRoute, useParams } from '@tanstack/react-router';
 import {
     BookTextIcon,
     CalendarRangeIcon,
+    CoinsIcon,
     FileTextIcon,
     ChevronsUpDownIcon,
     HouseIcon,
     ListTreeIcon,
     LogOutIcon,
+    ShapesIcon,
     SigmaIcon,
+    TrendingUpIcon,
 } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -64,6 +67,24 @@ const NAV = [
         label: 'app.navPeriods',
         icon: CalendarRangeIcon,
         permission: 'periods.read',
+    },
+    {
+        to: '/w/$companyId/dimensions',
+        label: 'app.navDimensions',
+        icon: ShapesIcon,
+        permission: 'dimensions.read',
+    },
+    {
+        to: '/w/$companyId/currencies',
+        label: 'app.navCurrencies',
+        icon: CoinsIcon,
+        permission: 'currencies.read',
+    },
+    {
+        to: '/w/$companyId/exchange-rates',
+        label: 'app.navRates',
+        icon: TrendingUpIcon,
+        permission: 'exchange-rates.read',
     },
     {
         to: '/w/$companyId/entries',

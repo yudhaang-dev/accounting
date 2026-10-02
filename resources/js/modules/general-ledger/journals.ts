@@ -1,6 +1,7 @@
 import { keepPreviousData, queryOptions } from '@tanstack/react-query';
 import { api, unwrap } from '@/api/client';
 import type { components } from '@/api/schema';
+import { fetchAll } from '@/lib/fetch-all';
 
 export type Journal = components['schemas']['JournalResource'];
 
@@ -84,4 +85,47 @@ export const accountNamesQuery = (companyId: string) =>
                     )
                 ).data.map(({ id, code, name }) => [id, { code, name }]),
             ),
+    });
+
+/** Names for the dimensions on posted lines, whatever the status of the type or value since. */
+export type DimensionNames = {
+    types: Record<string, string>;
+    values: Record<string, { code: string; name: string }>;
+};
+
+export const dimensionNamesQuery = (companyId: string) =>
+    queryOptions({
+        queryKey: ['companies', companyId, 'journals', 'dimension-names'],
+        staleTime: 60_000,
+        queryFn: async (): Promise<DimensionNames> => {
+            const [types, values] = await Promise.all([
+                fetchAll((page) =>
+                    unwrap(
+                        api.GET('/companies/{companyId}/dimension-types', {
+                            params: {
+                                path: { companyId },
+                                query: { per_page: 200, page },
+                            },
+                        }),
+                    ),
+                ),
+                fetchAll((page) =>
+                    unwrap(
+                        api.GET('/companies/{companyId}/dimension-values', {
+                            params: {
+                                path: { companyId },
+                                query: { per_page: 200, page },
+                            },
+                        }),
+                    ),
+                ),
+            ]);
+
+            return {
+                types: Object.fromEntries(types.map((t) => [t.key, t.label])),
+                values: Object.fromEntries(
+                    values.map(({ id, code, name }) => [id, { code, name }]),
+                ),
+            };
+        },
     });

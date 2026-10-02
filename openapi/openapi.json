@@ -3403,11 +3403,19 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "`ExchangeRateResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExchangeRateResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -6616,7 +6624,6 @@
                     },
                     "lines": {
                         "type": "array",
-                        "description": "`dimensions` is cast to an object so an empty map serializes as {} and not [] (typed as a map for the API spec).",
                         "items": {
                             "type": "object",
                             "properties": {
@@ -6633,7 +6640,10 @@
                                     "type": "string"
                                 },
                                 "dimensions": {
-                                    "type": "string"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 }
                             },
                             "required": [
@@ -6983,7 +6993,6 @@
                     },
                     "lines": {
                         "type": "array",
-                        "description": "`dimensions` is cast to an object so an empty map serializes as {} and not [] (typed as a map for the API spec).",
                         "items": {
                             "type": "object",
                             "properties": {
@@ -7012,7 +7021,10 @@
                                     "type": "string"
                                 },
                                 "dimensions": {
-                                    "type": "string"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 },
                                 "description": {
                                     "type": [

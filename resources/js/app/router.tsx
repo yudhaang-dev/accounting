@@ -42,6 +42,10 @@ import { EntriesPage } from '@/modules/transaction-entry/pages/entries-page';
 import { EntryFormPage } from '@/modules/transaction-entry/pages/entry-form-page';
 import { EntryPage } from '@/modules/transaction-entry/pages/entry-page';
 import { CompanyHomePage } from '@/modules/master-data/pages/company-home-page';
+import { CurrenciesPage } from '@/modules/master-data/pages/currencies-page';
+import { DimensionsPage } from '@/modules/master-data/pages/dimensions-page';
+import { ExchangeRatesPage } from '@/modules/master-data/pages/exchange-rates-page';
+import { RateTypesPage } from '@/modules/master-data/pages/rate-types-page';
 import { ForgotPasswordPage } from '@/modules/identity-access/pages/forgot-password-page';
 import { LoginPage } from '@/modules/identity-access/pages/login-page';
 import { NotFoundPage } from '@/app/not-found-page';
@@ -329,6 +333,92 @@ const periodsRoute = createRoute({
     },
 });
 
+const dimensionsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/dimensions',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navDimensions', href: at(m, '/dimensions') },
+        ],
+    },
+    beforeLoad: requirePermission('dimensions.read'),
+    component: function Dimensions() {
+        const { workspace } = dimensionsRoute.useRouteContext();
+
+        return (
+            <DimensionsPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'dimensions.manage')}
+            />
+        );
+    },
+});
+
+const currenciesRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/currencies',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navCurrencies', href: at(m, '/currencies') },
+        ],
+    },
+    beforeLoad: requirePermission('currencies.read'),
+    component: function Currencies() {
+        const { workspace } = currenciesRoute.useRouteContext();
+
+        return (
+            <CurrenciesPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'currencies.manage')}
+            />
+        );
+    },
+});
+
+const exchangeRatesRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/exchange-rates',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navRates', href: at(m, '/exchange-rates') },
+        ],
+    },
+    beforeLoad: requirePermission('exchange-rates.read'),
+    component: function ExchangeRates() {
+        const { workspace } = exchangeRatesRoute.useRouteContext();
+
+        return (
+            <ExchangeRatesPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'exchange-rates.manage')}
+                canReadTypes={can(workspace, 'exchange-rates.read')}
+            />
+        );
+    },
+});
+
+const rateTypesRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/exchange-rates/types',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navRates', href: at(m, '/exchange-rates') },
+            { labelKey: 'breadcrumb.rateTypes' },
+        ],
+    },
+    beforeLoad: requirePermission('exchange-rates.read'),
+    component: function RateTypes() {
+        const { workspace } = rateTypesRoute.useRouteContext();
+
+        return (
+            <RateTypesPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'exchange-rates.manage')}
+            />
+        );
+    },
+});
+
 const entriesRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/entries',
@@ -367,6 +457,7 @@ const newEntryRoute = createRoute({
             <EntryFormPage
                 companyId={workspace.company_id}
                 canManageTypes={can(workspace, 'policies.manage')}
+                canUseDimensions={can(workspace, 'dimensions.read')}
             />
         );
     },
@@ -405,6 +496,7 @@ const entryRoute = createRoute({
                     reject: can(workspace, 'entries.reject'),
                     post: can(workspace, 'entries.post'),
                     journals: can(workspace, 'journals.read'),
+                    dimensions: can(workspace, 'dimensions.read'),
                 }}
             />
         );
@@ -438,6 +530,7 @@ const editEntryRoute = createRoute({
                 companyId={workspace.company_id}
                 entryId={entryId}
                 canManageTypes={can(workspace, 'policies.manage')}
+                canUseDimensions={can(workspace, 'dimensions.read')}
             />
         );
     },
@@ -544,6 +637,7 @@ const journalRoute = createRoute({
                     entries: can(workspace, 'entries.read'),
                     periods: can(workspace, 'periods.read'),
                     accounts: can(workspace, 'accounts.read'),
+                    dimensions: can(workspace, 'dimensions.read'),
                 }}
             />
         );
@@ -639,6 +733,10 @@ const routeTree = rootRoute.addChildren([
                 companySetupRoute,
                 accountsRoute,
                 periodsRoute,
+                dimensionsRoute,
+                currenciesRoute,
+                exchangeRatesRoute,
+                rateTypesRoute,
                 entriesRoute,
                 newEntryRoute,
                 entryRoute,

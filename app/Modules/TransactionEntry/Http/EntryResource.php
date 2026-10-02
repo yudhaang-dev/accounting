@@ -3,6 +3,7 @@
 namespace App\Modules\TransactionEntry\Http;
 
 use App\Modules\TransactionEntry\Domain\Entry;
+use App\Platform\Api\JsonMap;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -49,12 +50,10 @@ class EntryResource extends JsonResource
                 'debit' => $line['debit'],
                 'credit' => $line['credit'],
                 'description' => $line['description'],
-                'dimensions' => (object) ($line['dimensions'] ?? []),
+                'dimensions' => JsonMap::of($line['dimensions'] ?? []),
             ];
         }
 
-        // `dimensions` is cast to an object so an empty map serializes as {} and not [] (typed as a map for the API spec).
-        // @phpstan-ignore return.type
         return $lines;
     }
 

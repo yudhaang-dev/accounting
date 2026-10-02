@@ -1289,13 +1289,14 @@ export interface components {
             accounting_date: string;
             document_date: string | null;
             description: string;
-            /** @description `dimensions` is cast to an object so an empty map serializes as {} and not [] (typed as a map for the API spec). */
             lines: {
                 account_id: string;
                 debit: string;
                 credit: string;
                 description: string;
-                dimensions: string;
+                dimensions: {
+                    [key: string]: string;
+                };
             }[];
             created_by: number;
             journal_id: string | null;
@@ -1376,7 +1377,6 @@ export interface components {
             entry_id: string | null;
             posted_by: number | null;
             posted_at: string;
-            /** @description `dimensions` is cast to an object so an empty map serializes as {} and not [] (typed as a map for the API spec). */
             lines: {
                 line_number: number;
                 account_id: string;
@@ -1386,7 +1386,9 @@ export interface components {
                 transaction_amount: string;
                 exchange_rate: string;
                 dimension_set_id: string;
-                dimensions: string;
+                dimensions: {
+                    [key: string]: string;
+                };
                 description: string | null;
             }[];
         };
@@ -3055,12 +3057,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description `ExchangeRateResource` */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/json": {
+                        data: components["schemas"]["ExchangeRateResource"];
+                    };
                 };
             };
             401: components["responses"]["AuthenticationException"];

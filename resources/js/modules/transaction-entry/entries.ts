@@ -1,6 +1,7 @@
 import { keepPreviousData, queryOptions } from '@tanstack/react-query';
 import { api, unwrap } from '@/api/client';
 import type { components } from '@/api/schema';
+import { fetchAll } from '@/lib/fetch-all';
 
 export type Entry = components['schemas']['EntryResource'];
 export type EntryStatus = components['schemas']['EntryStatus'];
@@ -132,6 +133,132 @@ export const accountNamesQuery = (companyId: string) =>
                 ).data.map(({ id, code, name }) => [id, { id, code, name }]),
             ),
     });
+
+/** What a line may use for one dimension type: its active values, with their validity. */
+export type LineDimensionType = {
+    key: string;
+    label: string;
+    values: {
+        id: string;
+        code: string;
+        name: string;
+        valid_from: string | null;
+        valid_to: string | null;
+    }[];
+};
+
+/**
+ * The dimension types an entry line can carry, each with its active values (MD-FR-04). A type with no
+ * active value is left out, so the form never shows a picker with nothing to pick.
+ */
+export const lineDimensionsQuery = (companyId: string) =>
+    queryOptions({
+        queryKey: ['companies', companyId, 'entries', 'dimensions'],
+        staleTime: 60_000,
+        queryFn: async (): Promise<LineDimensionType[]> => {
+            const [types, values] = await Promise.all([
+                fetchAll((page) =>
+                    unwrap(
+                        api.GET('/companies/{companyId}/dimension-types', {
+                            params: {
+                                path: { companyId },
+                                query: {
+                                    'filter[status]': 'active',
+                                    per_page: 200,
+                                    page,
+                                },
+                            },
+                        }),
+                    ),
+                ),
+                fetchAll((page) =>
+                    unwrap(
+                        api.GET('/companies/{companyId}/dimension-values', {
+                            params: {
+                                path: { companyId },
+                                query: {
+                                    'filter[status]': 'active',
+                                    per_page: 200,
+                                    page,
+                                },
+                            },
+                        }),
+                    ),
+                ),
+            ]);
+
+            return types
+                .map((type) => ({
+                    key: type.key,
+                    label: type.label,
+                    values: values
+                        .filter((value) => value.dimension_type_id === type.id)
+                        .map(({ id, code, name, valid_from, valid_to }) => ({
+                            id,
+                            code,
+                            name,
+                            valid_from,
+                            valid_to,
+                        })),
+                }))
+                .filter((type) => type.values.length > 0);
+        },
+    });
+
+/** Names for the dimensions on posted lines, whatever the status of the type or value since. */
+export type DimensionNames = {
+    types: Record<string, string>;
+    values: Record<string, { code: string; name: string }>;
+};
+
+export const dimensionNamesQuery = (companyId: string) =>
+    queryOptions({
+        queryKey: ['companies', companyId, 'entries', 'dimension-names'],
+        staleTime: 60_000,
+        queryFn: async (): Promise<DimensionNames> => {
+            const [types, values] = await Promise.all([
+                fetchAll((page) =>
+                    unwrap(
+                        api.GET('/companies/{companyId}/dimension-types', {
+                            params: {
+                                path: { companyId },
+                                query: { per_page: 200, page },
+                            },
+                        }),
+                    ),
+                ),
+                fetchAll((page) =>
+                    unwrap(
+                        api.GET('/companies/{companyId}/dimension-values', {
+                            params: {
+                                path: { companyId },
+                                query: { per_page: 200, page },
+                            },
+                        }),
+                    ),
+                ),
+            ]);
+
+            return {
+                types: Object.fromEntries(types.map((t) => [t.key, t.label])),
+                values: Object.fromEntries(
+                    values.map(({ id, code, name }) => [id, { code, name }]),
+                ),
+            };
+        },
+    });
+
+/**
+ * The API takes `dimensions` of a line as an object (type key to value id), while its generated type
+ * calls it a list; this is the one place that bridges the two. Empty choices are left out.
+ */
+export function dimensionsBody(
+    dimensions: Record<string, string>,
+): (string | null)[] {
+    return Object.fromEntries(
+        Object.entries(dimensions).filter(([, value]) => value !== ''),
+    ) as unknown as (string | null)[];
+}
 
 export async function createEntry(
     companyId: string,

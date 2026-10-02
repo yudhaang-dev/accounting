@@ -35,6 +35,7 @@ const line = (n: number, overrides: Record<string, unknown>) => ({
     exchange_rate: '1',
     dimension_set_id: '01JDIMSET00000000000000001',
     description: null,
+    dimensions: {},
     ...overrides,
 });
 
@@ -274,12 +275,14 @@ describe('from an entry to its journal', () => {
                 debit: '1500000.50',
                 credit: '0',
                 description: null,
+                dimensions: {},
             },
             {
                 account_id: sales,
                 debit: '0',
                 credit: '1500000.50',
                 description: null,
+                dimensions: {},
             },
         ],
         created_by: 1,
