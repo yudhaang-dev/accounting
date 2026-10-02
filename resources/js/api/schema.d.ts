@@ -760,6 +760,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/invitations/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accepts an invitation with the token from the email. The signed-in user must have a verified
+         *     email equal to the invited address. Answers the workspace that was joined
+         */
+        post: operations["invitations.accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Invitations of the workspace, newest first. `per_page` defaults to 50, at most 200 */
+        get: operations["invitations.index"];
+        put?: never;
+        /**
+         * Emails an invitation with the given roles. `expires_at` is when the membership lapses once
+         *     accepted. A new invitation replaces an open one for the same address
+         */
+        post: operations["invitations.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/invitations/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Withdraws a pending invitation */
+        post: operations["invitations.revoke"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/iso-currencies": {
         parameters: {
             query?: never;
@@ -851,6 +909,63 @@ export interface paths {
         get: operations["me.workspaces"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Members of the workspace with their roles, ordered by name. Filter: `filter[status]` is
+         *     `active`, `revoked` or `expired`. `per_page` defaults to 50, at most 200
+         */
+        get: operations["memberships.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/memberships/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["memberships.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Changes the expiry date or replaces the roles of a member. `lock_version` is required */
+        patch: operations["memberships.update"];
+        trace?: never;
+    };
+    "/companies/{companyId}/memberships/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revokes the membership: access stops from the next request; audit records stay. You cannot
+         *     revoke your own membership
+         */
+        post: operations["memberships.revoke"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1172,6 +1287,10 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AcceptInvitationRequest */
+        AcceptInvitationRequest: {
+            token: string;
+        };
         /**
          * AccountClass
          * @description The five classes of the chart of accounts. A parent and its children share one class (GL-FR-01).
@@ -1274,6 +1393,14 @@ export interface components {
             count?: number;
             /** @description Only with count 1; defaults to FY2026, or FY2026/2027 when the year does not start in January. */
             name?: string;
+        };
+        /** CreateInvitationRequest */
+        CreateInvitationRequest: {
+            /** Format: email */
+            email: string;
+            role_ids: string[];
+            /** Format: date-time */
+            expires_at?: string | null;
         };
         /** CreateRateTypeRequest */
         CreateRateTypeRequest: {
@@ -1455,6 +1582,16 @@ export interface components {
             confirmed: "yes" | "on" | "1" | 1 | "true" | true;
             exclude?: string[];
         };
+        /** InvitationResource */
+        InvitationResource: {
+            id: string;
+            email: string;
+            /** @description `pending`, `accepted`, `revoked`, or `expired` once the invitation lapsed unanswered. */
+            status: string;
+            role_ids: string[];
+            membership_expires_at: string | null;
+            expires_at: string;
+        };
         /** IsoCurrencyResource */
         IsoCurrencyResource: {
             code: string;
@@ -1507,6 +1644,20 @@ export interface components {
             email: string;
             email_verified: boolean;
             two_factor_enabled: boolean;
+        };
+        /** MembershipResource */
+        MembershipResource: {
+            id: string;
+            user: {
+                id: number;
+                name: string;
+                email: string;
+            };
+            /** @description `active`, `revoked`, or `expired` once a set expiry has passed. */
+            status: string;
+            expires_at: string | null;
+            roles: string;
+            lock_version: number;
         };
         /** PeriodResource */
         PeriodResource: {
@@ -1646,6 +1797,13 @@ export interface components {
             lock_version: number;
             pattern?: components["schemas"]["CalendarPattern"];
             start_month?: number;
+        };
+        /** UpdateMembershipRequest */
+        UpdateMembershipRequest: {
+            lock_version: number;
+            /** Format: date-time */
+            expires_at?: string | null;
+            role_ids?: string[];
         };
         /** UpdateRateTypeRequest */
         UpdateRateTypeRequest: {
@@ -3474,6 +3632,145 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "invitations.accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptInvitationRequest"];
+            };
+        };
+        responses: {
+            /** @description `WorkspaceResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WorkspaceResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "invitations.index": {
+        parameters: {
+            query?: {
+                "filter[is_active]"?: boolean;
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `InvitationResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvitationResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "invitations.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInvitationRequest"];
+            };
+        };
+        responses: {
+            /** @description `InvitationResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvitationResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "invitations.revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `InvitationResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvitationResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "iso-currencies.index": {
         parameters: {
             query?: {
@@ -3660,6 +3957,144 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "memberships.index": {
+        parameters: {
+            query?: {
+                "filter[status]"?: "active" | "revoked" | "expired";
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `MembershipResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MembershipResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "memberships.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `MembershipResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MembershipResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "memberships.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMembershipRequest"];
+            };
+        };
+        responses: {
+            /** @description `MembershipResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MembershipResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "memberships.revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `MembershipResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MembershipResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "periods.index": {

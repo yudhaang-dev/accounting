@@ -1,6 +1,8 @@
 <?php
 
+use App\Modules\IdentityAccess\Http\InvitationController;
 use App\Modules\IdentityAccess\Http\MeController;
+use App\Modules\IdentityAccess\Http\MembershipController;
 use App\Modules\IdentityAccess\Http\PermissionController;
 use App\Modules\IdentityAccess\Http\RoleController;
 use App\Platform\Api\ApiServiceProvider;
@@ -11,7 +13,24 @@ use Illuminate\Support\Facades\Route;
 Route::get('me', [MeController::class, 'show'])->middleware('auth')->name('me');
 Route::get('me/workspaces', [MeController::class, 'workspaces'])->middleware('auth')->name('me.workspaces');
 
+Route::post('invitations/accept', [InvitationController::class, 'accept'])->middleware('auth')->name('invitations.accept');
+
 Route::companyScoped(function () {
+    $ulid = ApiServiceProvider::ULID;
+
+    Route::get('memberships', [MembershipController::class, 'index'])->middleware('permission:memberships.read')->name('memberships.index');
+    Route::get('memberships/{id}', [MembershipController::class, 'show'])
+        ->middleware('permission:memberships.read')->where('id', $ulid)->name('memberships.show');
+    Route::patch('memberships/{id}', [MembershipController::class, 'update'])
+        ->middleware('permission:memberships.manage')->where('id', $ulid)->name('memberships.update');
+    Route::post('memberships/{id}/revoke', [MembershipController::class, 'revoke'])
+        ->middleware('permission:memberships.manage')->where('id', $ulid)->name('memberships.revoke');
+
+    Route::get('invitations', [InvitationController::class, 'index'])->middleware('permission:memberships.read')->name('invitations.index');
+    Route::post('invitations', [InvitationController::class, 'store'])->middleware('permission:memberships.manage')->name('invitations.store');
+    Route::post('invitations/{id}/revoke', [InvitationController::class, 'revoke'])
+        ->middleware('permission:memberships.manage')->where('id', $ulid)->name('invitations.revoke');
+
     Route::get('permissions', [PermissionController::class, 'index'])->middleware('permission:roles.read')->name('permissions.index');
 
     Route::get('roles', [RoleController::class, 'index'])->middleware('permission:roles.read')->name('roles.index');

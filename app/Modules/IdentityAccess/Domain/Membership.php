@@ -2,7 +2,9 @@
 
 namespace App\Modules\IdentityAccess\Domain;
 
+use App\Models\User;
 use App\Modules\IdentityAccess\Database\Factories\MembershipFactory;
+use App\Platform\Api\Concerns\HasLockVersion;
 use App\Support\Eloquent\UlidModel;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,7 +28,7 @@ use Illuminate\Support\Carbon;
 class Membership extends UlidModel
 {
     /** @use HasFactory<MembershipFactory> */
-    use HasFactory;
+    use HasFactory, HasLockVersion;
 
     protected $table = 'ia_memberships';
 
@@ -51,6 +53,22 @@ class Membership extends UlidModel
     {
         $query->where('status', MembershipStatus::Active->value)
             ->where(fn (Builder $q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()));
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /** Status as clients see it: a lapsed expiry shows as `expired`. */
+    public function effectiveStatus(): string
+    {
+        if ($this->status === MembershipStatus::Active && $this->expires_at !== null && $this->expires_at->isPast()) {
+            return 'expired';
+        }
+
+        return $this->status->value;
     }
 
     /** @return BelongsTo<Workspace, $this> */
