@@ -30,6 +30,8 @@ Route::companyScoped(function () {
     Route::post('history-imports', [HistoryImportController::class, 'store'])
         ->middleware('permission:opening-balances.import')->name('history-imports.store');
 
+    Route::get('fiscal-years/{id}/closing', [FiscalYearClosingController::class, 'show'])
+        ->middleware('permission:periods.read')->where('id', ApiServiceProvider::ULID)->name('fiscal-years.closing');
     Route::post('fiscal-years/{id}/close', [FiscalYearClosingController::class, 'store'])
         ->middleware('permission:fiscal-years.close')->where('id', ApiServiceProvider::ULID)->name('fiscal-years.close');
     Route::post('fiscal-years/{id}/reopen', [FiscalYearClosingController::class, 'reopen'])

@@ -825,6 +825,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/fiscal-years/{id}/closing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Where the fiscal year stands in its closing (GL-FR-12): whether it is closed, the closing in
+         *     force, and the checks that keep it from closing now: `retained_earnings` is mapped,
+         *     `last_period` accepts the closing journal, and no entry dated up to the end of the year is
+         *     unfinished (`unfinished_entries.count`, whatever the data scope of the caller). `ready` is true
+         *     when all pass. Answers 404 for a year of another company
+         */
+        get: operations["fiscal-years.closing"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/fiscal-years/{id}/close": {
         parameters: {
             query?: never;
@@ -1978,6 +2001,28 @@ export interface components {
             pattern: string;
             start_month: number | null;
             lock_version: number;
+        };
+        /** FiscalYearClosingStatusResource */
+        FiscalYearClosingStatusResource: {
+            closed: boolean;
+            /** @description The closing in force; null while the year is open, or after it was reopened. */
+            closing: unknown[] | null;
+            /** @description Whether every check passes, so the year can be closed now. */
+            ready: boolean;
+            checks: {
+                retained_earnings: {
+                    ok: boolean;
+                };
+                last_period: {
+                    ok: boolean;
+                    name: string | null;
+                    status: string | null;
+                };
+                unfinished_entries: {
+                    ok: boolean;
+                    count: number;
+                };
+            };
         };
         /** FiscalYearResource */
         FiscalYearResource: {
@@ -4323,6 +4368,32 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["FiscalYearResource"] & Record<string, never>;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "fiscal-years.closing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `FiscalYearClosingStatusResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FiscalYearClosingStatusResource"];
                     };
                 };
             };

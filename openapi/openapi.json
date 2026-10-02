@@ -4276,6 +4276,56 @@
                 }
             }
         },
+        "/companies/{companyId}/fiscal-years/{id}/closing": {
+            "get": {
+                "operationId": "fiscal-years.closing",
+                "summary": "Where the fiscal year stands in its closing (GL-FR-12): whether it is closed, the closing in\nforce, and the checks that keep it from closing now: `retained_earnings` is mapped,\n`last_period` accepts the closing journal, and no entry dated up to the end of the year is\nunfinished (`unfinished_entries.count`, whatever the data scope of the caller). `ready` is true\nwhen all pass. Answers 404 for a year of another company",
+                "tags": [
+                    "FiscalYearClosing"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`FiscalYearClosingStatusResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/FiscalYearClosingStatusResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/fiscal-years/{id}/close": {
             "post": {
                 "operationId": "fiscal-years.close",
@@ -9586,6 +9636,94 @@
                     "lock_version"
                 ],
                 "title": "FiscalCalendarResource"
+            },
+            "FiscalYearClosingStatusResource": {
+                "type": "object",
+                "properties": {
+                    "closed": {
+                        "type": "boolean"
+                    },
+                    "closing": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "The closing in force; null while the year is open, or after it was reopened.",
+                        "items": {}
+                    },
+                    "ready": {
+                        "type": "boolean",
+                        "description": "Whether every check passes, so the year can be closed now."
+                    },
+                    "checks": {
+                        "type": "object",
+                        "properties": {
+                            "retained_earnings": {
+                                "type": "object",
+                                "properties": {
+                                    "ok": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "ok"
+                                ]
+                            },
+                            "last_period": {
+                                "type": "object",
+                                "properties": {
+                                    "ok": {
+                                        "type": "boolean"
+                                    },
+                                    "name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "status": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "ok",
+                                    "name",
+                                    "status"
+                                ]
+                            },
+                            "unfinished_entries": {
+                                "type": "object",
+                                "properties": {
+                                    "ok": {
+                                        "type": "boolean"
+                                    },
+                                    "count": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "required": [
+                                    "ok",
+                                    "count"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "retained_earnings",
+                            "last_period",
+                            "unfinished_entries"
+                        ]
+                    }
+                },
+                "required": [
+                    "closed",
+                    "closing",
+                    "ready",
+                    "checks"
+                ],
+                "title": "FiscalYearClosingStatusResource"
             },
             "FiscalYearResource": {
                 "type": "object",

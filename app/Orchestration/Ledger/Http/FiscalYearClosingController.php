@@ -7,12 +7,25 @@ use App\Modules\GeneralLedger\Contracts\FiscalYearClose;
 use App\Modules\GeneralLedger\Contracts\FiscalYearClosing;
 use App\Modules\GeneralLedger\Contracts\FiscalYearReopen;
 use App\Orchestration\Ledger\CloseFiscalYear;
+use App\Orchestration\Ledger\FiscalYearReadiness;
 use App\Support\Access\ActorPermissions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class FiscalYearClosingController
 {
+    /**
+     * Where the fiscal year stands in its closing (GL-FR-12): whether it is closed, the closing in
+     * force, and the checks that keep it from closing now: `retained_earnings` is mapped,
+     * `last_period` accepts the closing journal, and no entry dated up to the end of the year is
+     * unfinished (`unfinished_entries.count`, whatever the data scope of the caller). `ready` is true
+     * when all pass. Answers 404 for a year of another company.
+     */
+    public function show(FiscalYearReadiness $readiness, string $companyId, string $id): FiscalYearClosingStatusResource
+    {
+        return new FiscalYearClosingStatusResource($readiness($companyId, $id));
+    }
+
     /**
      * Closes the fiscal year (GL-FR-12): one `system.closing` journal dated its last day brings every
      * income and expense account to zero per dimension set against the `retained_earnings` account.

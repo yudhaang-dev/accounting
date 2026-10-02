@@ -298,3 +298,79 @@ describe('reopening a fiscal year (GL-FR-14, GL-AC-10)', function () {
         expect(DB::table('gl_closing_runs')->where('id', $this->closing->json('data.id'))->value('status'))->toBe('closed');
     });
 });
+
+function closingStatus(?string $yearId = null, ?User $as = null): TestResponse
+{
+    return test()->actingAs($as ?? test()->admin)->getJson(test()->url.'/fiscal-years/'.($yearId ?? test()->year).'/closing');
+}
+
+describe('where a fiscal year stands in its closing (GL-FR-12)', function () {
+    it('lists what keeps the year from closing, and is ready once nothing does', function () {
+        closingStatus()->assertOk()
+            ->assertJsonPath('data.closed', false)
+            ->assertJsonPath('data.closing', null)
+            ->assertJsonPath('data.ready', false)
+            ->assertJsonPath('data.checks.retained_earnings.ok', false)
+            ->assertJsonPath('data.checks.last_period.ok', true)
+            ->assertJsonPath('data.checks.last_period.name', '2026-12')
+            ->assertJsonPath('data.checks.unfinished_entries.count', 0);
+
+        mapRetainedEarnings();
+
+        closingStatus()->assertOk()->assertJsonPath('data.ready', true)->assertJsonPath('data.checks.retained_earnings.ok', true);
+    });
+
+    it('counts the unfinished entries whoever asks', function () {
+        mapRetainedEarnings();
+        $this->actingAs($this->admin)->postJson("{$this->url}/transaction-types", ['key' => 'general_journal', 'label' => 'Jurnal Umum'])->assertCreated();
+        $this->actingAs(memberWithRoles($this->companyId, 'preparer'))->postJson("{$this->url}/entries", [
+            'transaction_type_key' => 'general_journal',
+            'accounting_date' => '2026-12-20',
+            'description' => 'Still a draft',
+            'lines' => [['account_id' => $this->bank, 'debit' => '10.00'], ['account_id' => $this->sales, 'credit' => '10.00']],
+        ])->assertCreated();
+
+        closingStatus()->assertOk()
+            ->assertJsonPath('data.ready', false)
+            ->assertJsonPath('data.checks.unfinished_entries.ok', false)
+            ->assertJsonPath('data.checks.unfinished_entries.count', 1);
+    });
+
+    it('does not count a soft-closed last period as ready unless the policy names the closing key', function () {
+        mapRetainedEarnings();
+        $december = (string) DB::table('gl_periods')->where('company_id', $this->companyId)->where('name', '2026-12')->value('id');
+        $this->actingAs($this->admin)->postJson("{$this->url}/periods/{$december}/soft-close")->assertOk();
+
+        closingStatus()->assertJsonPath('data.checks.last_period.ok', false)->assertJsonPath('data.checks.last_period.status', 'soft_closed');
+
+        $this->actingAs($this->admin)->putJson("{$this->url}/ledger-policy", [
+            'lock_version' => 0,
+            'soft_closed_transaction_type_keys' => ['system.closing'],
+            'soft_closed_permission' => null,
+            'source_override_permission' => null,
+            'fx_rounding_tolerance' => '0',
+        ])->assertOk();
+
+        closingStatus()->assertJsonPath('data.checks.last_period.ok', true)->assertJsonPath('data.ready', true);
+    });
+
+    it('shows the closing in force after the close and none after the reopening', function () {
+        mapRetainedEarnings();
+        closingJournal('2026-03-10', $this->bank, $this->sales, '1000000.00');
+        $run = closeYear()->assertCreated();
+
+        closingStatus()->assertOk()
+            ->assertJsonPath('data.closed', true)
+            ->assertJsonPath('data.closing.id', $run->json('data.id'))
+            ->assertJsonPath('data.closing.result', '1000000.00');
+
+        reopenYear()->assertOk();
+
+        closingStatus()->assertOk()->assertJsonPath('data.closed', false)->assertJsonPath('data.closing', null);
+    });
+
+    it('needs the periods.read permission and a year of the company', function () {
+        closingStatus('01ARZ3NDEKTSV4RRFFQ69G5FAV')->assertNotFound();
+        closingStatus(as: User::factory()->create())->assertForbidden();
+    });
+});
