@@ -6631,6 +6631,101 @@
                 }
             }
         },
+        "/companies/{companyId}/security-policy": {
+            "get": {
+                "operationId": "security-policy.show",
+                "summary": "The current security policy: permissions that need 2FA, the idle session limit and the IP\nallowlist of integration clients. A company that never set one has version 0 and no requirements",
+                "tags": [
+                    "SecurityPolicy"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SecurityPolicyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SecurityPolicyResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "security-policy.update",
+                "summary": "Replaces the policy as a new version; the change is audited and takes effect from the next\nrequest. A user without 2FA is refused the listed permissions with `TWO_FACTOR_REQUIRED`.\n`lock_version` is required",
+                "tags": [
+                    "SecurityPolicy"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateSecurityPolicyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`SecurityPolicyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SecurityPolicyResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/transaction-types": {
             "get": {
                 "operationId": "transaction-types.index",
@@ -8676,6 +8771,45 @@
                 ],
                 "title": "RoleResource"
             },
+            "SecurityPolicyResource": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "integer",
+                        "description": "0 while the company has never set a policy."
+                    },
+                    "two_factor_permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "idle_timeout_minutes": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "client_ip_allowlist": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "lock_version": {
+                        "type": "integer",
+                        "description": "Same as `version`, named as the concurrency field the update expects (API-TR-14)."
+                    }
+                },
+                "required": [
+                    "version",
+                    "two_factor_permissions",
+                    "idle_timeout_minutes",
+                    "client_ip_allowlist",
+                    "lock_version"
+                ],
+                "title": "SecurityPolicyResource"
+            },
             "StoreFiscalCalendarRequest": {
                 "type": "object",
                 "properties": {
@@ -9139,6 +9273,81 @@
                     "lock_version"
                 ],
                 "title": "UpdateRoleRequest"
+            },
+            "UpdateSecurityPolicyRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "two_factor_permissions": {
+                        "type": "array",
+                        "description": "Keys of GET /permissions.",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "company.read",
+                                "company.update",
+                                "company.activate",
+                                "company.deactivate",
+                                "accounts.read",
+                                "accounts.manage",
+                                "dimensions.read",
+                                "dimensions.manage",
+                                "currencies.read",
+                                "currencies.manage",
+                                "exchange-rates.read",
+                                "exchange-rates.manage",
+                                "periods.read",
+                                "periods.manage",
+                                "periods.close",
+                                "periods.reopen",
+                                "entries.read",
+                                "entries.create",
+                                "entries.submit",
+                                "entries.approve",
+                                "entries.reject",
+                                "entries.post",
+                                "entries.reverse",
+                                "journals.read",
+                                "reports.read",
+                                "reports.export",
+                                "audit.read",
+                                "memberships.read",
+                                "memberships.manage",
+                                "roles.read",
+                                "roles.manage",
+                                "integration-clients.manage",
+                                "policies.manage"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "idle_timeout_minutes": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 1440
+                    },
+                    "client_ip_allowlist": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "maxItems": 100,
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "lock_version",
+                    "two_factor_permissions",
+                    "idle_timeout_minutes",
+                    "client_ip_allowlist"
+                ],
+                "title": "UpdateSecurityPolicyRequest"
             },
             "WorkspaceResource": {
                 "type": "object",

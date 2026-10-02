@@ -1215,6 +1215,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/security-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The current security policy: permissions that need 2FA, the idle session limit and the IP
+         *     allowlist of integration clients. A company that never set one has version 0 and no requirements
+         */
+        get: operations["security-policy.show"];
+        /**
+         * Replaces the policy as a new version; the change is audited and takes effect from the next
+         *     request. A user without 2FA is refused the listed permissions with `TWO_FACTOR_REQUIRED`.
+         *     `lock_version` is required
+         */
+        put: operations["security-policy.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/transaction-types": {
         parameters: {
             query?: never;
@@ -1728,6 +1753,16 @@ export interface components {
             permissions: unknown[];
             lock_version: number;
         };
+        /** SecurityPolicyResource */
+        SecurityPolicyResource: {
+            /** @description 0 while the company has never set a policy. */
+            version: number;
+            two_factor_permissions: string[];
+            idle_timeout_minutes: number | null;
+            client_ip_allowlist: string[];
+            /** @description Same as `version`, named as the concurrency field the update expects (API-TR-14). */
+            lock_version: number;
+        };
         /** StoreFiscalCalendarRequest */
         StoreFiscalCalendarRequest: {
             pattern: components["schemas"]["CalendarPattern"];
@@ -1833,6 +1868,14 @@ export interface components {
             name?: string;
             description?: string | null;
             permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+        };
+        /** UpdateSecurityPolicyRequest */
+        UpdateSecurityPolicyRequest: {
+            lock_version: number;
+            /** @description Keys of GET /permissions. */
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            idle_timeout_minutes: number | null;
+            client_ip_allowlist: string[];
         };
         /** WorkspaceResource */
         WorkspaceResource: {
@@ -4665,6 +4708,61 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "security-policy.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `SecurityPolicyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SecurityPolicyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "security-policy.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSecurityPolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description `SecurityPolicyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SecurityPolicyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "transaction-types.index": {

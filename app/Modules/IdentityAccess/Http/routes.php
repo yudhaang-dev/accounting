@@ -5,6 +5,7 @@ use App\Modules\IdentityAccess\Http\MeController;
 use App\Modules\IdentityAccess\Http\MembershipController;
 use App\Modules\IdentityAccess\Http\PermissionController;
 use App\Modules\IdentityAccess\Http\RoleController;
+use App\Modules\IdentityAccess\Http\SecurityPolicyController;
 use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,9 @@ Route::companyScoped(function () {
     Route::post('invitations', [InvitationController::class, 'store'])->middleware('permission:memberships.manage')->name('invitations.store');
     Route::post('invitations/{id}/revoke', [InvitationController::class, 'revoke'])
         ->middleware('permission:memberships.manage')->where('id', $ulid)->name('invitations.revoke');
+
+    Route::get('security-policy', [SecurityPolicyController::class, 'show'])->middleware('permission:policies.manage')->name('security-policy.show');
+    Route::put('security-policy', [SecurityPolicyController::class, 'update'])->middleware('permission:policies.manage')->name('security-policy.update');
 
     Route::get('permissions', [PermissionController::class, 'index'])->middleware('permission:roles.read')->name('permissions.index');
 

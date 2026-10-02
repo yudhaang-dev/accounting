@@ -21,6 +21,7 @@ final class WorkspaceCompanyAccessGate implements CompanyAccessGate
     public function __construct(
         private readonly EffectiveAccessContexts $contexts,
         private readonly DataScopeContext $dataScope,
+        private readonly IdleSessionGuard $idle,
     ) {}
 
     public function authorize(Request $request, string $companyId): void
@@ -42,6 +43,8 @@ final class WorkspaceCompanyAccessGate implements CompanyAccessGate
         if (! $allowed) {
             throw new AuthorizationException;
         }
+
+        $this->idle->touch($request, $companyId);
 
         $context = $this->contexts->forUser($userId, $companyId);
 
