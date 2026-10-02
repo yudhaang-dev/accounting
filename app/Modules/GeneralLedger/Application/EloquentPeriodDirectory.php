@@ -2,6 +2,7 @@
 
 namespace App\Modules\GeneralLedger\Application;
 
+use App\Modules\GeneralLedger\Contracts\FiscalYearData;
 use App\Modules\GeneralLedger\Contracts\PeriodData;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Domain\FiscalCalendar;
@@ -39,6 +40,13 @@ final class EloquentPeriodDirectory implements PeriodDirectory
             $period->end_date->toDateString(),
             $period->status->value,
         );
+    }
+
+    public function fiscalYear(string $companyId, string $fiscalYearId): ?FiscalYearData
+    {
+        $year = FiscalYear::query()->withoutGlobalScope(CompanyScope::class)->where('company_id', $companyId)->find($fiscalYearId);
+
+        return $year === null ? null : new FiscalYearData($year->id, $year->name, $year->start_date->toDateString(), $year->end_date->toDateString());
     }
 
     public function setupProblems(string $companyId): array

@@ -4276,6 +4276,48 @@
                 }
             }
         },
+        "/companies/{companyId}/fiscal-years/{id}/close": {
+            "post": {
+                "operationId": "fiscal-years.close",
+                "summary": "Closes the fiscal year (GL-FR-12): one `system.closing` journal dated its last day brings every\nincome and expense account to zero per dimension set against the `retained_earnings` account.\nBalance sheet accounts carry on into the next year. Answers 201 with the closing, or 200 when\nthe year was closed already and nothing was posted. Answers 409 `INVALID_STATE_TRANSITION` while\nentries dated up to the end of the year are unfinished, 422 `MAPPING_REQUIRED` without a\n`retained_earnings` mapping, 422 `UNBALANCED_ENTRY` when the ledger does not balance and 422\n`PERIOD_NOT_OPEN` when the last period does not accept the closing journal",
+                "tags": [
+                    "FiscalYearClosing"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/history-imports": {
             "get": {
                 "operationId": "history-imports.show",
@@ -8396,6 +8438,58 @@
                 },
                 "title": "ClosePeriodRequest"
             },
+            "ClosingRunResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "fiscal_year_id": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "journal_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Null for a year without income or expense to close."
+                    },
+                    "journal_number": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "line_count": {
+                        "type": "integer"
+                    },
+                    "result": {
+                        "type": "string",
+                        "description": "Profit (positive) or loss (negative) of the year moved to retained earnings."
+                    },
+                    "retained_earnings_mapping_version": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "fiscal_year_id",
+                    "status",
+                    "journal_id",
+                    "journal_number",
+                    "line_count",
+                    "result",
+                    "retained_earnings_mapping_version",
+                    "created_at"
+                ],
+                "title": "ClosingRunResource"
+            },
             "CompanyResource": {
                 "type": "object",
                 "properties": {
@@ -8804,6 +8898,7 @@
                                 "journals.post-soft-closed",
                                 "journals.override-source",
                                 "opening-balances.import",
+                                "fiscal-years.close",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",
@@ -11243,6 +11338,7 @@
                                 "journals.post-soft-closed",
                                 "journals.override-source",
                                 "opening-balances.import",
+                                "fiscal-years.close",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",
@@ -11304,6 +11400,7 @@
                                 "journals.post-soft-closed",
                                 "journals.override-source",
                                 "opening-balances.import",
+                                "fiscal-years.close",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",

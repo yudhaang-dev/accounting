@@ -1,10 +1,12 @@
 <?php
 
 use App\Orchestration\Company\Http\CompanyActivationController;
+use App\Orchestration\Ledger\Http\FiscalYearClosingController;
 use App\Orchestration\Ledger\Http\HistoryImportController;
 use App\Orchestration\Ledger\Http\LedgerPolicyController;
 use App\Orchestration\Ledger\Http\OpeningBalanceImportController;
 use App\Orchestration\Workspace\Http\WorkspaceController;
+use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
 
 // Cross-module use case routes, mounted under /api/v1 (see OrchestrationServiceProvider).
@@ -27,4 +29,7 @@ Route::companyScoped(function () {
         ->middleware('permission:journals.read')->name('history-imports.show');
     Route::post('history-imports', [HistoryImportController::class, 'store'])
         ->middleware('permission:opening-balances.import')->name('history-imports.store');
+
+    Route::post('fiscal-years/{id}/close', [FiscalYearClosingController::class, 'store'])
+        ->middleware('permission:fiscal-years.close')->where('id', ApiServiceProvider::ULID)->name('fiscal-years.close');
 });

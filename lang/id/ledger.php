@@ -57,6 +57,10 @@ return [
     'history_period_repeated' => 'Periode :period sudah memiliki jurnal ringkasan pada jurnal :first.',
     'history_description' => 'Histori :date',
     'history_cutover_differs' => 'Akun :account bersaldo :ledger pada tanggal cutover, tetapi neraca saldo sumber :source.',
+    'closing_description' => 'Penutupan tahun buku :year',
+    'closing_line' => 'Penutupan tahun',
+    'closing_unbalanced' => 'Buku besar tidak seimbang sampai akhir tahun: debit :debit, kredit :credit.',
+    'closing_entries_unfinished' => 'Tahun buku belum dapat ditutup: :count entri bertanggal sampai :date belum selesai (draf, diajukan, disetujui, atau ditolak).',
     'opening_control_total_differs' => 'Akun kontrol :account bersaldo :balance tetapi total open item-nya :open_items.',
 
 ];

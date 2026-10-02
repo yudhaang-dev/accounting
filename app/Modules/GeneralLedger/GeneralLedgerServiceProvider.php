@@ -5,6 +5,7 @@ namespace App\Modules\GeneralLedger;
 use App\Modules\GeneralLedger\Application\EloquentAccountDirectory;
 use App\Modules\GeneralLedger\Application\EloquentAccountRoles;
 use App\Modules\GeneralLedger\Application\EloquentCurrencyUsage;
+use App\Modules\GeneralLedger\Application\EloquentFiscalYearClosing;
 use App\Modules\GeneralLedger\Application\EloquentHistoryImports;
 use App\Modules\GeneralLedger\Application\EloquentLedgerPolicies;
 use App\Modules\GeneralLedger\Application\EloquentLedgerReader;
@@ -14,6 +15,7 @@ use App\Modules\GeneralLedger\Application\EloquentPostingService;
 use App\Modules\GeneralLedger\Application\EloquentPostingValidator;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
 use App\Modules\GeneralLedger\Contracts\AccountRoles;
+use App\Modules\GeneralLedger\Contracts\FiscalYearClosing;
 use App\Modules\GeneralLedger\Contracts\HistoryImports;
 use App\Modules\GeneralLedger\Contracts\LedgerPolicies;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
@@ -43,5 +45,6 @@ class GeneralLedgerServiceProvider extends ModuleServiceProvider
         $this->app->bind(LedgerPolicies::class, EloquentLedgerPolicies::class);
         $this->app->bind(OpeningBalances::class, EloquentOpeningBalances::class);
         $this->app->bind(HistoryImports::class, EloquentHistoryImports::class);
+        $this->app->bind(FiscalYearClosing::class, EloquentFiscalYearClosing::class);
     }
 }
