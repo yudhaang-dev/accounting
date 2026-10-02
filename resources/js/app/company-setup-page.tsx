@@ -10,6 +10,7 @@ import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { WizardProgress } from '@/app/wizard-progress';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FormAlert } from '@/components/form-alert';
 import { SubmitButton } from '@/components/submit-button';
 import { Badge } from '@/components/ui/badge';
@@ -124,6 +125,7 @@ function ActivateStep({
     const { data: company } = useSuspenseQuery(companyQuery(companyId));
     const [missing, setMissing] = useState<[string, string][] | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
+    const [confirming, setConfirming] = useState(false);
 
     const activate = useMutation({
         mutationFn: () => activateCompany(companyId),
@@ -155,6 +157,7 @@ function ActivateStep({
 
             setFormError(genericErrorMessage(error, t));
         },
+        onSettled: () => setConfirming(false),
     });
 
     return (
@@ -167,9 +170,7 @@ function ActivateStep({
                 className="flex flex-col gap-4"
                 onSubmit={(event) => {
                     event.preventDefault();
-                    setMissing(null);
-                    setFormError(null);
-                    activate.mutate();
+                    setConfirming(true);
                 }}
             >
                 <p className="text-sm text-muted-foreground">
@@ -206,6 +207,21 @@ function ActivateStep({
                     {t('setup.activate.submit')}
                 </SubmitButton>
             </form>
+            <ConfirmDialog
+                open={confirming}
+                onOpenChange={setConfirming}
+                title={t('confirm.activateCompany.title', {
+                    name: company.name,
+                })}
+                description={t('confirm.activateCompany.description')}
+                confirmLabel={t('confirm.activateCompany.action')}
+                pending={activate.isPending}
+                onConfirm={() => {
+                    setMissing(null);
+                    setFormError(null);
+                    activate.mutate();
+                }}
+            />
         </Step>
     );
 }

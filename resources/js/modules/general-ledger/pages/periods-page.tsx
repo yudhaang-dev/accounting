@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CalendarRangeIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -31,6 +32,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useLastDefined } from '@/hooks/use-last-defined';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
@@ -81,6 +83,8 @@ export function PeriodsPage({
     const queryClient = useQueryClient();
     const [chosenYear, setChosenYear] = useState<string | null>(null);
     const [reopening, setReopening] = useState<Period | null>(null);
+    const [closing, setClosing] = useState<Period | null>(null);
+    const asking = useLastDefined(closing);
 
     useDocumentTitle(t('periods.pageTitle'));
 
@@ -103,6 +107,7 @@ export function PeriodsPage({
             await refresh();
             toast.success(t('periods.closed', { name: period.name }));
         },
+        onSettled: () => setClosing(null),
         onError: (error) =>
             toast.error(failure(error, genericErrorMessage(error, t))),
     });
@@ -294,7 +299,7 @@ export function PeriodsPage({
                                                                     },
                                                                 )}
                                                                 onClick={() =>
-                                                                    close.mutate(
+                                                                    setClosing(
                                                                         period,
                                                                     )
                                                                 }
@@ -338,6 +343,21 @@ export function PeriodsPage({
                 </div>
             )}
 
+            <ConfirmDialog
+                open={closing !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setClosing(null);
+                    }
+                }}
+                title={t('confirm.closePeriod.title', {
+                    name: asking?.name ?? '',
+                })}
+                description={t('confirm.closePeriod.description')}
+                confirmLabel={t('confirm.closePeriod.action')}
+                pending={close.isPending}
+                onConfirm={() => closing && close.mutate(closing)}
+            />
             <ReopenPeriodDialog
                 companyId={companyId}
                 period={reopening}

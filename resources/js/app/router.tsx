@@ -10,6 +10,7 @@ import {
     type RouterHistory,
 } from '@tanstack/react-router';
 import { AppShell } from '@/app/app-shell';
+import type { Crumb, CrumbMatch } from '@/app/breadcrumbs';
 import { RecordNotFound } from '@/app/record-not-found';
 import { isApiError } from '@/lib/http';
 import { CompanySetupPage } from '@/app/company-setup-page';
@@ -221,6 +222,9 @@ const indexRoute = createRoute({
 const workspacesRoute = createRoute({
     getParentRoute: () => verifiedRoute,
     path: '/workspaces',
+    staticData: {
+        crumbs: () => [{ labelKey: 'breadcrumb.workspaces' }],
+    },
     component: function Workspaces() {
         const { me, workspaces } = workspacesRoute.useRouteContext();
 
@@ -233,6 +237,9 @@ const workspacesRoute = createRoute({
 const companyRoute = createRoute({
     getParentRoute: () => verifiedRoute,
     path: '/w/$companyId',
+    staticData: {
+        crumbs: (m) => [{ label: workspaceName(m), href: at(m, '') }],
+    },
     beforeLoad: ({ context, params }): { workspace: Workspace } => {
         const workspace = context.workspaces.find(
             (w) => w.company_id === params.companyId,
@@ -281,6 +288,11 @@ const requirePermission =
 const accountsRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/accounts',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navAccounts', href: at(m, '/accounts') },
+        ],
+    },
     beforeLoad: requirePermission('accounts.read'),
     component: function Accounts() {
         const { workspace } = accountsRoute.useRouteContext();
@@ -297,6 +309,11 @@ const accountsRoute = createRoute({
 const periodsRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/periods',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navPeriods', href: at(m, '/periods') },
+        ],
+    },
     beforeLoad: requirePermission('periods.read'),
     component: function Periods() {
         const { workspace } = periodsRoute.useRouteContext();
@@ -315,6 +332,11 @@ const periodsRoute = createRoute({
 const entriesRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/entries',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navEntries', href: at(m, '/entries') },
+        ],
+    },
     beforeLoad: requirePermission('entries.read'),
     component: function Entries() {
         const { workspace } = entriesRoute.useRouteContext();
@@ -331,6 +353,12 @@ const entriesRoute = createRoute({
 const newEntryRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/entries/new',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navEntries', href: at(m, '/entries') },
+            { labelKey: 'breadcrumb.new' },
+        ],
+    },
     beforeLoad: requirePermission('entries.create'),
     component: function NewEntry() {
         const { workspace } = newEntryRoute.useRouteContext();
@@ -347,6 +375,12 @@ const newEntryRoute = createRoute({
 const entryRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/entries/$entryId',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navEntries', href: at(m, '/entries') },
+            { label: numberOf(m), href: at(m, `/entries/${m.params.entryId}`) },
+        ],
+    },
     beforeLoad: requirePermission('entries.read'),
     loader: ({ context, params }) =>
         orNotFound(
@@ -380,6 +414,13 @@ const entryRoute = createRoute({
 const editEntryRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/entries/$entryId/edit',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navEntries', href: at(m, '/entries') },
+            { label: numberOf(m), href: at(m, `/entries/${m.params.entryId}`) },
+            { labelKey: 'breadcrumb.edit' },
+        ],
+    },
     beforeLoad: requirePermission('entries.create'),
     loader: ({ context, params }) =>
         orNotFound(
@@ -402,6 +443,14 @@ const editEntryRoute = createRoute({
     },
 });
 
+// What a route's `crumbs` function sees: the address, the route context and the loaded record.
+const at = (m: CrumbMatch, path: string) => `/w/${m.params.companyId}${path}`;
+const workspaceName = (m: CrumbMatch) =>
+    (m.context.workspace as Workspace | undefined)?.name ?? '';
+// The number of the entry or journal the route loaded, for the last step of the trail.
+const numberOf = (m: CrumbMatch) =>
+    (m.loaderData as { number?: string } | undefined)?.number ?? '…';
+
 const stringSearch = (value: unknown): string | undefined =>
     typeof value === 'string' && value !== '' ? value : undefined;
 
@@ -409,6 +458,11 @@ const stringSearch = (value: unknown): string | undefined =>
 const journalsRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/journals',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navJournals', href: at(m, '/journals') },
+        ],
+    },
     beforeLoad: requirePermission('journals.read'),
     validateSearch: (search: Record<string, unknown>): JournalSearch => ({
         account_id: stringSearch(search.account_id),
@@ -440,6 +494,15 @@ const journalsRoute = createRoute({
 const trialBalanceRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/reports/trial-balance',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'breadcrumb.reports' },
+            {
+                labelKey: 'app.navTrialBalance',
+                href: at(m, '/reports/trial-balance'),
+            },
+        ],
+    },
     beforeLoad: requirePermission('reports.read'),
     component: function TrialBalanceScreen() {
         const { workspace } = trialBalanceRoute.useRouteContext();
@@ -451,6 +514,15 @@ const trialBalanceRoute = createRoute({
 const journalRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/journals/$journalId',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navJournals', href: at(m, '/journals') },
+            {
+                label: numberOf(m),
+                href: at(m, `/journals/${m.params.journalId}`),
+            },
+        ],
+    },
     beforeLoad: requirePermission('journals.read'),
     loader: ({ context, params }) =>
         orNotFound(
@@ -481,6 +553,12 @@ const journalRoute = createRoute({
 const newWorkspaceRoute = createRoute({
     getParentRoute: () => verifiedRoute,
     path: '/workspaces/new',
+    staticData: {
+        crumbs: () => [
+            { labelKey: 'breadcrumb.workspaces', href: '/workspaces' },
+            { labelKey: 'breadcrumb.new' },
+        ],
+    },
     component: NewWorkspacePage,
 });
 
@@ -488,6 +566,11 @@ const newWorkspaceRoute = createRoute({
 const companySetupRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/setup',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'breadcrumb.setup', href: at(m, '/setup') },
+        ],
+    },
     loader: ({ context, params }) => {
         const company = context.queryClient.getQueryData(
             companyQuery(params.companyId).queryKey,
@@ -591,5 +674,10 @@ export type AppRouter = ReturnType<typeof createAppRouter>;
 declare module '@tanstack/react-router' {
     interface Register {
         router: AppRouter;
+    }
+
+    // The trail a screen shows in the header, declared on its route (see `Breadcrumbs`).
+    interface StaticDataRouteOption {
+        crumbs?: (match: CrumbMatch) => Crumb[];
     }
 }

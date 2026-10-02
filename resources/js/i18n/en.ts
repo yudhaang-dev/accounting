@@ -16,6 +16,8 @@ export const en: Widen<typeof id> = {
         today: 'Today',
         clear: 'Clear',
         noMatch: 'Nothing matches.',
+        cancel: 'Cancel',
+        actionsFor: 'Actions for {{name}}',
         required: 'Required',
         email: 'Email',
         password: 'Password',
@@ -188,15 +190,10 @@ export const en: Widen<typeof id> = {
         accountName: 'Account name',
         normal: 'Normal balance',
         actions: 'Actions',
-        parentBadge: 'Parent',
         empty: 'No accounts yet',
         emptyDescription:
             'The chart of accounts is empty. Install a template or add accounts one by one.',
         noMatch: 'No account matches these filters.',
-        count: '{{count}} accounts',
-        previous: 'Previous',
-        next: 'Next',
-        pageOf: 'Page {{page}} of {{last}}',
         editAction: 'Edit',
         deactivateAction: 'Deactivate',
         reactivateAction: 'Reactivate',
@@ -288,10 +285,6 @@ export const en: Widen<typeof id> = {
         empty: 'No entries yet',
         emptyDescription: 'Entries you create will appear here.',
         noMatch: 'No entry matches these filters.',
-        count: '{{count}} entries',
-        previous: 'Previous',
-        next: 'Next',
-        pageOf: 'Page {{page}} of {{last}}',
         open: 'Open entry {{number}}',
         detail: {
             title: 'Entry {{number}}',
@@ -452,10 +445,6 @@ export const en: Widen<typeof id> = {
             empty: 'No journals yet',
             emptyDescription: 'Journals appear here once entries are posted.',
             noMatch: 'No journal matches these filters.',
-            count: '{{count}} journals',
-            previous: 'Previous',
-            next: 'Next',
-            pageOf: 'Page {{page}} of {{last}}',
             open: 'Open journal {{number}}',
         },
     },
@@ -463,7 +452,7 @@ export const en: Widen<typeof id> = {
         pageTitle: 'Trial balance',
         title: 'Trial balance',
         description:
-            'Opening balance, movement and closing balance per account over a date range. Total debit must equal total credit.',
+            'Opening balance, movement and closing balance per account over a date range. Total debit must equal total credit. The opening balance is not entered: it is calculated from every journal before the start date.',
         from: 'From date',
         to: 'To date',
         show: 'Show',
@@ -487,6 +476,56 @@ export const en: Widen<typeof id> = {
         drill: 'View journals of account {{code}}',
         currency: 'In {{currency}}',
         rangeInvalid: 'The start date cannot be after the end date.',
+    },
+    confirm: {
+        post: {
+            title: 'Post entry {{number}}?',
+            description:
+                'The journal it produces cannot be changed or deleted. It can only be corrected with a reversing journal.',
+            action: 'Post',
+        },
+        approve: {
+            title: 'Approve entry {{number}}?',
+            description:
+                'The approval is recorded in your name in the entry history, and the entry is ready to post.',
+            action: 'Approve',
+        },
+        closePeriod: {
+            title: 'Close period {{name}}?',
+            description:
+                'A closed period refuses all postings until it is reopened with a reason.',
+            action: 'Close period',
+        },
+        deactivateAccount: {
+            title: 'Deactivate account {{code}}?',
+            description:
+                'An inactive account takes no new postings. Its history stays, and it can be reactivated.',
+            action: 'Deactivate',
+        },
+        activateCompany: {
+            title: 'Activate {{name}}?',
+            description:
+                'The company starts recording transactions, and its functional currency can no longer change.',
+            action: 'Activate',
+        },
+    },
+    breadcrumb: {
+        label: 'Page navigation',
+        new: 'New',
+        edit: 'Edit',
+        reports: 'Reports',
+        setup: 'Setup',
+        workspaces: 'Workspaces',
+        more: 'More',
+    },
+    pager: {
+        rows: 'Rows per page',
+        all: 'All',
+        range: '{{from}}–{{to}} of {{total}}',
+        none: '0 of 0',
+        page: 'Page {{page}} of {{last}}',
+        previous: 'Previous',
+        next: 'Next',
     },
     newWorkspace: {
         pageTitle: 'New workspace',

@@ -37,7 +37,7 @@ import { isApiError } from '@/lib/http';
 import {
     ACCOUNT_CLASSES,
     createAccount,
-    parentOptionsQuery,
+    allAccountsQuery,
     updateAccount,
     type Account,
     type AccountClass,
@@ -92,7 +92,12 @@ function AccountForm({
         formState: { errors },
     } = form;
     const accountClass = watch('class');
-    const parents = useQuery(parentOptionsQuery(companyId, accountClass));
+    const chart = useQuery(allAccountsQuery(companyId));
+    // A parent shares the class of its children and must be active.
+    const parents = (chart.data ?? []).filter(
+        (candidate) =>
+            candidate.status === 'active' && candidate.class === accountClass,
+    );
 
     const refresh = () =>
         Promise.all([
@@ -164,7 +169,7 @@ function AccountForm({
         },
     });
 
-    const parentItems = (parents.data ?? [])
+    const parentItems = parents
         .filter((candidate) => candidate.id !== account?.id)
         .map((candidate) => ({
             value: candidate.id,

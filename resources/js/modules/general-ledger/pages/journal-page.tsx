@@ -1,10 +1,9 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
-import { Link, useRouter } from '@tanstack/react-router';
-import { ArrowLeftIcon, LockIcon } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { LockIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,
@@ -65,7 +64,6 @@ export function JournalPage({
     access: JournalAccess;
 }) {
     const { t, i18n } = useTranslation();
-    const router = useRouter();
     const { data: journal } = useSuspenseQuery(
         journalQuery(companyId, journalId),
     );
@@ -94,17 +92,6 @@ export function JournalPage({
 
     return (
         <>
-            <div>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => router.history.back()}
-                >
-                    <ArrowLeftIcon data-icon="inline-start" />
-                    {t('journals.back')}
-                </Button>
-            </div>
-
             <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-xl font-semibold tracking-tight">
                     {t('journals.title', { number: journal.number })}

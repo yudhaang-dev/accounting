@@ -113,6 +113,15 @@ test('from sign-in to a posted journal in the trial balance', async ({
 
     await test.step('activate the company', async () => {
         await page.getByRole('button', { name: 'Aktifkan perusahaan' }).click();
+        // Activation locks the functional currency, so it asks first.
+        await expect(page.getByRole('alertdialog')).toContainText(
+            'mata uang fungsionalnya tidak dapat diubah',
+        );
+        await shot(page, 'confirm-activate');
+        await page
+            .getByRole('alertdialog')
+            .getByRole('button', { name: 'Aktifkan', exact: true })
+            .click();
 
         await expect(
             page.getByRole('heading', { name: 'PT Toko Budi' }),
@@ -127,7 +136,52 @@ test('from sign-in to a posted journal in the trial balance', async ({
             page.getByRole('heading', { name: 'Bagan akun' }),
         ).toBeVisible();
         await expect(page.getByText('Kas Kecil')).toBeVisible();
+
+        // The whole chart is one tree: a child sits further in than its parent.
+        const indent = (name: string) =>
+            page
+                .locator('td span', { hasText: new RegExp(`^${name}$`) })
+                .evaluate((el) =>
+                    parseFloat(getComputedStyle(el).paddingInlineStart),
+                );
+
+        expect(await indent('Kas Kecil')).toBeGreaterThan(
+            await indent('Aset Lancar'),
+        );
+        expect(await indent('Aset Lancar')).toBeGreaterThan(
+            await indent('ASET'),
+        );
         await shot(page, 'accounts');
+
+        // Show every row.
+        await page.getByRole('combobox', { name: 'Baris per halaman' }).click();
+        await page.getByRole('option', { name: 'Semua' }).click();
+        await expect(page.getByText('1–101 dari 101')).toBeVisible();
+
+        // One actions menu per row.
+        await page.getByRole('button', { name: 'Aksi untuk 1111' }).click();
+        await expect(
+            page.getByRole('menuitem', { name: 'Nonaktifkan' }),
+        ).toBeVisible();
+        await shot(page, 'row-actions');
+        await page.keyboard.press('Escape');
+
+        // The language is a menu; the choice is remembered across a reload.
+        await page.getByRole('button', { name: 'Bahasa' }).click();
+        await shot(page, 'language-menu');
+        await page.getByRole('menuitem', { name: 'English' }).click();
+        await expect(
+            page.getByRole('heading', { name: 'Chart of accounts' }),
+        ).toBeVisible();
+        await page.reload();
+        await expect(
+            page.getByRole('heading', { name: 'Chart of accounts' }),
+        ).toBeVisible();
+        await page.getByRole('button', { name: 'Language' }).click();
+        await page.getByRole('menuitem', { name: 'Indonesia' }).click();
+        await expect(
+            page.getByRole('heading', { name: 'Bagan akun' }),
+        ).toBeVisible();
 
         await sidebar(page, 'Periode').click();
         await expect(
@@ -208,10 +262,23 @@ test('from sign-in to a posted journal in the trial balance', async ({
         await page.getByRole('button', { name: 'Ajukan' }).click();
         await expect(status(page, 'Menunggu persetujuan')).toBeVisible();
 
-        await page.getByRole('button', { name: 'Setujui' }).click();
+        await page
+            .getByRole('button', { name: 'Setujui', exact: true })
+            .click();
+        await page
+            .getByRole('alertdialog')
+            .getByRole('button', { name: 'Setujui', exact: true })
+            .click();
         await expect(status(page, 'Disetujui')).toBeVisible();
 
-        await page.getByRole('button', { name: 'Posting' }).click();
+        await page
+            .getByRole('button', { name: 'Posting', exact: true })
+            .click();
+        await shot(page, 'confirm-post');
+        await page
+            .getByRole('alertdialog')
+            .getByRole('button', { name: 'Posting', exact: true })
+            .click();
         await expect(status(page, 'Diposting')).toBeVisible();
 
         // The history is stamped with the moment it happened: today in the user's zone, not the
@@ -223,6 +290,14 @@ test('from sign-in to a posted journal in the trial balance', async ({
         await expect(
             page.getByText('Riwayat keputusan').locator('..').locator('..'),
         ).toContainText(today);
+        // The trail leads back: company, the entries, then this entry's number.
+        const trail = page.getByRole('navigation', {
+            name: 'Navigasi halaman',
+        });
+
+        await expect(trail).toContainText('Toko Budi');
+        await expect(trail.getByRole('link', { name: 'Entri' })).toBeVisible();
+        await expect(trail).toContainText('ENT/');
         await shot(page, 'entry-posted');
     });
 

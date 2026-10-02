@@ -1,11 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ListTreeIcon, PlusIcon, SearchIcon } from 'lucide-react';
-import { useDeferredValue, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FormAlert } from '@/components/form-alert';
+import { RowActions } from '@/components/row-actions';
+import { TablePagination } from '@/components/table-pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import {
     Empty,
     EmptyContent,
@@ -36,12 +40,15 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useLastDefined } from '@/hooks/use-last-defined';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
+import { ALL, usePageSize } from '@/lib/page-size';
 import {
     ACCOUNT_CLASSES,
-    accountsQuery,
+    accountDepths,
+    allAccountsQuery,
     setAccountStatus,
     type Account,
     type AccountClass,
@@ -49,9 +56,12 @@ import {
 } from '@/modules/general-ledger/accounts';
 import { AccountFormDialog } from '@/modules/general-ledger/components/account-form-dialog';
 
-const ALL = '__all';
+const ANY = '__any';
 
-/** Chart of accounts (GL-FR-01): browse, filter, add, edit, deactivate and reactivate. */
+/**
+ * Chart of accounts (GL-FR-01): the whole tree, indented by level, filterable and pageable in the
+ * browser, with add, edit, deactivate and reactivate. Deactivating asks first.
+ */
 export function AccountsPage({
     companyId,
     canManage,
@@ -67,20 +77,39 @@ export function AccountsPage({
     const [status, setStatus] = useState<AccountStatus | undefined>();
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = usePageSize('accounts', {
+        fallback: 50,
+        allowAll: true,
+    });
     const [editing, setEditing] = useState<Account | null>(null);
     const [creating, setCreating] = useState(false);
-    const deferredSearch = useDeferredValue(search.trim());
+    const [deactivating, setDeactivating] = useState<Account | null>(null);
+    const asking = useLastDefined(deactivating);
 
     useDocumentTitle(t('accounts.pageTitle'));
 
-    const filters = {
-        class: accountClass,
-        status,
-        search: deferredSearch,
-        page,
-    };
-    const list = useQuery(accountsQuery(companyId, filters));
-    const filtered = Boolean(accountClass || status || deferredSearch);
+    const chart = useQuery(allAccountsQuery(companyId));
+    const accounts = chart.data;
+    // Depth comes from the whole chart, so a filtered view keeps every account at its own level.
+    const depths = useMemo(() => accountDepths(accounts ?? []), [accounts]);
+    const needle = search.trim().toLowerCase();
+    const matching = (accounts ?? []).filter(
+        (account) =>
+            (!accountClass || account.class === accountClass) &&
+            (!status || account.status === status) &&
+            (!needle ||
+                account.code.toLowerCase().startsWith(needle) ||
+                account.name.toLowerCase().includes(needle)),
+    );
+    const lastPage =
+        pageSize === ALL
+            ? 1
+            : Math.max(1, Math.ceil(matching.length / pageSize));
+    const current = Math.min(page, lastPage);
+    const shown =
+        pageSize === ALL
+            ? matching
+            : matching.slice((current - 1) * pageSize, current * pageSize);
 
     const toggle = useMutation({
         mutationFn: (account: Account) =>
@@ -109,17 +138,18 @@ export function AccountsPage({
                     ? error.message
                     : genericErrorMessage(error, t),
             ),
+        onSettled: () => setDeactivating(null),
     });
 
     const classItems = [
-        { value: ALL, label: t('accounts.allClasses') },
+        { value: ANY, label: t('accounts.allClasses') },
         ...ACCOUNT_CLASSES.map((value) => ({
             value,
             label: t(`accountClass.${value}`),
         })),
     ];
     const statusItems = [
-        { value: ALL, label: t('accounts.allStatuses') },
+        { value: ANY, label: t('accounts.allStatuses') },
         { value: 'active', label: t('accounts.active') },
         { value: 'inactive', label: t('accounts.inactive') },
     ];
@@ -160,11 +190,11 @@ export function AccountsPage({
                     />
                 </InputGroup>
                 <Select
-                    value={accountClass ?? ALL}
+                    value={accountClass ?? ANY}
                     items={classItems}
                     onValueChange={(value) => {
                         setAccountClass(
-                            value === ALL ? undefined : (value as AccountClass),
+                            value === ANY ? undefined : (value as AccountClass),
                         );
                         setPage(1);
                     }}
@@ -186,11 +216,11 @@ export function AccountsPage({
                     </SelectContent>
                 </Select>
                 <Select
-                    value={status ?? ALL}
+                    value={status ?? ANY}
                     items={statusItems}
                     onValueChange={(value) => {
                         setStatus(
-                            value === ALL
+                            value === ANY
                                 ? undefined
                                 : (value as AccountStatus),
                         );
@@ -215,11 +245,11 @@ export function AccountsPage({
                 </Select>
             </div>
 
-            {list.isError ? (
-                <FormAlert>{genericErrorMessage(list.error, t)}</FormAlert>
-            ) : list.data === undefined ? (
+            {chart.isError ? (
+                <FormAlert>{genericErrorMessage(chart.error, t)}</FormAlert>
+            ) : accounts === undefined ? (
                 <Skeleton className="h-64 w-full" />
-            ) : list.data.total === 0 && !filtered ? (
+            ) : accounts.length === 0 ? (
                 <Empty className="max-w-xl flex-none border py-10">
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
@@ -245,7 +275,9 @@ export function AccountsPage({
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>{t('accounts.code')}</TableHead>
+                                    <TableHead className="w-28">
+                                        {t('accounts.code')}
+                                    </TableHead>
                                     <TableHead>
                                         {t('accounts.accountName')}
                                     </TableHead>
@@ -257,14 +289,16 @@ export function AccountsPage({
                                         {t('accounts.status')}
                                     </TableHead>
                                     {canManage && (
-                                        <TableHead className="text-end">
-                                            {t('accounts.actions')}
+                                        <TableHead className="w-12">
+                                            <span className="sr-only">
+                                                {t('accounts.actions')}
+                                            </span>
                                         </TableHead>
                                     )}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {list.data.accounts.length === 0 && (
+                                {shown.length === 0 && (
                                     <TableRow>
                                         <TableCell
                                             colSpan={canManage ? 6 : 5}
@@ -274,7 +308,7 @@ export function AccountsPage({
                                         </TableCell>
                                     </TableRow>
                                 )}
-                                {list.data.accounts.map((account) => (
+                                {shown.map((account) => (
                                     <TableRow
                                         key={account.id}
                                         className={
@@ -287,15 +321,18 @@ export function AccountsPage({
                                             {account.code}
                                         </TableCell>
                                         <TableCell>
-                                            {account.name}
-                                            {!account.is_leaf && (
-                                                <Badge
-                                                    variant="outline"
-                                                    className="ml-2"
-                                                >
-                                                    {t('accounts.parentBadge')}
-                                                </Badge>
-                                            )}
+                                            <span
+                                                className={
+                                                    account.is_leaf
+                                                        ? undefined
+                                                        : 'font-medium'
+                                                }
+                                                style={{
+                                                    paddingInlineStart: `${(depths.get(account.id) ?? 0) * 20}px`,
+                                                }}
+                                            >
+                                                {account.name}
+                                            </span>
                                         </TableCell>
                                         <TableCell>
                                             {t(
@@ -333,16 +370,10 @@ export function AccountsPage({
                                         </TableCell>
                                         {canManage && (
                                             <TableCell className="text-end">
-                                                <div className="flex justify-end gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        aria-label={t(
-                                                            'accounts.edit',
-                                                            {
-                                                                code: account.code,
-                                                            },
-                                                        )}
+                                                <RowActions
+                                                    label={account.code}
+                                                >
+                                                    <DropdownMenuItem
                                                         onClick={() =>
                                                             setEditing(account)
                                                         }
@@ -350,38 +381,35 @@ export function AccountsPage({
                                                         {t(
                                                             'accounts.editAction',
                                                         )}
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        disabled={
-                                                            toggle.isPending
-                                                        }
-                                                        aria-label={t(
-                                                            account.status ===
-                                                                'active'
-                                                                ? 'accounts.deactivate'
-                                                                : 'accounts.reactivate',
-                                                            {
-                                                                code: account.code,
-                                                            },
-                                                        )}
-                                                        onClick={() =>
-                                                            toggle.mutate(
-                                                                account,
-                                                            )
-                                                        }
-                                                    >
-                                                        {account.status ===
-                                                        'active'
-                                                            ? t(
-                                                                  'accounts.deactivateAction',
-                                                              )
-                                                            : t(
-                                                                  'accounts.reactivateAction',
-                                                              )}
-                                                    </Button>
-                                                </div>
+                                                    </DropdownMenuItem>
+                                                    {account.status ===
+                                                    'active' ? (
+                                                        <DropdownMenuItem
+                                                            variant="destructive"
+                                                            onClick={() =>
+                                                                setDeactivating(
+                                                                    account,
+                                                                )
+                                                            }
+                                                        >
+                                                            {t(
+                                                                'accounts.deactivateAction',
+                                                            )}
+                                                        </DropdownMenuItem>
+                                                    ) : (
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                toggle.mutate(
+                                                                    account,
+                                                                )
+                                                            }
+                                                        >
+                                                            {t(
+                                                                'accounts.reactivateAction',
+                                                            )}
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                </RowActions>
                                             </TableCell>
                                         )}
                                     </TableRow>
@@ -390,39 +418,17 @@ export function AccountsPage({
                         </Table>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-                        <span aria-live="polite">
-                            {t('accounts.count', { count: list.data.total })}
-                        </span>
-                        {list.data.lastPage > 1 && (
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={list.data.page <= 1}
-                                    onClick={() => setPage(list.data.page - 1)}
-                                >
-                                    {t('accounts.previous')}
-                                </Button>
-                                <span>
-                                    {t('accounts.pageOf', {
-                                        page: list.data.page,
-                                        last: list.data.lastPage,
-                                    })}
-                                </span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={
-                                        list.data.page >= list.data.lastPage
-                                    }
-                                    onClick={() => setPage(list.data.page + 1)}
-                                >
-                                    {t('accounts.next')}
-                                </Button>
-                            </div>
-                        )}
-                    </div>
+                    <TablePagination
+                        total={matching.length}
+                        page={current}
+                        pageSize={pageSize}
+                        allowAll
+                        onPageChange={setPage}
+                        onPageSizeChange={(size) => {
+                            setPageSize(size);
+                            setPage(1);
+                        }}
+                    />
                 </div>
             )}
 
@@ -440,6 +446,22 @@ export function AccountsPage({
                         setEditing(null);
                     }
                 }}
+            />
+            <ConfirmDialog
+                open={deactivating !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDeactivating(null);
+                    }
+                }}
+                title={t('confirm.deactivateAccount.title', {
+                    code: asking?.code ?? '',
+                })}
+                description={t('confirm.deactivateAccount.description')}
+                confirmLabel={t('confirm.deactivateAccount.action')}
+                pending={toggle.isPending}
+                destructive
+                onConfirm={() => deactivating && toggle.mutate(deactivating)}
             />
         </>
     );

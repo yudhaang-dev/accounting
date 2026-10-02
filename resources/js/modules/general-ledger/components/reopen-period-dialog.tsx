@@ -21,6 +21,7 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/textarea';
+import { useLastDefined } from '@/hooks/use-last-defined';
 import { genericErrorMessage } from '@/lib/errors';
 import { applyApiErrors } from '@/lib/forms';
 import { isApiError } from '@/lib/http';
@@ -128,6 +129,8 @@ export function ReopenPeriodDialog({
     onClose: () => void;
 }) {
     const { t } = useTranslation();
+    // Keep the wording while the dialog fades out after `period` is cleared.
+    const shown = useLastDefined(period);
 
     return (
         <Dialog
@@ -141,17 +144,17 @@ export function ReopenPeriodDialog({
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>
-                        {t('periods.reopenTitle', { name: period?.name ?? '' })}
+                        {t('periods.reopenTitle', { name: shown?.name ?? '' })}
                     </DialogTitle>
                     <DialogDescription>
                         {t('periods.reopenDescription')}
                     </DialogDescription>
                 </DialogHeader>
-                {period && (
+                {shown && (
                     <ReopenForm
-                        key={period.id}
+                        key={shown.id}
                         companyId={companyId}
-                        period={period}
+                        period={shown}
                         onDone={onClose}
                     />
                 )}

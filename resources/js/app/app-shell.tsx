@@ -41,6 +41,8 @@ import { useSignOut } from '@/modules/identity-access/hooks/use-sign-out';
 import { can } from '@/modules/identity-access/permissions';
 import type { Me } from '@/modules/identity-access/session';
 import type { Workspace } from '@/modules/identity-access/workspaces';
+import { Breadcrumbs } from '@/app/breadcrumbs';
+import { Separator } from '@/components/ui/separator';
 import { WorkspaceSwitcher } from '@/modules/identity-access/components/workspace-switcher';
 
 /** Company screens in the sidebar; an item shows only for users holding its permission. */
@@ -236,7 +238,11 @@ export function AppShell({
 
             <SidebarInset>
                 <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b px-4">
-                    <SidebarTrigger />
+                    <div className="flex min-w-0 items-center gap-2">
+                        <SidebarTrigger />
+                        <Separator orientation="vertical" className="h-4" />
+                        <Breadcrumbs />
+                    </div>
                     <LanguageSwitcher />
                 </header>
                 <div className="flex flex-1 flex-col gap-4 p-4 duration-300 motion-safe:animate-in motion-safe:fade-in md:p-6">

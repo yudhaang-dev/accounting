@@ -1,4 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react';
+import { confirmDialog, confirmWith, rowAction } from '@/test/actions';
+import { cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import {
@@ -42,6 +44,15 @@ const list = (data: unknown[]) =>
 const id1 = '01JACCOUNT0000000000000001';
 const id2 = '01JACCOUNT0000000000000002';
 const id3 = '01JACCOUNT0000000000000003';
+const id4 = '01JACCOUNT0000000000000004';
+const liability = row({
+    id: id4,
+    code: '2000',
+    name: 'LIABILITAS',
+    class: 'liability',
+    normal_balance: 'credit',
+    is_leaf: false,
+});
 
 const accounts = [
     row({ id: id1, code: '1000', name: 'ASET', is_leaf: false }),
@@ -62,8 +73,120 @@ describe('chart of accounts', () => {
         renderApp(accountsPath);
 
         expect(await screen.findByText('Kas Kecil')).toBeInTheDocument();
-        expect(screen.getByText('Induk')).toBeInTheDocument();
-        expect(screen.getByText('3 akun')).toBeInTheDocument();
+        expect(screen.getByText('1–3 dari 3')).toBeInTheDocument();
+    });
+
+    it('indents each account under its parent and sets parents apart', async () => {
+        mockApi({
+            ...withPermissions(['accounts.read']),
+            [`GET ${base}/accounts`]: () => list(accounts),
+        });
+
+        renderApp(accountsPath);
+
+        const child = await screen.findByText('Kas Kecil');
+        const parent = screen.getByText('ASET');
+
+        expect(parent).toHaveStyle({ paddingInlineStart: '0px' });
+        expect(parent.className).toMatch(/font-medium/);
+        expect(child).toHaveStyle({ paddingInlineStart: '20px' });
+        expect(child.className).not.toMatch(/font-medium/);
+    });
+
+    it('keeps every account at its own level when the chart is filtered', async () => {
+        mockApi({
+            ...withPermissions(['accounts.read']),
+            [`GET ${base}/accounts`]: () => list(accounts),
+        });
+
+        renderApp(accountsPath);
+        const typist = userEvent.setup();
+
+        await typist.type(
+            await screen.findByRole('searchbox', {
+                name: 'Cari kode atau nama',
+            }),
+            'kas',
+        );
+
+        // The parent is out of the view, yet the child is still one level in.
+        expect(screen.queryByText('ASET')).not.toBeInTheDocument();
+        expect(screen.getByText('Kas Kecil')).toHaveStyle({
+            paddingInlineStart: '20px',
+        });
+    });
+
+    it('pages the chart in the browser, with a choice of rows and all of them', async () => {
+        const many = Array.from({ length: 30 }, (_, n) =>
+            row({
+                id: `01JMANY${String(n).padStart(19, '0')}`,
+                code: String(2000 + n),
+                name: `Akun ${n}`,
+            }),
+        );
+
+        mockApi({
+            ...withPermissions(['accounts.read']),
+            [`GET ${base}/accounts`]: () => list(many),
+        });
+
+        renderApp(accountsPath);
+        const typist = userEvent.setup();
+
+        // The default shows the whole of a small chart.
+        expect(await screen.findByText('1–30 dari 30')).toBeInTheDocument();
+
+        await typist.click(
+            screen.getByRole('combobox', { name: 'Baris per halaman' }),
+        );
+        await typist.click(await screen.findByRole('option', { name: '10' }));
+
+        expect(screen.getByText('1–10 dari 30')).toBeInTheDocument();
+        expect(screen.getByText('Halaman 1 dari 3')).toBeInTheDocument();
+        expect(screen.queryByText('Akun 10')).not.toBeInTheDocument();
+
+        await typist.click(screen.getByRole('button', { name: 'Berikutnya' }));
+        expect(screen.getByText('11–20 dari 30')).toBeInTheDocument();
+        expect(screen.getByText('Akun 10')).toBeInTheDocument();
+
+        await typist.click(
+            screen.getByRole('combobox', { name: 'Baris per halaman' }),
+        );
+        await typist.click(
+            await screen.findByRole('option', { name: 'Semua' }),
+        );
+
+        expect(screen.getByText('1–30 dari 30')).toBeInTheDocument();
+        expect(screen.getByText('Akun 29')).toBeInTheDocument();
+    });
+
+    it('remembers how many rows to show', async () => {
+        const many = Array.from({ length: 30 }, (_, n) =>
+            row({
+                id: `01JMANY${String(n).padStart(19, '0')}`,
+                code: String(2000 + n),
+                name: `Akun ${n}`,
+            }),
+        );
+
+        mockApi({
+            ...withPermissions(['accounts.read']),
+            [`GET ${base}/accounts`]: () => list(many),
+        });
+
+        const first = renderApp(accountsPath);
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('combobox', { name: 'Baris per halaman' }),
+        );
+        await typist.click(await screen.findByRole('option', { name: '25' }));
+        expect(screen.getByText('1–25 dari 30')).toBeInTheDocument();
+        first.queryClient.clear();
+        cleanup();
+
+        renderApp(accountsPath);
+        expect(await screen.findByText('1–25 dari 30')).toBeInTheDocument();
     });
 
     it('offers no editing to someone who may only read', async () => {
@@ -110,8 +233,8 @@ describe('chart of accounts', () => {
         ).not.toBeInTheDocument();
     });
 
-    it('filters on the server by what is typed', async () => {
-        const api = mockApi({
+    it('narrows the chart by what is typed, in the browser', async () => {
+        mockApi({
             ...withPermissions(['accounts.read']),
             [`GET ${base}/accounts`]: () => list(accounts),
         });
@@ -126,19 +249,15 @@ describe('chart of accounts', () => {
             'kas',
         );
 
-        await waitFor(() =>
-            expect(
-                api
-                    .called(`GET ${base}/accounts`)
-                    .some((call) => call.query['filter[search]'] === 'kas'),
-            ).toBe(true),
-        );
+        expect(screen.getByText('Kas Kecil')).toBeInTheDocument();
+        expect(screen.queryByText('Bank Khusus')).not.toBeInTheDocument();
+        expect(screen.getByText('1–1 dari 1')).toBeInTheDocument();
     });
 
     it('adds a contra account of another class under a parent', async () => {
         const api = mockApi({
             ...withPermissions(['accounts.read', 'accounts.manage']),
-            [`GET ${base}/accounts`]: () => list(accounts),
+            [`GET ${base}/accounts`]: () => list([...accounts, liability]),
             [`POST ${base}/accounts`]: () =>
                 json({ data: row({ code: '2100', name: 'Utang' }) }, 201),
         });
@@ -170,7 +289,7 @@ describe('chart of accounts', () => {
             within(dialog).getByRole('combobox', { name: 'Akun induk' }),
         );
         await typist.click(
-            await screen.findByRole('option', { name: '1000 · ASET' }),
+            await screen.findByRole('option', { name: '2000 · LIABILITAS' }),
         );
         await typist.click(
             within(dialog).getByRole('button', { name: 'Simpan' }),
@@ -184,7 +303,7 @@ describe('chart of accounts', () => {
             name: 'Utang',
             class: 'liability',
             normal_balance: 'credit',
-            parent_id: id1,
+            parent_id: id4,
         });
     });
 
@@ -314,9 +433,7 @@ describe('chart of accounts', () => {
         renderApp(accountsPath);
         const typist = userEvent.setup();
 
-        await typist.click(
-            await screen.findByRole('button', { name: 'Ubah 1111' }),
-        );
+        await rowAction(typist, '1111', 'Ubah');
         const dialog = await screen.findByRole('dialog');
         const name = within(dialog).getByLabelText('Nama akun');
 
@@ -345,9 +462,7 @@ describe('chart of accounts', () => {
         renderApp(accountsPath);
         const typist = userEvent.setup();
 
-        await typist.click(
-            await screen.findByRole('button', { name: 'Ubah 1111' }),
-        );
+        await rowAction(typist, '1111', 'Ubah');
         const dialog = await screen.findByRole('dialog');
 
         await typist.click(
@@ -373,17 +488,79 @@ describe('chart of accounts', () => {
         renderApp(accountsPath);
         const typist = userEvent.setup();
 
-        await typist.click(
-            await screen.findByRole('button', { name: 'Nonaktifkan 1111' }),
-        );
-        await typist.click(
-            screen.getByRole('button', { name: 'Aktifkan kembali 1113' }),
-        );
+        await rowAction(typist, '1111', 'Nonaktifkan');
+        await confirmWith(typist, 'Nonaktifkan');
+        await rowAction(typist, '1113', 'Aktifkan');
 
         await waitFor(() => {
             expect(api.called(off)).toHaveLength(1);
             expect(api.called(on)).toHaveLength(1);
         });
+    });
+
+    it('asks before deactivating, and leaves the account alone when told not to', async () => {
+        const off = `POST ${base}/accounts/${id2}/deactivate`;
+        const api = mockApi({
+            ...withPermissions(['accounts.read', 'accounts.manage']),
+            [`GET ${base}/accounts`]: () => list(accounts),
+            [off]: () => json({ data: row({ status: 'inactive' }) }),
+        });
+
+        renderApp(accountsPath);
+        const typist = userEvent.setup();
+
+        await rowAction(typist, '1111', 'Nonaktifkan');
+
+        const dialog = await confirmDialog();
+
+        expect(
+            within(dialog).getByText('Nonaktifkan akun 1111?'),
+        ).toBeInTheDocument();
+        expect(api.called(off)).toHaveLength(0);
+
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Batal' }),
+        );
+
+        await waitFor(() =>
+            expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument(),
+        );
+        expect(api.called(off)).toHaveLength(0);
+    });
+
+    it('does not ask before reactivating: that is easy to undo', async () => {
+        const on = `POST ${base}/accounts/${id3}/reactivate`;
+        const api = mockApi({
+            ...withPermissions(['accounts.read', 'accounts.manage']),
+            [`GET ${base}/accounts`]: () => list(accounts),
+            [on]: () => json({ data: row({ status: 'active' }) }),
+        });
+
+        renderApp(accountsPath);
+
+        await rowAction(userEvent.setup(), '1113', 'Aktifkan');
+
+        await waitFor(() => expect(api.called(on)).toHaveLength(1));
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    });
+
+    it('keeps the actions of a row in one menu', async () => {
+        mockApi({
+            ...withPermissions(['accounts.read', 'accounts.manage']),
+            [`GET ${base}/accounts`]: () => list(accounts),
+        });
+
+        renderApp(accountsPath);
+
+        await screen.findByText('Kas Kecil');
+
+        // One button per row, whatever the number of actions.
+        expect(
+            screen.getAllByRole('button', { name: /^Aksi untuk / }),
+        ).toHaveLength(3);
+        expect(
+            screen.queryByRole('button', { name: 'Ubah' }),
+        ).not.toBeInTheDocument();
     });
 
     it('says the chart is empty when there are no accounts at all', async () => {
@@ -451,6 +628,7 @@ describe('fiscal periods', () => {
         await typist.click(
             await screen.findByRole('button', { name: 'Tutup 2026-02' }),
         );
+        await confirmWith(typist, 'Tutup periode');
 
         await waitFor(() => expect(api.called(close)).toHaveLength(1));
     });

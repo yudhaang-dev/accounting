@@ -5,10 +5,10 @@ import {
     useSuspenseQuery,
 } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { ArrowLeftIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FormAlert } from '@/components/form-alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useLastDefined } from '@/hooks/use-last-defined';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { formatDecimal, isPositive, sumDecimals } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
@@ -67,6 +68,12 @@ export function EntryPage({
         null,
     );
     const [actionError, setActionError] = useState<string | null>(null);
+    // Approving and posting cannot be taken back, so they ask first.
+    const [confirming, setConfirming] = useState<'approve' | 'post' | null>(
+        null,
+    );
+    // `asking` keeps the wording while the dialog fades out after `confirming` is cleared.
+    const asking = useLastDefined(confirming) ?? 'post';
 
     useDocumentTitle(t('entries.detail.title', { number: entry.number }));
 
@@ -79,6 +86,7 @@ export function EntryPage({
             });
             toast.success(t(`entries.detail.done.${action}`));
         },
+        onSettled: () => setConfirming(null),
         // The server says why in the user's language: the entry is not balanced, the period is
         // closed, the approver may not be the author, and so on.
         onError: (error) =>
@@ -107,22 +115,6 @@ export function EntryPage({
 
     return (
         <>
-            <div>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    render={
-                        <Link
-                            to="/w/$companyId/entries"
-                            params={{ companyId }}
-                        />
-                    }
-                >
-                    <ArrowLeftIcon data-icon="inline-start" />
-                    {t('entries.detail.back')}
-                </Button>
-            </div>
-
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3">
                     <h1 className="text-xl font-semibold tracking-tight">
@@ -171,7 +163,7 @@ export function EntryPage({
                             {can.approve && (
                                 <Button
                                     disabled={busy}
-                                    onClick={() => run('approve')}
+                                    onClick={() => setConfirming('approve')}
                                 >
                                     {t('entries.detail.actions.approve')}
                                 </Button>
@@ -179,7 +171,10 @@ export function EntryPage({
                         </>
                     )}
                     {entry.status === 'approved' && can.post && (
-                        <Button disabled={busy} onClick={() => run('post')}>
+                        <Button
+                            disabled={busy}
+                            onClick={() => setConfirming('post')}
+                        >
                             {t('entries.detail.actions.post')}
                         </Button>
                     )}
@@ -400,6 +395,21 @@ export function EntryPage({
                 </CardContent>
             </Card>
 
+            <ConfirmDialog
+                open={confirming !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setConfirming(null);
+                    }
+                }}
+                title={t(`confirm.${asking}.title`, {
+                    number: entry.number,
+                })}
+                description={t(`confirm.${asking}.description`)}
+                confirmLabel={t(`confirm.${asking}.action`)}
+                pending={act.isPending}
+                onConfirm={() => confirming && run(confirming)}
+            />
             <ReasonDialog
                 companyId={companyId}
                 entry={entry}

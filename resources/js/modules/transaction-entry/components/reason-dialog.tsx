@@ -21,6 +21,7 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/textarea';
+import { useLastDefined } from '@/hooks/use-last-defined';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
 import {
@@ -134,6 +135,8 @@ export function ReasonDialog({
     onClose: () => void;
 }) {
     const { t } = useTranslation();
+    // Keep the wording while the dialog fades out after `mode` is cleared.
+    const shown = useLastDefined(mode);
 
     return (
         <Dialog
@@ -148,7 +151,7 @@ export function ReasonDialog({
                 <DialogHeader>
                     <DialogTitle>
                         {t(
-                            mode === 'cancel'
+                            shown === 'cancel'
                                 ? 'entries.reason.cancelTitle'
                                 : 'entries.reason.rejectTitle',
                             { number: entry.number },
@@ -156,18 +159,18 @@ export function ReasonDialog({
                     </DialogTitle>
                     <DialogDescription>
                         {t(
-                            mode === 'cancel'
+                            shown === 'cancel'
                                 ? 'entries.reason.cancelDescription'
                                 : 'entries.reason.rejectDescription',
                         )}
                     </DialogDescription>
                 </DialogHeader>
-                {mode && (
+                {shown && (
                     <ReasonForm
-                        key={mode}
+                        key={shown}
                         companyId={companyId}
                         entry={entry}
-                        mode={mode}
+                        mode={shown}
                         onDone={onClose}
                     />
                 )}

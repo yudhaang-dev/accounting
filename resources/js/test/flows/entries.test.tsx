@@ -1,4 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react';
+import { confirmDialog, confirmWith } from '@/test/actions';
 import { pickDate } from '@/test/pickers';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -143,6 +144,44 @@ describe('entry list', () => {
         expect(
             screen.getAllByRole('link', { name: 'Entri baru' }).length,
         ).toBeGreaterThan(0);
+    });
+
+    it('asks the server for as many rows as were chosen', async () => {
+        const api = mockApi({
+            ...withPermissions(['entries.read']),
+            [`GET ${base}/entries`]: () => page([entry()]),
+        });
+
+        renderApp(entriesPath);
+        const typist = userEvent.setup();
+
+        await screen.findByText('JU-2026-0001');
+        expect(
+            api
+                .called(`GET ${base}/entries`)
+                .every((call) => call.query.per_page === '25'),
+        ).toBe(true);
+
+        await typist.click(
+            screen.getByRole('combobox', { name: 'Baris per halaman' }),
+        );
+        await typist.click(await screen.findByRole('option', { name: '100' }));
+
+        await waitFor(() =>
+            expect(
+                api
+                    .called(`GET ${base}/entries`)
+                    .some((call) => call.query.per_page === '100'),
+            ).toBe(true),
+        );
+
+        // A list that asks the server never offers "all": the server caps a page.
+        await typist.click(
+            screen.getByRole('combobox', { name: 'Baris per halaman' }),
+        );
+        expect(
+            screen.queryByRole('option', { name: 'Semua' }),
+        ).not.toBeInTheDocument();
     });
 
     it('filters by date on the server', async () => {
@@ -609,8 +648,78 @@ describe('entry lifecycle', () => {
         await typist.click(
             await screen.findByRole('button', { name: 'Setujui' }),
         );
+        await confirmWith(typist, 'Setujui');
 
         await waitFor(() => expect(api.called(approve)).toHaveLength(1));
+    });
+
+    it('asks before approving, and does nothing until it is confirmed', async () => {
+        const approve = `POST ${entryPath()}/approve`;
+        const api = mockApi({
+            ...detailRoutes(all, { status: 'submitted' }),
+            [approve]: () => json({ data: entry({ status: 'approved' }) }),
+        });
+
+        renderApp(`${entriesPath}/${entry().id}`);
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('button', { name: 'Setujui' }),
+        );
+
+        const dialog = await confirmDialog();
+
+        expect(
+            within(dialog).getByText(/Setujui entri JU-2026-0001\?/),
+        ).toBeInTheDocument();
+        expect(api.called(approve)).toHaveLength(0);
+
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Batal' }),
+        );
+        await waitFor(() =>
+            expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument(),
+        );
+        expect(api.called(approve)).toHaveLength(0);
+    });
+
+    it('says what posting does before it posts', async () => {
+        const post = `POST ${entryPath()}/post`;
+        const api = mockApi({
+            ...detailRoutes(all, { status: 'approved' }),
+            [post]: () => json({ data: entry({ status: 'posted' }) }),
+        });
+
+        renderApp(`${entriesPath}/${entry().id}`);
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('button', { name: 'Posting' }),
+        );
+
+        expect(
+            within(await confirmDialog()).getByText(
+                /tidak dapat diubah atau dihapus/,
+            ),
+        ).toBeInTheDocument();
+        expect(api.called(post)).toHaveLength(0);
+    });
+
+    it('does not ask before submitting: it can still be rejected and revised', async () => {
+        const submit = `POST ${entryPath()}/submit`;
+        const api = mockApi({
+            ...detailRoutes(all),
+            [submit]: () => json({ data: entry({ status: 'submitted' }) }),
+        });
+
+        renderApp(`${entriesPath}/${entry().id}`);
+
+        await userEvent
+            .setup()
+            .click(await screen.findByRole('button', { name: 'Ajukan' }));
+
+        await waitFor(() => expect(api.called(submit)).toHaveLength(1));
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     });
 
     it('will not reject without a reason', async () => {
@@ -664,6 +773,7 @@ describe('entry lifecycle', () => {
         await typist.click(
             await screen.findByRole('button', { name: 'Posting' }),
         );
+        await confirmWith(typist, 'Posting');
 
         await waitFor(() => expect(api.called(post)).toHaveLength(1));
     });

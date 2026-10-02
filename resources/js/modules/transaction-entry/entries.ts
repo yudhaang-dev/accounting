@@ -22,6 +22,7 @@ export type EntryFilters = {
     from?: string;
     to?: string;
     page: number;
+    perPage: number;
 };
 
 export type EntryPage = {
@@ -45,6 +46,7 @@ export const entriesQuery = (companyId: string, filters: EntryFilters) =>
                             'filter[from]': filters.from || undefined,
                             'filter[to]': filters.to || undefined,
                             page: filters.page,
+                            per_page: filters.perPage,
                         },
                     },
                 }),

@@ -1,4 +1,4 @@
-import { keepPreviousData, queryOptions } from '@tanstack/react-query';
+import { queryOptions } from '@tanstack/react-query';
 import { api, unwrap } from '@/api/client';
 import type { components } from '@/api/schema';
 
@@ -16,71 +16,64 @@ export const ACCOUNT_CLASSES: AccountClass[] = [
     'expense',
 ];
 
-export type AccountFilters = {
-    class?: AccountClass;
-    status?: AccountStatus;
-    search?: string;
-    page: number;
-};
-
-export type AccountPage = {
-    accounts: Account[];
-    page: number;
-    lastPage: number;
-    total: number;
-};
-
-export const accountsQuery = (companyId: string, filters: AccountFilters) =>
+/**
+ * The whole chart, fetched page by page until it is complete. A chart is a tree and a parent may be
+ * on another page than its children, so the list screen filters, indents and pages it in the browser
+ * from the complete set (a chart is hundreds of accounts, not millions).
+ */
+export const allAccountsQuery = (companyId: string) =>
     queryOptions({
-        queryKey: ['companies', companyId, 'accounts', filters],
-        placeholderData: keepPreviousData,
-        queryFn: async (): Promise<AccountPage> => {
-            const body = await unwrap(
-                api.GET('/companies/{companyId}/accounts', {
-                    params: {
-                        path: { companyId },
-                        query: {
-                            'filter[class]': filters.class,
-                            'filter[status]': filters.status,
-                            'filter[search]': filters.search || undefined,
-                            page: filters.page,
-                        },
-                    },
-                }),
-            );
+        queryKey: ['companies', companyId, 'accounts', 'all'],
+        queryFn: async (): Promise<Account[]> => {
+            const accounts: Account[] = [];
+            let page = 1;
+            let lastPage = 1;
 
-            return {
-                accounts: body.data,
-                page: body.meta.current_page,
-                lastPage: body.meta.last_page,
-                total: body.meta.total,
-            };
-        },
-    });
-
-/** Every active account of a class, to choose a parent from (a chart stays well under 200). */
-export const parentOptionsQuery = (
-    companyId: string,
-    accountClass: AccountClass,
-) =>
-    queryOptions({
-        queryKey: ['companies', companyId, 'accounts', 'parents', accountClass],
-        queryFn: async (): Promise<Account[]> =>
-            (
-                await unwrap(
+            do {
+                const body = await unwrap(
                     api.GET('/companies/{companyId}/accounts', {
                         params: {
                             path: { companyId },
-                            query: {
-                                'filter[class]': accountClass,
-                                'filter[status]': 'active',
-                                per_page: 200,
-                            },
+                            query: { per_page: 200, page },
                         },
                     }),
-                )
-            ).data,
+                );
+
+                accounts.push(...body.data);
+                lastPage = body.meta.last_page;
+                page += 1;
+            } while (page <= lastPage);
+
+            return accounts;
+        },
     });
+
+/** How many levels below the top each account sits, from the parent links of the whole chart. */
+export function accountDepths(accounts: Account[]): Map<string, number> {
+    const parentOf = new Map(accounts.map((a) => [a.id, a.parent_id]));
+    const depths = new Map<string, number>();
+
+    for (const { id } of accounts) {
+        let depth = 0;
+
+        for (
+            let parent = parentOf.get(id);
+            parent;
+            parent = parentOf.get(parent)
+        ) {
+            depth += 1;
+
+            // A parent link loop cannot exist (the API refuses it); do not spin if data ever lies.
+            if (depth > accounts.length) {
+                break;
+            }
+        }
+
+        depths.set(id, depth);
+    }
+
+    return depths;
+}
 
 export async function createAccount(
     companyId: string,

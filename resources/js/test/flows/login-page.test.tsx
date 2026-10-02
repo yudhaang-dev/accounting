@@ -233,7 +233,12 @@ describe('login screen', () => {
         renderApp('/login');
 
         const typist = userEvent.setup();
-        await typist.click(await screen.findByRole('button', { name: 'EN' }));
+        await typist.click(
+            await screen.findByRole('button', { name: 'Bahasa' }),
+        );
+        await typist.click(
+            await screen.findByRole('menuitem', { name: 'English' }),
+        );
 
         expect(
             await screen.findByRole('button', { name: 'Sign in' }),
@@ -241,7 +246,14 @@ describe('login screen', () => {
         expect(localStorage.getItem('locale')).toBe('en');
         expect(document.documentElement.lang).toBe('en');
 
-        await typist.click(screen.getByRole('button', { name: 'ID' }));
+        // The menu names the current language on its button, in that language.
+        await typist.click(screen.getByRole('button', { name: 'Language' }));
+        await typist.click(
+            await screen.findByRole('menuitem', { name: 'Indonesia' }),
+        );
+        expect(
+            await screen.findByRole('button', { name: 'Masuk' }),
+        ).toBeInTheDocument();
     });
 });
 

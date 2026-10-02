@@ -13,6 +13,8 @@ export const id = {
         today: 'Hari ini',
         clear: 'Hapus',
         noMatch: 'Tidak ada yang cocok.',
+        cancel: 'Batal',
+        actionsFor: 'Aksi untuk {{name}}',
         required: 'Wajib diisi',
         email: 'Email',
         password: 'Kata sandi',
@@ -185,15 +187,10 @@ export const id = {
         accountName: 'Nama akun',
         normal: 'Saldo normal',
         actions: 'Aksi',
-        parentBadge: 'Induk',
         empty: 'Belum ada akun',
         emptyDescription:
             'Bagan akun masih kosong. Pasang template atau tambahkan akun satu per satu.',
         noMatch: 'Tidak ada akun yang cocok dengan filter ini.',
-        count: '{{count}} akun',
-        previous: 'Sebelumnya',
-        next: 'Berikutnya',
-        pageOf: 'Halaman {{page}} dari {{last}}',
         editAction: 'Ubah',
         deactivateAction: 'Nonaktifkan',
         reactivateAction: 'Aktifkan',
@@ -285,10 +282,6 @@ export const id = {
         empty: 'Belum ada entri',
         emptyDescription: 'Entri yang dibuat akan muncul di sini.',
         noMatch: 'Tidak ada entri yang cocok dengan filter ini.',
-        count: '{{count}} entri',
-        previous: 'Sebelumnya',
-        next: 'Berikutnya',
-        pageOf: 'Halaman {{page}} dari {{last}}',
         open: 'Buka entri {{number}}',
         detail: {
             title: 'Entri {{number}}',
@@ -449,10 +442,6 @@ export const id = {
             empty: 'Belum ada jurnal',
             emptyDescription: 'Jurnal muncul di sini setelah entri diposting.',
             noMatch: 'Tidak ada jurnal yang cocok dengan filter ini.',
-            count: '{{count}} jurnal',
-            previous: 'Sebelumnya',
-            next: 'Berikutnya',
-            pageOf: 'Halaman {{page}} dari {{last}}',
             open: 'Buka jurnal {{number}}',
         },
     },
@@ -460,7 +449,7 @@ export const id = {
         pageTitle: 'Neraca saldo',
         title: 'Neraca saldo',
         description:
-            'Saldo awal, mutasi, dan saldo akhir per akun pada rentang tanggal. Total debit harus sama dengan kredit.',
+            'Saldo awal, mutasi, dan saldo akhir per akun pada rentang tanggal. Total debit harus sama dengan kredit. Saldo awal tidak diinput: ia dihitung dari semua jurnal sebelum tanggal awal.',
         from: 'Dari tanggal',
         to: 'Sampai tanggal',
         show: 'Tampilkan',
@@ -484,6 +473,56 @@ export const id = {
         drill: 'Lihat jurnal akun {{code}}',
         currency: 'Dalam {{currency}}',
         rangeInvalid: 'Tanggal awal tidak boleh setelah tanggal akhir.',
+    },
+    confirm: {
+        post: {
+            title: 'Posting entri {{number}}?',
+            description:
+                'Jurnal yang dihasilkan tidak dapat diubah atau dihapus. Koreksi hanya bisa dilakukan dengan jurnal pembalik.',
+            action: 'Posting',
+        },
+        approve: {
+            title: 'Setujui entri {{number}}?',
+            description:
+                'Persetujuan dicatat atas nama Anda di riwayat entri, dan entri siap diposting.',
+            action: 'Setujui',
+        },
+        closePeriod: {
+            title: 'Tutup periode {{name}}?',
+            description:
+                'Periode yang ditutup menolak semua posting sampai dibuka kembali dengan alasan.',
+            action: 'Tutup periode',
+        },
+        deactivateAccount: {
+            title: 'Nonaktifkan akun {{code}}?',
+            description:
+                'Akun nonaktif tidak menerima posting baru. Riwayatnya tetap ada, dan akun dapat diaktifkan kembali.',
+            action: 'Nonaktifkan',
+        },
+        activateCompany: {
+            title: 'Aktifkan {{name}}?',
+            description:
+                'Perusahaan mulai mencatat transaksi, dan mata uang fungsionalnya tidak dapat diubah lagi.',
+            action: 'Aktifkan',
+        },
+    },
+    breadcrumb: {
+        label: 'Navigasi halaman',
+        new: 'Baru',
+        edit: 'Ubah',
+        reports: 'Laporan',
+        setup: 'Penyiapan',
+        workspaces: 'Ruang kerja',
+        more: 'Lainnya',
+    },
+    pager: {
+        rows: 'Baris per halaman',
+        all: 'Semua',
+        range: '{{from}}–{{to}} dari {{total}}',
+        none: '0 dari 0',
+        page: 'Halaman {{page}} dari {{last}}',
+        previous: 'Sebelumnya',
+        next: 'Berikutnya',
     },
     newWorkspace: {
         pageTitle: 'Ruang kerja baru',

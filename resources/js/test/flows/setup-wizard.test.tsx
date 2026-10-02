@@ -1,4 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react';
+import { confirmWith } from '@/test/actions';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import {
@@ -568,6 +569,7 @@ describe('company setup wizard', () => {
         await typist.click(
             await screen.findByRole('button', { name: 'Aktifkan perusahaan' }),
         );
+        await confirmWith(typist, 'Aktifkan');
 
         const alert = await screen.findByRole('alert');
 
@@ -606,6 +608,7 @@ describe('company setup wizard', () => {
         await typist.click(
             await screen.findByRole('button', { name: 'Aktifkan perusahaan' }),
         );
+        await confirmWith(typist, 'Aktifkan');
 
         await waitFor(() =>
             expect(router.state.location.pathname).toBe(

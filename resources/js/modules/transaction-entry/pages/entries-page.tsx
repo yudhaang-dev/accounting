@@ -1,4 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import { TablePagination } from '@/components/table-pagination';
+import { usePageSize } from '@/lib/page-size';
 import { DatePicker } from '@/components/date-picker';
 import { Link } from '@tanstack/react-router';
 import { FileTextIcon, PlusIcon } from 'lucide-react';
@@ -59,10 +61,13 @@ export function EntriesPage({
     const [from, setFrom] = useState('');
     const [to, setTo] = useState('');
     const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = usePageSize('entries');
 
     useDocumentTitle(t('entries.pageTitle'));
 
-    const list = useQuery(entriesQuery(companyId, { status, from, to, page }));
+    const list = useQuery(
+        entriesQuery(companyId, { status, from, to, page, perPage: pageSize }),
+    );
     const filtered = Boolean(status || from || to);
     const statusItems = [
         { value: ALL, label: t('entries.allStatuses') },
@@ -256,39 +261,16 @@ export function EntriesPage({
                         </Table>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-                        <span aria-live="polite">
-                            {t('entries.count', { count: list.data.total })}
-                        </span>
-                        {list.data.lastPage > 1 && (
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={list.data.page <= 1}
-                                    onClick={() => setPage(list.data.page - 1)}
-                                >
-                                    {t('entries.previous')}
-                                </Button>
-                                <span>
-                                    {t('entries.pageOf', {
-                                        page: list.data.page,
-                                        last: list.data.lastPage,
-                                    })}
-                                </span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={
-                                        list.data.page >= list.data.lastPage
-                                    }
-                                    onClick={() => setPage(list.data.page + 1)}
-                                >
-                                    {t('entries.next')}
-                                </Button>
-                            </div>
-                        )}
-                    </div>
+                    <TablePagination
+                        total={list.data.total}
+                        page={list.data.page}
+                        pageSize={pageSize}
+                        onPageChange={setPage}
+                        onPageSizeChange={(size) => {
+                            setPageSize(size);
+                            setPage(1);
+                        }}
+                    />
                 </div>
             )}
         </>
