@@ -21,6 +21,8 @@ return [
     'dimension_required' => 'Akun :account mewajibkan nilai untuk dimensi :type.',
     'dimension_forbidden' => 'Akun :account tidak mengizinkan dimensi :type.',
     'dimension_set_unknown' => 'Set dimensi tidak ada di perusahaan ini.',
+    'already_reversed' => 'Jurnal :number sudah dibalik oleh :reversal.',
+    'reversal_of' => 'Pembalikan jurnal :number',
     'unbalanced' => 'Jurnal tidak seimbang: debit :debit, kredit :credit.',
 
 ];

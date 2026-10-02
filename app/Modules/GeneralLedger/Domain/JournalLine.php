@@ -25,6 +25,8 @@ use LogicException;
  * @property string $currency
  * @property BigDecimal $transaction_amount
  * @property BigDecimal $exchange_rate
+ * @property string|null $rate_type_id
+ * @property string|null $rate_date
  * @property string $dimension_set_id
  * @property string|null $description
  */

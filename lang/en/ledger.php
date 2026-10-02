@@ -21,6 +21,8 @@ return [
     'dimension_required' => 'Account :account requires a value for the dimension :type.',
     'dimension_forbidden' => 'Account :account does not allow the dimension :type.',
     'dimension_set_unknown' => 'The dimension set does not exist in this company.',
+    'already_reversed' => 'Journal :number was already reversed by :reversal.',
+    'reversal_of' => 'Reversal of journal :number',
     'unbalanced' => 'The journal is not balanced: debit :debit, credit :credit.',
 
 ];

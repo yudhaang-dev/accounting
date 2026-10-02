@@ -15,4 +15,14 @@ interface PostingService
      * is stored in that case.
      */
     public function post(PostJournal $command): PostedJournal;
+
+    /**
+     * Posts the mirror image of a journal, linked to it (GL-FR-06); a journal can be reversed once.
+     * The original's accounts are not validated again, so a journal stays reversible after its
+     * account was deactivated; the period of the reversal date must accept the posting.
+     *
+     * Fails with ApiException NOT_FOUND (unknown journal), INVALID_STATE_TRANSITION (already
+     * reversed), COMPANY_READ_ONLY or PERIOD_NOT_OPEN, or a validation error for a malformed date.
+     */
+    public function reverse(ReverseJournal $command): PostedJournal;
 }

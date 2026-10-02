@@ -9,6 +9,7 @@ use App\Modules\GeneralLedger\Contracts\LedgerPolicies;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
+use App\Modules\MasterData\Contracts\CompanyData;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
 use App\Modules\MasterData\Contracts\DimensionSets;
@@ -52,14 +53,9 @@ final class EloquentPostingValidator implements PostingValidator
      */
     public function resolve(PostJournal $command): ResolvedPosting
     {
-        $company = $this->status->isWritable($command->companyId) ? $this->companies->find($command->companyId) : null;
-
-        if ($company === null) {
-            throw new ApiException(ErrorCode::CompanyReadOnly);
-        }
-
+        $company = $this->company($command->companyId);
         $amounts = $this->structure($command, $company->functionalCurrency);
-        $periodId = $this->period($command);
+        $periodId = $this->periodFor($command->companyId, $command->accountingDate, $command->transactionTypeKey, $command->actorPermissions);
         $accounts = $this->accounts($command);
         $this->sources($command, $accounts);
         $this->currencies($command, $accounts, $company->functionalCurrency);
@@ -169,21 +165,40 @@ final class EloquentPostingValidator implements PostingValidator
     }
 
     /**
+     * @throws ApiException COMPANY_READ_ONLY
+     */
+    public function company(string $companyId): CompanyData
+    {
+        $company = $this->status->isWritable($companyId) ? $this->companies->find($companyId) : null;
+
+        if ($company === null) {
+            throw new ApiException(ErrorCode::CompanyReadOnly);
+        }
+
+        return $company;
+    }
+
+    /**
+     * The period that accepts a posting on the date for this transaction type key and these permissions.
+     *
+     * @param  list<string>  $actorPermissions
+     * @return string the period ID
+     *
      * @throws ApiException PERIOD_NOT_OPEN
      */
-    private function period(PostJournal $command): string
+    public function periodFor(string $companyId, string $accountingDate, ?string $transactionTypeKey, array $actorPermissions): string
     {
-        $period = $this->periods->forDate($command->companyId, $command->accountingDate);
+        $period = $this->periods->forDate($companyId, $accountingDate);
 
         if ($period === null) {
             throw new ApiException(ErrorCode::PeriodNotOpen, errors: [
-                'accounting_date' => [__('ledger.period_missing', ['date' => $command->accountingDate])],
+                'accounting_date' => [__('ledger.period_missing', ['date' => $accountingDate])],
             ]);
         }
 
         if ($period->isSoftClosed()) {
             // Only what the policy names may enter; the permission was certified by the application layer (GL-AC-04).
-            if (! $this->policies->current($command->companyId)->allowsSoftClosedPosting($command->transactionTypeKey, $command->actorPermissions)) {
+            if (! $this->policies->current($companyId)->allowsSoftClosedPosting($transactionTypeKey, $actorPermissions)) {
                 throw new ApiException(ErrorCode::PeriodNotOpen, errors: [
                     'accounting_date' => [__('ledger.period_soft_closed', ['period' => $period->name])],
                 ]);
