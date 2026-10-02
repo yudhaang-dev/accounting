@@ -518,6 +518,9 @@ export const en: Widen<typeof id> = {
             closed: 'Closed',
             soft_closed: 'Soft closed',
         },
+        softCloseAction: 'Soft-close',
+        softClose: 'Soft-close {{name}}',
+        softClosed: 'Period {{name}} soft-closed.',
         closeAction: 'Close',
         reopenAction: 'Reopen',
         close: 'Close {{name}}',
@@ -984,6 +987,12 @@ export const en: Widen<typeof id> = {
             description:
                 'The approval is recorded in your name in the entry history, and the entry is ready to post.',
             action: 'Approve',
+        },
+        softClosePeriod: {
+            title: 'Soft-close period {{name}}?',
+            description:
+                'The period then only takes the postings that the ledger policy names, for example audit corrections. It can be closed fully or reopened.',
+            action: 'Soft-close',
         },
         closePeriod: {
             title: 'Close period {{name}}?',

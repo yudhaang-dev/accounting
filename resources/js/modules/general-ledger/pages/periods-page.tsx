@@ -45,6 +45,7 @@ import { ReopenPeriodDialog } from '@/modules/general-ledger/components/reopen-p
 import {
     closePeriod,
     periodsQuery,
+    softClosePeriod,
     type Period,
 } from '@/modules/general-ledger/periods';
 
@@ -85,6 +86,8 @@ export function PeriodsPage({
     const [reopening, setReopening] = useState<Period | null>(null);
     const [closing, setClosing] = useState<Period | null>(null);
     const asking = useLastDefined(closing);
+    const [softClosing, setSoftClosing] = useState<Period | null>(null);
+    const askingSoft = useLastDefined(softClosing);
 
     useDocumentTitle(t('periods.pageTitle'));
 
@@ -111,6 +114,18 @@ export function PeriodsPage({
         onError: (error) =>
             toast.error(failure(error, genericErrorMessage(error, t))),
     });
+
+    const softClose = useMutation({
+        mutationFn: (period: Period) => softClosePeriod(companyId, period.id),
+        onSuccess: async (period) => {
+            await refresh();
+            toast.success(t('periods.softClosed', { name: period.name }));
+        },
+        onSettled: () => setSoftClosing(null),
+        onError: (error) =>
+            toast.error(failure(error, genericErrorMessage(error, t))),
+    });
+    const busy = close.isPending || softClose.isPending;
 
     const addYear = useMutation({
         mutationFn: () => createFiscalYears(companyId, { count: 1 }),
@@ -289,9 +304,31 @@ export function PeriodsPage({
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                disabled={
-                                                                    close.isPending
+                                                                disabled={busy}
+                                                                aria-label={t(
+                                                                    'periods.softClose',
+                                                                    {
+                                                                        name: period.name,
+                                                                    },
+                                                                )}
+                                                                onClick={() =>
+                                                                    setSoftClosing(
+                                                                        period,
+                                                                    )
                                                                 }
+                                                            >
+                                                                {t(
+                                                                    'periods.softCloseAction',
+                                                                )}
+                                                            </Button>
+                                                        )}
+                                                    {period.status !==
+                                                        'closed' &&
+                                                        canClose && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                disabled={busy}
                                                                 aria-label={t(
                                                                     'periods.close',
                                                                     {
@@ -309,8 +346,7 @@ export function PeriodsPage({
                                                                 )}
                                                             </Button>
                                                         )}
-                                                    {period.status ===
-                                                        'closed' &&
+                                                    {period.status !== 'open' &&
                                                         canReopen && (
                                                             <Button
                                                                 variant="ghost"
@@ -343,6 +379,21 @@ export function PeriodsPage({
                 </div>
             )}
 
+            <ConfirmDialog
+                open={softClosing !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setSoftClosing(null);
+                    }
+                }}
+                title={t('confirm.softClosePeriod.title', {
+                    name: askingSoft?.name ?? '',
+                })}
+                description={t('confirm.softClosePeriod.description')}
+                confirmLabel={t('confirm.softClosePeriod.action')}
+                pending={softClose.isPending}
+                onConfirm={() => softClosing && softClose.mutate(softClosing)}
+            />
             <ConfirmDialog
                 open={closing !== null}
                 onOpenChange={(open) => {

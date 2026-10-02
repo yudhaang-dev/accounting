@@ -819,6 +819,58 @@ describe('fiscal periods', () => {
         await waitFor(() => expect(api.called(close)).toHaveLength(1));
     });
 
+    it('soft-closes an open period after asking', async () => {
+        const soft = `POST ${base}/periods/${period(2, 'open').id}/soft-close`;
+        const api = mockApi({
+            ...periodRoutes(['periods.read', 'periods.close']),
+            [soft]: () => json({ data: period(2, 'soft_closed') }),
+        });
+
+        renderApp(periodsPath);
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('button', {
+                name: 'Tutup sementara 2026-02',
+            }),
+        );
+        await confirmWith(typist, 'Tutup sementara');
+
+        await waitFor(() => expect(api.called(soft)).toHaveLength(1));
+    });
+
+    it('lets a soft-closed period be closed or reopened, and a closed one only reopened', async () => {
+        mockApi({
+            ...withPermissions([
+                'periods.read',
+                'periods.close',
+                'periods.reopen',
+            ]),
+            [`GET ${base}/fiscal-years`]: () => json({ data: [year] }),
+            [`GET ${base}/periods`]: () =>
+                list([period(1, 'closed'), period(2, 'soft_closed')]),
+        });
+
+        renderApp(periodsPath);
+
+        await screen.findByText('Ditutup sementara');
+        expect(
+            screen.getByRole('button', { name: 'Tutup 2026-02' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Buka kembali 2026-02' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Buka kembali 2026-01' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Tutup 2026-01' }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: /^Tutup sementara/ }),
+        ).not.toBeInTheDocument();
+    });
+
     it('will not reopen a period without a reason', async () => {
         const reopen = `POST ${base}/periods/${period(1, 'closed').id}/reopen`;
         const api = mockApi({

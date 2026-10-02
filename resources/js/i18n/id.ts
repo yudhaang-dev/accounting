@@ -515,6 +515,9 @@ export const id = {
             closed: 'Ditutup',
             soft_closed: 'Ditutup sementara',
         },
+        softCloseAction: 'Tutup sementara',
+        softClose: 'Tutup sementara {{name}}',
+        softClosed: 'Periode {{name}} ditutup sementara.',
         closeAction: 'Tutup',
         reopenAction: 'Buka kembali',
         close: 'Tutup {{name}}',
@@ -984,6 +987,12 @@ export const id = {
             description:
                 'Persetujuan dicatat atas nama Anda di riwayat entri, dan entri siap diposting.',
             action: 'Setujui',
+        },
+        softClosePeriod: {
+            title: 'Tutup sementara periode {{name}}?',
+            description:
+                'Periode hanya menerima posting dari jenis transaksi dan hak yang ditetapkan kebijakan buku besar, misalnya koreksi audit. Periode dapat ditutup penuh atau dibuka kembali.',
+            action: 'Tutup sementara',
         },
         closePeriod: {
             title: 'Tutup periode {{name}}?',

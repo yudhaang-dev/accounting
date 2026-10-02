@@ -38,6 +38,20 @@ export const periodQuery = (companyId: string, id: string) =>
             ).data,
     });
 
+/** Keeps the period open to the postings the ledger policy names and refuses all others (GL-FR-04). */
+export async function softClosePeriod(
+    companyId: string,
+    id: string,
+): Promise<Period> {
+    return (
+        await unwrap(
+            api.POST('/companies/{companyId}/periods/{id}/soft-close', {
+                params: { path: { companyId, id } },
+            }),
+        )
+    ).data;
+}
+
 export async function closePeriod(
     companyId: string,
     id: string,
