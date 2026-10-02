@@ -54,7 +54,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 ## M3 — Identitas & akses
 
-- [ ] **M3-01** Role sebagai data dan endpoint katalog permission — IA-FR-02, IA-AC-03
+- [x] **M3-01** Role sebagai data dan endpoint katalog permission — IA-FR-02, IA-AC-03 — role tidak pernah dihapus, hanya dinonaktifkan; penugasan role ke anggota menyusul di M3-02
 - [ ] **M3-02** Siklus membership: undangan, pencabutan, kedaluwarsa — IA-FR-01, IA-AC-02
 - [ ] **M3-03** Cakupan data per nilai dimensi beserta turunannya, diterapkan sebagai filter di semua modul — IA-FR-03, IA-AC-04, X-AC-01
 - [ ] **M3-04** Kebijakan keamanan: 2FA wajib per permission, batas sesi idle, allowlist IP klien — IA-FR-04, IA-FR-05, IA-AC-05

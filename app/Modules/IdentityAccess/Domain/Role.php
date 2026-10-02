@@ -3,9 +3,11 @@
 namespace App\Modules\IdentityAccess\Domain;
 
 use App\Modules\IdentityAccess\Database\Factories\RoleFactory;
+use App\Platform\Api\Concerns\HasLockVersion;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role as SpatieRole;
 
 /**
@@ -22,7 +24,20 @@ use Spatie\Permission\Models\Role as SpatieRole;
 class Role extends SpatieRole
 {
     /** @use HasFactory<RoleFactory> */
-    use HasFactory, HasUlids;
+    use HasFactory, HasLockVersion, HasUlids;
+
+    /**
+     * Keys of the permissions of the role, sorted.
+     *
+     * @return list<string>
+     */
+    public function permissionKeys(): array
+    {
+        $keys = array_map(fn (Permission $permission): string => $permission->name, $this->permissions->all());
+        sort($keys);
+
+        return $keys;
+    }
 
     protected function casts(): array
     {
