@@ -10,7 +10,7 @@
 
 - [x] **M0-01** Bersihkan starter kit: hapus Inertia dan Wayfinder (paket PHP/JS, middleware, halaman); Fortify mode headless dengan respons JSON — ADR-0010, ADR-0005
 - [x] **M0-02** Pindah ke PostgreSQL (`.env.example`, test, ekstensi `btree_gist`) — ADR-0003
-- [x] **M0-03** Pasang paket ADR-0004 dan verifikasi kompatibilitasnya dengan Laravel 13 — ADR-0004 — terpasang; `spatie/laravel-webhook-server` ditunda ke B-02 (F2), `laravel/horizon` ditunda ke persiapan produksi Linux (butuh ext-pcntl/posix, tidak ada di Windows)
+- [x] **M0-03** Pasang paket ADR-0004 dan verifikasi kompatibilitasnya dengan Laravel 13 — ADR-0004 — `spatie/laravel-webhook-server` ditunda ke B-02, `laravel/horizon` ke persiapan produksi Linux
 - [x] **M0-04** Kerangka modul (`app/Modules/*`, `Orchestration`, `Platform`, `Support`), service provider dan route per modul, prefix tabel — ADR-0002
 - [x] **M0-05** Penjaga arsitektur di CI: deptrac sesuai graf, Pest arch (import lintas modul hanya ke `Contracts`, tanpa pemeriksaan nama role, prefix tabel) — ADR-0002
 - [x] **M0-06** Tipe dasar: `Money` (brick/math) dan cast desimal, model berbasis ULID, scope perusahaan dan konvensi composite FK — API-TR-04, API-TR-05
@@ -33,8 +33,8 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M1-04** Bagan akun dengan seed template yang wajib dikonfirmasi — GL-FR-01, X-AC-03
 - [x] **M1-05** Kalender fiskal bulanan, periode tanpa celah (exclusion constraint), status `open`/`closed` — GL-FR-03, GL-FR-04, GL-AC-08
 - [x] **M1-06** Inti posting GL: `Journal`/`JournalLine` dengan kolom mata uang dan `dimension_set_id` (set kosong) sejak awal, trigger keseimbangan dan imutabilitas, nomor jurnal, `AccountBalance` dengan urutan penguncian, idempotensi per entri — GL-FR-05, GL-FR-06, GL-AC-01, GL-AC-03, GL-AC-12, ADR-0007, ADR-0008
-- [x] **M1-07** Entri minimal: Jenis Transaksi mode `free_lines`, siklus entri, validasi lewat `PostingValidator`, approval berbasis permission, posting ke GL — TE-FR-01, TE-FR-03, TE-FR-07, TE-FR-10 — SoD sementara berupa satu saklar `entries.separation_of_duties` (default mati) sampai kebijakan approval per perusahaan (M5-04); `structured` dan versi baru menyusul di M5-01
-- [x] **M1-08** Neraca saldo dengan drill-down dan ekspor CSV (Platform Export) — RP-FR-05, RP-AC-01, X-FR-02, API-AC-07 — penanda batch saldo konversi menyusul di M4-08
+- [x] **M1-07** Entri minimal: Jenis Transaksi mode `free_lines`, siklus entri, validasi lewat `PostingValidator`, approval berbasis permission, posting ke GL — TE-FR-01, TE-FR-03, TE-FR-07, TE-FR-10 — SoD baru berupa satu saklar sampai M5-04; `structured` dan versi baru di M5-01
+- [x] **M1-08** Neraca saldo dengan drill-down dan ekspor CSV (Platform Export) — RP-FR-05, RP-AC-01, X-FR-02, API-AC-07 — penanda batch saldo konversi di M8-08
 - [x] **M1-09** SPA: pemilih workspace, wizard setup perusahaan (profil, konfirmasi template COA, kalender), akun, periode, form dan daftar entri beserta aksinya, detail jurnal, neraca saldo
   - [x] **M1-09a** Shell SPA dan pemilih workspace
   - [x] **M1-09b** Wizard setup perusahaan (profil, konfirmasi template COA, kalender)
@@ -48,7 +48,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 - [x] **M2-01** Tipe dan nilai dimensi: hierarki, masa berlaku, aturan hanya-daun, nonaktif — MD-FR-02, MD-FR-03, MD-AC-03, MD-AC-04
 - [x] **M2-02** Resolusi dimension set dan query hierarki; dipakai baris entri, jurnal, dan filter neraca saldo — MD-FR-04, MD-FR-05, MD-AC-01, MD-AC-02
-- [x] **M2-03** Mata uang ISO 4217, aktivasi per perusahaan, skala dan pembulatan — MD-FR-06 — larangan menonaktifkan mata uang yang dipakai transaksi menyusul di M4-05
+- [x] **M2-03** Mata uang ISO 4217, aktivasi per perusahaan, skala dan pembulatan — MD-FR-06
 - [x] **M2-04** Jenis kurs dan kurs (manual, CSV, API `exchange-rates:write`), pencarian tanpa fallback, batas umur — MD-FR-07, MD-FR-08, MD-AC-06
 - [x] **M2-05** SPA: dimensi, mata uang, kurs, pemilih dimensi di form entri
 
@@ -56,20 +56,20 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 - [x] **M3-01** Role sebagai data dan endpoint katalog permission — IA-FR-02, IA-AC-03
 - [x] **M3-02** Siklus membership: undangan, pencabutan, kedaluwarsa — IA-FR-01, IA-AC-02
-- [x] **M3-03** Cakupan data per nilai dimensi beserta turunannya, diterapkan sebagai filter di semua modul — IA-FR-03, IA-AC-04, X-AC-01 — modul baru yang membaca data berdimensi wajib menerapkan `DataScopeContext` (neraca saldo, jurnal, dan entri sudah). Laporan M8 menerima `DataScope` sebagai parameter dan menandai `restricted`; entri dari klien integrasi (M3-05) membutuhkan cakupan sendiri
+- [x] **M3-03** Cakupan data per nilai dimensi beserta turunannya, diterapkan sebagai filter di semua modul — IA-FR-03, IA-AC-04, X-AC-01 — laporan M8 menerima `DataScope` dan menandai `restricted`; entri klien integrasi (M3-05) butuh cakupan sendiri
 - [x] **M3-04** Kebijakan keamanan: 2FA wajib per permission, batas sesi idle, allowlist IP klien — IA-FR-04, IA-FR-05, IA-AC-05 — 2FA hanya memeriksa 2FA terpasang di akun, bukan tantangan per sesi
-- [x] **M3-05** Klien integrasi: Passport Client Credentials di `/api/v1/oauth/token`, scope, allowlist, rotasi dan pencabutan langsung — IA-FR-06, IA-AC-06, IA-AC-07, API-TR-22, API-TR-23, API-TR-24 — permission `financial-events.*` ditambahkan di M5-07, yang juga menegakkan allowlist Jenis Transaksi (baru divalidasi formatnya). Deploy: jalankan `php artisan passport:keys` dan migrasi Passport; atur `API_TOKEN_TTL_SECONDS`
-- [x] **M3-06** SPA: anggota dan role, cakupan data, kebijakan keamanan, klien integrasi (secret tampil sekali) — tipe `roles`/`data_scope`/`permissions` di OpenAPI masih longgar (keterbatasan Scramble), ditimpa tipe lokal di `modules/identity-access/access.ts`; pemilih cakupan butuh `dimensions.read`
+- [x] **M3-05** Klien integrasi: Passport Client Credentials di `/api/v1/oauth/token`, scope, allowlist, rotasi dan pencabutan langsung — IA-FR-06, IA-AC-06, IA-AC-07, API-TR-22, API-TR-23, API-TR-24 — permission `financial-events.*` dan penegakan allowlist Jenis Transaksi di M5-07. Deploy: `php artisan passport:keys`, migrasi Passport, atur `API_TOKEN_TTL_SECONDS`
+- [x] **M3-06** SPA: anggota dan role, cakupan data, kebijakan keamanan, klien integrasi (secret tampil sekali)
 
 ## M4 — Buku besar
 
-- [x] **M4-01** Atribut posting akun: sumber yang diizinkan, kewajiban dimensi, batasan mata uang, penanda revaluasi — GL-FR-02, GL-AC-02 — batasan `specific` menolak baris mata uang fungsional; baris valas baru ada di M4-05, penegakan penanda revaluasi di M4-07. Skema OpenAPI mengetik `dimension_requirements` sebagai `string` (respons) dan larik (request), keterbatasan Scramble; klien SPA di M4-12 perlu menimpanya dengan tipe lokal. Layar SPA menyusul di M4-12
-- [x] **M4-02** Status `soft_closed` dengan kebijakan per key Jenis Transaksi, tutup/buka periode beralasan, pola kalender 4-4-5 dan rentang bebas — GL-FR-03, GL-FR-04, GL-AC-04 — key berawalan `system.` lolos validasi kebijakan tanpa Jenis Transaksi; permission baru `journals.post-soft-closed` ada di role `accounting_admin`. Penandaan hasil turunan saat membuka kembali menyusul di M4-10/M4-11 dan M8-11. Layar SPA menyusul di M4-12; wizard setup baru membuat tahun bulanan
-- [x] **M4-03** Pembalikan jurnal di sisi GL — GL-FR-06, GL-AC-11 — `PostingService::reverse()`; akun asal tidak divalidasi ulang. Belum ada endpoint HTTP: alur pembalikan entri ada di M5-06
-- [x] **M4-04** Kebijakan override akun kontrol — GL-FR-07 — kebijakan buku besar mendapat `source_override_permission` (kosong = tanpa override, default); permission baru `journals.override-source`. Alur entri (M5) belum membawa alasan override, jadi baru bisa lewat `PostJournal::sourceOverrideReason`
-- [x] **M4-05** Baris valas, pembulatan ke `fx_rounding`, saldo per mata uang — GL-FR-08, GL-AC-05 — baris valas membawa `currency` dengan `rate_type_key` atau `exchange_rate` eksplisit; kebijakan buku besar mendapat `fx_rounding_tolerance` (default 0, wajib dikirim di `PUT /ledger-policy`); baris pembulatan tidak dicek atribut akunnya. Larangan menonaktifkan mata uang terpakai sudah ada (M2-03); penolakan aktivasi mata uang tanpa pemetaan peran belum. Saldo per mata uang lewat `LedgerReader::currencyBalances()`, belum ada endpoint
-- [x] **M4-06** Pemetaan peran GL berversi dan interface validasi target peran — GL-FR-10, X-AC-02, X-AC-03 — `AccountRoles` (`GET/PUT /account-roles`, `require()` menjawab `MAPPING_REQUIRED`) dan `AccountDirectory::roleTargetProblems()` untuk peran modul lain. Wajib-bila-valas-aktif baru ditegakkan saat dipakai (M4-05); penolakan aktivasi mata uang tanpa pemetaan menyusul bersama larangan menonaktifkannya
-- [x] **M4-07** Revaluasi akun non-kontrol dengan kebijakan pembalikan otomatis — GL-FR-09, GL-AC-06 — `POST /periods/{id}/revaluation` (permission baru `periods.revalue`, ada di role `accounting_admin`); kebijakan buku besar mendapat `revaluation_rate_type_key` dan `revaluation_auto_reverse`. Akun kontrol = akun yang tidak menerima sumber `entry` maupun `system`; menjalankan ulang hanya memposting selisih baru. Berlaku untuk periode `soft_closed` hanya bila key `system.fx_revaluation` diizinkan kebijakan. Revaluasi open item ada di M6-07
+- [x] **M4-01** Atribut posting akun: sumber yang diizinkan, kewajiban dimensi, batasan mata uang, penanda revaluasi — GL-FR-02, GL-AC-02 — layar SPA di M4-12, yang perlu menimpa tipe `dimension_requirements` dari OpenAPI
+- [x] **M4-02** Status `soft_closed` dengan kebijakan per key Jenis Transaksi, tutup/buka periode beralasan, pola kalender 4-4-5 dan rentang bebas — GL-FR-03, GL-FR-04, GL-AC-04 — penandaan hasil turunan saat membuka kembali di M4-10/M4-11 dan M8-11; layar SPA di M4-12
+- [x] **M4-03** Pembalikan jurnal di sisi GL — GL-FR-06, GL-AC-11 — endpoint pembalikan ada di M5-06
+- [x] **M4-04** Kebijakan override akun kontrol — GL-FR-07 — alur entri membawa alasan override di M5
+- [x] **M4-05** Baris valas, pembulatan ke `fx_rounding`, saldo per mata uang — GL-FR-08, GL-AC-05 — endpoint saldo per mata uang belum ada; penolakan aktivasi mata uang tanpa pemetaan peran belum
+- [x] **M4-06** Pemetaan peran GL berversi dan interface validasi target peran — GL-FR-10, X-AC-02, X-AC-03
+- [x] **M4-07** Revaluasi akun non-kontrol dengan kebijakan pembalikan otomatis — GL-FR-09, GL-AC-06 — revaluasi open item di M6-07
 - [x] **M4-08** Impor saldo konversi: `cutover_date`, `ledger_start_date`, pemetaan kode sumber, saldo YTD, idempoten — GL-FR-11, GL-AC-07 — baris akun kontrol baru dapat diimpor setelah Subledger menyuplai total open item (M6-10); penanda batch di neraca saldo menyusul di M8-08
 - [ ] **M4-09** Impor histori (ringkasan per periode atau transaksi) dan pencocokan dengan neraca saldo sumber pada cutover — GL-FR-11
 - [ ] **M4-10** Tutup tahun: orkestrasi kesiapan, jurnal penutup per akun × set dimensi, saldo tahun berikutnya — GL-FR-12, GL-FR-13, GL-AC-09
