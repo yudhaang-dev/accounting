@@ -27,10 +27,10 @@ final class EloquentLedgerPolicies implements LedgerPolicies
         return $row === null ? LedgerPolicyData::none() : $this->data($row);
     }
 
-    public function change(string $companyId, array $softClosedTransactionTypeKeys, ?string $softClosedPermission, int $expectedVersion, int $actorId): LedgerPolicyData
+    public function change(string $companyId, array $softClosedTransactionTypeKeys, ?string $softClosedPermission, ?string $sourceOverridePermission, int $expectedVersion, int $actorId): LedgerPolicyData
     {
         try {
-            return DB::transaction(function () use ($companyId, $softClosedTransactionTypeKeys, $softClosedPermission, $expectedVersion, $actorId): LedgerPolicyData {
+            return DB::transaction(function () use ($companyId, $softClosedTransactionTypeKeys, $softClosedPermission, $sourceOverridePermission, $expectedVersion, $actorId): LedgerPolicyData {
                 $before = $this->current($companyId);
 
                 if ($before->version !== $expectedVersion) {
@@ -46,6 +46,7 @@ final class EloquentLedgerPolicies implements LedgerPolicies
                     'version' => $before->version + 1,
                     'soft_closed_transaction_type_keys' => json_encode($keys, JSON_THROW_ON_ERROR),
                     'soft_closed_permission' => $softClosedPermission,
+                    'source_override_permission' => $sourceOverridePermission,
                     'created_by' => $actorId,
                     'created_at' => now(),
                 ]);
@@ -68,13 +69,14 @@ final class EloquentLedgerPolicies implements LedgerPolicies
         }
     }
 
-    /** @return array{version: int, soft_closed_transaction_type_keys: list<string>, soft_closed_permission: string|null} */
+    /** @return array{version: int, soft_closed_transaction_type_keys: list<string>, soft_closed_permission: string|null, source_override_permission: string|null} */
     private function snapshot(LedgerPolicyData $policy): array
     {
         return [
             'version' => $policy->version,
             'soft_closed_transaction_type_keys' => $policy->softClosedTransactionTypeKeys,
             'soft_closed_permission' => $policy->softClosedPermission,
+            'source_override_permission' => $policy->sourceOverridePermission,
         ];
     }
 
@@ -83,6 +85,6 @@ final class EloquentLedgerPolicies implements LedgerPolicies
         /** @var list<string> $keys */
         $keys = json_decode((string) $row->soft_closed_transaction_type_keys, true, flags: JSON_THROW_ON_ERROR);
 
-        return new LedgerPolicyData((int) $row->version, $keys, $row->soft_closed_permission);
+        return new LedgerPolicyData((int) $row->version, $keys, $row->soft_closed_permission, $row->source_override_permission);
     }
 }

@@ -19,7 +19,7 @@ final class PermissionCatalog
         'periods' => ['read', 'manage', 'close', 'reopen'],
         'transaction-types' => ['read'],
         'entries' => ['read', 'create', 'submit', 'approve', 'reject', 'post', 'reverse'],
-        'journals' => ['read', 'post-soft-closed'],
+        'journals' => ['read', 'post-soft-closed', 'override-source'],
         'reports' => ['read', 'export'],
         'audit' => ['read'],
         'memberships' => ['read', 'manage'],

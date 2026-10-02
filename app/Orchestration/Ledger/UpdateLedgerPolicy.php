@@ -31,7 +31,7 @@ final class UpdateLedgerPolicy
      * @throws ValidationException
      * @throws ApiException VERSION_CONFLICT
      */
-    public function __invoke(string $companyId, array $softClosedTransactionTypeKeys, ?string $softClosedPermission, int $expectedVersion, int $actorId): LedgerPolicyData
+    public function __invoke(string $companyId, array $softClosedTransactionTypeKeys, ?string $softClosedPermission, ?string $sourceOverridePermission, int $expectedVersion, int $actorId): LedgerPolicyData
     {
         $errors = [];
 
@@ -46,10 +46,14 @@ final class UpdateLedgerPolicy
             $errors['soft_closed_permission'] = [__('ledger.policy_permission_unknown', ['permission' => $softClosedPermission])];
         }
 
+        if ($sourceOverridePermission !== null && ! $this->permissions->exists($sourceOverridePermission)) {
+            $errors['source_override_permission'] = [__('ledger.policy_permission_unknown', ['permission' => $sourceOverridePermission])];
+        }
+
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
 
-        return $this->policies->change($companyId, $softClosedTransactionTypeKeys, $softClosedPermission, $expectedVersion, $actorId);
+        return $this->policies->change($companyId, $softClosedTransactionTypeKeys, $softClosedPermission, $sourceOverridePermission, $expectedVersion, $actorId);
     }
 }

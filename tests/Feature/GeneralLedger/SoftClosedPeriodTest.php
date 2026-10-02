@@ -47,6 +47,7 @@ function setLedgerPolicy(array $keys, ?string $permission, int $version)
         'lock_version' => $version,
         'soft_closed_transaction_type_keys' => $keys,
         'soft_closed_permission' => $permission,
+        'source_override_permission' => null,
     ]);
 }
 
@@ -170,14 +171,14 @@ describe('the ledger policy of soft-closed periods (GL-FR-04)', function () {
         [$otherCompany] = createWorkspaceAs($other, 'Other');
 
         $this->actingAs($other)->putJson("/api/v1/companies/{$otherCompany}/ledger-policy", [
-            'lock_version' => 0, 'soft_closed_transaction_type_keys' => ['general_journal'], 'soft_closed_permission' => null,
+            'lock_version' => 0, 'soft_closed_transaction_type_keys' => ['general_journal'], 'soft_closed_permission' => null, 'source_override_permission' => null,
         ])->assertUnprocessable()->assertJsonValidationErrors(['soft_closed_transaction_type_keys.0']);
     });
 
     it('needs policies.manage', function () {
         $this->actingAs($this->viewer)->getJson("{$this->url}/ledger-policy")->assertForbidden();
         $this->actingAs($this->viewer)->putJson("{$this->url}/ledger-policy", [
-            'lock_version' => 0, 'soft_closed_transaction_type_keys' => [], 'soft_closed_permission' => null,
+            'lock_version' => 0, 'soft_closed_transaction_type_keys' => [], 'soft_closed_permission' => null, 'source_override_permission' => null,
         ])->assertForbidden();
     });
 });

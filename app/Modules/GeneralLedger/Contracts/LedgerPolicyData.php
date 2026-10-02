@@ -11,16 +11,29 @@ final readonly class LedgerPolicyData
     /**
      * @param  list<string>  $softClosedTransactionTypeKeys  keys that may post into a soft-closed period
      * @param  string|null  $softClosedPermission  permission the poster must hold as well; null when the key suffices
+     * @param  string|null  $sourceOverridePermission  permission that lets a poster post to an account from a source it does not accept (GL-FR-07); null when the policy allows no override
      */
     public function __construct(
         public int $version,
         public array $softClosedTransactionTypeKeys,
         public ?string $softClosedPermission,
+        public ?string $sourceOverridePermission = null,
     ) {}
 
     public static function none(): self
     {
-        return new self(0, [], null);
+        return new self(0, [], null, null);
+    }
+
+    /**
+     * Whether an actor holding these permissions may post to an account from a source it does not
+     * accept (GL-FR-07). The default policy allows nobody.
+     *
+     * @param  list<string>  $actorPermissions
+     */
+    public function allowsSourceOverride(array $actorPermissions): bool
+    {
+        return $this->sourceOverridePermission !== null && in_array($this->sourceOverridePermission, $actorPermissions, true);
     }
 
     /**

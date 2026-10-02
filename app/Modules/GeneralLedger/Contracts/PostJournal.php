@@ -13,7 +13,8 @@ final readonly class PostJournal
      * @param  string|null  $entryId  idempotency key: posting the same entry again returns the journal that exists
      * @param  array<string, mixed>|null  $references  opaque references of the source
      * @param  int|null  $postedBy  user who caused the posting, when there is one
-     * @param  list<string>  $actorPermissions  permissions the application layer found the actor to hold; the ledger only looks at the one its policy names for soft-closed periods (GL-FR-04)
+     * @param  string|null  $sourceOverrideReason  why the poster posts to an account from a source it does not accept (GL-FR-07); only used when the policy and the actor allow the override
+     * @param  list<string>  $actorPermissions  permissions the application layer found the actor to hold; the ledger only looks at the one its policy names for soft-closed periods (GL-FR-04), and for source overrides (GL-FR-07)
      * @param  list<PostJournalLine>  $lines
      */
     public function __construct(
@@ -29,5 +30,6 @@ final readonly class PostJournal
         public ?string $entryId = null,
         public ?int $postedBy = null,
         public array $actorPermissions = [],
+        public ?string $sourceOverrideReason = null,
     ) {}
 }

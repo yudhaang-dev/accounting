@@ -18,5 +18,5 @@ interface LedgerPolicies
      *
      * Fails with ApiException VERSION_CONFLICT when the current version is not `$expectedVersion`.
      */
-    public function change(string $companyId, array $softClosedTransactionTypeKeys, ?string $softClosedPermission, int $expectedVersion, int $actorId): LedgerPolicyData;
+    public function change(string $companyId, array $softClosedTransactionTypeKeys, ?string $softClosedPermission, ?string $sourceOverridePermission, int $expectedVersion, int $actorId): LedgerPolicyData;
 }

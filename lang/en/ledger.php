@@ -23,6 +23,7 @@ return [
     'dimension_set_unknown' => 'The dimension set does not exist in this company.',
     'already_reversed' => 'Journal :number was already reversed by :reversal.',
     'reversal_of' => 'Reversal of journal :number',
+    'override_reason_required' => 'A reason is required to post to account :account from the source ":source".',
     'unbalanced' => 'The journal is not balanced: debit :debit, credit :credit.',
 
 ];

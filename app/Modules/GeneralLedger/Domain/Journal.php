@@ -25,6 +25,7 @@ use LogicException;
  * @property string|null $reverses_journal_id
  * @property string|null $entry_id
  * @property int|null $posted_by
+ * @property string|null $source_override_reason
  * @property Carbon $posted_at
  */
 class Journal extends RetainedCompanyModel

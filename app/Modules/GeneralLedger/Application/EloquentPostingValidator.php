@@ -57,7 +57,7 @@ final class EloquentPostingValidator implements PostingValidator
         $amounts = $this->structure($command, $company->functionalCurrency);
         $periodId = $this->periodFor($command->companyId, $command->accountingDate, $command->transactionTypeKey, $command->actorPermissions);
         $accounts = $this->accounts($command);
-        $this->sources($command, $accounts);
+        $overridden = $this->sources($command, $accounts);
         $this->currencies($command, $accounts, $company->functionalCurrency);
         $setIds = $this->dimensions($command);
         $this->dimensionRequirements($command, $accounts, $setIds);
@@ -75,7 +75,7 @@ final class EloquentPostingValidator implements PostingValidator
             ];
         }
 
-        return new ResolvedPosting($periodId, $company->functionalCurrency, $lines);
+        return new ResolvedPosting($periodId, $company->functionalCurrency, $lines, $overridden === [] ? null : trim((string) $command->sourceOverrideReason), $overridden);
     }
 
     /**
@@ -247,11 +247,16 @@ final class EloquentPostingValidator implements PostingValidator
     }
 
     /**
+     * A line to an account that does not accept the source of the posting is refused, unless the
+     * policy names an override permission, the actor holds it and gives a reason (GL-FR-07).
+     *
      * @param  array<string, AccountData>  $accounts
+     * @return list<string> codes of the accounts posted to by override
      *
      * @throws ApiException POSTING_SOURCE_NOT_ALLOWED
+     * @throws ValidationException when the override is allowed but has no reason
      */
-    private function sources(PostJournal $command, array $accounts): void
+    private function sources(PostJournal $command, array $accounts): array
     {
         $errors = [];
 
@@ -264,9 +269,29 @@ final class EloquentPostingValidator implements PostingValidator
             }
         }
 
-        if ($errors !== []) {
+        if ($errors === []) {
+            return [];
+        }
+
+        if (! $this->policies->current($command->companyId)->allowsSourceOverride($command->actorPermissions)) {
             throw new ApiException(ErrorCode::PostingSourceNotAllowed, errors: $errors);
         }
+
+        $codes = [];
+
+        foreach (array_keys($errors) as $field) {
+            $codes[] = $accounts[$command->lines[(int) explode('.', $field)[1]]->accountId]->code;
+        }
+
+        $codes = array_values(array_unique($codes));
+
+        if (trim((string) $command->sourceOverrideReason) === '') {
+            throw ValidationException::withMessages([
+                'source_override_reason' => [__('ledger.override_reason_required', ['account' => implode(', ', $codes), 'source' => $command->source->value])],
+            ]);
+        }
+
+        return $codes;
     }
 
     /**

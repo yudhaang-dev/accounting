@@ -10,6 +10,7 @@ use App\Modules\GeneralLedger\Domain\Journal;
 use App\Modules\GeneralLedger\Domain\JournalLine;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
+use App\Platform\Audit\Audit;
 use App\Platform\Numbering\Numbering;
 use App\Platform\Numbering\NumberSeriesNotFound;
 use App\Platform\Numbering\ResetPeriod;
@@ -34,6 +35,7 @@ final class EloquentPostingService implements PostingService
         private readonly AccountBalances $balances,
         private readonly Numbering $numbering,
         private readonly CompanyContext $company,
+        private readonly Audit $audit,
     ) {}
 
     public function post(PostJournal $command): PostedJournal
@@ -65,6 +67,7 @@ final class EloquentPostingService implements PostingService
                 'source_references' => $command->references,
                 'entry_id' => $command->entryId,
                 'posted_by' => $command->postedBy,
+                'source_override_reason' => $resolved->sourceOverrideReason,
                 'posted_at' => now(),
             ]);
 
@@ -101,9 +104,25 @@ final class EloquentPostingService implements PostingService
             }
 
             $this->balances->apply($command->companyId, $movements);
+            $this->auditOverride($journal, $resolved);
 
             return new PostedJournal($journal->id, $journal->number, $command->accountingDate, $resolved->periodId);
         }));
+    }
+
+    private function auditOverride(Journal $journal, ResolvedPosting $resolved): void
+    {
+        if ($resolved->sourceOverrideReason === null) {
+            return;
+        }
+
+        $this->audit->record(
+            'journal.source_override',
+            "Journal {$journal->number} posted to ".implode(', ', $resolved->overriddenAccounts)." from the source {$journal->source}, outside the sources the accounts accept.",
+            $journal,
+            properties: ['reason' => $resolved->sourceOverrideReason, 'accounts' => $resolved->overriddenAccounts, 'source' => $journal->source],
+            companyId: $journal->company_id,
+        );
     }
 
     public function reverse(ReverseJournal $command): PostedJournal

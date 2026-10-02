@@ -8412,6 +8412,7 @@
                                 "entries.reverse",
                                 "journals.read",
                                 "journals.post-soft-closed",
+                                "journals.override-source",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",
@@ -9376,6 +9377,12 @@
                             "null"
                         ]
                     },
+                    "source_override_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "posted_at": {
                         "type": "string"
                     },
@@ -9454,6 +9461,7 @@
                     "reverses_journal_id",
                     "entry_id",
                     "posted_by",
+                    "source_override_reason",
                     "posted_at",
                     "scope_restricted",
                     "lines"
@@ -9489,6 +9497,12 @@
                             "null"
                         ]
                     },
+                    "source_override_permission": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "lock_version": {
                         "type": "integer",
                         "description": "Same as `version`, named as the concurrency field the update expects (API-TR-14)."
@@ -9498,6 +9512,7 @@
                     "version",
                     "soft_closed_transaction_type_keys",
                     "soft_closed_permission",
+                    "source_override_permission",
                     "lock_version"
                 ],
                 "title": "LedgerPolicyResource"
@@ -10234,12 +10249,20 @@
                             "null"
                         ],
                         "maxLength": 64
+                    },
+                    "source_override_permission": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 64
                     }
                 },
                 "required": [
                     "lock_version",
                     "soft_closed_transaction_type_keys",
-                    "soft_closed_permission"
+                    "soft_closed_permission",
+                    "source_override_permission"
                 ],
                 "title": "UpdateLedgerPolicyRequest"
             },
@@ -10351,6 +10374,7 @@
                                 "entries.reverse",
                                 "journals.read",
                                 "journals.post-soft-closed",
+                                "journals.override-source",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",
@@ -10409,6 +10433,7 @@
                                 "entries.reverse",
                                 "journals.read",
                                 "journals.post-soft-closed",
+                                "journals.override-source",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",

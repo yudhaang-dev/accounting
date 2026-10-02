@@ -26,13 +26,14 @@ class LedgerPolicyController
     {
         /** @var User $user */
         $user = $request->user();
-        /** @var array{lock_version: int, soft_closed_transaction_type_keys: list<string>, soft_closed_permission: string|null} $data */
+        /** @var array{lock_version: int, soft_closed_transaction_type_keys: list<string>, soft_closed_permission: string|null, source_override_permission: string|null} $data */
         $data = $request->validated();
 
         return new LedgerPolicyResource($update(
             $companyId,
             $data['soft_closed_transaction_type_keys'],
             $data['soft_closed_permission'],
+            $data['source_override_permission'],
             (int) $data['lock_version'],
             $user->id,
         ));

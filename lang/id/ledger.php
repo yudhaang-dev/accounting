@@ -23,6 +23,7 @@ return [
     'dimension_set_unknown' => 'Set dimensi tidak ada di perusahaan ini.',
     'already_reversed' => 'Jurnal :number sudah dibalik oleh :reversal.',
     'reversal_of' => 'Pembalikan jurnal :number',
+    'override_reason_required' => 'Alasan wajib diisi untuk memposting ke akun :account dari sumber ":source".',
     'unbalanced' => 'Jurnal tidak seimbang: debit :debit, kredit :credit.',
 
 ];
