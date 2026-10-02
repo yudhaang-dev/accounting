@@ -9,6 +9,12 @@ return [
     'default_rate_type' => 'spot',
 
     /*
+    | Number prefix of the transaction types the code defines, which do not share the default pattern
+    | because the numbers of an entry are unique across the types of a company.
+    */
+    'system_number_prefixes' => ['system.reversal' => 'REV'],
+
+    /*
     | Entry number series created per transaction type on first use (TE-FR-16). Numbers are issued
     | when the entry is created. The journal number is a separate series owned by the ledger.
     */

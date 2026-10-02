@@ -30,6 +30,9 @@ class EntryRequest extends FormRequest
             /** @var array<string, string|null> */
             'lines.*.dimensions' => ['nullable', 'array'],
             'lines.*.dimensions.*' => ['nullable', 'string', 'size:26'],
+            // Date the system reverses the entry on once it is posted, and the posted entry it replaces (TE-FR-11).
+            'auto_reverse_on' => ['nullable', 'date_format:Y-m-d'],
+            'replaces_entry_id' => ['nullable', 'string', 'size:26'],
             // The currency and the rate a structured entry brings; a free-lines entry has them on each line (TE-FR-06).
             'currency' => ['nullable', 'string', 'regex:/^[A-Z]{3}$/'],
             'exchange_rate' => ['nullable', 'string', 'max:40'],

@@ -2,6 +2,7 @@
 
 namespace App\Modules\TransactionEntry\Application;
 
+use App\Modules\GeneralLedger\Contracts\JournalDirectory;
 use App\Modules\TransactionEntry\Contracts\ApprovalPolicies;
 use App\Modules\TransactionEntry\Domain\Entry;
 use Brick\Math\BigDecimal;
@@ -21,6 +22,7 @@ final class ApprovalPlanner
     public function __construct(
         private readonly ApprovalPolicies $policies,
         private readonly EntryRates $rates,
+        private readonly JournalDirectory $journals,
     ) {}
 
     /**
@@ -55,6 +57,11 @@ final class ApprovalPlanner
     /** Total debit of the entry in the functional currency, as the lines stand when it is submitted. */
     private function amount(Entry $entry): BigDecimal
     {
+        // A reversal is as large as the journal it reverses.
+        if ($entry->reverses_journal_id !== null) {
+            return BigDecimal::of($this->journals->find($entry->company_id, $entry->reverses_journal_id)->total ?? '0');
+        }
+
         $total = BigDecimal::zero();
 
         foreach ($entry->lines as $line) {

@@ -7,6 +7,7 @@ use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\GeneralLedger\Contracts\PostJournalLine;
+use App\Modules\GeneralLedger\Contracts\ReverseJournal;
 use App\Modules\TransactionEntry\Domain\Entry;
 use App\Modules\TransactionEntry\Domain\EntryDecision;
 use App\Modules\TransactionEntry\Domain\EntryStatus;
@@ -48,7 +49,7 @@ final class EntryWorkflow
             $this->assertStatus($entry, [EntryStatus::Draft]);
             $this->checks->assertValid($entry);
             $this->refreshLines($entry);
-            $this->validator->validate($this->command($entry, $userId));
+            $this->validate($entry, $userId);
 
             $plan = $this->planner->plan($entry);
             $entry->forceFill(['status' => EntryStatus::Submitted, 'approval' => $plan])->save();
@@ -150,9 +151,18 @@ final class EntryWorkflow
         $this->checks->assertValid($entry);
         $this->refreshLines($entry);
 
-        $journal = $this->posting->post($this->command($entry, $userId));
+        $journal = $entry->reverses_journal_id === null
+            ? $this->posting->post($this->command($entry, $userId))
+            : $this->posting->reverse($this->reversal($entry, $userId));
 
-        $entry->forceFill(['status' => EntryStatus::Posted, 'journal_id' => $journal->id, 'journal_number' => $journal->number, 'posted_at' => now()])->save();
+        $entry->forceFill([
+            'status' => EntryStatus::Posted,
+            'journal_id' => $journal->id,
+            'journal_number' => $journal->number,
+            'posted_at' => now(),
+            // An entry that asked to be reversed on a date waits for that date from now on (TE-FR-11).
+            'auto_reversal_status' => $entry->auto_reverse_on === null ? null : 'pending',
+        ])->save();
 
         $this->record($entry, 'post', $userId, null, EntryStatus::Approved);
 
@@ -199,6 +209,29 @@ final class EntryWorkflow
     private function refreshLines(Entry $entry): void
     {
         $entry->forceFill(['lines' => $this->lines->of($entry)])->save();
+    }
+
+    /** Checks what the ledger will check when it posts the entry (TE-FR-08). */
+    private function validate(Entry $entry, int $userId): void
+    {
+        if ($entry->reverses_journal_id === null) {
+            $this->validator->validate($this->command($entry, $userId));
+        } else {
+            $this->validator->validateReversal($this->reversal($entry, $userId));
+        }
+    }
+
+    private function reversal(Entry $entry, int $userId): ReverseJournal
+    {
+        return new ReverseJournal(
+            companyId: $entry->company_id,
+            journalId: (string) $entry->reverses_journal_id,
+            accountingDate: $entry->accounting_date->toDateString(),
+            description: $entry->description,
+            entryId: $entry->id,
+            postedBy: $userId,
+            actorPermissions: $this->permissions->current(),
+        );
     }
 
     private function command(Entry $entry, int $userId): PostJournal

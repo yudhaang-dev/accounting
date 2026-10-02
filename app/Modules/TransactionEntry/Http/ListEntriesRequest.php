@@ -17,6 +17,7 @@ class ListEntriesRequest extends FormRequest
             'filter' => ['sometimes', 'array'],
             'filter.status' => ['sometimes', Rule::enum(EntryStatus::class)],
             'filter.transaction_type_key' => ['sometimes', 'string', 'max:64'],
+            'filter.auto_reversal_status' => ['sometimes', Rule::in(['pending', 'done', 'failed'])],
             'filter.from' => ['sometimes', 'date_format:Y-m-d'],
             'filter.to' => ['sometimes', 'date_format:Y-m-d'],
             'sort' => ['sometimes', Rule::in(['accounting_date', '-accounting_date', 'number', '-number'])],

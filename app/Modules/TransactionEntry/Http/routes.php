@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\TransactionEntry\Http\EntryController;
+use App\Modules\TransactionEntry\Http\JournalReversalController;
 use App\Modules\TransactionEntry\Http\TransactionTypeController;
 use App\Modules\TransactionEntry\Http\TransactionTypeVersionController;
 use App\Platform\Api\ApiServiceProvider;
@@ -31,6 +32,9 @@ Route::companyScoped(function () {
         ->middleware('permission:entries.read')->where('id', ApiServiceProvider::ULID)->name('entries.show');
     Route::patch('entries/{id}', [EntryController::class, 'update'])
         ->middleware('permission:entries.create')->where('id', ApiServiceProvider::ULID)->name('entries.update');
+
+    Route::post('journals/{id}/reverse', [JournalReversalController::class, 'store'])
+        ->middleware('permission:entries.create')->where('id', ApiServiceProvider::ULID)->name('journals.reverse');
 
     $permissions = [
         'submit' => 'entries.submit',

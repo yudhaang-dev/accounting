@@ -16,7 +16,8 @@ class EntryController
 {
     /**
      * Entries of the company, newest accounting date first unless `sort` says otherwise. Filters:
-     * `filter[status]`, `filter[transaction_type_key]`, `filter[from]` and `filter[to]` (accounting date).
+     * `filter[status]`, `filter[transaction_type_key]`, `filter[auto_reversal_status]` (`failed` lists the
+     * scheduled reversals that did not go through, TE-FR-11), `filter[from]` and `filter[to]` (accounting date).
      * `per_page` defaults to 50, at most 200.
      */
     public function index(ListEntriesRequest $request): AnonymousResourceCollection
@@ -27,6 +28,7 @@ class EntryController
         $entries = Entry::query()
             ->when(isset($filters['status']), fn (Builder $query) => $query->where('status', $filters['status']))
             ->when(isset($filters['transaction_type_key']), fn (Builder $query) => $query->where('transaction_type_key', $filters['transaction_type_key']))
+            ->when(isset($filters['auto_reversal_status']), fn (Builder $query) => $query->where('auto_reversal_status', $filters['auto_reversal_status']))
             ->when(isset($filters['from']), fn (Builder $query) => $query->where('accounting_date', '>=', $filters['from']))
             ->when(isset($filters['to']), fn (Builder $query) => $query->where('accounting_date', '<=', $filters['to']))
             ->orderBy(ltrim($sort, '-'), Str::startsWith($sort, '-') ? 'desc' : 'asc')

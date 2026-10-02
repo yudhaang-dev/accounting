@@ -13,7 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class EntryResource extends JsonResource
 {
     /**
-     * @return array{id: string, number: string, status: string, source: string, transaction_type_key: string, transaction_type_version: int, accounting_date: string, document_date: string|null, description: string, lines: list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>, currency: string|null, exchange_rate: string|null, applied_rate: string|null}>, values: array<string, mixed>|null, currency: string|null, exchange_rate: string|null, approval: array{stages: list<string>, approved: int, auto_post: bool, separation_of_duties: bool}|null, created_by: int, journal_id: string|null, journal_number: string|null, posted_at: string|null, decisions: list<array{action: string, actor_id: int, reason: string|null, at: string}>|null, lock_version: int}
+     * @return array{id: string, number: string, status: string, source: string, transaction_type_key: string, transaction_type_version: int, accounting_date: string, document_date: string|null, description: string, lines: list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>, currency: string|null, exchange_rate: string|null, applied_rate: string|null}>, values: array<string, mixed>|null, currency: string|null, exchange_rate: string|null, approval: array{stages: list<string>, approved: int, auto_post: bool, separation_of_duties: bool}|null, reverses_journal_id: string|null, reason: string|null, replaces_entry_id: string|null, auto_reverse_on: string|null, auto_reversal_status: string|null, auto_reversal_error: string|null, auto_reversal_entry_id: string|null, created_by: int, journal_id: string|null, journal_number: string|null, posted_at: string|null, decisions: list<array{action: string, actor_id: int, reason: string|null, at: string}>|null, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -32,6 +32,13 @@ class EntryResource extends JsonResource
             'currency' => $this->resource->currency,
             'exchange_rate' => $this->resource->exchange_rate,
             'approval' => $this->approval(),
+            'reverses_journal_id' => $this->resource->reverses_journal_id,
+            'reason' => $this->resource->reason,
+            'replaces_entry_id' => $this->resource->replaces_entry_id,
+            'auto_reverse_on' => $this->resource->auto_reverse_on?->toDateString(),
+            'auto_reversal_status' => $this->resource->auto_reversal_status,
+            'auto_reversal_error' => $this->resource->auto_reversal_error,
+            'auto_reversal_entry_id' => $this->resource->auto_reversal_entry_id,
             'created_by' => $this->resource->created_by,
             'journal_id' => $this->resource->journal_id,
             'journal_number' => $this->resource->journal_number,

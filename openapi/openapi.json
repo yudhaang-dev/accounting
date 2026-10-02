@@ -2731,7 +2731,7 @@
         "/companies/{companyId}/entries": {
             "get": {
                 "operationId": "entries.index",
-                "summary": "Entries of the company, newest accounting date first unless `sort` says otherwise. Filters:\n`filter[status]`, `filter[transaction_type_key]`, `filter[from]` and `filter[to]` (accounting date).\n`per_page` defaults to 50, at most 200",
+                "summary": "Entries of the company, newest accounting date first unless `sort` says otherwise. Filters:\n`filter[status]`, `filter[transaction_type_key]`, `filter[auto_reversal_status]` (`failed` lists the\nscheduled reversals that did not go through, TE-FR-11), `filter[from]` and `filter[to]` (accounting date).\n`per_page` defaults to 50, at most 200",
                 "tags": [
                     "Entry"
                 ],
@@ -2757,6 +2757,18 @@
                         "schema": {
                             "type": "string",
                             "maxLength": 64
+                        }
+                    },
+                    {
+                        "name": "filter[auto_reversal_status]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "done",
+                                "failed"
+                            ]
                         }
                     },
                     {
@@ -5872,6 +5884,69 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/journals/{id}/reverse": {
+            "post": {
+                "operationId": "journals.reverse",
+                "summary": "Asks for the reversal of a posted journal (TE-FR-11): creates a draft entry of the type\n`system.reversal` and returns it. Submit, approve and post it like any entry; the policy decides\nwho must approve. A journal is reversed in full and only once; 404 for a journal that does not\nexist or that the caller does not see entirely, 409 when it was reversed already or a request is\nunder way, 422 when the period of `reversal_date` does not accept the posting",
+                "tags": [
+                    "JournalReversal"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReverseJournalRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`EntryResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EntryResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -9890,6 +9965,22 @@
                         },
                         "maxItems": 500
                     },
+                    "auto_reverse_on": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date",
+                        "description": "Date the system reverses the entry on once it is posted, and the posted entry it replaces (TE-FR-11)."
+                    },
+                    "replaces_entry_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 26,
+                        "maxLength": 26
+                    },
                     "currency": {
                         "type": [
                             "string",
@@ -10052,6 +10143,48 @@
                             "separation_of_duties"
                         ]
                     },
+                    "reverses_journal_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "replaces_entry_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "auto_reverse_on": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "auto_reversal_status": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "auto_reversal_error": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "auto_reversal_entry_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "created_by": {
                         "type": "integer"
                     },
@@ -10124,6 +10257,13 @@
                     "currency",
                     "exchange_rate",
                     "approval",
+                    "reverses_journal_id",
+                    "reason",
+                    "replaces_entry_id",
+                    "auto_reverse_on",
+                    "auto_reversal_status",
+                    "auto_reversal_error",
+                    "auto_reversal_entry_id",
                     "created_by",
                     "journal_id",
                     "journal_number",
@@ -11495,6 +11635,24 @@
                 ],
                 "title": "ReopenPeriodRequest"
             },
+            "ReverseJournalRequest": {
+                "type": "object",
+                "properties": {
+                    "reversal_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 500
+                    }
+                },
+                "required": [
+                    "reversal_date",
+                    "reason"
+                ],
+                "title": "ReverseJournalRequest"
+            },
             "RoleResource": {
                 "type": "object",
                 "properties": {
@@ -12048,6 +12206,22 @@
                             ]
                         },
                         "maxItems": 500
+                    },
+                    "auto_reverse_on": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date",
+                        "description": "Date the system reverses the entry on once it is posted, and the posted entry it replaces (TE-FR-11)."
+                    },
+                    "replaces_entry_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 26,
+                        "maxLength": 26
                     },
                     "currency": {
                         "type": [

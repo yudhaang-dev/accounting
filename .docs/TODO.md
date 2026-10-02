@@ -89,12 +89,12 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M5-03** Mata uang dan kurs entri — TE-FR-06
 - [x] **M5-04** Kebijakan approval/SoD: aturan per key, sumber, dan ambang; tahap dan permission; posting otomatis setelah approval — TE-FR-09, TE-AC-05
 - [x] **M5-05** Validasi lengkap saat submit dan posting — TE-FR-08, TE-AC-03
-- [ ] **M5-06** Pembalikan, penggantian, dan pembalikan terjadwal — TE-FR-11, TE-AC-09
+- [x] **M5-06** Pembalikan, penggantian, dan pembalikan terjadwal — TE-FR-11, TE-AC-09 — pembalikan jurnal sumber subledger masih langsung ke GL, dialihkan di M6-08
 - [ ] **M5-07** Endpoint Peristiwa Keuangan beserta status HTTP-nya — TE-FR-12, API-TR-16, API-TR-17, API-TR-18, API-TR-19, API-TR-20, API-AC-03, API-AC-05, API-AC-06
 - [ ] **M5-08** Idempotensi kunci sumber dengan payload kanonis, aman terhadap kiriman bersamaan — TE-FR-13, TE-AC-04, API-AC-04
 - [ ] **M5-09** Changes feed berbasis cursor — TE-FR-15, TE-AC-08
 - [ ] **M5-10** Jurnal berulang — TE-FR-14
-- [ ] **M5-11** Penomoran entri per Jenis Transaksi — TE-FR-16
+- [ ] **M5-11** Penomoran entri per Jenis Transaksi — TE-FR-16 — seri bawaan semua jenis memakai pola yang sama padahal nomor entri unik per perusahaan, jadi dua jenis bisa bentrok; hanya `system.reversal` yang sudah berawalan sendiri
 - [ ] **M5-12** Lampiran entri (Platform Attachments) — X-FR-04
 - [ ] **M5-13** Template Jenis Transaksi yang wajib dikonfirmasi — TE-FR-01
 - [ ] **M5-14** SPA: perancang Jenis Transaksi, form dinamis dari skema, kotak approval, kebijakan approval, jadwal berulang, alur pembalikan

@@ -562,7 +562,8 @@ export interface paths {
         };
         /**
          * Entries of the company, newest accounting date first unless `sort` says otherwise. Filters:
-         *     `filter[status]`, `filter[transaction_type_key]`, `filter[from]` and `filter[to]` (accounting date).
+         *     `filter[status]`, `filter[transaction_type_key]`, `filter[auto_reversal_status]` (`failed` lists the
+         *     scheduled reversals that did not go through, TE-FR-11), `filter[from]` and `filter[to]` (accounting date).
          *     `per_page` defaults to 50, at most 200
          */
         get: operations["entries.index"];
@@ -1140,6 +1141,29 @@ export interface paths {
         get: operations["journals.show"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/journals/{id}/reverse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Asks for the reversal of a posted journal (TE-FR-11): creates a draft entry of the type
+         *     `system.reversal` and returns it. Submit, approve and post it like any entry; the policy decides
+         *     who must approve. A journal is reversed in full and only once; 404 for a journal that does not
+         *     exist or that the caller does not see entirely, 409 when it was reversed already or a request is
+         *     under way, 422 when the period of `reversal_date` does not accept the posting
+         */
+        post: operations["journals.reverse"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2068,6 +2092,12 @@ export interface components {
                 currency?: string | null;
                 exchange_rate?: string | null;
             }[];
+            /**
+             * Format: date
+             * @description Date the system reverses the entry on once it is posted, and the posted entry it replaces (TE-FR-11).
+             */
+            auto_reverse_on?: string | null;
+            replaces_entry_id?: string | null;
             /** @description The currency and the rate a structured entry brings; a free-lines entry has them on each line (TE-FR-06). */
             currency?: string | null;
             exchange_rate?: string | null;
@@ -2108,6 +2138,13 @@ export interface components {
                 auto_post: string;
                 separation_of_duties: string;
             } | null;
+            reverses_journal_id: string | null;
+            reason: string | null;
+            replaces_entry_id: string | null;
+            auto_reverse_on: string | null;
+            auto_reversal_status: string | null;
+            auto_reversal_error: string | null;
+            auto_reversal_entry_id: string | null;
             created_by: number;
             journal_id: string | null;
             journal_number: string | null;
@@ -2456,6 +2493,12 @@ export interface components {
         ReopenPeriodRequest: {
             reason: string;
         };
+        /** ReverseJournalRequest */
+        ReverseJournalRequest: {
+            /** Format: date */
+            reversal_date: string;
+            reason: string;
+        };
         /** RoleResource */
         RoleResource: {
             id: string;
@@ -2597,6 +2640,12 @@ export interface components {
                 currency?: string | null;
                 exchange_rate?: string | null;
             }[];
+            /**
+             * Format: date
+             * @description Date the system reverses the entry on once it is posted, and the posted entry it replaces (TE-FR-11).
+             */
+            auto_reverse_on?: string | null;
+            replaces_entry_id?: string | null;
             /** @description The currency and the rate a structured entry brings; a free-lines entry has them on each line (TE-FR-06). */
             currency?: string | null;
             exchange_rate?: string | null;
@@ -3968,6 +4017,7 @@ export interface operations {
             query?: {
                 "filter[status]"?: components["schemas"]["EntryStatus"];
                 "filter[transaction_type_key]"?: string;
+                "filter[auto_reversal_status]"?: "pending" | "done" | "failed";
                 "filter[from]"?: string;
                 "filter[to]"?: string;
                 sort?: "accounting_date" | "-accounting_date" | "number" | "-number";
@@ -5253,6 +5303,37 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "journals.reverse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReverseJournalRequest"];
+            };
+        };
+        responses: {
+            /** @description `EntryResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EntryResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "ledger-policy.show": {

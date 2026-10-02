@@ -12,6 +12,8 @@ use App\Modules\GeneralLedger\Contracts\LedgerPolicies;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
+use App\Modules\GeneralLedger\Contracts\ReverseJournal;
+use App\Modules\GeneralLedger\Domain\Journal;
 use App\Modules\MasterData\Contracts\CompanyData;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
@@ -54,6 +56,28 @@ final class EloquentPostingValidator implements PostingValidator
     public function validate(PostJournal $command): void
     {
         $this->resolve($command);
+    }
+
+    public function validateReversal(ReverseJournal $command): void
+    {
+        $this->company($command->companyId);
+
+        $original = Journal::query()->find($command->journalId) ?? throw new ApiException(ErrorCode::NotFound);
+        $existing = Journal::query()->where('reverses_journal_id', $original->id)->first();
+
+        if ($existing !== null && ($command->entryId === null || $existing->entry_id !== $command->entryId)) {
+            throw new ApiException(ErrorCode::InvalidStateTransition, errors: [
+                'journal_id' => [__('ledger.already_reversed', ['number' => $original->number, 'reversal' => $existing->number])],
+            ]);
+        }
+
+        if (! $this->isDate($command->accountingDate)) {
+            throw ValidationException::withMessages([
+                'accounting_date' => [__('validation.date_format', ['attribute' => 'accounting_date', 'format' => 'Y-m-d'])],
+            ]);
+        }
+
+        $this->periodFor($command->companyId, $command->accountingDate, $original->transaction_type_key, $command->actorPermissions);
     }
 
     /**

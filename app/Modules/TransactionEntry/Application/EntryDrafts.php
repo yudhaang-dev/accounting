@@ -12,11 +12,7 @@ use App\Modules\TransactionEntry\Domain\VersionStatus;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Platform\Audit\Audit;
-use App\Platform\Numbering\Numbering;
-use App\Platform\Numbering\NumberSeriesNotFound;
-use App\Platform\Numbering\ResetPeriod;
 use App\Support\Access\DataScopeContext;
-use App\Support\Company\CompanyContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -26,14 +22,13 @@ use Illuminate\Validation\ValidationException;
  * of accounts, period and balance happens on submit and again on posting (TE-FR-08).
  *
  * @phpstan-type LineInput array{account_id: string, debit?: string|null, credit?: string|null, description?: string|null, dimensions?: array<string, string|null>|null, currency?: string|null, exchange_rate?: string|null}
- * @phpstan-type EntryInput array{accounting_date: string, document_date?: string|null, description: string, currency?: string|null, exchange_rate?: string|null, lines?: list<LineInput>, values?: array<string, mixed>}
+ * @phpstan-type EntryInput array{accounting_date: string, document_date?: string|null, description: string, currency?: string|null, exchange_rate?: string|null, auto_reverse_on?: string|null, replaces_entry_id?: string|null, lines?: list<LineInput>, values?: array<string, mixed>}
  */
 final class EntryDrafts
 {
     public function __construct(
-        private readonly Numbering $numbering,
+        private readonly EntryNumbers $numbers,
         private readonly Audit $audit,
-        private readonly CompanyContext $company,
         private readonly DataScopeContext $scope,
         private readonly EntryLines $entryLines,
         private readonly EntryRates $rates,
@@ -58,11 +53,12 @@ final class EntryDrafts
                 'transaction_type_id' => $type->id,
                 'transaction_type_key' => $type->key,
                 'transaction_type_version' => $resolved->version,
-                'number' => $this->nextNumber($type->key, CarbonImmutable::parse($data['accounting_date'])),
+                'number' => $this->numbers->next($type->key, CarbonImmutable::parse($data['accounting_date'])),
                 'accounting_date' => $data['accounting_date'],
                 'document_date' => $data['document_date'] ?? null,
                 'description' => $data['description'],
                 ...$content,
+                ...$this->links($data, $data['accounting_date']),
                 'created_by' => $userId,
             ])->refresh();
 
@@ -88,6 +84,10 @@ final class EntryDrafts
                 throw new ApiException(ErrorCode::InvalidStateTransition);
             }
 
+            if ($entry->reverses_journal_id !== null) {
+                throw ValidationException::withMessages(['lines' => [__('entries.reversal_not_editable')]]);
+            }
+
             $version = $entry->typeVersion();
 
             $entry->updateLocked([
@@ -95,12 +95,47 @@ final class EntryDrafts
                 'document_date' => $data['document_date'] ?? null,
                 'description' => $data['description'],
                 ...$this->content($version, $data),
+                ...$this->links($data, $data['accounting_date']),
             ], $expectedVersion);
 
             $this->audit->record('entry.updated', "Entry {$entry->number} updated.", $entry, companyId: $entry->company_id);
 
             return $entry->refresh();
         });
+    }
+
+    /**
+     * The date the system reverses the entry on and the entry it replaces, both optional (TE-FR-11).
+     * A reversal date must come after the accounting date; a replaced entry must be a posted entry.
+     *
+     * @param  EntryInput  $data
+     * @return array{auto_reverse_on: string|null, replaces_entry_id: string|null}
+     *
+     * @throws ValidationException
+     */
+    private function links(array $data, string $accountingDate): array
+    {
+        $on = $data['auto_reverse_on'] ?? null;
+        $replaces = $data['replaces_entry_id'] ?? null;
+        $errors = [];
+
+        if ($on !== null && $on <= $accountingDate) {
+            $errors['auto_reverse_on'] = [__('entries.auto_reverse_after')];
+        }
+
+        if ($replaces !== null) {
+            $replaced = Entry::query()->find($replaces);
+
+            if ($replaced === null || $replaced->status !== EntryStatus::Posted || $replaced->reverses_journal_id !== null) {
+                $errors['replaces_entry_id'] = [__('entries.replaces_unknown')];
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return ['auto_reverse_on' => $on, 'replaces_entry_id' => $replaces];
     }
 
     /**
@@ -219,25 +254,5 @@ final class EntryDrafts
             'currency' => $this->rates->foreign($line['currency'] ?? null),
             'exchange_rate' => $this->rates->foreign($line['currency'] ?? null) === null ? null : ($line['exchange_rate'] ?? null),
         ], $lines);
-    }
-
-    /**
-     * Issues the next entry number of the type, creating its series on first use (TE-FR-16).
-     */
-    private function nextNumber(string $typeKey, CarbonImmutable $date): string
-    {
-        $companyId = $this->company->require();
-        $series = "entry:{$typeKey}";
-
-        try {
-            return $this->numbering->next($companyId, $series, $date);
-        } catch (NumberSeriesNotFound) {
-            /** @var array{pattern: string, padding: int, reset: string} $default */
-            $default = config('entries.number');
-
-            $this->numbering->define($companyId, $series, $default['pattern'], $default['padding'], ResetPeriod::from($default['reset']));
-
-            return $this->numbering->next($companyId, $series, $date);
-        }
     }
 }

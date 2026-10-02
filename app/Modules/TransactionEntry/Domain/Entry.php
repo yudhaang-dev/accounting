@@ -26,6 +26,13 @@ use Illuminate\Support\Carbon;
  * @property string|null $currency currency of a structured entry; null for the functional currency
  * @property string|null $exchange_rate the rate a structured entry brought, if it did
  * @property array{policy_version: int, rule: int|null, amount: string, stages: list<string>, auto_post: bool, separation_of_duties: bool, approvals: list<int>}|null $approval the approval plan given when the entry was submitted, and who has approved so far
+ * @property string|null $reverses_journal_id the journal a `system.reversal` entry reverses
+ * @property string|null $reason why a reversal was asked for
+ * @property string|null $replaces_entry_id the posted entry this one replaces
+ * @property Carbon|null $auto_reverse_on the date the system reverses the entry once it is posted
+ * @property string|null $auto_reversal_status `pending`, `done` or `failed`, once the entry is posted with `auto_reverse_on`
+ * @property string|null $auto_reversal_error why the scheduled reversal failed
+ * @property string|null $auto_reversal_entry_id the reversal entry the system made
  * @property int $created_by
  * @property string|null $journal_id
  * @property string|null $journal_number
@@ -46,7 +53,7 @@ class Entry extends VersionedCompanyModel
 
     protected $fillable = [
         'transaction_type_id', 'transaction_type_key', 'transaction_type_version', 'number', 'status', 'source',
-        'accounting_date', 'document_date', 'description', 'lines', 'field_values', 'currency', 'exchange_rate', 'approval', 'created_by', 'journal_id', 'journal_number', 'posted_at',
+        'accounting_date', 'document_date', 'description', 'lines', 'field_values', 'currency', 'exchange_rate', 'approval', 'reverses_journal_id', 'reason', 'replaces_entry_id', 'auto_reverse_on', 'auto_reversal_status', 'auto_reversal_error', 'auto_reversal_entry_id', 'created_by', 'journal_id', 'journal_number', 'posted_at',
     ];
 
     protected function casts(): array
@@ -58,6 +65,7 @@ class Entry extends VersionedCompanyModel
             'lines' => 'array',
             'field_values' => 'array',
             'approval' => 'array',
+            'auto_reverse_on' => 'date',
             'posted_at' => 'datetime',
         ];
     }
