@@ -19,16 +19,32 @@ beforeEach(function () {
         ->assertCreated()->json('data.id');
 });
 
-function structuredBody(?array $fields = null, string $mode = 'structured'): array
+function structuredBody(?array $fields = null, string $mode = 'structured', ?array $rules = null): array
 {
-    return [
-        'mode' => $mode,
-        'fields' => $fields ?? [
-            ['name' => 'invoice_date', 'type' => 'date', 'label' => 'Tanggal faktur'],
-            ['name' => 'total', 'type' => 'amount', 'label' => 'Total'],
-            ['name' => 'note', 'type' => 'text', 'label' => 'Catatan', 'required' => false],
-        ],
+    $fields ??= [
+        ['name' => 'invoice_date', 'type' => 'date', 'label' => 'Tanggal faktur'],
+        ['name' => 'total', 'type' => 'amount', 'label' => 'Total'],
+        ['name' => 'note', 'type' => 'text', 'label' => 'Catatan', 'required' => false],
     ];
+
+    // Unless given, a version with a `total` amount posts it from the bank account to sales.
+    $hasTotal = collect($fields)->contains(fn (array $field) => $field['name'] === 'total' && $field['type'] === 'amount');
+    $rules ??= $mode === 'structured' && $hasTotal ? [
+        ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'fixed', 'account_id' => versionAccountId('1112')]],
+        ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'fixed', 'account_id' => versionAccountId('4110')], 'reuses_field' => true],
+    ] : [];
+
+    // The first rule shares its field with the second, so it has to say so as well.
+    if ($rules !== [] && ! isset($rules[0]['reuses_field']) && $rules[0]['amount_field'] === ($rules[1]['amount_field'] ?? null)) {
+        $rules[0]['reuses_field'] = true;
+    }
+
+    return ['mode' => $mode, 'fields' => $fields, 'posting_rules' => $rules];
+}
+
+function versionAccountId(string $code): string
+{
+    return (string) Account::withoutGlobalScope(CompanyScope::class)->where('company_id', test()->companyId)->where('code', $code)->value('id');
 }
 
 function draftVersion(?array $body = null): int
@@ -116,8 +132,12 @@ it('accepts account and dimension fields that reference what the company has', f
     $sales = (string) Account::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->where('code', '4110')->value('id');
 
     $number = draftVersion(structuredBody([
+        ['name' => 'total', 'type' => 'amount', 'label' => 'Total'],
         ['name' => 'revenue', 'type' => 'account', 'label' => 'Pendapatan', 'account_ids' => [$sales]],
         ['name' => 'dept', 'type' => 'dimension', 'label' => 'Departemen', 'dimension_type' => 'department'],
+    ], 'structured', [
+        ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'fixed', 'account_id' => versionAccountId('1112')]],
+        ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'field', 'field' => 'revenue'], 'reuses_field' => true, 'apply_dimensions' => true],
     ]));
     versionAction($number, 'publish')->assertOk();
 
@@ -128,7 +148,7 @@ it('accepts account and dimension fields that reference what the company has', f
 });
 
 it('does not publish a structured version without fields', function () {
-    $number = draftVersion(structuredBody([]));
+    $number = draftVersion(structuredBody([], 'structured', []));
 
     versionAction($number, 'publish')->assertUnprocessable()->assertJsonValidationErrors(['fields']);
 });
@@ -159,15 +179,6 @@ it('retires a published version and refuses new entries on it (TE-AC-06)', funct
     $this->actingAs($this->preparer)->getJson("{$this->url}/entries/{$entryId}")->assertOk()->assertJsonPath('data.transaction_type_version', 1);
 
     versionAction(1, 'retire')->assertConflict();
-});
-
-it('does not take entries on a structured version yet', function () {
-    $number = draftVersion();
-    versionAction($number, 'publish')->assertOk();
-    versionAction(1, 'retire')->assertOk();
-
-    $this->actingAs($this->preparer)->postJson("{$this->url}/entries", versionedEntry())
-        ->assertUnprocessable()->assertJsonValidationErrors(['transaction_type_version']);
 });
 
 it('lets only policy managers change versions', function () {

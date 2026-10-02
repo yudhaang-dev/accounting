@@ -18,4 +18,16 @@ final class JsonMap
         // @phpstan-ignore return.type
         return (object) $map;
     }
+
+    /**
+     * The same for a map of arbitrary values, such as the field values of an entry.
+     *
+     * @param  array<string, mixed>  $map
+     * @return array<string, mixed>
+     */
+    public static function ofMixed(array $map)
+    {
+        // @phpstan-ignore return.type
+        return (object) $map;
+    }
 }

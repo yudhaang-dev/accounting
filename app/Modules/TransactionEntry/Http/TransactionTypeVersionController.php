@@ -18,7 +18,7 @@ class TransactionTypeVersionController
     /** Starts a draft with the next version number. */
     public function store(VersionRequest $request, string $companyId, string $id, TransactionTypeVersions $versions): JsonResponse
     {
-        $versions->createDraft($id, TransactionTypeMode::from($request->string('mode')->toString()), $this->fields($request));
+        $versions->createDraft($id, TransactionTypeMode::from($request->string('mode')->toString()), $this->fields($request), $this->rules($request));
 
         return $this->type($id)->response()->setStatusCode(201);
     }
@@ -26,7 +26,7 @@ class TransactionTypeVersionController
     /** Replaces the content of a draft version. */
     public function update(VersionRequest $request, string $companyId, string $id, int $version, TransactionTypeVersions $versions): TransactionTypeResource
     {
-        $versions->updateDraft($id, $version, TransactionTypeMode::from($request->string('mode')->toString()), $this->fields($request));
+        $versions->updateDraft($id, $version, TransactionTypeMode::from($request->string('mode')->toString()), $this->fields($request), $this->rules($request));
 
         return $this->type($id);
     }
@@ -55,6 +55,15 @@ class TransactionTypeVersionController
         $found = TransactionTypeVersion::query()->where('transaction_type_id', $id)->where('version', $version)->firstOrFail();
 
         return response()->json(['data' => $found->fields === null ? null : FieldSchema::toJsonSchema($found->fields)]);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function rules(VersionRequest $request): array
+    {
+        /** @var list<array<string, mixed>> */
+        return $request->validated('posting_rules', []);
     }
 
     private function type(string $id): TransactionTypeResource

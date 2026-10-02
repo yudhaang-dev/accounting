@@ -10,7 +10,7 @@ namespace App\Modules\TransactionEntry\Domain;
  */
 final class FieldSchema
 {
-    private const DECIMAL = '^[0-9]+(\.[0-9]+)?$';
+    public const DECIMAL = '^[0-9]+(\.[0-9]+)?$';
 
     /**
      * @param  list<FieldDefinition>  $fields

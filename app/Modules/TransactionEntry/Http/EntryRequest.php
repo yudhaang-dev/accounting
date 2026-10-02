@@ -19,7 +19,8 @@ class EntryRequest extends FormRequest
             'accounting_date' => ['required', 'date_format:Y-m-d'],
             'document_date' => ['nullable', 'date_format:Y-m-d'],
             'description' => ['required', 'string', 'max:500'],
-            'lines' => ['required', 'array', 'max:500'],
+            // A free-lines entry carries `lines`, a structured one `values`; the version decides which is required.
+            'lines' => ['sometimes', 'array', 'max:500'],
             'lines.*' => ['array'],
             'lines.*.account_id' => ['required', 'string', 'size:26'],
             'lines.*.debit' => ['nullable', 'string', 'max:40'],
@@ -29,6 +30,8 @@ class EntryRequest extends FormRequest
             /** @var array<string, string|null> */
             'lines.*.dimensions' => ['nullable', 'array'],
             'lines.*.dimensions.*' => ['nullable', 'string', 'size:26'],
+            // Field name => value, by the field schema of the version (TE-FR-04).
+            'values' => ['sometimes', 'array'],
         ];
     }
 

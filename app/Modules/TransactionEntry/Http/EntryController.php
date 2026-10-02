@@ -45,11 +45,12 @@ class EntryController
 
     /**
      * Creates a draft entry on the latest published version of the transaction type, or on the
-     * requested `transaction_type_version`. The entry number is issued now.
+     * requested `transaction_type_version`. A `free_lines` version takes `lines`; a `structured` one takes
+     * `values` and the lines come from its posting rules. The entry number is issued now.
      */
     public function store(EntryRequest $request, EntryDrafts $drafts): JsonResponse
     {
-        /** @var array{transaction_type_key: string, transaction_type_version?: int|null, accounting_date: string, document_date?: string|null, description: string, lines: list<array{account_id: string, debit?: string|null, credit?: string|null, description?: string|null}>} $data */
+        /** @var array{transaction_type_key: string, transaction_type_version?: int|null, accounting_date: string, document_date?: string|null, description: string, lines?: list<array{account_id: string, debit?: string|null, credit?: string|null, description?: string|null}>, values?: array<string, mixed>} $data */
         $data = $request->validated();
 
         $entry = $drafts->create($data['transaction_type_key'], $data['transaction_type_version'] ?? null, $data, $this->userId($request));
@@ -62,7 +63,7 @@ class EntryController
      */
     public function update(UpdateEntryRequest $request, EntryDrafts $drafts, string $companyId, string $id): EntryResource
     {
-        /** @var array{lock_version: int, accounting_date: string, document_date?: string|null, description: string, lines: list<array{account_id: string, debit?: string|null, credit?: string|null, description?: string|null}>} $data */
+        /** @var array{lock_version: int, accounting_date: string, document_date?: string|null, description: string, lines?: list<array{account_id: string, debit?: string|null, credit?: string|null, description?: string|null}>, values?: array<string, mixed>} $data */
         $data = $request->validated();
 
         return new EntryResource($drafts->update($id, $data, (int) $data['lock_version']));

@@ -545,7 +545,8 @@ export interface paths {
         put?: never;
         /**
          * Creates a draft entry on the latest published version of the transaction type, or on the
-         *     requested `transaction_type_version`. The entry number is issued now
+         *     requested `transaction_type_version`. A `free_lines` version takes `lines`; a `structured` one takes
+         *     `values` and the lines come from its posting rules. The entry number is issued now
          */
         post: operations["entries.store"];
         delete?: never;
@@ -2018,13 +2019,16 @@ export interface components {
             /** Format: date */
             document_date?: string | null;
             description: string;
-            lines: {
+            /** @description A free-lines entry carries `lines`, a structured one `values`; the version decides which is required. */
+            lines?: {
                 account_id: string;
                 debit?: string | null;
                 credit?: string | null;
                 description?: string | null;
                 dimensions?: (string | null)[];
             }[];
+            /** @description Field name => value, by the field schema of the version (TE-FR-04). */
+            values?: string[];
         };
         /** EntryResource */
         EntryResource: {
@@ -2046,6 +2050,9 @@ export interface components {
                     [key: string]: string;
                 };
             }[];
+            values: {
+                [key: string]: unknown;
+            } | null;
             created_by: number;
             journal_id: string | null;
             journal_number: string | null;
@@ -2438,6 +2445,7 @@ export interface components {
                 mode: string;
                 status: string;
                 fields: string;
+                posting_rules: string;
             }[];
             lock_version: number;
         };
@@ -2508,13 +2516,16 @@ export interface components {
             /** Format: date */
             document_date?: string | null;
             description: string;
-            lines: {
+            /** @description A free-lines entry carries `lines`, a structured one `values`; the version decides which is required. */
+            lines?: {
                 account_id: string;
                 debit?: string | null;
                 credit?: string | null;
                 description?: string | null;
                 dimensions?: (string | null)[];
             }[];
+            /** @description Field name => value, by the field schema of the version (TE-FR-04). */
+            values?: string[];
         };
         /** UpdateFiscalCalendarRequest */
         UpdateFiscalCalendarRequest: {
@@ -2582,6 +2593,22 @@ export interface components {
                 required?: boolean;
                 account_ids?: string[];
                 dimension_type?: string;
+            }[];
+            /** @description Posting rules of a structured version (TE-FR-05); what they refer to is checked by the application layer. */
+            posting_rules?: {
+                /** @enum {string} */
+                type: "amount" | "fx_difference";
+                /** @enum {string|null} */
+                side?: "debit" | "credit" | null;
+                amount_field?: string | null;
+                account?: {
+                    /** @enum {string} */
+                    source?: "fixed" | "field";
+                    account_id?: string;
+                    field?: string;
+                } | null;
+                apply_dimensions?: boolean;
+                reuses_field?: boolean;
             }[];
         };
         /** WorkspaceResource */

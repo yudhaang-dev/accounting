@@ -2861,7 +2861,7 @@
             },
             "post": {
                 "operationId": "entries.store",
-                "summary": "Creates a draft entry on the latest published version of the transaction type, or on the\nrequested `transaction_type_version`. The entry number is issued now",
+                "summary": "Creates a draft entry on the latest published version of the transaction type, or on the\nrequested `transaction_type_version`. A `free_lines` version takes `lines`; a `structured` one takes\n`values` and the lines come from its posting rules. The entry number is issued now",
                 "tags": [
                     "Entry"
                 ],
@@ -9680,6 +9680,7 @@
                     },
                     "lines": {
                         "type": "array",
+                        "description": "A free-lines entry carries `lines`, a structured one `values`; the version decides which is required.",
                         "items": {
                             "type": "object",
                             "properties": {
@@ -9725,15 +9726,20 @@
                                 "account_id"
                             ]
                         },
-                        "minItems": 1,
                         "maxItems": 500
+                    },
+                    "values": {
+                        "type": "array",
+                        "description": "Field name => value, by the field schema of the version (TE-FR-04).",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "required": [
                     "transaction_type_key",
                     "accounting_date",
-                    "description",
-                    "lines"
+                    "description"
                 ],
                 "title": "EntryRequest"
             },
@@ -9803,6 +9809,13 @@
                             ]
                         }
                     },
+                    "values": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "additionalProperties": {}
+                    },
                     "created_by": {
                         "type": "integer"
                     },
@@ -9871,6 +9884,7 @@
                     "document_date",
                     "description",
                     "lines",
+                    "values",
                     "created_by",
                     "journal_id",
                     "journal_number",
@@ -11372,13 +11386,17 @@
                                 },
                                 "fields": {
                                     "type": "string"
+                                },
+                                "posting_rules": {
+                                    "type": "string"
                                 }
                             },
                             "required": [
                                 "version",
                                 "mode",
                                 "status",
-                                "fields"
+                                "fields",
+                                "posting_rules"
                             ]
                         }
                     },
@@ -11646,6 +11664,7 @@
                     },
                     "lines": {
                         "type": "array",
+                        "description": "A free-lines entry carries `lines`, a structured one `values`; the version decides which is required.",
                         "items": {
                             "type": "object",
                             "properties": {
@@ -11691,15 +11710,20 @@
                                 "account_id"
                             ]
                         },
-                        "minItems": 1,
                         "maxItems": 500
+                    },
+                    "values": {
+                        "type": "array",
+                        "description": "Field name => value, by the field schema of the version (TE-FR-04).",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "required": [
                     "lock_version",
                     "accounting_date",
-                    "description",
-                    "lines"
+                    "description"
                 ],
                 "title": "UpdateEntryRequest"
             },
@@ -12083,6 +12107,74 @@
                                 "name",
                                 "type",
                                 "label"
+                            ]
+                        },
+                        "maxItems": 50
+                    },
+                    "posting_rules": {
+                        "type": "array",
+                        "description": "Posting rules of a structured version (TE-FR-05); what they refer to is checked by the application layer.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "amount",
+                                        "fx_difference"
+                                    ]
+                                },
+                                "side": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "enum": [
+                                        "debit",
+                                        "credit",
+                                        null
+                                    ]
+                                },
+                                "amount_field": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 64
+                                },
+                                "account": {
+                                    "type": [
+                                        "object",
+                                        "null"
+                                    ],
+                                    "properties": {
+                                        "source": {
+                                            "type": "string",
+                                            "enum": [
+                                                "fixed",
+                                                "field"
+                                            ]
+                                        },
+                                        "account_id": {
+                                            "type": "string",
+                                            "minLength": 26,
+                                            "maxLength": 26
+                                        },
+                                        "field": {
+                                            "type": "string",
+                                            "maxLength": 64
+                                        }
+                                    }
+                                },
+                                "apply_dimensions": {
+                                    "type": "boolean"
+                                },
+                                "reuses_field": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "type"
                             ]
                         },
                         "maxItems": 50

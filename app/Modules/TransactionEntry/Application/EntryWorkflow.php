@@ -28,6 +28,7 @@ final class EntryWorkflow
         private readonly PostingService $posting,
         private readonly Audit $audit,
         private readonly ActorPermissions $permissions,
+        private readonly EntryLines $lines,
     ) {}
 
     /**
@@ -85,6 +86,8 @@ final class EntryWorkflow
 
             $this->assertStatus($entry, [EntryStatus::Approved]);
 
+            $this->refreshLines($entry);
+
             $journal = $this->posting->post($this->command($entry, $userId));
 
             $entry->forceFill(['status' => EntryStatus::Posted, 'journal_id' => $journal->id, 'journal_number' => $journal->number, 'posted_at' => now()])->save();
@@ -111,6 +114,7 @@ final class EntryWorkflow
             }
 
             if ($validate) {
+                $this->refreshLines($entry);
                 $this->validator->validate($this->command($entry, $userId));
             }
 
@@ -132,6 +136,18 @@ final class EntryWorkflow
             throw new ApiException(ErrorCode::InvalidStateTransition, errors: [
                 'status' => [__('entries.invalid_transition', ['status' => $entry->status->value])],
             ]);
+        }
+    }
+
+    /**
+     * A structured entry takes its lines from the posting rules and role mappings as they stand when it
+     * is submitted and again when it is posted (TE-FR-05, TE-FR-08); the transaction rolls this back with
+     * a refusal.
+     */
+    private function refreshLines(Entry $entry): void
+    {
+        if ($entry->field_values !== null) {
+            $entry->forceFill(['lines' => $this->lines->of($entry)])->save();
         }
     }
 

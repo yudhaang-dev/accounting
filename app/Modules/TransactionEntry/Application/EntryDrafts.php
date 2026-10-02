@@ -4,6 +4,7 @@ namespace App\Modules\TransactionEntry\Application;
 
 use App\Modules\TransactionEntry\Domain\Entry;
 use App\Modules\TransactionEntry\Domain\EntryStatus;
+use App\Modules\TransactionEntry\Domain\FieldValues;
 use App\Modules\TransactionEntry\Domain\TransactionType;
 use App\Modules\TransactionEntry\Domain\TransactionTypeMode;
 use App\Modules\TransactionEntry\Domain\TransactionTypeVersion;
@@ -25,7 +26,7 @@ use Illuminate\Validation\ValidationException;
  * of accounts, period and balance happens on submit and again on posting (TE-FR-08).
  *
  * @phpstan-type LineInput array{account_id: string, debit?: string|null, credit?: string|null, description?: string|null, dimensions?: array<string, string|null>|null}
- * @phpstan-type EntryInput array{accounting_date: string, document_date?: string|null, description: string, lines: list<LineInput>}
+ * @phpstan-type EntryInput array{accounting_date: string, document_date?: string|null, description: string, lines?: list<LineInput>, values?: array<string, mixed>}
  */
 final class EntryDrafts
 {
@@ -34,6 +35,7 @@ final class EntryDrafts
         private readonly Audit $audit,
         private readonly CompanyContext $company,
         private readonly DataScopeContext $scope,
+        private readonly EntryLines $entryLines,
     ) {}
 
     /**
@@ -44,13 +46,12 @@ final class EntryDrafts
      */
     public function create(string $typeKey, ?int $version, array $data, int $userId): Entry
     {
-        $this->assertWithinDataScope($data['lines']);
-
         return DB::transaction(function () use ($typeKey, $version, $data, $userId): Entry {
             $type = TransactionType::query()->where('key', $typeKey)->first()
                 ?? throw ValidationException::withMessages(['transaction_type_key' => [__('entries.type_unknown', ['key' => $typeKey])]]);
 
             $resolved = $this->version($type, $version);
+            $content = $this->content($resolved, $data);
 
             $entry = Entry::create([
                 'transaction_type_id' => $type->id,
@@ -60,7 +61,7 @@ final class EntryDrafts
                 'accounting_date' => $data['accounting_date'],
                 'document_date' => $data['document_date'] ?? null,
                 'description' => $data['description'],
-                'lines' => $this->lines($data['lines']),
+                ...$content,
                 'created_by' => $userId,
             ])->refresh();
 
@@ -79,8 +80,6 @@ final class EntryDrafts
      */
     public function update(string $id, array $data, int $expectedVersion): Entry
     {
-        $this->assertWithinDataScope($data['lines']);
-
         return DB::transaction(function () use ($id, $data, $expectedVersion): Entry {
             $entry = Entry::query()->lockForUpdate()->findOrFail($id);
 
@@ -88,11 +87,16 @@ final class EntryDrafts
                 throw new ApiException(ErrorCode::InvalidStateTransition);
             }
 
+            $version = TransactionTypeVersion::query()
+                ->where('transaction_type_id', $entry->transaction_type_id)
+                ->where('version', $entry->transaction_type_version)
+                ->firstOrFail();
+
             $entry->updateLocked([
                 'accounting_date' => $data['accounting_date'],
                 'document_date' => $data['document_date'] ?? null,
                 'description' => $data['description'],
-                'lines' => $this->lines($data['lines']),
+                ...$this->content($version, $data),
             ], $expectedVersion);
 
             $this->audit->record('entry.updated', "Entry {$entry->number} updated.", $entry, companyId: $entry->company_id);
@@ -144,11 +148,50 @@ final class EntryDrafts
             throw ValidationException::withMessages(['transaction_type_version' => [__('entries.version_unpublished', ['version' => $found->version])]]);
         }
 
-        if ($found->mode === TransactionTypeMode::Structured) {
-            throw ValidationException::withMessages(['transaction_type_version' => [__('entries.structured_not_supported')]]);
+        return $found;
+    }
+
+    /**
+     * The `lines` and `field_values` columns for the input, by the mode of the version: a `free_lines`
+     * entry carries its lines, a `structured` one carries field values and its lines come from the posting
+     * rules (TE-FR-05). The data scope applies to the resulting lines.
+     *
+     * @param  EntryInput  $data
+     * @return array{lines: list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>}>, field_values: array<string, mixed>|null}
+     *
+     * @throws ValidationException
+     * @throws ApiException FORBIDDEN
+     */
+    private function content(TransactionTypeVersion $version, array $data): array
+    {
+        if ($version->mode === TransactionTypeMode::Structured) {
+            if (isset($data['lines'])) {
+                throw ValidationException::withMessages(['lines' => [__('entries.lines_not_allowed')]]);
+            }
+
+            $values = FieldValues::present($data['values'] ?? []);
+
+            if (($errors = FieldValues::errors($version->fields ?? [], $values)) !== []) {
+                throw ValidationException::withMessages($errors);
+            }
+
+            $lines = $this->entryLines->generate($version, $values, $data['accounting_date']);
+            $this->assertWithinDataScope($lines);
+
+            return ['lines' => $lines, 'field_values' => $values];
         }
 
-        return $found;
+        if (isset($data['values'])) {
+            throw ValidationException::withMessages(['values' => [__('entries.values_not_allowed')]]);
+        }
+
+        if (! isset($data['lines'])) {
+            throw ValidationException::withMessages(['lines' => [__('entries.lines_required')]]);
+        }
+
+        $this->assertWithinDataScope($data['lines']);
+
+        return ['lines' => $this->lines($data['lines']), 'field_values' => null];
     }
 
     /**
