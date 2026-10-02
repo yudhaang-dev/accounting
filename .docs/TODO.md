@@ -74,13 +74,13 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M4-09** Impor histori (ringkasan per periode atau transaksi) dan pencocokan dengan neraca saldo sumber pada cutover — GL-FR-11 — histori pada akun kontrol baru dapat diimpor setelah Subledger menyuplai total open item (M6-10)
 - [x] **M4-10** Tutup tahun: orkestrasi kesiapan, jurnal penutup per akun × set dimensi, saldo tahun berikutnya — GL-FR-12, GL-FR-13, GL-AC-09 — kesiapan baru memeriksa entri belum selesai; rekonsiliasi subledger menyusul di M6-09
 - [x] **M4-11** Buka kembali tahun buku — GL-FR-14, GL-AC-10 — penandaan snapshot laporan untuk dihitung ulang menyusul di M8-11
-- [ ] **M4-12** SPA: atribut akun, manajemen periode, revaluasi, wizard saldo konversi, checklist tutup tahun
+- [x] **M4-12** SPA: atribut akun, manajemen periode, revaluasi, wizard saldo konversi, checklist tutup tahun — wizard impor belum memetakan dimensi (API sudah mendukungnya)
   - [x] **M4-12a** Atribut posting pada form akun
   - [x] **M4-12b** Manajemen periode: tutup sementara, tutup, buka kembali
   - [x] **M4-12c** Pengaturan buku besar: kebijakan dan pemetaan peran akun
   - [x] **M4-12d** Revaluasi per periode
   - [x] **M4-12e** Wizard saldo konversi dan histori
-  - [ ] **M4-12f** Checklist tutup dan buka kembali tahun buku
+  - [x] **M4-12f** Checklist tutup dan buka kembali tahun buku
 
 ## M5 — Pencatatan transaksi
 

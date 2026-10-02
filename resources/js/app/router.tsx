@@ -340,6 +340,11 @@ const periodsRoute = createRoute({
                 canClose={can(workspace, 'periods.close')}
                 canReopen={can(workspace, 'periods.reopen')}
                 canRevalue={can(workspace, 'periods.revalue')}
+                yearClosing={{
+                    close: can(workspace, 'fiscal-years.close'),
+                    reopen: can(workspace, 'fiscal-years.reopen'),
+                    entries: can(workspace, 'entries.read'),
+                }}
                 revaluationAccess={{
                     accounts: can(workspace, 'accounts.read'),
                     journals: can(workspace, 'journals.read'),

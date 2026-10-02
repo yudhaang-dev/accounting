@@ -779,12 +779,40 @@ const period = (n: number, status: string) => ({
     status,
 });
 
+const closingState = (overrides: Record<string, unknown> = {}) => ({
+    closed: false,
+    closing: null,
+    ready: true,
+    checks: {
+        retained_earnings: { ok: true },
+        last_period: { ok: true, name: '2026-12', status: 'open' },
+        unfinished_entries: { ok: true, count: 0 },
+    },
+    ...overrides,
+});
+
+const closingRun = (overrides: Record<string, unknown> = {}) => ({
+    id: '01JCLOSING',
+    fiscal_year_id: year.id,
+    status: 'closed',
+    journal_id: '01JJOURNAL000000000000009',
+    journal_number: 'JU-2026-12-0009',
+    line_count: 3,
+    result: '600000.00',
+    retained_earnings_mapping_version: 1,
+    reversal_journal_id: null,
+    created_at: '2026-12-31T10:00:00Z',
+    ...overrides,
+});
+
 describe('fiscal periods', () => {
-    const periodRoutes = (permissions: string[]) => ({
+    const closingPath = `${base}/fiscal-years/${year.id}/closing`;
+    const periodRoutes = (permissions: string[], state = closingState()) => ({
         ...withPermissions(permissions),
         [`GET ${base}/fiscal-years`]: () => json({ data: [year] }),
         [`GET ${base}/periods`]: () =>
             list([period(1, 'closed'), period(2, 'open')]),
+        [`GET ${closingPath}`]: () => json({ data: state }),
     });
 
     it('lists the periods of the fiscal year', async () => {
@@ -1049,6 +1077,229 @@ describe('fiscal periods', () => {
             expect(
                 screen.queryByRole('button', { name: 'Revaluasi 2026-01' }),
             ).not.toBeInTheDocument();
+        });
+    });
+
+    describe('closing the fiscal year (GL-FR-12, GL-FR-14)', () => {
+        const close = `POST ${base}/fiscal-years/${year.id}/close`;
+        const reopen = `POST ${base}/fiscal-years/${year.id}/reopen`;
+
+        it('shows what keeps the year from closing and offers no closing meanwhile', async () => {
+            mockApi(
+                periodRoutes(
+                    ['periods.read', 'fiscal-years.close', 'entries.read'],
+                    closingState({
+                        ready: false,
+                        checks: {
+                            retained_earnings: { ok: false },
+                            last_period: {
+                                ok: false,
+                                name: '2026-12',
+                                status: 'closed',
+                            },
+                            unfinished_entries: { ok: false, count: 3 },
+                        },
+                    }),
+                ),
+            );
+
+            renderApp(periodsPath);
+
+            expect(
+                await screen.findByText('Akun saldo laba belum dipetakan.'),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByText(/Periode terakhir \(2026-12\) sudah ditutup/),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByText(
+                    /3 entri bertanggal sampai 2026-12-31 belum selesai/,
+                ),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole('link', {
+                    name: 'Atur di Pengaturan buku besar',
+                }),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole('link', { name: 'Lihat entri' }),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole('button', { name: 'Tutup tahun buku' }),
+            ).toBeDisabled();
+        });
+
+        it('closes the year after asking', async () => {
+            const api = mockApi({
+                ...periodRoutes(['periods.read', 'fiscal-years.close']),
+                [close]: () => json({ data: closingRun() }, 201),
+            });
+
+            renderApp(periodsPath);
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('button', { name: 'Tutup tahun buku' }),
+            );
+            await confirmWith(typist, 'Tutup tahun buku');
+
+            await waitFor(() => expect(api.called(close)).toHaveLength(1));
+            // The status is read again after the closing.
+            await waitFor(() =>
+                expect(api.called(`GET ${closingPath}`).length).toBeGreaterThan(
+                    1,
+                ),
+            );
+        });
+
+        it('shows the result of a closed year with its journal, and reopens it with a reason', async () => {
+            const api = mockApi({
+                ...periodRoutes(
+                    ['periods.read', 'fiscal-years.reopen', 'journals.read'],
+                    closingState({
+                        closed: true,
+                        closing: closingRun(),
+                        ready: false,
+                    }),
+                ),
+                [reopen]: () =>
+                    json({
+                        data: closingRun({
+                            status: 'reopened',
+                            reversal_journal_id: '01JJOURNAL000000000000010',
+                        }),
+                    }),
+            });
+
+            renderApp(periodsPath);
+            const typist = userEvent.setup();
+
+            expect(
+                await screen.findByText(/Tahun buku FY2026 sudah ditutup/),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByText(
+                    /Laba tahun berjalan 600\.000,00 dipindahkan ke saldo laba/,
+                ),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole('link', {
+                    name: 'Lihat jurnal penutup JU-2026-12-0009',
+                }),
+            ).toHaveAttribute(
+                'href',
+                `/w/${workspace.company_id}/journals/01JJOURNAL000000000000009`,
+            );
+            // A closed year offers no closing and no checklist.
+            expect(
+                screen.queryByRole('button', { name: 'Tutup tahun buku' }),
+            ).not.toBeInTheDocument();
+
+            await typist.click(
+                screen.getByRole('button', { name: 'Buka kembali tahun buku' }),
+            );
+            const dialog = await screen.findByRole('dialog');
+
+            await typist.click(
+                within(dialog).getByRole('button', { name: 'Buka kembali' }),
+            );
+            expect(
+                await within(dialog).findByText('Wajib diisi'),
+            ).toBeInTheDocument();
+            expect(api.called(reopen)).toHaveLength(0);
+
+            await typist.type(
+                within(dialog).getByLabelText('Alasan'),
+                'Koreksi audit',
+            );
+            await typist.click(
+                within(dialog).getByRole('button', { name: 'Buka kembali' }),
+            );
+
+            await waitFor(() =>
+                expect(api.called(reopen)[0]?.body).toEqual({
+                    reason: 'Koreksi audit',
+                }),
+            );
+        });
+
+        it('says so when a closed year had no income or expense, and a loss as a loss', async () => {
+            mockApi(
+                periodRoutes(
+                    ['periods.read'],
+                    closingState({
+                        closed: true,
+                        closing: closingRun({
+                            journal_id: null,
+                            journal_number: null,
+                            result: '0.00',
+                        }),
+                    }),
+                ),
+            );
+
+            renderApp(periodsPath);
+
+            expect(
+                await screen.findByText(
+                    /Tidak ada pendapatan atau beban yang perlu ditutup/,
+                ),
+            ).toBeInTheDocument();
+        });
+
+        it('shows a loss as a loss', async () => {
+            mockApi(
+                periodRoutes(
+                    ['periods.read'],
+                    closingState({
+                        closed: true,
+                        closing: closingRun({ result: '-250000.00' }),
+                    }),
+                ),
+            );
+
+            renderApp(periodsPath);
+
+            expect(
+                await screen.findByText(
+                    /Rugi tahun berjalan 250\.000,00 dipindahkan ke saldo laba/,
+                ),
+            ).toBeInTheDocument();
+        });
+
+        it('offers neither closing nor reopening without the permissions', async () => {
+            mockApi(periodRoutes(['periods.read']));
+
+            renderApp(periodsPath);
+
+            await screen.findByText('Akun saldo laba sudah dipetakan.');
+            expect(
+                screen.queryByRole('button', { name: 'Tutup tahun buku' }),
+            ).not.toBeInTheDocument();
+        });
+
+        it('shows why the server refused the closing', async () => {
+            const api = mockApi({
+                ...periodRoutes(['periods.read', 'fiscal-years.close']),
+                [close]: () =>
+                    json(
+                        {
+                            message: 'Ada entri yang belum selesai.',
+                            code: 'INVALID_STATE_TRANSITION',
+                        },
+                        409,
+                    ),
+            });
+
+            renderApp(periodsPath);
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('button', { name: 'Tutup tahun buku' }),
+            );
+            await confirmWith(typist, 'Tutup tahun buku');
+
+            await waitFor(() => expect(api.called(close)).toHaveLength(1));
         });
     });
 

@@ -458,6 +458,38 @@ export const en: Widen<typeof id> = {
             done: '{{count}} history journals posted.',
         },
     },
+    closing: {
+        title: 'Closing of fiscal year {{name}}',
+        checkOk: 'Met',
+        checkFailed: 'Not met',
+        retainedOk: 'The retained earnings account is mapped.',
+        retainedMissing: 'The retained earnings account is not mapped.',
+        toSettings: 'Set it in Ledger settings',
+        periodOk: 'The last period ({{name}}) accepts the closing journal.',
+        periodClosed:
+            'The last period ({{name}}) is closed. Reopen it so it accepts the closing journal.',
+        periodSoftClosed:
+            'The last period ({{name}}) is soft-closed. The ledger policy must allow the key system.closing.',
+        entriesOk: 'No entry is unfinished.',
+        entriesPending_one:
+            'One entry dated up to {{date}} is unfinished (draft, submitted, approved or rejected).',
+        entriesPending_other:
+            '{{count}} entries dated up to {{date}} are unfinished (draft, submitted, approved or rejected).',
+        toEntries: 'View entries',
+        closeAction: 'Close fiscal year',
+        closed: 'Fiscal year {{name}} closed.',
+        isClosed: 'Fiscal year {{name}} is closed.',
+        profit: 'The profit of the year, {{amount}}, was moved to retained earnings.',
+        loss: 'The loss of the year, {{amount}}, was moved to retained earnings.',
+        noActivity: 'There was no income or expense to close.',
+        openJournal: 'View closing journal {{number}}',
+        reopenAction: 'Reopen fiscal year',
+        reopenTitle: 'Reopen fiscal year {{name}}',
+        reopenDescription:
+            'The closing journal is reversed and the year can be closed again. The last period must accept postings. The reason is recorded with your name in the audit log.',
+        reopenSubmit: 'Reopen',
+        reopened: 'Fiscal year {{name}} reopened.',
+    },
     dimensions: {
         pageTitle: 'Dimensions',
         title: 'Dimensions',
@@ -1184,6 +1216,12 @@ export const en: Widen<typeof id> = {
             description:
                 'The approval is recorded in your name in the entry history, and the entry is ready to post.',
             action: 'Approve',
+        },
+        closeYear: {
+            title: 'Close fiscal year {{name}}?',
+            description:
+                'One closing journal brings income and expense to zero against retained earnings. A closed year refuses all postings until it is reopened with a reason.',
+            action: 'Close fiscal year',
         },
         softClosePeriod: {
             title: 'Soft-close period {{name}}?',

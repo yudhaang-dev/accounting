@@ -41,6 +41,7 @@ import {
     fiscalYearsQuery,
     type FiscalYear,
 } from '@/modules/general-ledger/calendar';
+import { FiscalYearClosingPanel } from '@/modules/general-ledger/components/fiscal-year-closing-panel';
 import { ReopenPeriodDialog } from '@/modules/general-ledger/components/reopen-period-dialog';
 import {
     RevaluationDialog,
@@ -80,6 +81,7 @@ export function PeriodsPage({
     canReopen,
     canRevalue,
     revaluationAccess,
+    yearClosing,
 }: {
     companyId: string;
     canManage: boolean;
@@ -87,6 +89,8 @@ export function PeriodsPage({
     canReopen: boolean;
     canRevalue: boolean;
     revaluationAccess: RevaluationAccess;
+    /** What the user may do about closing a fiscal year, and see on the way. */
+    yearClosing: { close: boolean; reopen: boolean; entries: boolean };
 }) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
@@ -148,6 +152,8 @@ export function PeriodsPage({
         onError: (error) =>
             toast.error(failure(error, genericErrorMessage(error, t))),
     });
+
+    const selectedYear = years.data?.find((year) => year.id === yearId);
 
     const yearItems = (years.data ?? []).map((year) => ({
         value: year.id,
@@ -240,6 +246,18 @@ export function PeriodsPage({
                             </SelectContent>
                         </Select>
                     </div>
+
+                    {selectedYear && (
+                        <FiscalYearClosingPanel
+                            key={selectedYear.id}
+                            companyId={companyId}
+                            year={selectedYear}
+                            canClose={yearClosing.close}
+                            canReopen={yearClosing.reopen}
+                            canReadJournals={revaluationAccess.journals}
+                            canReadEntries={yearClosing.entries}
+                        />
+                    )}
 
                     {periods.isError ? (
                         <FormAlert>

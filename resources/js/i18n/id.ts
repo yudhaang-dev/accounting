@@ -454,6 +454,38 @@ export const id = {
             done: '{{count}} jurnal histori diposting.',
         },
     },
+    closing: {
+        title: 'Penutupan tahun buku {{name}}',
+        checkOk: 'Terpenuhi',
+        checkFailed: 'Belum terpenuhi',
+        retainedOk: 'Akun saldo laba sudah dipetakan.',
+        retainedMissing: 'Akun saldo laba belum dipetakan.',
+        toSettings: 'Atur di Pengaturan buku besar',
+        periodOk: 'Periode terakhir ({{name}}) menerima jurnal penutup.',
+        periodClosed:
+            'Periode terakhir ({{name}}) sudah ditutup. Buka kembali agar menerima jurnal penutup.',
+        periodSoftClosed:
+            'Periode terakhir ({{name}}) ditutup sementara. Kebijakan buku besar harus mengizinkan kunci system.closing.',
+        entriesOk: 'Tidak ada entri yang belum selesai.',
+        entriesPending_one:
+            'Satu entri bertanggal sampai {{date}} belum selesai (draf, diajukan, disetujui, atau ditolak).',
+        entriesPending_other:
+            '{{count}} entri bertanggal sampai {{date}} belum selesai (draf, diajukan, disetujui, atau ditolak).',
+        toEntries: 'Lihat entri',
+        closeAction: 'Tutup tahun buku',
+        closed: 'Tahun buku {{name}} ditutup.',
+        isClosed: 'Tahun buku {{name}} sudah ditutup.',
+        profit: 'Laba tahun berjalan {{amount}} dipindahkan ke saldo laba.',
+        loss: 'Rugi tahun berjalan {{amount}} dipindahkan ke saldo laba.',
+        noActivity: 'Tidak ada pendapatan atau beban yang perlu ditutup.',
+        openJournal: 'Lihat jurnal penutup {{number}}',
+        reopenAction: 'Buka kembali tahun buku',
+        reopenTitle: 'Buka kembali tahun buku {{name}}',
+        reopenDescription:
+            'Jurnal penutup dibalik dan tahun dapat ditutup ulang. Periode terakhir harus menerima posting. Alasan dicatat bersama nama Anda di jejak audit.',
+        reopenSubmit: 'Buka kembali',
+        reopened: 'Tahun buku {{name}} dibuka kembali.',
+    },
     dimensions: {
         pageTitle: 'Dimensi',
         title: 'Dimensi',
@@ -1183,6 +1215,12 @@ export const id = {
             description:
                 'Persetujuan dicatat atas nama Anda di riwayat entri, dan entri siap diposting.',
             action: 'Setujui',
+        },
+        closeYear: {
+            title: 'Tutup tahun buku {{name}}?',
+            description:
+                'Satu jurnal penutup menolkan pendapatan dan beban ke saldo laba. Tahun yang ditutup menolak semua posting sampai dibuka kembali dengan alasan.',
+            action: 'Tutup tahun buku',
         },
         softClosePeriod: {
             title: 'Tutup sementara periode {{name}}?',
