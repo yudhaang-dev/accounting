@@ -30,9 +30,21 @@ const row = (overrides: Record<string, unknown>) => ({
     parent_id: null,
     is_leaf: true,
     status: 'active',
+    allowed_sources: ['entry', 'subledger', 'system'],
+    dimension_requirements: {},
+    currency_restriction: 'any',
+    restricted_currency: null,
+    is_revaluable: false,
     lock_version: 1,
     ...overrides,
 });
+
+const postingDefaults = {
+    allowed_sources: ['entry', 'subledger', 'system'],
+    currency_restriction: 'any',
+    restricted_currency: null,
+    is_revaluable: false,
+};
 
 const list = (data: unknown[]) =>
     json({
@@ -304,6 +316,7 @@ describe('chart of accounts', () => {
             class: 'liability',
             normal_balance: 'credit',
             parent_id: id4,
+            ...postingDefaults,
         });
     });
 
@@ -385,6 +398,179 @@ describe('chart of accounts', () => {
             class: 'asset',
             normal_balance: null,
             parent_id: null,
+            ...postingDefaults,
+        });
+    });
+
+    describe('posting attributes (GL-FR-02)', () => {
+        const branch = {
+            id: '01JDIMTYPE0000000000000001',
+            key: 'branch',
+            label: 'Cabang',
+            is_hierarchical: true,
+            leaf_only: false,
+            status: 'active',
+            lock_version: 1,
+        };
+        const dollar = {
+            code: 'USD',
+            name: 'US Dollar',
+            minor_unit: 2,
+            scale: 2,
+            rounding_mode: 'half_up',
+            is_functional: false,
+            status: 'active',
+            lock_version: 1,
+        };
+        const full = [
+            'accounts.read',
+            'accounts.manage',
+            'currencies.read',
+            'dimensions.read',
+        ];
+        const path = `PATCH ${base}/accounts/${id2}`;
+        const routes = () => ({
+            ...withPermissions(full),
+            [`GET ${base}/accounts`]: () => list(accounts),
+            [`GET ${base}/currencies`]: () =>
+                list([{ ...dollar, code: 'IDR', is_functional: true }, dollar]),
+            [`GET ${base}/dimension-types`]: () => list([branch]),
+            [path]: () => json({ data: row({ lock_version: 2 }) }),
+        });
+
+        it('makes an account a bank account in one currency, revalued, with a required dimension', async () => {
+            const api = mockApi(routes());
+
+            renderApp(accountsPath);
+            const typist = userEvent.setup();
+
+            await rowAction(typist, '1111', 'Ubah');
+            const dialog = await screen.findByRole('dialog');
+
+            await typist.click(
+                within(dialog).getByRole('combobox', { name: 'Mata uang' }),
+            );
+            await typist.click(
+                await screen.findByRole('option', {
+                    name: 'Satu mata uang asing tertentu',
+                }),
+            );
+            await typist.click(
+                await within(dialog).findByRole('combobox', {
+                    name: 'Mata uang asing',
+                }),
+            );
+            await typist.click(
+                await screen.findByRole('option', { name: 'USD · US Dollar' }),
+            );
+            await typist.click(
+                within(dialog).getByRole('checkbox', {
+                    name: /Direvaluasi di akhir periode/,
+                }),
+            );
+            await typist.click(
+                await within(dialog).findByRole('combobox', { name: 'Cabang' }),
+            );
+            await typist.click(
+                await screen.findByRole('option', { name: 'Wajib' }),
+            );
+            await typist.click(
+                within(dialog).getByRole('button', { name: 'Simpan' }),
+            );
+
+            await waitFor(() => expect(api.called(path)).toHaveLength(1));
+            expect(api.called(path)[0]?.body).toMatchObject({
+                lock_version: 1,
+                allowed_sources: ['entry', 'subledger', 'system'],
+                currency_restriction: 'specific',
+                restricted_currency: 'USD',
+                is_revaluable: true,
+                dimension_requirements: { branch: 'required' },
+            });
+        });
+
+        it('turns an account into a subledger control account by dropping the other sources', async () => {
+            const api = mockApi(routes());
+
+            renderApp(accountsPath);
+            const typist = userEvent.setup();
+
+            await rowAction(typist, '1111', 'Ubah');
+            const dialog = await screen.findByRole('dialog');
+
+            await typist.click(
+                within(dialog).getByRole('checkbox', { name: 'Entri manual' }),
+            );
+            await typist.click(
+                within(dialog).getByRole('checkbox', { name: /^Sistem/ }),
+            );
+            await typist.click(
+                within(dialog).getByRole('button', { name: 'Simpan' }),
+            );
+
+            await waitFor(() => expect(api.called(path)).toHaveLength(1));
+            expect(api.called(path)[0]?.body).toMatchObject({
+                allowed_sources: ['subledger'],
+            });
+        });
+
+        it('keeps the last source checked and offers no revaluation for a functional-only account', async () => {
+            mockApi({
+                ...routes(),
+                [`GET ${base}/accounts`]: () =>
+                    list([
+                        row({
+                            id: id2,
+                            code: '1111',
+                            parent_id: null,
+                            allowed_sources: ['subledger'],
+                            currency_restriction: 'functional_only',
+                        }),
+                    ]),
+            });
+
+            renderApp(accountsPath);
+            const typist = userEvent.setup();
+
+            await rowAction(typist, '1111', 'Ubah');
+            const dialog = await screen.findByRole('dialog');
+
+            // The checkbox is not a native input: it says it is disabled through ARIA.
+            expect(
+                within(dialog).getByRole('checkbox', { name: 'Subledger' }),
+            ).toHaveAttribute('aria-disabled', 'true');
+            expect(
+                within(dialog).getByRole('checkbox', {
+                    name: /Direvaluasi di akhir periode/,
+                }),
+            ).toHaveAttribute('aria-disabled', 'true');
+        });
+
+        it('leaves out what it may not read, so the account keeps its own requirements', async () => {
+            const api = mockApi({
+                ...withPermissions(['accounts.read', 'accounts.manage']),
+                [`GET ${base}/accounts`]: () => list(accounts),
+                [path]: () => json({ data: row({ lock_version: 2 }) }),
+            });
+
+            renderApp(accountsPath);
+            const typist = userEvent.setup();
+
+            await rowAction(typist, '1111', 'Ubah');
+            const dialog = await screen.findByRole('dialog');
+
+            expect(
+                within(dialog).queryByText('Dimensi'),
+            ).not.toBeInTheDocument();
+
+            await typist.click(
+                within(dialog).getByRole('button', { name: 'Simpan' }),
+            );
+
+            await waitFor(() => expect(api.called(path)).toHaveLength(1));
+            expect(api.called(path)[0]?.body).not.toHaveProperty(
+                'dimension_requirements',
+            );
         });
     });
 

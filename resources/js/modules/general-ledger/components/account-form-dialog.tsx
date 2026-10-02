@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, type Control } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { FormAlert } from '@/components/form-alert';
@@ -38,10 +38,19 @@ import {
     ACCOUNT_CLASSES,
     createAccount,
     allAccountsQuery,
+    dimensionRequirementsOf,
+    POSTING_SOURCES,
     updateAccount,
     type Account,
     type AccountClass,
+    type CurrencyRestriction,
 } from '@/modules/general-ledger/accounts';
+import {
+    AccountPostingFields,
+    type PostingAccess,
+    type PostingHost,
+    type PostingValues,
+} from '@/modules/general-ledger/components/account-posting-fields';
 
 type Values = {
     code: string;
@@ -51,6 +60,7 @@ type Values = {
     normal_balance: 'default' | 'debit' | 'credit';
     /** Empty means no parent. */
     parent_id: string;
+    posting: PostingValues;
 };
 
 type Props = {
@@ -59,6 +69,8 @@ type Props = {
     account?: Account;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    /** What the user may read; the posting attributes that need it are left out otherwise. */
+    access: PostingAccess;
 };
 
 const valuesOf = (account?: Account): Values => ({
@@ -69,15 +81,50 @@ const valuesOf = (account?: Account): Values => ({
         ? (account.normal_balance as 'debit' | 'credit')
         : 'default',
     parent_id: account?.parent_id ?? '',
+    posting: {
+        allowed_sources: account
+            ? (account.allowed_sources as PostingValues['allowed_sources'])
+            : [...POSTING_SOURCES],
+        currency_restriction:
+            (account?.currency_restriction as
+                | CurrencyRestriction
+                | undefined) ?? 'any',
+        restricted_currency: account?.restricted_currency ?? '',
+        is_revaluable: account?.is_revaluable ?? false,
+        dimension_requirements: dimensionRequirementsOf(account),
+    },
+});
+
+/**
+ * The posting attributes to send. A currency restriction other than `specific` carries no currency,
+ * a balance only in the functional currency is not revaluable, and the requirements are left out
+ * when the user cannot read the dimension types (the account then keeps its own).
+ */
+const postingPayload = (values: Values, access: PostingAccess) => ({
+    allowed_sources: values.posting.allowed_sources,
+    currency_restriction: values.posting.currency_restriction,
+    restricted_currency:
+        values.posting.currency_restriction === 'specific'
+            ? values.posting.restricted_currency || null
+            : null,
+    is_revaluable:
+        values.posting.currency_restriction === 'functional_only'
+            ? false
+            : values.posting.is_revaluable,
+    ...(access.dimensions
+        ? { dimension_requirements: values.posting.dimension_requirements }
+        : {}),
 });
 
 function AccountForm({
     companyId,
     account,
+    access,
     onDone,
 }: {
     companyId: string;
     account?: Account;
+    access: PostingAccess;
     onDone: () => void;
 }) {
     const { t } = useTranslation();
@@ -121,6 +168,7 @@ function AccountForm({
                               ? undefined
                               : values.normal_balance,
                       parent_id: values.parent_id || null,
+                      ...postingPayload(values, access),
                   })
                 : createAccount(companyId, {
                       code: values.code,
@@ -131,6 +179,7 @@ function AccountForm({
                               ? null
                               : values.normal_balance,
                       parent_id: values.parent_id || null,
+                      ...postingPayload(values, access),
                   }),
         onSuccess: async (saved) => {
             await refresh();
@@ -156,7 +205,12 @@ function AccountForm({
             if (
                 isApiError(error) &&
                 error.status === 422 &&
-                applyApiErrors(form.setError, error, { parent_id: 'parent_id' })
+                applyApiErrors(form.setError, error, {
+                    parent_id: 'parent_id',
+                    allowed_sources: 'posting.allowed_sources',
+                    restricted_currency: 'posting.restricted_currency',
+                    currency_restriction: 'posting.currency_restriction',
+                })
             ) {
                 return;
             }
@@ -361,6 +415,14 @@ function AccountForm({
                     )}
                 </Field>
 
+                <AccountPostingFields
+                    companyId={companyId}
+                    access={access}
+                    // The posting attributes sit under `posting` in this form, which is all the fields look at.
+                    control={control as unknown as Control<PostingHost>}
+                    errors={errors.posting}
+                />
+
                 <DialogFooter>
                     <Button type="button" variant="ghost" onClick={onDone}>
                         {t('accounts.form.cancel')}
@@ -384,12 +446,13 @@ export function AccountFormDialog({
     account,
     open,
     onOpenChange,
+    access,
 }: Props) {
     const { t } = useTranslation();
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-lg">
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
                 <DialogHeader>
                     <DialogTitle>
                         {account
@@ -407,6 +470,7 @@ export function AccountFormDialog({
                         key={account?.id ?? 'new'}
                         companyId={companyId}
                         account={account}
+                        access={access}
                         onDone={() => onOpenChange(false)}
                     />
                 )}

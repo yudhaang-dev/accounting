@@ -208,6 +208,36 @@ export const id = {
         reactivate: 'Aktifkan kembali {{code}}',
         deactivated: 'Akun {{code}} dinonaktifkan.',
         reactivated: 'Akun {{code}} diaktifkan kembali.',
+        posting: {
+            title: 'Pengaturan posting',
+            sources: 'Sumber posting yang diterima',
+            sourcesHint:
+                'Akun kontrol subledger hanya menerima sumber subledger. Minimal satu sumber harus tetap dipilih.',
+            source: {
+                entry: 'Entri manual',
+                subledger: 'Subledger',
+                system: 'Sistem (revaluasi, penutupan, saldo konversi)',
+            },
+            currency: 'Mata uang',
+            restriction: {
+                any: 'Bebas',
+                functional_only: 'Hanya mata uang fungsional',
+                specific: 'Satu mata uang asing tertentu',
+            },
+            restrictedCurrency: 'Mata uang asing',
+            chooseCurrency: 'Pilih mata uang',
+            revaluable: 'Direvaluasi di akhir periode',
+            revaluableHint:
+                'Untuk pos moneter valas, mis. kas dan bank dalam mata uang asing. Akun kontrol subledger direvaluasi dari open item-nya.',
+            dimensions: 'Dimensi',
+            dimensionsHint:
+                'Tipe yang tidak diatur bersifat opsional pada akun ini.',
+            requirement: {
+                optional: 'Opsional',
+                required: 'Wajib',
+                forbidden: 'Dilarang',
+            },
+        },
         form: {
             createTitle: 'Tambah akun',
             editTitle: 'Ubah akun {{code}}',

@@ -310,6 +310,10 @@ const accountsRoute = createRoute({
             <AccountsPage
                 companyId={workspace.company_id}
                 canManage={can(workspace, 'accounts.manage')}
+                access={{
+                    currencies: can(workspace, 'currencies.read'),
+                    dimensions: can(workspace, 'dimensions.read'),
+                }}
             />
         );
     },

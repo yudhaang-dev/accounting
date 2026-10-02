@@ -55,6 +55,7 @@ import {
     type AccountStatus,
 } from '@/modules/general-ledger/accounts';
 import { AccountFormDialog } from '@/modules/general-ledger/components/account-form-dialog';
+import type { PostingAccess } from '@/modules/general-ledger/components/account-posting-fields';
 
 const ANY = '__any';
 
@@ -65,9 +66,12 @@ const ANY = '__any';
 export function AccountsPage({
     companyId,
     canManage,
+    access,
 }: {
     companyId: string;
     canManage: boolean;
+    /** What the user may read, for the posting attributes of the account form. */
+    access: PostingAccess;
 }) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
@@ -434,11 +438,13 @@ export function AccountsPage({
 
             <AccountFormDialog
                 companyId={companyId}
+                access={access}
                 open={creating}
                 onOpenChange={setCreating}
             />
             <AccountFormDialog
                 companyId={companyId}
+                access={access}
                 account={editing ?? undefined}
                 open={editing !== null}
                 onOpenChange={(open) => {

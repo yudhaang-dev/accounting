@@ -211,6 +211,36 @@ export const en: Widen<typeof id> = {
         reactivate: 'Reactivate {{code}}',
         deactivated: 'Account {{code}} deactivated.',
         reactivated: 'Account {{code}} reactivated.',
+        posting: {
+            title: 'Posting settings',
+            sources: 'Sources the account accepts',
+            sourcesHint:
+                'A subledger control account accepts the subledger source only. At least one source must stay selected.',
+            source: {
+                entry: 'Manual entries',
+                subledger: 'Subledger',
+                system: 'System (revaluation, closing, opening balances)',
+            },
+            currency: 'Currency',
+            restriction: {
+                any: 'Any',
+                functional_only: 'Functional currency only',
+                specific: 'One specific foreign currency',
+            },
+            restrictedCurrency: 'Foreign currency',
+            chooseCurrency: 'Choose a currency',
+            revaluable: 'Revalued at period end',
+            revaluableHint:
+                'For monetary foreign currency items, such as cash and bank in a foreign currency. A subledger control account is revalued from its open items.',
+            dimensions: 'Dimensions',
+            dimensionsHint:
+                'A type that is not set is optional on this account.',
+            requirement: {
+                optional: 'Optional',
+                required: 'Required',
+                forbidden: 'Forbidden',
+            },
+        },
         form: {
             createTitle: 'Add account',
             editTitle: 'Edit account {{code}}',

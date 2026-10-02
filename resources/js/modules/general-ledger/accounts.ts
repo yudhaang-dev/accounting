@@ -5,8 +5,24 @@ import type { components } from '@/api/schema';
 export type Account = components['schemas']['AccountResource'];
 export type AccountClass = components['schemas']['AccountClass'];
 export type AccountStatus = components['schemas']['AccountStatus'];
-export type CreateAccountInput = components['schemas']['CreateAccountRequest'];
-export type UpdateAccountInput = components['schemas']['UpdateAccountRequest'];
+
+/**
+ * The generated request types give `dimension_requirements` as a list (a limit of the generator);
+ * the API takes an object of dimension type key => requirement, which is what these declare.
+ */
+type WithRequirements<T> = Omit<T, 'dimension_requirements'> & {
+    dimension_requirements?: Record<string, DimensionRequirement>;
+};
+
+/** Hands the body to the generated client, whose type disagrees with the API on `dimension_requirements`. */
+const asWire = <T>(body: unknown): T => body as T;
+
+export type CreateAccountInput = WithRequirements<
+    components['schemas']['CreateAccountRequest']
+>;
+export type UpdateAccountInput = WithRequirements<
+    components['schemas']['UpdateAccountRequest']
+>;
 
 export const ACCOUNT_CLASSES: AccountClass[] = [
     'asset',
@@ -83,7 +99,9 @@ export async function createAccount(
         await unwrap(
             api.POST('/companies/{companyId}/accounts', {
                 params: { path: { companyId } },
-                body,
+                body: asWire<components['schemas']['CreateAccountRequest']>(
+                    body,
+                ),
             }),
         )
     ).data;
@@ -99,7 +117,9 @@ export async function updateAccount(
         await unwrap(
             api.PATCH('/companies/{companyId}/accounts/{id}', {
                 params: { path: { companyId, id } },
-                body,
+                body: asWire<components['schemas']['UpdateAccountRequest']>(
+                    body,
+                ),
             }),
         )
     ).data;
@@ -116,3 +136,48 @@ export async function setAccountStatus(
         await unwrap(api.POST(path, { params: { path: { companyId, id } } }))
     ).data;
 }
+
+export type PostingSource = components['schemas']['JournalSource'];
+export type CurrencyRestriction = components['schemas']['CurrencyRestriction'];
+export type DimensionRequirement =
+    components['schemas']['DimensionRequirement'];
+
+export const POSTING_SOURCES: PostingSource[] = [
+    'entry',
+    'subledger',
+    'system',
+];
+
+export const CURRENCY_RESTRICTIONS: CurrencyRestriction[] = [
+    'any',
+    'functional_only',
+    'specific',
+];
+
+export const DIMENSION_REQUIREMENTS: DimensionRequirement[] = [
+    'optional',
+    'required',
+    'forbidden',
+];
+
+/**
+ * What an account demands of each dimension type (GL-FR-02), as type key => requirement; a type that
+ * is not listed is optional. The OpenAPI document types this field as a string (a limit of the
+ * generator), but on the wire it is an object, so it is read as one here.
+ */
+export function dimensionRequirementsOf(
+    account?: Pick<Account, 'dimension_requirements'>,
+): Record<string, DimensionRequirement> {
+    const value: unknown = account?.dimension_requirements;
+
+    return value !== null && typeof value === 'object'
+        ? (value as Record<string, DimensionRequirement>)
+        : {};
+}
+
+/** A control account is kept by a subledger: it takes neither entries nor system postings (GL-FR-07). */
+export const isControlAccount = (
+    account: Pick<Account, 'allowed_sources'>,
+): boolean =>
+    !account.allowed_sources.includes('entry') &&
+    !account.allowed_sources.includes('system');
