@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class FiscalCalendarResource extends JsonResource
 {
     /**
-     * @return array{id: string, pattern: string, start_month: int, lock_version: int}
+     * @return array{id: string, pattern: string, start_month: int|null, lock_version: int}
      */
     public function toArray(Request $request): array
     {

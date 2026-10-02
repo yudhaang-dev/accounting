@@ -17,12 +17,12 @@ class FiscalCalendarController
     }
 
     /**
-     * Sets up the calendar: the month a fiscal year starts and how it is cut into periods. Answers
-     * 409 when the company already has one.
+     * Sets up the calendar: how a fiscal year is cut into periods (`monthly`, `four_four_five` or
+     * `free`) and, for `monthly`, the month it starts. Answers 409 when the company already has one.
      */
     public function store(StoreFiscalCalendarRequest $request, ConfigureFiscalCalendar $configure): JsonResponse
     {
-        /** @var array{pattern: string, start_month: int} $data */
+        /** @var array{pattern: string, start_month?: int|null} $data */
         $data = $request->validated();
 
         return (new FiscalCalendarResource($configure->create($data)))->response()->setStatusCode(201);

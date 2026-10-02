@@ -29,9 +29,10 @@ class FiscalYearController
     }
 
     /**
-     * Creates `count` fiscal years (default 1), each with twelve monthly periods. The first year
-     * needs `start_date` (the 1st of the calendar start month); later years continue the previous
-     * one. Answers 422 `MAPPING_REQUIRED` while the fiscal calendar has not been set up.
+     * Creates `count` fiscal years (default 1), cut by the pattern of the calendar: twelve calendar
+     * months, twelve periods of 4, 4 and 5 weeks (`extra_week` makes a 53-week year), or the `periods`
+     * you list for a free calendar. The first year needs `start_date`; later years continue the
+     * previous one. Answers 422 `MAPPING_REQUIRED` while the fiscal calendar has not been set up.
      */
     public function store(CreateFiscalYearsRequest $request, CreateFiscalYears $createYears): JsonResponse
     {
@@ -39,6 +40,8 @@ class FiscalYearController
             $request->validated('start_date'),
             (int) $request->validated('count', 1),
             $request->validated('name'),
+            $request->validated('periods', []),
+            (bool) $request->validated('extra_week', false),
         );
 
         return FiscalYearResource::collection($years)->response()->setStatusCode(201);

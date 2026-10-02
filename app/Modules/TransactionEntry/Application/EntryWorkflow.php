@@ -13,6 +13,7 @@ use App\Modules\TransactionEntry\Domain\EntryStatus;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Platform\Audit\Audit;
+use App\Support\Access\ActorPermissions;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -26,6 +27,7 @@ final class EntryWorkflow
         private readonly PostingValidator $validator,
         private readonly PostingService $posting,
         private readonly Audit $audit,
+        private readonly ActorPermissions $permissions,
     ) {}
 
     /**
@@ -153,6 +155,8 @@ final class EntryWorkflow
             references: ['entry_id' => $entry->id, 'entry_number' => $entry->number],
             entryId: $entry->id,
             postedBy: $userId,
+            // The ledger tells which of them it cares about (soft-closed periods, GL-FR-04).
+            actorPermissions: $this->permissions->current(),
         );
     }
 

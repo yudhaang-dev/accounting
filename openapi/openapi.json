@@ -3703,7 +3703,7 @@
             },
             "post": {
                 "operationId": "fiscal-calendar.store",
-                "summary": "Sets up the calendar: the month a fiscal year starts and how it is cut into periods. Answers\n409 when the company already has one",
+                "summary": "Sets up the calendar: how a fiscal year is cut into periods (`monthly`, `four_four_five` or\n`free`) and, for `monthly`, the month it starts. Answers 409 when the company already has one",
                 "tags": [
                     "FiscalCalendar"
                 ],
@@ -3746,11 +3746,11 @@
                             }
                         }
                     },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             },
@@ -3799,11 +3799,11 @@
                             }
                         }
                     },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -3980,7 +3980,7 @@
             },
             "post": {
                 "operationId": "fiscal-years.store",
-                "summary": "Creates `count` fiscal years (default 1), each with twelve monthly periods. The first year\nneeds `start_date` (the 1st of the calendar start month); later years continue the previous\none. Answers 422 `MAPPING_REQUIRED` while the fiscal calendar has not been set up",
+                "summary": "Creates `count` fiscal years (default 1), cut by the pattern of the calendar: twelve calendar\nmonths, twelve periods of 4, 4 and 5 weeks (`extra_week` makes a 53-week year), or the `periods`\nyou list for a free calendar. The first year needs `start_date`; later years continue the\nprevious one. Answers 422 `MAPPING_REQUIRED` while the fiscal calendar has not been set up",
                 "tags": [
                     "FiscalYear"
                 ],
@@ -5370,6 +5370,101 @@
                 }
             }
         },
+        "/companies/{companyId}/ledger-policy": {
+            "get": {
+                "operationId": "ledger-policy.show",
+                "summary": "The current ledger policy: which transaction type keys, and which permission, may still post into\na soft-closed period. A company that never set one has version 0, and a soft-closed period then\naccepts no posting",
+                "tags": [
+                    "LedgerPolicy"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`LedgerPolicyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LedgerPolicyResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "ledger-policy.update",
+                "summary": "Replaces the policy as a new version; the change is audited. Answers 422 for a transaction type\nkey or permission that does not exist. `lock_version` is required",
+                "tags": [
+                    "LedgerPolicy"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateLedgerPolicyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`LedgerPolicyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LedgerPolicyResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/me": {
             "get": {
                 "operationId": "me",
@@ -6047,10 +6142,10 @@
                 }
             }
         },
-        "/companies/{companyId}/periods/{id}/close": {
+        "/companies/{companyId}/periods/{id}/soft-close": {
             "post": {
-                "operationId": "periods.close",
-                "summary": "Closes an open period: it no longer accepts postings",
+                "operationId": "periods.soft-close",
+                "summary": "Soft-closes an open period: it accepts only the postings that the ledger policy names (the\ntransaction type keys and permission of `GET /ledger-policy`). An optional `reason` is audited",
                 "tags": [
                     "Period"
                 ],
@@ -6072,6 +6167,15 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ClosePeriodRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "`PeriodResource`",
@@ -6093,6 +6197,71 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/periods/{id}/close": {
+            "post": {
+                "operationId": "periods.close",
+                "summary": "Closes an open or soft-closed period: it no longer accepts any posting. An optional `reason`\nis audited",
+                "tags": [
+                    "Period"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ClosePeriodRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`PeriodResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PeriodResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -6100,7 +6269,7 @@
         "/companies/{companyId}/periods/{id}/reopen": {
             "post": {
                 "operationId": "periods.reopen",
-                "summary": "Reopens a closed period. A `reason` is required and is audited with the actor",
+                "summary": "Reopens a soft-closed or closed period. A `reason` is required and is audited with the actor",
                 "tags": [
                     "Period"
                 ],
@@ -7817,11 +7986,26 @@
             },
             "CalendarPattern": {
                 "type": "string",
-                "description": "How a fiscal year is cut into periods. Only calendar months for now; 4-4-5 and free ranges come with M4-02.\n",
+                "description": "How a fiscal year is cut into periods (GL-FR-03): calendar months, twelve periods of 4, 4 and 5 weeks per quarter, or periods the user gives explicitly.\n",
                 "enum": [
-                    "monthly"
+                    "monthly",
+                    "four_four_five",
+                    "free"
                 ],
                 "title": "CalendarPattern"
+            },
+            "ClosePeriodRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    }
+                },
+                "title": "ClosePeriodRequest"
             },
             "CompanyResource": {
                 "type": "object",
@@ -8025,7 +8209,7 @@
                     "start_date": {
                         "type": "string",
                         "format": "date",
-                        "description": "Required for the first year (the 1st of the calendar start month); later years continue\nthe previous one, and a start date, when given, must equal that continuation."
+                        "description": "Required for the first year (the 1st of the start month of a monthly calendar, any date for\n4-4-5; a free calendar takes it from its first period). Later years continue the previous\none, and a start date, when given, must equal that continuation."
                     },
                     "count": {
                         "type": "integer",
@@ -8036,6 +8220,40 @@
                         "type": "string",
                         "description": "Only with count 1; defaults to FY2026, or FY2026/2027 when the year does not start in January.",
                         "maxLength": 32
+                    },
+                    "extra_week": {
+                        "type": "boolean",
+                        "description": "4-4-5 only: a 53-week year; the extra week goes to the last period. Only with count 1."
+                    },
+                    "periods": {
+                        "type": "array",
+                        "description": "Free calendar only, and then required: the periods of the one year, in order and without gaps.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 32
+                                },
+                                "start_date": {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                "end_date": {
+                                    "type": "string",
+                                    "format": "date"
+                                }
+                            },
+                            "required": [
+                                "start_date",
+                                "end_date"
+                            ]
+                        },
+                        "minItems": 1,
+                        "maxItems": 60
                     }
                 },
                 "title": "CreateFiscalYearsRequest"
@@ -8193,6 +8411,7 @@
                                 "entries.post",
                                 "entries.reverse",
                                 "journals.read",
+                                "journals.post-soft-closed",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",
@@ -8792,7 +9011,10 @@
                         "type": "string"
                     },
                     "start_month": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "lock_version": {
                         "type": "integer"
@@ -9248,6 +9470,38 @@
                 ],
                 "title": "JournalSource"
             },
+            "LedgerPolicyResource": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "integer",
+                        "description": "0 while the company has never set a policy."
+                    },
+                    "soft_closed_transaction_type_keys": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "soft_closed_permission": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "lock_version": {
+                        "type": "integer",
+                        "description": "Same as `version`, named as the concurrency field the update expects (API-TR-14)."
+                    }
+                },
+                "required": [
+                    "version",
+                    "soft_closed_transaction_type_keys",
+                    "soft_closed_permission",
+                    "lock_version"
+                ],
+                "title": "LedgerPolicyResource"
+            },
             "MeResource": {
                 "type": "object",
                 "properties": {
@@ -9371,9 +9625,10 @@
             },
             "PeriodStatus": {
                 "type": "string",
-                "description": "`open` accepts postings, `closed` refuses all of them (GL-FR-04). `soft_closed` arrives with M4-02.\n",
+                "description": "`open` accepts postings, `closed` refuses all of them; `soft_closed` accepts only what the ledger policy names (GL-FR-04).\n",
                 "enum": [
                     "open",
+                    "soft_closed",
                     "closed"
                 ],
                 "title": "PeriodStatus"
@@ -9553,14 +9808,13 @@
                     },
                     "start_month": {
                         "type": "integer",
-                        "description": "Month (1 = January) in which a fiscal year starts; the year always starts on the 1st.",
+                        "description": "Month (1 = January) in which a monthly fiscal year starts; the year always starts on the 1st.\n4-4-5 and free calendars start on the date of their first fiscal year instead.",
                         "minimum": 1,
                         "maximum": 12
                     }
                 },
                 "required": [
-                    "pattern",
-                    "start_month"
+                    "pattern"
                 ],
                 "title": "StoreFiscalCalendarRequest"
             },
@@ -9904,7 +10158,10 @@
                         "$ref": "#/components/schemas/CalendarPattern"
                     },
                     "start_month": {
-                        "type": "integer",
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
                         "minimum": 1,
                         "maximum": 12
                     }
@@ -9953,6 +10210,38 @@
                     "lock_version"
                 ],
                 "title": "UpdateIntegrationClientRequest"
+            },
+            "UpdateLedgerPolicyRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "soft_closed_transaction_type_keys": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "maxLength": 64
+                        },
+                        "maxItems": 100,
+                        "uniqueItems": true
+                    },
+                    "soft_closed_permission": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 64
+                    }
+                },
+                "required": [
+                    "lock_version",
+                    "soft_closed_transaction_type_keys",
+                    "soft_closed_permission"
+                ],
+                "title": "UpdateLedgerPolicyRequest"
             },
             "UpdateMembershipRequest": {
                 "type": "object",
@@ -10061,6 +10350,7 @@
                                 "entries.post",
                                 "entries.reverse",
                                 "journals.read",
+                                "journals.post-soft-closed",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",
@@ -10118,6 +10408,7 @@
                                 "entries.post",
                                 "entries.reverse",
                                 "journals.read",
+                                "journals.post-soft-closed",
                                 "reports.read",
                                 "reports.export",
                                 "audit.read",

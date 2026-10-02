@@ -16,7 +16,7 @@ class UpdateFiscalCalendarRequest extends FormRequest
         return [
             'lock_version' => ['required', 'integer', 'min:1'],
             'pattern' => ['sometimes', Rule::enum(CalendarPattern::class)],
-            'start_month' => ['sometimes', 'integer', 'between:1,12'],
+            'start_month' => ['sometimes', 'nullable', 'integer', 'between:1,12'],
         ];
     }
 }

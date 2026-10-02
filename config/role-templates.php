@@ -20,7 +20,7 @@ return [
                 ...$read,
                 'company.update', 'company.activate', 'company.deactivate',
                 'accounts.manage', 'dimensions.manage', 'currencies.manage', 'exchange-rates.manage',
-                'periods.manage', 'periods.close', 'periods.reopen',
+                'periods.manage', 'periods.close', 'periods.reopen', 'journals.post-soft-closed',
                 'memberships.read', 'memberships.manage',
                 'roles.read', 'roles.manage',
                 'integration-clients.manage',

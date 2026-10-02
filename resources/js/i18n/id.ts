@@ -1091,6 +1091,9 @@ export const id = {
             doneTitle: 'Kalender fiskal siap',
             doneDescription:
                 'Tahun fiskal dimulai pada bulan {{month}}; {{count}} tahun fiskal terbentuk.',
+            doneDescriptionOtherPattern: '{{count}} tahun fiskal terbentuk.',
+            otherPattern:
+                'Kalender ini tidak bulanan. Wizard pengaturan baru dapat membuat tahun bulanan; buat tahun fiskal lewat API.',
             pattern: 'Pola',
             patternMonthly: 'Bulanan (12 periode per tahun)',
             startMonth: 'Tahun fiskal dimulai pada bulan',

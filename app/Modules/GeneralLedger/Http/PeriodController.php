@@ -34,15 +34,25 @@ class PeriodController
     }
 
     /**
-     * Closes an open period: it no longer accepts postings.
+     * Soft-closes an open period: it accepts only the postings that the ledger policy names (the
+     * transaction type keys and permission of `GET /ledger-policy`). An optional `reason` is audited.
      */
-    public function close(SetPeriodStatus $status, string $companyId, string $id): PeriodResource
+    public function softClose(ClosePeriodRequest $request, SetPeriodStatus $status, string $companyId, string $id): PeriodResource
     {
-        return new PeriodResource($status->close($id));
+        return new PeriodResource($status->softClose($id, $request->validated('reason')));
     }
 
     /**
-     * Reopens a closed period. A `reason` is required and is audited with the actor.
+     * Closes an open or soft-closed period: it no longer accepts any posting. An optional `reason`
+     * is audited.
+     */
+    public function close(ClosePeriodRequest $request, SetPeriodStatus $status, string $companyId, string $id): PeriodResource
+    {
+        return new PeriodResource($status->close($id, $request->validated('reason')));
+    }
+
+    /**
+     * Reopens a soft-closed or closed period. A `reason` is required and is audited with the actor.
      */
     public function reopen(ReopenPeriodRequest $request, SetPeriodStatus $status, string $companyId, string $id): PeriodResource
     {

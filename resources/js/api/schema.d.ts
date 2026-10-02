@@ -729,8 +729,8 @@ export interface paths {
         get: operations["fiscal-calendar.show"];
         put?: never;
         /**
-         * Sets up the calendar: the month a fiscal year starts and how it is cut into periods. Answers
-         *     409 when the company already has one
+         * Sets up the calendar: how a fiscal year is cut into periods (`monthly`, `four_four_five` or
+         *     `free`) and, for `monthly`, the month it starts. Answers 409 when the company already has one
          */
         post: operations["fiscal-calendar.store"];
         delete?: never;
@@ -754,9 +754,10 @@ export interface paths {
         get: operations["fiscal-years.index"];
         put?: never;
         /**
-         * Creates `count` fiscal years (default 1), each with twelve monthly periods. The first year
-         *     needs `start_date` (the 1st of the calendar start month); later years continue the previous
-         *     one. Answers 422 `MAPPING_REQUIRED` while the fiscal calendar has not been set up
+         * Creates `count` fiscal years (default 1), cut by the pattern of the calendar: twelve calendar
+         *     months, twelve periods of 4, 4 and 5 weeks (`extra_week` makes a 53-week year), or the `periods`
+         *     you list for a free calendar. The first year needs `start_date`; later years continue the
+         *     previous one. Answers 422 `MAPPING_REQUIRED` while the fiscal calendar has not been set up
          */
         post: operations["fiscal-years.store"];
         delete?: never;
@@ -980,6 +981,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/ledger-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The current ledger policy: which transaction type keys, and which permission, may still post into
+         *     a soft-closed period. A company that never set one has version 0, and a soft-closed period then
+         *     accepts no posting
+         */
+        get: operations["ledger-policy.show"];
+        /**
+         * Replaces the policy as a new version; the change is audited. Answers 422 for a transaction type
+         *     key or permission that does not exist. `lock_version` is required
+         */
+        put: operations["ledger-policy.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -1113,6 +1139,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/periods/{id}/soft-close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Soft-closes an open period: it accepts only the postings that the ledger policy names (the
+         *     transaction type keys and permission of `GET /ledger-policy`). An optional `reason` is audited
+         */
+        post: operations["periods.soft-close"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/periods/{id}/close": {
         parameters: {
             query?: never;
@@ -1122,7 +1168,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Closes an open period: it no longer accepts postings */
+        /**
+         * Closes an open or soft-closed period: it no longer accepts any posting. An optional `reason`
+         *     is audited
+         */
         post: operations["periods.close"];
         delete?: never;
         options?: never;
@@ -1139,7 +1188,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reopens a closed period. A `reason` is required and is audited with the actor */
+        /** Reopens a soft-closed or closed period. A `reason` is required and is audited with the actor */
         post: operations["periods.reopen"];
         delete?: never;
         options?: never;
@@ -1472,10 +1521,14 @@ export interface components {
         };
         /**
          * CalendarPattern
-         * @description How a fiscal year is cut into periods. Only calendar months for now; 4-4-5 and free ranges come with M4-02.
+         * @description How a fiscal year is cut into periods (GL-FR-03): calendar months, twelve periods of 4, 4 and 5 weeks per quarter, or periods the user gives explicitly.
          * @enum {string}
          */
-        CalendarPattern: "monthly";
+        CalendarPattern: "monthly" | "four_four_five" | "free";
+        /** ClosePeriodRequest */
+        ClosePeriodRequest: {
+            reason?: string | null;
+        };
         /** CompanyResource */
         CompanyResource: {
             id: string;
@@ -1530,13 +1583,24 @@ export interface components {
         CreateFiscalYearsRequest: {
             /**
              * Format: date
-             * @description Required for the first year (the 1st of the calendar start month); later years continue
-             *     the previous one, and a start date, when given, must equal that continuation.
+             * @description Required for the first year (the 1st of the start month of a monthly calendar, any date for
+             *     4-4-5; a free calendar takes it from its first period). Later years continue the previous
+             *     one, and a start date, when given, must equal that continuation.
              */
             start_date?: string;
             count?: number;
             /** @description Only with count 1; defaults to FY2026, or FY2026/2027 when the year does not start in January. */
             name?: string;
+            /** @description 4-4-5 only: a 53-week year; the extra week goes to the last period. Only with count 1. */
+            extra_week?: boolean;
+            /** @description Free calendar only, and then required: the periods of the one year, in order and without gaps. */
+            periods?: {
+                name?: string | null;
+                /** Format: date */
+                start_date: string;
+                /** Format: date */
+                end_date: string;
+            }[];
         };
         /** CreateIntegrationClientRequest */
         CreateIntegrationClientRequest: {
@@ -1567,7 +1631,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -1727,7 +1791,7 @@ export interface components {
         FiscalCalendarResource: {
             id: string;
             pattern: string;
-            start_month: number;
+            start_month: number | null;
             lock_version: number;
         };
         /** FiscalYearResource */
@@ -1839,6 +1903,15 @@ export interface components {
          * @enum {string}
          */
         JournalSource: "entry" | "subledger" | "system";
+        /** LedgerPolicyResource */
+        LedgerPolicyResource: {
+            /** @description 0 while the company has never set a policy. */
+            version: number;
+            soft_closed_transaction_type_keys: string[];
+            soft_closed_permission: string | null;
+            /** @description Same as `version`, named as the concurrency field the update expects (API-TR-14). */
+            lock_version: number;
+        };
         /** MeResource */
         MeResource: {
             id: number;
@@ -1875,10 +1948,10 @@ export interface components {
         };
         /**
          * PeriodStatus
-         * @description `open` accepts postings, `closed` refuses all of them (GL-FR-04). `soft_closed` arrives with M4-02.
+         * @description `open` accepts postings, `closed` refuses all of them; `soft_closed` accepts only what the ledger policy names (GL-FR-04).
          * @enum {string}
          */
-        PeriodStatus: "open" | "closed";
+        PeriodStatus: "open" | "soft_closed" | "closed";
         /** RateTypeResource */
         RateTypeResource: {
             id: string;
@@ -1930,8 +2003,11 @@ export interface components {
         /** StoreFiscalCalendarRequest */
         StoreFiscalCalendarRequest: {
             pattern: components["schemas"]["CalendarPattern"];
-            /** @description Month (1 = January) in which a fiscal year starts; the year always starts on the 1st. */
-            start_month: number;
+            /**
+             * @description Month (1 = January) in which a monthly fiscal year starts; the year always starts on the 1st.
+             *     4-4-5 and free calendars start on the date of their first fiscal year instead.
+             */
+            start_month?: number;
         };
         /** TransactionTypeResource */
         TransactionTypeResource: {
@@ -2017,7 +2093,7 @@ export interface components {
         UpdateFiscalCalendarRequest: {
             lock_version: number;
             pattern?: components["schemas"]["CalendarPattern"];
-            start_month?: number;
+            start_month?: number | null;
         };
         /** UpdateIntegrationClientRequest */
         UpdateIntegrationClientRequest: {
@@ -2025,6 +2101,12 @@ export interface components {
             name?: string;
             scopes?: ("transaction-types:read" | "financial-events:write" | "financial-events:read:self" | "exchange-rates:write")[];
             transaction_type_keys?: string[];
+        };
+        /** UpdateLedgerPolicyRequest */
+        UpdateLedgerPolicyRequest: {
+            lock_version: number;
+            soft_closed_transaction_type_keys: string[];
+            soft_closed_permission: string | null;
         };
         /** UpdateMembershipRequest */
         UpdateMembershipRequest: {
@@ -2045,13 +2127,13 @@ export interface components {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -4363,6 +4445,61 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "ledger-policy.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `LedgerPolicyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LedgerPolicyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "ledger-policy.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLedgerPolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description `LedgerPolicyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LedgerPolicyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -4632,7 +4769,7 @@ export interface operations {
             404: components["responses"]["ModelNotFoundException"];
         };
     };
-    "periods.close": {
+    "periods.soft-close": {
         parameters: {
             query?: never;
             header?: never;
@@ -4642,7 +4779,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ClosePeriodRequest"];
+            };
+        };
         responses: {
             /** @description `PeriodResource` */
             200: {
@@ -4656,6 +4797,38 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "periods.close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ClosePeriodRequest"];
+            };
+        };
+        responses: {
+            /** @description `PeriodResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PeriodResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "periods.reopen": {

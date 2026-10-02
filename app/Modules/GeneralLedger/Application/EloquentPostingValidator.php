@@ -5,6 +5,7 @@ namespace App\Modules\GeneralLedger\Application;
 use App\Modules\GeneralLedger\Contracts\AccountData;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
 use App\Modules\GeneralLedger\Contracts\DimensionRequirement;
+use App\Modules\GeneralLedger\Contracts\LedgerPolicies;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
@@ -37,6 +38,7 @@ final class EloquentPostingValidator implements PostingValidator
         private readonly AccountDirectory $accounts,
         private readonly DimensionSets $dimensionSets,
         private readonly Currencies $currencies,
+        private readonly LedgerPolicies $policies,
     ) {}
 
     public function validate(PostJournal $command): void
@@ -179,7 +181,14 @@ final class EloquentPostingValidator implements PostingValidator
             ]);
         }
 
-        if (! $period->isOpen()) {
+        if ($period->isSoftClosed()) {
+            // Only what the policy names may enter; the permission was certified by the application layer (GL-AC-04).
+            if (! $this->policies->current($command->companyId)->allowsSoftClosedPosting($command->transactionTypeKey, $command->actorPermissions)) {
+                throw new ApiException(ErrorCode::PeriodNotOpen, errors: [
+                    'accounting_date' => [__('ledger.period_soft_closed', ['period' => $period->name])],
+                ]);
+            }
+        } elseif (! $period->isOpen()) {
             throw new ApiException(ErrorCode::PeriodNotOpen, errors: [
                 'accounting_date' => [__('ledger.period_closed', ['period' => $period->name, 'status' => $period->status])],
             ]);

@@ -263,13 +263,19 @@ export function CalendarStep({ companyId }: { companyId: string }) {
         return <CalendarForm companyId={companyId} />;
     }
 
+    // 4-4-5 and free calendars have no start month; the wizard only builds monthly years.
+    const startMonth = calendar.data.start_month;
+
     if (years.data.length === 0) {
-        return (
-            <YearsForm
-                companyId={companyId}
-                startMonth={calendar.data.start_month}
-            />
-        );
+        if (startMonth === null) {
+            return (
+                <p className="text-sm text-muted-foreground">
+                    {t('setup.calendar.otherPattern')}
+                </p>
+            );
+        }
+
+        return <YearsForm companyId={companyId} startMonth={startMonth} />;
     }
 
     return (
@@ -277,10 +283,14 @@ export function CalendarStep({ companyId }: { companyId: string }) {
             <div className="flex flex-col gap-1">
                 <p className="font-medium">{t('setup.calendar.doneTitle')}</p>
                 <p className="text-sm text-muted-foreground">
-                    {t('setup.calendar.doneDescription', {
-                        month: months[calendar.data.start_month - 1],
-                        count: years.data.length,
-                    })}
+                    {startMonth === null
+                        ? t('setup.calendar.doneDescriptionOtherPattern', {
+                              count: years.data.length,
+                          })
+                        : t('setup.calendar.doneDescription', {
+                              month: months[startMonth - 1],
+                              count: years.data.length,
+                          })}
                 </p>
             </div>
             <ul className="flex flex-col gap-1 text-sm">

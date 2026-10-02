@@ -2,6 +2,7 @@
 
 namespace App\Platform\Api\Http;
 
+use App\Support\Access\ActorPermissions;
 use App\Support\Access\DataScopeContext;
 use App\Support\Company\CompanyAccessGate;
 use App\Support\Company\CompanyContext;
@@ -19,6 +20,7 @@ final class ResolveCompany
         private readonly CompanyAccessGate $gate,
         private readonly CompanyContext $context,
         private readonly DataScopeContext $scope,
+        private readonly ActorPermissions $permissions,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -33,6 +35,7 @@ final class ResolveCompany
         } finally {
             $this->context->forget();
             $this->scope->forget();
+            $this->permissions->forget();
         }
     }
 }

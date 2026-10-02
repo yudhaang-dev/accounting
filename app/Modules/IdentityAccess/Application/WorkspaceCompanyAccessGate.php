@@ -11,6 +11,7 @@ use App\Modules\IdentityAccess\Domain\Workspace;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Platform\Api\Principal;
+use App\Support\Access\ActorPermissions;
 use App\Support\Access\DataScope;
 use App\Support\Access\DataScopeContext;
 use App\Support\Company\CompanyAccessGate;
@@ -30,6 +31,7 @@ final class WorkspaceCompanyAccessGate implements CompanyAccessGate
     public function __construct(
         private readonly EffectiveAccessContexts $contexts,
         private readonly DataScopeContext $dataScope,
+        private readonly ActorPermissions $actorPermissions,
         private readonly IdleSessionGuard $idle,
         private readonly SecurityPolicies $policies,
     ) {}
@@ -67,6 +69,7 @@ final class WorkspaceCompanyAccessGate implements CompanyAccessGate
         $request->attributes->set(EffectiveAccessContexts::REQUEST_ATTRIBUTE, $context);
         // Business modules apply the scope as a filter without knowing this module (IA-FR-03).
         $this->dataScope->set($context->dataScope);
+        $this->actorPermissions->set($context->permissions);
     }
 
     /**
@@ -110,6 +113,7 @@ final class WorkspaceCompanyAccessGate implements CompanyAccessGate
             $client->id,
         ));
         $this->dataScope->set(DataScope::unrestricted());
+        $this->actorPermissions->set(IntegrationScopes::permissionsFor($scopes));
     }
 
     private function checksPermission(Request $request): bool

@@ -12,7 +12,7 @@ use Illuminate\Support\Carbon;
  * @property string $id
  * @property string $company_id
  * @property CalendarPattern $pattern
- * @property int $start_month
+ * @property int|null $start_month
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */

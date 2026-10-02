@@ -1091,6 +1091,10 @@ export const en: Widen<typeof id> = {
             doneTitle: 'Fiscal calendar ready',
             doneDescription:
                 'The fiscal year starts in {{month}}; {{count}} fiscal years have been created.',
+            doneDescriptionOtherPattern:
+                '{{count}} fiscal years have been created.',
+            otherPattern:
+                'This calendar is not monthly. The setup wizard only creates monthly years for now; create the fiscal years through the API.',
             pattern: 'Pattern',
             patternMonthly: 'Monthly (12 periods per year)',
             startMonth: 'Fiscal year starts in',

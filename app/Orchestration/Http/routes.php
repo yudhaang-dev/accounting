@@ -1,6 +1,7 @@
 <?php
 
 use App\Orchestration\Company\Http\CompanyActivationController;
+use App\Orchestration\Ledger\Http\LedgerPolicyController;
 use App\Orchestration\Workspace\Http\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,4 +12,7 @@ Route::post('workspaces', [WorkspaceController::class, 'store'])->middleware(['a
 Route::companyScoped(function () {
     Route::post('activate', [CompanyActivationController::class, 'activate'])
         ->middleware('permission:company.activate')->name('company.activate');
+
+    Route::get('ledger-policy', [LedgerPolicyController::class, 'show'])->middleware('permission:policies.manage')->name('ledger-policy.show');
+    Route::put('ledger-policy', [LedgerPolicyController::class, 'update'])->middleware('permission:policies.manage')->name('ledger-policy.update');
 });

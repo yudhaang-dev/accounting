@@ -15,8 +15,9 @@ class StoreFiscalCalendarRequest extends FormRequest
     {
         return [
             'pattern' => ['required', Rule::enum(CalendarPattern::class)],
-            // Month (1 = January) in which a fiscal year starts; the year always starts on the 1st.
-            'start_month' => ['required', 'integer', 'between:1,12'],
+            // Month (1 = January) in which a monthly fiscal year starts; the year always starts on the 1st.
+            // 4-4-5 and free calendars start on the date of their first fiscal year instead.
+            'start_month' => ['required_if:pattern,monthly', 'prohibited_unless:pattern,monthly', 'integer', 'between:1,12'],
         ];
     }
 }

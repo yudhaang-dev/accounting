@@ -44,6 +44,8 @@ Route::companyScoped(function () {
     Route::get('periods', [PeriodController::class, 'index'])->middleware('permission:periods.read')->name('periods.index');
     Route::get('periods/{id}', [PeriodController::class, 'show'])
         ->middleware('permission:periods.read')->where('id', ApiServiceProvider::ULID)->name('periods.show');
+    Route::post('periods/{id}/soft-close', [PeriodController::class, 'softClose'])
+        ->middleware('permission:periods.close')->where('id', ApiServiceProvider::ULID)->name('periods.soft-close');
     Route::post('periods/{id}/close', [PeriodController::class, 'close'])
         ->middleware('permission:periods.close')->where('id', ApiServiceProvider::ULID)->name('periods.close');
     Route::post('periods/{id}/reopen', [PeriodController::class, 'reopen'])
