@@ -18,7 +18,10 @@ final class EloquentCompanyDirectory implements CompanyDirectory, CompanyStatusL
 {
     private const PROFILE_FIELDS = ['name', 'legal_name', 'tax_id', 'functional_currency', 'timezone', 'default_locale'];
 
-    public function __construct(private readonly Audit $audit) {}
+    public function __construct(
+        private readonly Audit $audit,
+        private readonly SeedDimensionTypes $seedDimensionTypes,
+    ) {}
 
     public function create(NewCompany $company): CompanyData
     {
@@ -28,6 +31,8 @@ final class EloquentCompanyDirectory implements CompanyDirectory, CompanyStatusL
             'timezone' => $company->timezone,
             'default_locale' => $company->defaultLocale,
         ])->refresh();
+
+        ($this->seedDimensionTypes)($model->id);
 
         $this->audit->record(
             'company.created',

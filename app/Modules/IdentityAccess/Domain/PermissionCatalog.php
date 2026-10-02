@@ -13,6 +13,7 @@ final class PermissionCatalog
     private const ACTIONS = [
         'company' => ['read', 'update', 'activate', 'deactivate'],
         'accounts' => ['read', 'manage'],
+        'dimensions' => ['read', 'manage'],
         'periods' => ['read', 'manage', 'close', 'reopen'],
         'entries' => ['read', 'create', 'submit', 'approve', 'reject', 'post', 'reverse'],
         'journals' => ['read'],

@@ -229,6 +229,164 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/dimension-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dimension types of the company, ordered by key. Filter: `filter[status]`. `per_page` defaults
+         *     to 50, at most 200
+         */
+        get: operations["dimension-types.index"];
+        put?: never;
+        /** Adds a dimension type. The key is stable and cannot change afterwards */
+        post: operations["dimension-types.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/dimension-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dimension-types.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Changes label, hierarchy flag or leaf-only rule. `lock_version` is required; a type cannot stop
+         *     being hierarchical while values have a parent
+         */
+        patch: operations["dimension-types.update"];
+        trace?: never;
+    };
+    "/companies/{companyId}/dimension-types/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivates the type: its values can no longer be used in new transactions */
+        post: operations["dimension-types.deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/dimension-types/{id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivates the type */
+        post: operations["dimension-types.reactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/dimension-values": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dimension values of the company, ordered by code unless `sort` says otherwise. Filters:
+         *     `filter[dimension_type_id]`, `filter[status]`, `filter[parent_id]` and `filter[search]` (code
+         *     prefix or part of the name). `per_page` defaults to 50, at most 200
+         */
+        get: operations["dimension-values.index"];
+        put?: never;
+        /**
+         * Adds a value to an active type. The parent (hierarchical types only) must be an active value
+         *     of the same type. `valid_from` and `valid_to` are optional
+         */
+        post: operations["dimension-values.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/dimension-values/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dimension-values.show"];
+        put?: never;
+        post?: never;
+        /**
+         * Deletes a value that was never used. A value with children or that is part of a dimension set
+         *     can only be deactivated
+         */
+        delete: operations["dimension-values.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Changes code, name, parent or validity. `lock_version` is required; the type cannot change and
+         *     a parent that would form a cycle is refused
+         */
+        patch: operations["dimension-values.update"];
+        trace?: never;
+    };
+    "/companies/{companyId}/dimension-values/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivates the value. Refused while it has active children */
+        post: operations["dimension-values.deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/dimension-values/{id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivates the value. Refused while its parent or its type is inactive */
+        post: operations["dimension-values.reactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/entries": {
         parameters: {
             query?: never;
@@ -724,6 +882,25 @@ export interface components {
             normal_balance?: "debit" | "credit" | null;
             parent_id?: string | null;
         };
+        /** CreateDimensionTypeRequest */
+        CreateDimensionTypeRequest: {
+            /** @description Stable identifier used in API payloads (`dimensions` objects, `dimensions[<key>]` filters). */
+            key: string;
+            label: string;
+            is_hierarchical?: boolean;
+            leaf_only?: boolean;
+        };
+        /** CreateDimensionValueRequest */
+        CreateDimensionValueRequest: {
+            dimension_type_id: string;
+            code: string;
+            name: string;
+            parent_id?: string | null;
+            /** Format: date */
+            valid_from?: string | null;
+            /** Format: date */
+            valid_to?: string | null;
+        };
         /** CreateFiscalYearsRequest */
         CreateFiscalYearsRequest: {
             /**
@@ -759,6 +936,34 @@ export interface components {
             company_id: string;
             company_name: string;
             permissions: string[];
+        };
+        /**
+         * DimensionStatus
+         * @enum {string}
+         */
+        DimensionStatus: "active" | "inactive";
+        /** DimensionTypeResource */
+        DimensionTypeResource: {
+            id: string;
+            key: string;
+            label: string;
+            is_hierarchical: boolean;
+            leaf_only: boolean;
+            status: string;
+            lock_version: number;
+        };
+        /** DimensionValueResource */
+        DimensionValueResource: {
+            id: string;
+            dimension_type_id: string;
+            code: string;
+            name: string;
+            parent_id: string | null;
+            is_leaf: boolean;
+            valid_from: string | null;
+            valid_to: string | null;
+            status: string;
+            lock_version: number;
         };
         /**
          * EntryRequest
@@ -947,6 +1152,24 @@ export interface components {
             timezone?: string;
             /** @enum {string} */
             default_locale?: "id" | "en";
+        };
+        /** UpdateDimensionTypeRequest */
+        UpdateDimensionTypeRequest: {
+            lock_version: number;
+            label?: string;
+            is_hierarchical?: boolean;
+            leaf_only?: boolean;
+        };
+        /** UpdateDimensionValueRequest */
+        UpdateDimensionValueRequest: {
+            lock_version: number;
+            code?: string;
+            name?: string;
+            parent_id?: string | null;
+            /** Format: date */
+            valid_from?: string | null;
+            /** Format: date */
+            valid_to?: string | null;
         };
         /** UpdateEntryRequest */
         UpdateEntryRequest: {
@@ -1481,6 +1704,422 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["ActivatedCompanyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "dimension-types.index": {
+        parameters: {
+            query?: {
+                "filter[status]"?: components["schemas"]["DimensionStatus"];
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `DimensionTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DimensionTypeResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "dimension-types.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDimensionTypeRequest"];
+            };
+        };
+        responses: {
+            /** @description `DimensionTypeResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DimensionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "dimension-types.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `DimensionTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DimensionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "dimension-types.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDimensionTypeRequest"];
+            };
+        };
+        responses: {
+            /** @description `DimensionTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DimensionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "dimension-types.deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `DimensionTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DimensionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "dimension-types.reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `DimensionTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DimensionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "dimension-values.index": {
+        parameters: {
+            query?: {
+                "filter[dimension_type_id]"?: string;
+                "filter[status]"?: components["schemas"]["DimensionStatus"];
+                "filter[parent_id]"?: string;
+                "filter[search]"?: string;
+                sort?: "code" | "-code" | "name" | "-name";
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `DimensionValueResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DimensionValueResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "dimension-values.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDimensionValueRequest"];
+            };
+        };
+        responses: {
+            /** @description `DimensionValueResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DimensionValueResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "dimension-values.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `DimensionValueResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DimensionValueResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "dimension-values.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "dimension-values.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDimensionValueRequest"];
+            };
+        };
+        responses: {
+            /** @description `DimensionValueResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DimensionValueResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "dimension-values.deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `DimensionValueResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DimensionValueResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "dimension-values.reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `DimensionValueResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DimensionValueResource"];
                     };
                 };
             };

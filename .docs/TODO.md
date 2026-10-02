@@ -46,7 +46,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 ## M2 — Data induk
 
-- [ ] **M2-01** Tipe dan nilai dimensi: hierarki, masa berlaku, aturan hanya-daun, nonaktif — MD-FR-02, MD-FR-03, MD-AC-03, MD-AC-04
+- [x] **M2-01** Tipe dan nilai dimensi: hierarki, masa berlaku, aturan hanya-daun, nonaktif — MD-FR-02, MD-FR-03, MD-AC-03, MD-AC-04 — `dimension-types` dan `dimension-values` (CRUD, nonaktif/aktif, hapus hanya bila belum dipakai); `department` (hierarkis) dan `project` di-seed saat perusahaan dibuat sebagai data biasa; permission `dimensions.read`/`dimensions.manage`; `md_dimension_set_items` disiapkan sebagai penanda pemakaian dan diisi M2-02, yang juga menegakkan masa berlaku dan aturan hanya-daun (`leaf_only` baru disimpan di sini) saat nilai dipakai
 - [ ] **M2-02** Resolusi dimension set dan query hierarki; dipakai baris entri, jurnal, dan filter neraca saldo — MD-FR-04, MD-FR-05, MD-AC-01, MD-AC-02
 - [ ] **M2-03** Mata uang ISO 4217, aktivasi per perusahaan, skala dan pembulatan — MD-FR-06
 - [ ] **M2-04** Jenis kurs dan kurs (manual, CSV, API `exchange-rates:write`), pencarian tanpa fallback, batas umur — MD-FR-07, MD-FR-08, MD-AC-06

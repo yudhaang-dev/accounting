@@ -29,6 +29,7 @@
 - **API-TR-08 Command.** Transisi status memakai `POST .../{resource}/{id}/{action}`:
   - `entries`: `submit`, `approve`, `reject`, `post`, `revise`, `cancel`.
   - `companies/{companyId}`: `activate`, `deactivate`, `reactivate`.
+  - `dimension-types` dan `dimension-values`: `deactivate`, `reactivate`; nilai dimensi yang belum pernah dipakai dapat dihapus (`DELETE`), selebihnya hanya dinonaktifkan (MD-FR-03).
   - `accounts`: `deactivate`, `reactivate`; `accounts/import-template` mengimpor template COA yang sudah dikonfirmasi (`confirmed: true`, X-AC-03).
   - `journals/{id}/reverse` membuat entri `system.reversal` yang tunduk pada approval dan mengembalikan entri tersebut.
   - `periods`: `soft-close`, `close`, `reopen`; `fiscal-years`: `close`, `reopen`; `plan-versions`: `publish`, `archive`; `opening-balance-imports` dan `revaluation-runs`: `post`.

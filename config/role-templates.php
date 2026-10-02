@@ -7,7 +7,7 @@
 | workspace so that the first user can set the company up and work in it.
 */
 
-$read = ['company.read', 'accounts.read', 'periods.read', 'entries.read', 'journals.read', 'reports.read'];
+$read = ['company.read', 'accounts.read', 'dimensions.read', 'periods.read', 'entries.read', 'journals.read', 'reports.read'];
 
 return [
 
@@ -19,7 +19,7 @@ return [
             'permissions' => [
                 ...$read,
                 'company.update', 'company.activate', 'company.deactivate',
-                'accounts.manage',
+                'accounts.manage', 'dimensions.manage',
                 'periods.manage', 'periods.close', 'periods.reopen',
                 'memberships.read', 'memberships.manage',
                 'roles.read', 'roles.manage',
