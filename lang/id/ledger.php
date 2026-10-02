@@ -21,6 +21,8 @@ return [
     'dimension_required' => 'Akun :account mewajibkan nilai untuk dimensi :type.',
     'dimension_forbidden' => 'Akun :account tidak mengizinkan dimensi :type.',
     'dimension_set_unknown' => 'Set dimensi tidak ada di perusahaan ini.',
+    'role_unmapped' => 'Peran akun :key belum dipetakan ke akun.',
+    'role_class_not_allowed' => 'Akun berkelas :class tidak dapat berperan di sini; yang diizinkan: :allowed.',
     'already_reversed' => 'Jurnal :number sudah dibalik oleh :reversal.',
     'reversal_of' => 'Pembalikan jurnal :number',
     'override_reason_required' => 'Alasan wajib diisi untuk memposting ke akun :account dari sumber ":source".',

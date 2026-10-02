@@ -1,6 +1,8 @@
 <?php
 
+use App\Modules\GeneralLedger\Contracts\AccountRole;
 use App\Modules\GeneralLedger\Http\AccountController;
+use App\Modules\GeneralLedger\Http\AccountRoleController;
 use App\Modules\GeneralLedger\Http\AccountTemplateController;
 use App\Modules\GeneralLedger\Http\FiscalCalendarController;
 use App\Modules\GeneralLedger\Http\FiscalYearController;
@@ -31,6 +33,10 @@ Route::companyScoped(function () {
         Route::post("accounts/{id}/{$action}", [AccountController::class, $action])
             ->middleware('permission:accounts.manage')->where('id', ApiServiceProvider::ULID)->name("accounts.{$action}");
     }
+
+    Route::get('account-roles', [AccountRoleController::class, 'index'])->middleware('permission:accounts.read')->name('account-roles.index');
+    Route::put('account-roles/{role}', [AccountRoleController::class, 'update'])
+        ->middleware('permission:accounts.manage')->whereIn('role', array_column(AccountRole::cases(), 'value'))->name('account-roles.update');
 
     Route::get('fiscal-calendar', [FiscalCalendarController::class, 'show'])->middleware('permission:periods.read')->name('fiscal-calendar.show');
     Route::post('fiscal-calendar', [FiscalCalendarController::class, 'store'])->middleware('permission:periods.manage')->name('fiscal-calendar.store');

@@ -68,7 +68,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M4-03** Pembalikan jurnal di sisi GL — GL-FR-06, GL-AC-11 — `PostingService::reverse()`; akun asal tidak divalidasi ulang. Belum ada endpoint HTTP: alur pembalikan entri ada di M5-06
 - [x] **M4-04** Kebijakan override akun kontrol — GL-FR-07 — kebijakan buku besar mendapat `source_override_permission` (kosong = tanpa override, default); permission baru `journals.override-source`. Alur entri (M5) belum membawa alasan override, jadi baru bisa lewat `PostJournal::sourceOverrideReason`
 - [ ] **M4-05** Baris valas, pembulatan ke `fx_rounding`, saldo per mata uang — GL-FR-08, GL-AC-05
-- [ ] **M4-06** Pemetaan peran GL berversi dan interface validasi target peran — GL-FR-10, X-AC-02, X-AC-03
+- [x] **M4-06** Pemetaan peran GL berversi dan interface validasi target peran — GL-FR-10, X-AC-02, X-AC-03 — `AccountRoles` (`GET/PUT /account-roles`, `require()` menjawab `MAPPING_REQUIRED`) dan `AccountDirectory::roleTargetProblems()` untuk peran modul lain. Wajib-bila-valas-aktif baru ditegakkan saat dipakai (M4-05); penolakan aktivasi mata uang tanpa pemetaan menyusul bersama larangan menonaktifkannya
 - [ ] **M4-07** Revaluasi akun non-kontrol dengan kebijakan pembalikan otomatis — GL-FR-09, GL-AC-06
 - [ ] **M4-08** Impor saldo konversi: `cutover_date`, `ledger_start_date`, pemetaan kode sumber, saldo YTD, idempoten — GL-FR-11, GL-AC-07
 - [ ] **M4-09** Impor histori (ringkasan per periode atau transaksi) dan pencocokan dengan neraca saldo sumber pada cutover — GL-FR-11

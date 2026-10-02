@@ -43,6 +43,35 @@ final class EloquentAccountDirectory implements AccountDirectory
         );
     }
 
+    public function roleTargetProblems(string $companyId, string $accountId, array $classes, ?JournalSource $requiredSource = null): array
+    {
+        $account = $this->find($companyId, $accountId);
+
+        if ($account === null) {
+            return [__('ledger.account_unknown')];
+        }
+
+        $problems = [];
+
+        if (! $account->isActive) {
+            $problems[] = __('ledger.account_inactive');
+        }
+
+        if (! $account->isLeaf) {
+            $problems[] = __('ledger.account_parent');
+        }
+
+        if (! in_array($account->class, $classes, true)) {
+            $problems[] = __('ledger.role_class_not_allowed', ['class' => $account->class->value, 'allowed' => implode(', ', array_map(fn (AccountClass $class): string => $class->value, $classes))]);
+        }
+
+        if ($requiredSource !== null && ! $account->acceptsSource($requiredSource)) {
+            $problems[] = __('ledger.source_not_allowed', ['account' => $account->code, 'source' => $requiredSource->value]);
+        }
+
+        return $problems;
+    }
+
     public function missingClasses(string $companyId): array
     {
         $present = $this->forCompany($companyId)

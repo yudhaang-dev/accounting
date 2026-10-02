@@ -543,6 +543,178 @@
                 }
             }
         },
+        "/companies/{companyId}/account-roles": {
+            "get": {
+                "operationId": "account-roles.index",
+                "summary": "Every account role of the ledger with the account that plays it now, or `null` when it is not\nmapped. `valid` is false when that account no longer qualifies (inactive, for example), and\n`required` names the situation in which a missing mapping blocks a feature",
+                "tags": [
+                    "AccountRole"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "account_id": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "effective_date": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "valid": {
+                                                        "type": "string"
+                                                    },
+                                                    "required": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "year_end_close",
+                                                            "foreign_currency"
+                                                        ]
+                                                    },
+                                                    "allowed_classes": {
+                                                        "type": "array",
+                                                        "items": {}
+                                                    },
+                                                    "lock_version": {
+                                                        "type": "integer",
+                                                        "description": "The version of the mapping (0 when none), named as the concurrency field (API-TR-14)."
+                                                    }
+                                                },
+                                                "required": [
+                                                    "key",
+                                                    "account_id",
+                                                    "effective_date",
+                                                    "valid",
+                                                    "required",
+                                                    "allowed_classes",
+                                                    "lock_version"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/account-roles/{role}": {
+            "put": {
+                "operationId": "account-roles.update",
+                "summary": "Maps the role to an account as a new version; the change is audited. The account must be an active\nleaf of the company in a class the role accepts. `lock_version` is the one you read (0 when the role\nis not mapped yet) and `effective_date` defaults to today",
+                "tags": [
+                    "AccountRole"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateAccountRoleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "key": {
+                                                    "type": "string"
+                                                },
+                                                "account_id": {
+                                                    "type": "string"
+                                                },
+                                                "effective_date": {
+                                                    "type": "string"
+                                                },
+                                                "lock_version": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "key",
+                                                "account_id",
+                                                "effective_date",
+                                                "lock_version"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/account-templates": {
             "get": {
                 "operationId": "account-templates.index",
@@ -9946,6 +10118,32 @@
                     "lock_version"
                 ],
                 "title": "UpdateAccountRequest"
+            },
+            "UpdateAccountRoleRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "account_id": {
+                        "type": "string",
+                        "minLength": 26,
+                        "maxLength": 26
+                    },
+                    "effective_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    }
+                },
+                "required": [
+                    "lock_version",
+                    "account_id"
+                ],
+                "title": "UpdateAccountRoleRequest"
             },
             "UpdateCompanyRequest": {
                 "type": "object",

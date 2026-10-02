@@ -21,6 +21,8 @@ return [
     'dimension_required' => 'Account :account requires a value for the dimension :type.',
     'dimension_forbidden' => 'Account :account does not allow the dimension :type.',
     'dimension_set_unknown' => 'The dimension set does not exist in this company.',
+    'role_unmapped' => 'The account role :key is not mapped to an account.',
+    'role_class_not_allowed' => 'An account of the class :class cannot play this role; allowed: :allowed.',
     'already_reversed' => 'Journal :number was already reversed by :reversal.',
     'reversal_of' => 'Reversal of journal :number',
     'override_reason_required' => 'A reason is required to post to account :account from the source ":source".',

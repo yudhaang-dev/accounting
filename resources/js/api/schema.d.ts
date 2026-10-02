@@ -118,6 +118,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/account-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every account role of the ledger with the account that plays it now, or `null` when it is not
+         *     mapped. `valid` is false when that account no longer qualifies (inactive, for example), and
+         *     `required` names the situation in which a missing mapping blocks a feature
+         */
+        get: operations["account-roles.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/account-roles/{role}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Maps the role to an account as a new version; the change is audited. The account must be an active
+         *     leaf of the company in a class the role accepts. `lock_version` is the one you read (0 when the role
+         *     is not mapped yet) and `effective_date` defaults to today
+         */
+        put: operations["account-roles.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/account-templates": {
         parameters: {
             query?: never;
@@ -2039,6 +2081,13 @@ export interface components {
             normal_balance?: "debit" | "credit";
             parent_id?: string | null;
         };
+        /** UpdateAccountRoleRequest */
+        UpdateAccountRoleRequest: {
+            lock_version: number;
+            account_id: string;
+            /** Format: date */
+            effective_date?: string | null;
+        };
         /** UpdateCompanyRequest */
         UpdateCompanyRequest: {
             lock_version: number;
@@ -2444,6 +2493,75 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "account-roles.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            account_id: string | null;
+                            effective_date: string | null;
+                            valid: string;
+                            /** @enum {string} */
+                            required: "year_end_close" | "foreign_currency";
+                            allowed_classes: unknown[];
+                            /** @description The version of the mapping (0 when none), named as the concurrency field (API-TR-14). */
+                            lock_version: number;
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "account-roles.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                role: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAccountRoleRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            account_id: string;
+                            effective_date: string;
+                            lock_version: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "account-templates.index": {
