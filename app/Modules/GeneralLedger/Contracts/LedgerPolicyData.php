@@ -13,6 +13,8 @@ final readonly class LedgerPolicyData
      * @param  string|null  $softClosedPermission  permission the poster must hold as well; null when the key suffices
      * @param  string|null  $sourceOverridePermission  permission that lets a poster post to an account from a source it does not accept (GL-FR-07); null when the policy allows no override
      * @param  string  $fxRoundingTolerance  largest rounding difference, in the functional currency, that a foreign currency journal may carry and have booked to `fx_rounding` (GL-FR-05); `0` allows none
+     * @param  string|null  $revaluationRateTypeKey  rate type of the closing rate of a revaluation (GL-FR-09); null until the company sets one, and no revaluation can run
+     * @param  bool  $revaluationAutoReverse  whether a revaluation is reversed on the first day of the next period (GL-FR-09)
      */
     public function __construct(
         public int $version,
@@ -20,11 +22,13 @@ final readonly class LedgerPolicyData
         public ?string $softClosedPermission,
         public ?string $sourceOverridePermission = null,
         public string $fxRoundingTolerance = '0',
+        public ?string $revaluationRateTypeKey = null,
+        public bool $revaluationAutoReverse = false,
     ) {}
 
     public static function none(): self
     {
-        return new self(0, [], null, null, '0');
+        return new self(0, [], null);
     }
 
     /**

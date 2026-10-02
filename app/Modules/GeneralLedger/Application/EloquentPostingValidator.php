@@ -7,6 +7,7 @@ use App\Modules\GeneralLedger\Contracts\AccountDirectory;
 use App\Modules\GeneralLedger\Contracts\AccountRole;
 use App\Modules\GeneralLedger\Contracts\AccountRoles;
 use App\Modules\GeneralLedger\Contracts\DimensionRequirement;
+use App\Modules\GeneralLedger\Contracts\JournalSource;
 use App\Modules\GeneralLedger\Contracts\LedgerPolicies;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
@@ -121,7 +122,14 @@ final class EloquentPostingValidator implements PostingValidator
                     continue;
                 }
 
-                $lineScale = $config->scale;
+                // An adjustment carries functional amounts, so it follows the scale of the ledger.
+                $lineScale = $line->adjustment ? $scale : $config->scale;
+            }
+
+            if ($line->adjustment && ($currency === $functionalCurrency || $command->source !== JournalSource::System)) {
+                $errors["lines.{$index}.adjustment"][] = __('ledger.adjustment_not_allowed');
+
+                continue;
             }
 
             try {
@@ -462,6 +470,12 @@ final class EloquentPostingValidator implements PostingValidator
                 }
             } catch (InvalidArgumentException $e) {
                 $errors["lines.{$index}.exchange_rate"][] = $e->getMessage();
+
+                continue;
+            }
+
+            if ($line->adjustment) {
+                $converted[] = ['debit' => $debit, 'credit' => $credit, 'currency' => $currency, 'transaction_amount' => BigDecimal::zero()->toScale($scale), 'exchange_rate' => $rate, 'rate_type_id' => $typeId, 'rate_date' => $date];
 
                 continue;
             }

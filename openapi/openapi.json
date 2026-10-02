@@ -7000,6 +7000,49 @@
                 }
             }
         },
+        "/companies/{companyId}/periods/{id}/revaluation": {
+            "post": {
+                "operationId": "periods.revaluation",
+                "description": "Answers 201 with the run and the adjustments, or 200 with `id: null` when nothing needed adjusting.\nRunning again only posts what changed since the last run. Answers 422 `MAPPING_REQUIRED` when the\npolicy has no rate type or the unrealized gain or loss role is not mapped, and 422\n`EXCHANGE_RATE_NOT_FOUND` when a currency has no closing rate.",
+                "summary": "Revalues the foreign currency balances of the accounts marked for revaluation, as of the last day\nof the period, at the closing rate of the rate type named by the ledger policy (GL-FR-09). Control\naccounts of a subledger are left out. The difference is posted as a `system.fx_revaluation`\njournal; with auto-reversal in the policy, its reversal is dated the first day of the next period",
+                "tags": [
+                    "Revaluation"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/roles": {
             "get": {
                 "operationId": "roles.index",
@@ -8574,6 +8617,7 @@
                                 "periods.manage",
                                 "periods.close",
                                 "periods.reopen",
+                                "periods.revalue",
                                 "transaction-types.read",
                                 "entries.read",
                                 "entries.create",
@@ -9678,6 +9722,15 @@
                     "fx_rounding_tolerance": {
                         "type": "string"
                     },
+                    "revaluation_rate_type_key": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "revaluation_auto_reverse": {
+                        "type": "boolean"
+                    },
                     "lock_version": {
                         "type": "integer",
                         "description": "Same as `version`, named as the concurrency field the update expects (API-TR-14)."
@@ -9689,6 +9742,8 @@
                     "soft_closed_permission",
                     "source_override_permission",
                     "fx_rounding_tolerance",
+                    "revaluation_rate_type_key",
+                    "revaluation_auto_reverse",
                     "lock_version"
                 ],
                 "title": "LedgerPolicyResource"
@@ -10462,6 +10517,17 @@
                     "fx_rounding_tolerance": {
                         "type": "number",
                         "minimum": 0
+                    },
+                    "revaluation_rate_type_key": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "pattern": "^[a-z][a-z0-9_]*$",
+                        "maxLength": 64
+                    },
+                    "revaluation_auto_reverse": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -10571,6 +10637,7 @@
                                 "periods.manage",
                                 "periods.close",
                                 "periods.reopen",
+                                "periods.revalue",
                                 "transaction-types.read",
                                 "entries.read",
                                 "entries.create",
@@ -10630,6 +10697,7 @@
                                 "periods.manage",
                                 "periods.close",
                                 "periods.reopen",
+                                "periods.revalue",
                                 "transaction-types.read",
                                 "entries.read",
                                 "entries.create",

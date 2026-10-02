@@ -3,6 +3,7 @@
 namespace App\Orchestration\Ledger;
 
 use App\Modules\GeneralLedger\Contracts\LedgerPolicies;
+use App\Modules\GeneralLedger\Contracts\LedgerPolicyChange;
 use App\Modules\GeneralLedger\Contracts\LedgerPolicyData;
 use App\Modules\IdentityAccess\Contracts\Permissions;
 use App\Modules\TransactionEntry\Contracts\TransactionTypeKeys;
@@ -11,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Changes the ledger policy after checking what the ledger cannot: that the transaction type keys
- * exist in the company and that the permission exists (X-AC-03). A typo would otherwise lock every
+ * exist in the company and that the permissions exist (X-AC-03). A typo would otherwise lock every
  * poster out of soft-closed periods without telling anyone. Keys of the system (`system.` prefix)
  * are fixed by the product and need no transaction type.
  */
@@ -26,34 +27,31 @@ final class UpdateLedgerPolicy
     ) {}
 
     /**
-     * @param  list<string>  $softClosedTransactionTypeKeys
-     *
      * @throws ValidationException
      * @throws ApiException VERSION_CONFLICT
      */
-    public function __invoke(string $companyId, array $softClosedTransactionTypeKeys, ?string $softClosedPermission, ?string $sourceOverridePermission, string $fxRoundingTolerance, int $expectedVersion, int $actorId): LedgerPolicyData
+    public function __invoke(string $companyId, LedgerPolicyChange $change, int $expectedVersion, int $actorId): LedgerPolicyData
     {
         $errors = [];
+        $keys = $change->softClosedTransactionTypeKeys;
 
-        $custom = array_values(array_filter($softClosedTransactionTypeKeys, fn (string $key): bool => ! str_starts_with($key, self::SYSTEM_PREFIX)));
+        $custom = array_values(array_filter($keys, fn (string $key): bool => ! str_starts_with($key, self::SYSTEM_PREFIX)));
 
         foreach ($this->transactionTypes->missing($companyId, $custom) as $key) {
-            $index = array_search($key, $softClosedTransactionTypeKeys, true);
+            $index = array_search($key, $keys, true);
             $errors["soft_closed_transaction_type_keys.{$index}"] = [__('ledger.policy_key_unknown', ['key' => $key])];
         }
 
-        if ($softClosedPermission !== null && ! $this->permissions->exists($softClosedPermission)) {
-            $errors['soft_closed_permission'] = [__('ledger.policy_permission_unknown', ['permission' => $softClosedPermission])];
-        }
-
-        if ($sourceOverridePermission !== null && ! $this->permissions->exists($sourceOverridePermission)) {
-            $errors['source_override_permission'] = [__('ledger.policy_permission_unknown', ['permission' => $sourceOverridePermission])];
+        foreach (['soft_closed_permission' => $change->softClosedPermission, 'source_override_permission' => $change->sourceOverridePermission] as $field => $permission) {
+            if ($permission !== null && ! $this->permissions->exists($permission)) {
+                $errors[$field] = [__('ledger.policy_permission_unknown', ['permission' => $permission])];
+            }
         }
 
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
 
-        return $this->policies->change($companyId, $softClosedTransactionTypeKeys, $softClosedPermission, $sourceOverridePermission, $fxRoundingTolerance, $expectedVersion, $actorId);
+        return $this->policies->change($companyId, $change, $expectedVersion, $actorId);
     }
 }

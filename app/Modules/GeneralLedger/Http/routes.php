@@ -8,6 +8,7 @@ use App\Modules\GeneralLedger\Http\FiscalCalendarController;
 use App\Modules\GeneralLedger\Http\FiscalYearController;
 use App\Modules\GeneralLedger\Http\JournalController;
 use App\Modules\GeneralLedger\Http\PeriodController;
+use App\Modules\GeneralLedger\Http\RevaluationController;
 use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
 
@@ -56,6 +57,9 @@ Route::companyScoped(function () {
         ->middleware('permission:periods.close')->where('id', ApiServiceProvider::ULID)->name('periods.close');
     Route::post('periods/{id}/reopen', [PeriodController::class, 'reopen'])
         ->middleware('permission:periods.reopen')->where('id', ApiServiceProvider::ULID)->name('periods.reopen');
+
+    Route::post('periods/{id}/revaluation', [RevaluationController::class, 'store'])
+        ->middleware('permission:periods.revalue')->where('id', ApiServiceProvider::ULID)->name('periods.revaluation');
 
     Route::get('journals', [JournalController::class, 'index'])->middleware('permission:journals.read')->name('journals.index');
     Route::get('journals/{id}', [JournalController::class, 'show'])

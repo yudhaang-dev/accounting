@@ -16,7 +16,7 @@ final class PermissionCatalog
         'dimensions' => ['read', 'manage'],
         'currencies' => ['read', 'manage'],
         'exchange-rates' => ['read', 'manage'],
-        'periods' => ['read', 'manage', 'close', 'reopen'],
+        'periods' => ['read', 'manage', 'close', 'reopen', 'revalue'],
         'transaction-types' => ['read'],
         'entries' => ['read', 'create', 'submit', 'approve', 'reject', 'post', 'reverse'],
         'journals' => ['read', 'post-soft-closed', 'override-source'],

@@ -4,6 +4,7 @@ namespace App\Orchestration\Ledger\Http;
 
 use App\Models\User;
 use App\Modules\GeneralLedger\Contracts\LedgerPolicies;
+use App\Modules\GeneralLedger\Contracts\LedgerPolicyChange;
 use App\Orchestration\Ledger\UpdateLedgerPolicy;
 
 class LedgerPolicyController
@@ -26,15 +27,19 @@ class LedgerPolicyController
     {
         /** @var User $user */
         $user = $request->user();
-        /** @var array{lock_version: int, soft_closed_transaction_type_keys: list<string>, soft_closed_permission: string|null, source_override_permission: string|null, fx_rounding_tolerance: string|int|float} $data */
+        /** @var array{lock_version: int, soft_closed_transaction_type_keys: list<string>, soft_closed_permission: string|null, source_override_permission: string|null, fx_rounding_tolerance: string|int|float, revaluation_rate_type_key?: string|null, revaluation_auto_reverse?: bool} $data */
         $data = $request->validated();
 
         return new LedgerPolicyResource($update(
             $companyId,
-            $data['soft_closed_transaction_type_keys'],
-            $data['soft_closed_permission'],
-            $data['source_override_permission'],
-            (string) $data['fx_rounding_tolerance'],
+            new LedgerPolicyChange(
+                $data['soft_closed_transaction_type_keys'],
+                $data['soft_closed_permission'],
+                $data['source_override_permission'],
+                (string) $data['fx_rounding_tolerance'],
+                $data['revaluation_rate_type_key'] ?? null,
+                $data['revaluation_auto_reverse'] ?? false,
+            ),
             (int) $data['lock_version'],
             $user->id,
         ));

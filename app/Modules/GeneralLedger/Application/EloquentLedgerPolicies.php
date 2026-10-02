@@ -3,6 +3,7 @@
 namespace App\Modules\GeneralLedger\Application;
 
 use App\Modules\GeneralLedger\Contracts\LedgerPolicies;
+use App\Modules\GeneralLedger\Contracts\LedgerPolicyChange;
 use App\Modules\GeneralLedger\Contracts\LedgerPolicyData;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
@@ -27,17 +28,17 @@ final class EloquentLedgerPolicies implements LedgerPolicies
         return $row === null ? LedgerPolicyData::none() : $this->data($row);
     }
 
-    public function change(string $companyId, array $softClosedTransactionTypeKeys, ?string $softClosedPermission, ?string $sourceOverridePermission, string $fxRoundingTolerance, int $expectedVersion, int $actorId): LedgerPolicyData
+    public function change(string $companyId, LedgerPolicyChange $change, int $expectedVersion, int $actorId): LedgerPolicyData
     {
         try {
-            return DB::transaction(function () use ($companyId, $softClosedTransactionTypeKeys, $softClosedPermission, $sourceOverridePermission, $fxRoundingTolerance, $expectedVersion, $actorId): LedgerPolicyData {
+            return DB::transaction(function () use ($companyId, $change, $expectedVersion, $actorId): LedgerPolicyData {
                 $before = $this->current($companyId);
 
                 if ($before->version !== $expectedVersion) {
                     throw new ApiException(ErrorCode::VersionConflict);
                 }
 
-                $keys = array_values(array_unique($softClosedTransactionTypeKeys));
+                $keys = array_values(array_unique($change->softClosedTransactionTypeKeys));
                 sort($keys);
 
                 DB::table('gl_ledger_policies')->insert([
@@ -45,9 +46,11 @@ final class EloquentLedgerPolicies implements LedgerPolicies
                     'company_id' => $companyId,
                     'version' => $before->version + 1,
                     'soft_closed_transaction_type_keys' => json_encode($keys, JSON_THROW_ON_ERROR),
-                    'soft_closed_permission' => $softClosedPermission,
-                    'source_override_permission' => $sourceOverridePermission,
-                    'fx_rounding_tolerance' => $fxRoundingTolerance,
+                    'soft_closed_permission' => $change->softClosedPermission,
+                    'source_override_permission' => $change->sourceOverridePermission,
+                    'fx_rounding_tolerance' => $change->fxRoundingTolerance,
+                    'revaluation_rate_type_key' => $change->revaluationRateTypeKey,
+                    'revaluation_auto_reverse' => $change->revaluationAutoReverse,
                     'created_by' => $actorId,
                     'created_at' => now(),
                 ]);
@@ -70,7 +73,7 @@ final class EloquentLedgerPolicies implements LedgerPolicies
         }
     }
 
-    /** @return array{version: int, soft_closed_transaction_type_keys: list<string>, soft_closed_permission: string|null, source_override_permission: string|null, fx_rounding_tolerance: string} */
+    /** @return array<string, mixed> */
     private function snapshot(LedgerPolicyData $policy): array
     {
         return [
@@ -79,6 +82,8 @@ final class EloquentLedgerPolicies implements LedgerPolicies
             'soft_closed_permission' => $policy->softClosedPermission,
             'source_override_permission' => $policy->sourceOverridePermission,
             'fx_rounding_tolerance' => $policy->fxRoundingTolerance,
+            'revaluation_rate_type_key' => $policy->revaluationRateTypeKey,
+            'revaluation_auto_reverse' => $policy->revaluationAutoReverse,
         ];
     }
 
@@ -94,6 +99,14 @@ final class EloquentLedgerPolicies implements LedgerPolicies
         /** @var list<string> $keys */
         $keys = json_decode((string) $row->soft_closed_transaction_type_keys, true, flags: JSON_THROW_ON_ERROR);
 
-        return new LedgerPolicyData((int) $row->version, $keys, $row->soft_closed_permission, $row->source_override_permission, self::tolerance($row->fx_rounding_tolerance));
+        return new LedgerPolicyData(
+            (int) $row->version,
+            $keys,
+            $row->soft_closed_permission,
+            $row->source_override_permission,
+            self::tolerance($row->fx_rounding_tolerance),
+            $row->revaluation_rate_type_key,
+            (bool) $row->revaluation_auto_reverse,
+        );
     }
 }

@@ -15,6 +15,7 @@ final readonly class PostJournalLine
      * @param  array<string, string|null>|null  $dimensions  dimension type key => value ID, resolved on the accounting date (MD-FR-04)
      * @param  string|null  $exchangeRate  functional currency per 1 unit of `$currency`, for a foreign line; wins over `$rateTypeKey` and is recorded without a rate type or date
      * @param  string|null  $rateTypeKey  rate type to look the rate up in on the accounting date (MD-FR-08); required for a foreign line without `$exchangeRate`
+     * @param  bool  $adjustment  a valuation adjustment of a foreign currency balance (GL-FR-09): `debit` and `credit` are already functional amounts and the transaction amount is zero, so the balance in the currency is untouched; only for system postings
      */
     public function __construct(
         public string $accountId,
@@ -26,5 +27,6 @@ final readonly class PostJournalLine
         public ?array $dimensions = null,
         public ?string $exchangeRate = null,
         public ?string $rateTypeKey = null,
+        public bool $adjustment = false,
     ) {}
 }
