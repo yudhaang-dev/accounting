@@ -4276,6 +4276,93 @@
                 }
             }
         },
+        "/companies/{companyId}/history-imports": {
+            "get": {
+                "operationId": "history-imports.show",
+                "summary": "The history import of the company (GL-FR-11); 404 before the import",
+                "tags": [
+                    "HistoryImport"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`HistoryImportResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/HistoryImportResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "history-imports.store",
+                "summary": "Imports the history between the ledger start and the cutover date as `system.history_import`\njournals, atomically, and checks the ledger against the source trial balance at the cutover\ndate (GL-FR-11). Answers 201 with the import, or 200 when the same `source_key` and content were\nimported before. Answers 409 `INVALID_STATE_TRANSITION` without an opening balance batch, when\nthe batch has no history to import or when another import exists, 409 `IDEMPOTENCY_KEY_REUSED`\nfor a known `source_key` with other content, 422 `MAPPING_REQUIRED` for a code without a\nmapping, and 422 for dates outside the history, a period summarised twice, journals that the\nposting rules refuse, or a ledger that differs from the source trial balance",
+                "tags": [
+                    "HistoryImport"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportHistoryRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/integration-clients": {
             "get": {
                 "operationId": "integration-clients.index",
@@ -9374,6 +9461,222 @@
                     "period_count"
                 ],
                 "title": "FiscalYearResource"
+            },
+            "HistoryImportResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "batch_id": {
+                        "type": "string"
+                    },
+                    "source_key": {
+                        "type": "string"
+                    },
+                    "granularity": {
+                        "type": "string"
+                    },
+                    "journal_count": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "batch_id",
+                    "source_key",
+                    "granularity",
+                    "journal_count",
+                    "created_at"
+                ],
+                "title": "HistoryImportResource"
+            },
+            "ImportHistoryRequest": {
+                "type": "object",
+                "properties": {
+                    "source_key": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "granularity": {
+                        "type": "string",
+                        "enum": [
+                            "period_summary",
+                            "transactions"
+                        ]
+                    },
+                    "account_mapping": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "source_code": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                },
+                                "account_code": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                }
+                            },
+                            "required": [
+                                "source_code",
+                                "account_code"
+                            ]
+                        },
+                        "maxItems": 5000,
+                        "uniqueItems": true
+                    },
+                    "dimension_mapping": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                },
+                                "source_code": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                },
+                                "value_id": {
+                                    "type": "string",
+                                    "minLength": 26,
+                                    "maxLength": 26
+                                }
+                            },
+                            "required": [
+                                "type",
+                                "source_code",
+                                "value_id"
+                            ]
+                        },
+                        "maxItems": 20000
+                    },
+                    "journals": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "accounting_date": {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                "description": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 500
+                                },
+                                "lines": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "source_account_code": {
+                                                "type": "string",
+                                                "maxLength": 64
+                                            },
+                                            "debit": {
+                                                "type": "string",
+                                                "pattern": "^\\d+(\\.\\d+)?$"
+                                            },
+                                            "credit": {
+                                                "type": "string",
+                                                "pattern": "^\\d+(\\.\\d+)?$"
+                                            },
+                                            "currency": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "minLength": 3,
+                                                "maxLength": 3
+                                            },
+                                            "exchange_rate": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "pattern": "^\\d+(\\.\\d+)?$"
+                                            },
+                                            "dimensions": {
+                                                "type": [
+                                                    "array",
+                                                    "null"
+                                                ],
+                                                "items": {
+                                                    "type": "string",
+                                                    "maxLength": 64
+                                                }
+                                            },
+                                            "description": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 500
+                                            }
+                                        },
+                                        "required": [
+                                            "source_account_code",
+                                            "debit",
+                                            "credit"
+                                        ]
+                                    },
+                                    "minItems": 2,
+                                    "maxItems": 5000
+                                }
+                            },
+                            "required": [
+                                "accounting_date",
+                                "lines"
+                            ]
+                        },
+                        "minItems": 1,
+                        "maxItems": 20000
+                    },
+                    "cutover_balances": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "source_account_code": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                },
+                                "debit": {
+                                    "type": "string",
+                                    "pattern": "^\\d+(\\.\\d+)?$"
+                                },
+                                "credit": {
+                                    "type": "string",
+                                    "pattern": "^\\d+(\\.\\d+)?$"
+                                }
+                            },
+                            "required": [
+                                "source_account_code",
+                                "debit",
+                                "credit"
+                            ]
+                        },
+                        "minItems": 1,
+                        "maxItems": 5000,
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "source_key",
+                    "granularity",
+                    "journals",
+                    "cutover_balances"
+                ],
+                "title": "ImportHistoryRequest"
             },
             "ImportOpeningBalancesRequest": {
                 "type": "object",

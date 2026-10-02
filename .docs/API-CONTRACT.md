@@ -19,7 +19,7 @@
 | --- | --- |
 | Identitas | `/api/v1/me`, `/api/v1/me/workspaces`, `memberships`, `roles`, `permissions` (katalog), `integration-clients` |
 | Data induk | profil perusahaan (`/api/v1/companies/{companyId}`), `dimension-types`, `dimension-values`, `iso-currencies` (referensi ISO 4217, baca saja), `currencies` (diidentifikasi kode ISO), `rate-types`, `exchange-rates` (`GET exchange-rates/lookup` untuk pencarian kurs, `POST exchange-rates/import` untuk CSV) |
-| Buku besar | `accounts`, `account-templates`, `fiscal-calendar`, `fiscal-years`, `periods`, `journals` (baca), `opening-balance-imports`, `revaluation-runs`, `general-ledger/account-role-mappings` |
+| Buku besar | `accounts`, `account-templates`, `fiscal-calendar`, `fiscal-years`, `periods`, `journals` (baca), `opening-balance-imports`, `history-imports`, `revaluation-runs`, `general-ledger/account-role-mappings` |
 | Pencatatan | `transaction-types`, `entries`, `financial-events`, `recurring-schedules` |
 | Subledger | `parties`, `posting-profiles`, `cash-accounts`, `open-items`, `allocations`, `reconciliations`, `subledger/account-role-mappings`, `reports/aging` |
 | Perencanaan | `plans`, `plan-versions` |

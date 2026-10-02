@@ -47,6 +47,16 @@ return [
     'opening_duplicate_line' => 'The source account :code repeats the account, currency and dimensions of line :first.',
     'opening_year_to_date_at_year_start' => 'Account :account carries income or expense, which has no year to date when the ledger starts on the first day of a fiscal year.',
     'opening_control_total_missing' => 'Control account :account needs the total of its open items, which was not provided.',
+    'history_needs_opening' => 'Import the opening balances before the history.',
+    'history_no_gap' => 'The ledger start date equals the cutover date, so there is no history to import.',
+    'history_already_imported' => 'The company already has history, imported as :key.',
+    'history_key_reused' => 'The source key :key was imported with other content.',
+    'history_granularity_invalid' => 'The granularity must be period_summary or transactions.',
+    'history_journals_required' => 'The history needs at least one journal.',
+    'history_date_out_of_range' => 'History is dated from :from to :to, the day before the cutover.',
+    'history_period_repeated' => 'Period :period already has a summary journal at journal :first.',
+    'history_description' => 'History :date',
+    'history_cutover_differs' => 'Account :account carries :ledger at the cutover date, but the source trial balance has :source.',
     'opening_control_total_differs' => 'Control account :account carries :balance but its open items total :open_items.',
 
 ];

@@ -71,7 +71,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M4-06** Pemetaan peran GL berversi dan interface validasi target peran — GL-FR-10, X-AC-02, X-AC-03
 - [x] **M4-07** Revaluasi akun non-kontrol dengan kebijakan pembalikan otomatis — GL-FR-09, GL-AC-06 — revaluasi open item di M6-07
 - [x] **M4-08** Impor saldo konversi: `cutover_date`, `ledger_start_date`, pemetaan kode sumber, saldo YTD, idempoten — GL-FR-11, GL-AC-07 — baris akun kontrol baru dapat diimpor setelah Subledger menyuplai total open item (M6-10); penanda batch di neraca saldo menyusul di M8-08
-- [ ] **M4-09** Impor histori (ringkasan per periode atau transaksi) dan pencocokan dengan neraca saldo sumber pada cutover — GL-FR-11
+- [x] **M4-09** Impor histori (ringkasan per periode atau transaksi) dan pencocokan dengan neraca saldo sumber pada cutover — GL-FR-11 — histori pada akun kontrol baru dapat diimpor setelah Subledger menyuplai total open item (M6-10)
 - [ ] **M4-10** Tutup tahun: orkestrasi kesiapan, jurnal penutup per akun × set dimensi, saldo tahun berikutnya — GL-FR-12, GL-FR-13, GL-AC-09
 - [ ] **M4-11** Buka kembali tahun buku — GL-FR-14, GL-AC-10
 - [ ] **M4-12** SPA: atribut akun, manajemen periode, revaluasi, wizard saldo konversi, checklist tutup tahun

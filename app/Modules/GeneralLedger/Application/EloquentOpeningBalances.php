@@ -3,7 +3,6 @@
 namespace App\Modules\GeneralLedger\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountClass;
-use App\Modules\GeneralLedger\Contracts\AccountData;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
 use App\Modules\GeneralLedger\Contracts\JournalSource;
 use App\Modules\GeneralLedger\Contracts\OpeningBalanceBatchData;
@@ -18,8 +17,6 @@ use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Platform\Audit\Audit;
 use App\Support\Company\CompanyContext;
-use App\Support\Company\CompanyScope;
-use Brick\Math\BigDecimal;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Database\Query\Builder;
@@ -43,6 +40,7 @@ final class EloquentOpeningBalances implements OpeningBalances
         private readonly PostingService $posting,
         private readonly EloquentPostingValidator $validator,
         private readonly AccountDirectory $accounts,
+        private readonly ConversionMapper $mapper,
         private readonly PeriodDirectory $periods,
         private readonly CompanyContext $company,
         private readonly Audit $audit,
@@ -168,20 +166,7 @@ final class EloquentOpeningBalances implements OpeningBalances
             'lines' => array_map(fn ($line): array => (array) $line, $command->lines),
         ];
 
-        $sort = function (array &$value) use (&$sort): void {
-            foreach ($value as &$item) {
-                if (is_array($item)) {
-                    $sort($item);
-                }
-            }
-
-            if (! array_is_list($value)) {
-                ksort($value);
-            }
-        };
-        $sort($payload);
-
-        return hash('sha256', json_encode($payload, JSON_THROW_ON_ERROR));
+        return $this->mapper->hash($payload);
     }
 
     /**
@@ -228,83 +213,11 @@ final class EloquentOpeningBalances implements OpeningBalances
      */
     private function resolve(OpeningBalanceImport $command): array
     {
-        $unmapped = [];
-        $unknown = [];
+        $resolved = $this->mapper->translate($command->companyId, $command->accountMapping, $command->dimensionMapping, $command->lines);
 
-        /** @var array<string, string> $accountIds source code => account ID */
-        $accountIds = [];
-        $codes = array_values(array_unique(array_values($command->accountMapping)));
-        $byCode = Account::query()->withoutGlobalScope(CompanyScope::class)
-            ->where('company_id', $command->companyId)->whereIn('code', $codes)->pluck('id', 'code');
+        $this->yearToDate($command, $resolved['account_ids']);
 
-        foreach ($command->lines as $index => $line) {
-            if (! array_key_exists($line->sourceAccountCode, $command->accountMapping)) {
-                $unmapped["lines.{$index}.source_account_code"] = [__('ledger.opening_account_unmapped', ['code' => $line->sourceAccountCode])];
-
-                continue;
-            }
-
-            $target = $command->accountMapping[$line->sourceAccountCode];
-
-            if (! isset($byCode[$target])) {
-                $unknown["lines.{$index}.source_account_code"] = [__('ledger.opening_account_unknown', ['source' => $line->sourceAccountCode, 'code' => $target])];
-
-                continue;
-            }
-
-            $accountIds[$line->sourceAccountCode] = $byCode[$target];
-
-            foreach ($line->dimensions ?? [] as $type => $sourceCode) {
-                if (! isset($command->dimensionMapping[$type][$sourceCode])) {
-                    $unmapped["lines.{$index}.dimensions.{$type}"] = [__('ledger.opening_dimension_unmapped', ['code' => $sourceCode, 'type' => $type])];
-                }
-            }
-        }
-
-        if ($unmapped !== [] || $unknown !== []) {
-            throw new ApiException(ErrorCode::MappingRequired, errors: $unmapped + $unknown);
-        }
-
-        $lines = [];
-        $seen = [];
-        $duplicates = [];
-        $classes = [];
-
-        foreach ($command->lines as $index => $line) {
-            $dimensions = [];
-
-            foreach ($line->dimensions ?? [] as $type => $sourceCode) {
-                $dimensions[$type] = $command->dimensionMapping[$type][$sourceCode];
-            }
-
-            ksort($dimensions);
-            $accountId = $accountIds[$line->sourceAccountCode];
-            $key = json_encode([$accountId, $line->currency, $dimensions], JSON_THROW_ON_ERROR);
-
-            if (isset($seen[$key])) {
-                $duplicates["lines.{$index}.source_account_code"] = [__('ledger.opening_duplicate_line', ['code' => $line->sourceAccountCode, 'first' => $seen[$key] + 1])];
-            }
-
-            $seen[$key] ??= $index;
-            $lines[] = new PostJournalLine(
-                $accountId,
-                $line->debit,
-                $line->credit,
-                $line->description,
-                $line->currency,
-                dimensions: $dimensions === [] ? null : $dimensions,
-                exchangeRate: $line->exchangeRate,
-            );
-            $classes[$accountId] = true;
-        }
-
-        if ($duplicates !== []) {
-            throw ValidationException::withMessages($duplicates);
-        }
-
-        $this->yearToDate($command, array_keys($classes));
-
-        return ['lines' => $lines, 'account_ids' => array_keys($classes)];
+        return $resolved;
     }
 
     /**
@@ -349,59 +262,20 @@ final class EloquentOpeningBalances implements OpeningBalances
     private function controlAccounts(OpeningBalanceImport $command, string $journalId, array $accountIds): void
     {
         $totals = $command->controlTotals ?? [];
-
-        /** @var array<string, AccountData> $control */
-        $control = [];
-
-        foreach (array_unique([...$accountIds, ...array_keys($totals)]) as $accountId) {
-            $account = $this->accounts->find($command->companyId, $accountId);
-
-            if ($account !== null && $this->isControl($account)) {
-                $control[$accountId] = $account;
-            }
-        }
+        $control = $this->mapper->controlAccounts($command->companyId, $accountIds, $totals);
 
         if ($control === []) {
             return;
         }
 
-        $posted = DB::table('gl_journal_lines')
+        /** @var array<string, string> $balances */
+        $balances = DB::table('gl_journal_lines')
             ->where('company_id', $command->companyId)->where('journal_id', $journalId)->whereIn('account_id', array_keys($control))
             ->groupBy('account_id')
             ->selectRaw('account_id, sum(debit - credit) as net')
-            ->pluck('net', 'account_id');
+            ->pluck('net', 'account_id')->all();
 
-        $errors = [];
-
-        foreach ($control as $accountId => $account) {
-            $actual = BigDecimal::of($posted[$accountId] ?? '0');
-
-            if (! isset($totals[$accountId])) {
-                if (in_array($accountId, $accountIds, true)) {
-                    $errors['lines'][] = __('ledger.opening_control_total_missing', ['account' => $account->code]);
-                }
-
-                continue;
-            }
-
-            if (! $actual->isEqualTo(BigDecimal::of($totals[$accountId]))) {
-                $errors['lines'][] = __('ledger.opening_control_total_differs', [
-                    'account' => $account->code,
-                    'balance' => $actual->toScale(2)->toString(),
-                    'open_items' => BigDecimal::of($totals[$accountId])->toScale(2)->toString(),
-                ]);
-            }
-        }
-
-        if ($errors !== []) {
-            throw ValidationException::withMessages($errors);
-        }
-    }
-
-    /** An account that takes neither entries nor system postings is kept by a subledger (see RunRevaluation). */
-    private function isControl(AccountData $account): bool
-    {
-        return ! $account->acceptsSource(JournalSource::Entry) && ! $account->acceptsSource(JournalSource::System);
+        $this->mapper->verifyControl($control, $accountIds, $totals, $balances);
     }
 
     private function isDate(string $value): bool

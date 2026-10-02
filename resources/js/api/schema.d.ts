@@ -825,6 +825,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/history-imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The history import of the company (GL-FR-11); 404 before the import */
+        get: operations["history-imports.show"];
+        put?: never;
+        /**
+         * Imports the history between the ledger start and the cutover date as `system.history_import`
+         *     journals, atomically, and checks the ledger against the source trial balance at the cutover
+         *     date (GL-FR-11). Answers 201 with the import, or 200 when the same `source_key` and content were
+         *     imported before. Answers 409 `INVALID_STATE_TRANSITION` without an opening balance batch, when
+         *     the batch has no history to import or when another import exists, 409 `IDEMPOTENCY_KEY_REUSED`
+         *     for a known `source_key` with other content, 422 `MAPPING_REQUIRED` for a code without a
+         *     mapping, and 422 for dates outside the history, a period summarised twice, journals that the
+         *     posting rules refuse, or a ledger that differs from the source trial balance
+         */
+        post: operations["history-imports.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/integration-clients": {
         parameters: {
             query?: never;
@@ -1896,6 +1923,49 @@ export interface components {
             end_date: string;
             period_count: string | number;
             periods?: components["schemas"]["PeriodResource"][];
+        };
+        /** HistoryImportResource */
+        HistoryImportResource: {
+            id: string;
+            batch_id: string;
+            source_key: string;
+            granularity: string;
+            journal_count: number;
+            created_at: string;
+        };
+        /** ImportHistoryRequest */
+        ImportHistoryRequest: {
+            source_key: string;
+            /** @enum {string} */
+            granularity: "period_summary" | "transactions";
+            account_mapping?: {
+                source_code: string;
+                account_code: string;
+            }[];
+            dimension_mapping?: {
+                type: string;
+                source_code: string;
+                value_id: string;
+            }[];
+            journals: {
+                /** Format: date */
+                accounting_date: string;
+                description?: string | null;
+                lines: {
+                    source_account_code: string;
+                    debit: string;
+                    credit: string;
+                    currency?: string | null;
+                    exchange_rate?: string | null;
+                    dimensions?: string[] | null;
+                    description?: string | null;
+                }[];
+            }[];
+            cutover_balances: {
+                source_account_code: string;
+                debit: string;
+                credit: string;
+            }[];
         };
         /** ImportOpeningBalancesRequest */
         ImportOpeningBalancesRequest: {
@@ -4189,6 +4259,58 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "history-imports.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `HistoryImportResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["HistoryImportResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "history-imports.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportHistoryRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "integration-clients.index": {

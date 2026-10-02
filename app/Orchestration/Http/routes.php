@@ -1,6 +1,7 @@
 <?php
 
 use App\Orchestration\Company\Http\CompanyActivationController;
+use App\Orchestration\Ledger\Http\HistoryImportController;
 use App\Orchestration\Ledger\Http\LedgerPolicyController;
 use App\Orchestration\Ledger\Http\OpeningBalanceImportController;
 use App\Orchestration\Workspace\Http\WorkspaceController;
@@ -21,4 +22,9 @@ Route::companyScoped(function () {
         ->middleware('permission:journals.read')->name('opening-balance-imports.show');
     Route::post('opening-balance-imports', [OpeningBalanceImportController::class, 'store'])
         ->middleware('permission:opening-balances.import')->name('opening-balance-imports.store');
+
+    Route::get('history-imports', [HistoryImportController::class, 'show'])
+        ->middleware('permission:journals.read')->name('history-imports.show');
+    Route::post('history-imports', [HistoryImportController::class, 'store'])
+        ->middleware('permission:opening-balances.import')->name('history-imports.store');
 });

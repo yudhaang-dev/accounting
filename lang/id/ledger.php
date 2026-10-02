@@ -47,6 +47,16 @@ return [
     'opening_duplicate_line' => 'Akun sumber :code mengulang akun, mata uang, dan dimensi baris :first.',
     'opening_year_to_date_at_year_start' => 'Akun :account memuat pendapatan atau beban, yang tidak punya saldo tahun berjalan bila pembukuan dimulai pada hari pertama tahun buku.',
     'opening_control_total_missing' => 'Akun kontrol :account memerlukan total open item-nya, yang belum diberikan.',
+    'history_needs_opening' => 'Impor saldo konversi sebelum histori.',
+    'history_no_gap' => 'Awal histori sama dengan tanggal cutover, jadi tidak ada histori untuk diimpor.',
+    'history_already_imported' => 'Perusahaan sudah memiliki histori, diimpor sebagai :key.',
+    'history_key_reused' => 'Kunci sumber :key sudah diimpor dengan isi yang berbeda.',
+    'history_granularity_invalid' => 'Granularitas harus period_summary atau transactions.',
+    'history_journals_required' => 'Histori memerlukan minimal satu jurnal.',
+    'history_date_out_of_range' => 'Histori bertanggal :from sampai :to, sehari sebelum cutover.',
+    'history_period_repeated' => 'Periode :period sudah memiliki jurnal ringkasan pada jurnal :first.',
+    'history_description' => 'Histori :date',
+    'history_cutover_differs' => 'Akun :account bersaldo :ledger pada tanggal cutover, tetapi neraca saldo sumber :source.',
     'opening_control_total_differs' => 'Akun kontrol :account bersaldo :balance tetapi total open item-nya :open_items.',
 
 ];
