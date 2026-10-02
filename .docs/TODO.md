@@ -49,7 +49,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M2-01** Tipe dan nilai dimensi: hierarki, masa berlaku, aturan hanya-daun, nonaktif — MD-FR-02, MD-FR-03, MD-AC-03, MD-AC-04
 - [x] **M2-02** Resolusi dimension set dan query hierarki; dipakai baris entri, jurnal, dan filter neraca saldo — MD-FR-04, MD-FR-05, MD-AC-01, MD-AC-02 — skema OpenAPI mengetik objek `dimensions` pada body/query sebagai larik string (keterbatasan Scramble); klien SPA di M2-05 perlu mengonversinya
 - [x] **M2-03** Mata uang ISO 4217, aktivasi per perusahaan, skala dan pembulatan — MD-FR-06 — larangan menonaktifkan mata uang yang dipakai transaksi menyusul di M4-05
-- [ ] **M2-04** Jenis kurs dan kurs (manual, CSV, API `exchange-rates:write`), pencarian tanpa fallback, batas umur — MD-FR-07, MD-FR-08, MD-AC-06
+- [x] **M2-04** Jenis kurs dan kurs (manual, CSV, API `exchange-rates:write`), pencarian tanpa fallback, batas umur — MD-FR-07, MD-FR-08, MD-AC-06 — scope `exchange-rates:write` untuk klien integrasi dipetakan ke permission `exchange-rates.manage` di M3-05; sampai itu kurs dari klien tercatat `api` hanya bila pemanggilnya bukan user
 - [ ] **M2-05** SPA: dimensi, mata uang, kurs, pemilih dimensi di form entri
 
 ## M3 — Identitas & akses

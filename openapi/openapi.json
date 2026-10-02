@@ -3154,6 +3154,480 @@
                 }
             }
         },
+        "/companies/{companyId}/exchange-rates": {
+            "get": {
+                "operationId": "exchange-rates.index",
+                "summary": "Exchange rates, newest effective date first. By default only the current version of each rate\nis listed. Filters: `filter[rate_type]` (key), `filter[currency]`, `filter[from]` and\n`filter[to]` (effective date), and `filter[include_superseded]=1` to list every version.\n`per_page` defaults to 50, at most 200",
+                "tags": [
+                    "ExchangeRate"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[rate_type]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 32
+                        }
+                    },
+                    {
+                        "name": "filter[currency]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                        }
+                    },
+                    {
+                        "name": "filter[from]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[to]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[include_superseded]",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `ExchangeRateResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ExchangeRateResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "exchange-rates.store",
+                "summary": "Records the rate of a foreign currency for a rate type and an effective date, as functional\ncurrency per 1 unit. A different rate for the same type, currency and date is recorded as a\nnew version (a correction); the same rate again changes nothing and answers 200 with the\nexisting version. The functional currency and currencies that are not activated are refused",
+                "tags": [
+                    "ExchangeRate"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RecordExchangeRateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/exchange-rates/lookup": {
+            "get": {
+                "operationId": "exchange-rates.lookup",
+                "summary": "The rate that applies on `date`: the latest version of the rate with the latest effective date\non or before it, for the rate type and currency. Answers `EXCHANGE_RATE_NOT_FOUND` when there is\nnone or the newest one is older than the age limit of the rate type; it never falls back to 1,\nanother rate type or a cross rate (MD-FR-08)",
+                "tags": [
+                    "ExchangeRate"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "rate_type",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 32
+                        }
+                    },
+                    {
+                        "name": "currency",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "rate_type": {
+                                                    "type": "string"
+                                                },
+                                                "currency": {
+                                                    "type": "string"
+                                                },
+                                                "requested_date": {
+                                                    "type": "string"
+                                                },
+                                                "effective_date": {
+                                                    "type": "string"
+                                                },
+                                                "rate": {
+                                                    "type": "string"
+                                                },
+                                                "version": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "rate_type",
+                                                "currency",
+                                                "requested_date",
+                                                "effective_date",
+                                                "rate",
+                                                "version"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/exchange-rates/import": {
+            "post": {
+                "operationId": "exchange-rates.import",
+                "summary": "Imports rates from CSV, as a multipart `file` or a `text/csv` body. Columns: `rate_type`,\n`currency`, `effective_date`, `rate`. At most 1000 rows. All or nothing: any invalid row\nrejects the whole file and every problem is listed under `rows.<line>.<field>`",
+                "tags": [
+                    "ExchangeRate"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "created": {
+                                                    "type": "integer"
+                                                },
+                                                "unchanged": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "created",
+                                                "unchanged"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/exchange-rates/{id}": {
+            "get": {
+                "operationId": "exchange-rates.show",
+                "tags": [
+                    "ExchangeRate"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ExchangeRateResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExchangeRateResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/fiscal-calendar": {
             "get": {
                 "operationId": "fiscal-calendar.show",
@@ -4521,6 +4995,462 @@
                 }
             }
         },
+        "/companies/{companyId}/rate-types": {
+            "get": {
+                "operationId": "rate-types.index",
+                "summary": "Rate types of the company, ordered by key. Filter: `filter[status]`. `per_page` defaults to 50,\nat most 200",
+                "tags": [
+                    "RateType"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[status]",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/DimensionStatus"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `RateTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/RateTypeResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "rate-types.store",
+                "summary": "Adds a rate type. The key is stable and cannot change afterwards",
+                "tags": [
+                    "RateType"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateRateTypeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`RateTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RateTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/rate-types/{id}": {
+            "get": {
+                "operationId": "rate-types.show",
+                "tags": [
+                    "RateType"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`RateTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RateTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "rate-types.update",
+                "summary": "Changes the label or the age limit. `lock_version` is required",
+                "tags": [
+                    "RateType"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateRateTypeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`RateTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RateTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/rate-types/{id}/deactivate": {
+            "post": {
+                "operationId": "rate-types.deactivate",
+                "summary": "Deactivates the type: no new rates can be recorded for it; existing rates stay readable",
+                "tags": [
+                    "RateType"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`RateTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RateTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/rate-types/{id}/reactivate": {
+            "post": {
+                "operationId": "rate-types.reactivate",
+                "summary": "Reactivates the type",
+                "tags": [
+                    "RateType"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`RateTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RateTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/transaction-types": {
             "get": {
                 "operationId": "transaction-types.index",
@@ -5289,6 +6219,35 @@
                 },
                 "title": "CreateFiscalYearsRequest"
             },
+            "CreateRateTypeRequest": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Stable identifier used in API payloads and rate lookups.",
+                        "pattern": "^[a-z][a-z0-9_]*$",
+                        "maxLength": 32
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "max_age_days": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Rates older than this many days are not used for a date; empty means no limit (MD-FR-08).",
+                        "minimum": 0,
+                        "maximum": 3650
+                    }
+                },
+                "required": [
+                    "key",
+                    "label"
+                ],
+                "title": "CreateRateTypeRequest"
+            },
             "CreateTransactionTypeRequest": {
                 "type": "object",
                 "properties": {
@@ -5776,6 +6735,67 @@
                 ],
                 "title": "EntryStatus"
             },
+            "ExchangeRateResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "rate_type_id": {
+                        "type": "string"
+                    },
+                    "rate_type": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "effective_date": {
+                        "type": "string"
+                    },
+                    "rate": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "integer"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "actor_type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "actor_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "rate_type_id",
+                    "rate_type",
+                    "currency",
+                    "effective_date",
+                    "rate",
+                    "version",
+                    "source",
+                    "actor_type",
+                    "actor_id",
+                    "created_at"
+                ],
+                "title": "ExchangeRateResource"
+            },
             "FiscalCalendarResource": {
                 "type": "object",
                 "properties": {
@@ -6118,6 +7138,41 @@
                 ],
                 "title": "PeriodStatus"
             },
+            "RateTypeResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "max_age_days": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "key",
+                    "label",
+                    "max_age_days",
+                    "status",
+                    "lock_version"
+                ],
+                "title": "RateTypeResource"
+            },
             "ReasonRequest": {
                 "type": "object",
                 "description": "Reason of a rejection (required) or a cancellation (optional), TE-FR-07.",
@@ -6131,6 +7186,36 @@
                     }
                 },
                 "title": "ReasonRequest"
+            },
+            "RecordExchangeRateRequest": {
+                "type": "object",
+                "properties": {
+                    "rate_type": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9_]*$",
+                        "maxLength": 32
+                    },
+                    "currency": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$"
+                    },
+                    "effective_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "rate": {
+                        "type": "string",
+                        "description": "Up to 12 integer and 12 decimal digits, greater than zero, as a decimal string (API-TR-05).",
+                        "pattern": "^\\d{1,12}(\\.\\d{1,12})?$"
+                    }
+                },
+                "required": [
+                    "rate_type",
+                    "currency",
+                    "effective_date",
+                    "rate"
+                ],
+                "title": "RecordExchangeRateRequest"
             },
             "ReopenPeriodRequest": {
                 "type": "object",
@@ -6483,6 +7568,31 @@
                     "lock_version"
                 ],
                 "title": "UpdateFiscalCalendarRequest"
+            },
+            "UpdateRateTypeRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "max_age_days": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 3650
+                    }
+                },
+                "required": [
+                    "lock_version"
+                ],
+                "title": "UpdateRateTypeRequest"
             },
             "WorkspaceResource": {
                 "type": "object",

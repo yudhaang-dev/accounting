@@ -4,7 +4,9 @@ use App\Modules\MasterData\Http\CompanyController;
 use App\Modules\MasterData\Http\CurrencyController;
 use App\Modules\MasterData\Http\DimensionTypeController;
 use App\Modules\MasterData\Http\DimensionValueController;
+use App\Modules\MasterData\Http\ExchangeRateController;
 use App\Modules\MasterData\Http\IsoCurrencyController;
+use App\Modules\MasterData\Http\RateTypeController;
 use App\Platform\Api\ApiServiceProvider;
 use App\Platform\Api\Http\RejectWritesWhenReadOnly;
 use Illuminate\Support\Facades\Route;
@@ -58,4 +60,23 @@ Route::companyScoped(function () {
         Route::post("currencies/{code}/{$action}", [CurrencyController::class, $action])
             ->middleware('permission:currencies.manage')->where('code', $code)->name("currencies.{$action}");
     }
+
+    Route::get('rate-types', [RateTypeController::class, 'index'])->middleware('permission:exchange-rates.read')->name('rate-types.index');
+    Route::post('rate-types', [RateTypeController::class, 'store'])->middleware('permission:exchange-rates.manage')->name('rate-types.store');
+    Route::get('rate-types/{id}', [RateTypeController::class, 'show'])
+        ->middleware('permission:exchange-rates.read')->where('id', ApiServiceProvider::ULID)->name('rate-types.show');
+    Route::patch('rate-types/{id}', [RateTypeController::class, 'update'])
+        ->middleware('permission:exchange-rates.manage')->where('id', ApiServiceProvider::ULID)->name('rate-types.update');
+
+    foreach (['deactivate', 'reactivate'] as $action) {
+        Route::post("rate-types/{id}/{$action}", [RateTypeController::class, $action])
+            ->middleware('permission:exchange-rates.manage')->where('id', ApiServiceProvider::ULID)->name("rate-types.{$action}");
+    }
+
+    Route::get('exchange-rates', [ExchangeRateController::class, 'index'])->middleware('permission:exchange-rates.read')->name('exchange-rates.index');
+    Route::post('exchange-rates', [ExchangeRateController::class, 'store'])->middleware('permission:exchange-rates.manage')->name('exchange-rates.store');
+    Route::get('exchange-rates/lookup', [ExchangeRateController::class, 'lookup'])->middleware('permission:exchange-rates.read')->name('exchange-rates.lookup');
+    Route::post('exchange-rates/import', [ExchangeRateController::class, 'import'])->middleware('permission:exchange-rates.manage')->name('exchange-rates.import');
+    Route::get('exchange-rates/{id}', [ExchangeRateController::class, 'show'])
+        ->middleware('permission:exchange-rates.read')->where('id', ApiServiceProvider::ULID)->name('exchange-rates.show');
 });

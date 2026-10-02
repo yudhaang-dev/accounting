@@ -609,6 +609,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/exchange-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exchange rates, newest effective date first. By default only the current version of each rate
+         *     is listed. Filters: `filter[rate_type]` (key), `filter[currency]`, `filter[from]` and
+         *     `filter[to]` (effective date), and `filter[include_superseded]=1` to list every version.
+         *     `per_page` defaults to 50, at most 200
+         */
+        get: operations["exchange-rates.index"];
+        put?: never;
+        /**
+         * Records the rate of a foreign currency for a rate type and an effective date, as functional
+         *     currency per 1 unit. A different rate for the same type, currency and date is recorded as a
+         *     new version (a correction); the same rate again changes nothing and answers 200 with the
+         *     existing version. The functional currency and currencies that are not activated are refused
+         */
+        post: operations["exchange-rates.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/exchange-rates/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The rate that applies on `date`: the latest version of the rate with the latest effective date
+         *     on or before it, for the rate type and currency. Answers `EXCHANGE_RATE_NOT_FOUND` when there is
+         *     none or the newest one is older than the age limit of the rate type; it never falls back to 1,
+         *     another rate type or a cross rate (MD-FR-08)
+         */
+        get: operations["exchange-rates.lookup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/exchange-rates/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Imports rates from CSV, as a multipart `file` or a `text/csv` body. Columns: `rate_type`,
+         *     `currency`, `effective_date`, `rate`. At most 1000 rows. All or nothing: any invalid row
+         *     rejects the whole file and every problem is listed under `rows.<line>.<field>`
+         */
+        post: operations["exchange-rates.import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/exchange-rates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["exchange-rates.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/fiscal-calendar": {
         parameters: {
             query?: never;
@@ -840,6 +927,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/rate-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Rate types of the company, ordered by key. Filter: `filter[status]`. `per_page` defaults to 50,
+         *     at most 200
+         */
+        get: operations["rate-types.index"];
+        put?: never;
+        /** Adds a rate type. The key is stable and cannot change afterwards */
+        post: operations["rate-types.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/rate-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["rate-types.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Changes the label or the age limit. `lock_version` is required */
+        patch: operations["rate-types.update"];
+        trace?: never;
+    };
+    "/companies/{companyId}/rate-types/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivates the type: no new rates can be recorded for it; existing rates stay readable */
+        post: operations["rate-types.deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/rate-types/{id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivates the type */
+        post: operations["rate-types.reactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/transaction-types": {
         parameters: {
             query?: never;
@@ -1021,6 +1180,14 @@ export interface components {
             /** @description Only with count 1; defaults to FY2026, or FY2026/2027 when the year does not start in January. */
             name?: string;
         };
+        /** CreateRateTypeRequest */
+        CreateRateTypeRequest: {
+            /** @description Stable identifier used in API payloads and rate lookups. */
+            key: string;
+            label: string;
+            /** @description Rates older than this many days are not used for a date; empty means no limit (MD-FR-08). */
+            max_age_days?: number | null;
+        };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
             /** @description Keys starting with `system.` are defined by code and contain a dot, which this pattern excludes. */
@@ -1148,6 +1315,20 @@ export interface components {
          * @enum {string}
          */
         EntryStatus: "draft" | "submitted" | "approved" | "posted" | "rejected" | "cancelled";
+        /** ExchangeRateResource */
+        ExchangeRateResource: {
+            id: string;
+            rate_type_id: string;
+            rate_type: string;
+            currency: string;
+            effective_date: string;
+            rate: string;
+            version: number;
+            source: string;
+            actor_type: string | null;
+            actor_id: string | null;
+            created_at: string | null;
+        };
         /** FiscalCalendarResource */
         FiscalCalendarResource: {
             id: string;
@@ -1239,12 +1420,30 @@ export interface components {
          * @enum {string}
          */
         PeriodStatus: "open" | "closed";
+        /** RateTypeResource */
+        RateTypeResource: {
+            id: string;
+            key: string;
+            label: string;
+            max_age_days: number | null;
+            status: string;
+            lock_version: number;
+        };
         /**
          * ReasonRequest
          * @description Reason of a rejection (required) or a cancellation (optional), TE-FR-07.
          */
         ReasonRequest: {
             reason?: string | null;
+        };
+        /** RecordExchangeRateRequest */
+        RecordExchangeRateRequest: {
+            rate_type: string;
+            currency: string;
+            /** Format: date */
+            effective_date: string;
+            /** @description Up to 12 integer and 12 decimal digits, greater than zero, as a decimal string (API-TR-05). */
+            rate: string;
         };
         /** ReopenPeriodRequest */
         ReopenPeriodRequest: {
@@ -1334,6 +1533,12 @@ export interface components {
             lock_version: number;
             pattern?: components["schemas"]["CalendarPattern"];
             start_month?: number;
+        };
+        /** UpdateRateTypeRequest */
+        UpdateRateTypeRequest: {
+            lock_version: number;
+            label?: string;
+            max_age_days?: number | null;
         };
         /** WorkspaceResource */
         WorkspaceResource: {
@@ -2776,6 +2981,182 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "exchange-rates.index": {
+        parameters: {
+            query?: {
+                "filter[rate_type]"?: string;
+                "filter[currency]"?: string;
+                "filter[from]"?: string;
+                "filter[to]"?: string;
+                "filter[include_superseded]"?: boolean;
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ExchangeRateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ExchangeRateResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "exchange-rates.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordExchangeRateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "exchange-rates.lookup": {
+        parameters: {
+            query: {
+                rate_type: string;
+                currency: string;
+                date: string;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            rate_type: string;
+                            currency: string;
+                            requested_date: string;
+                            effective_date: string;
+                            rate: string;
+                            version: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "exchange-rates.import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            created: number;
+                            unchanged: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "exchange-rates.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ExchangeRateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ExchangeRateResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "fiscal-calendar.show": {
         parameters: {
             query?: never;
@@ -3298,6 +3679,201 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "rate-types.index": {
+        parameters: {
+            query?: {
+                "filter[status]"?: components["schemas"]["DimensionStatus"];
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `RateTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RateTypeResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "rate-types.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRateTypeRequest"];
+            };
+        };
+        responses: {
+            /** @description `RateTypeResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RateTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "rate-types.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `RateTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RateTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "rate-types.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRateTypeRequest"];
+            };
+        };
+        responses: {
+            /** @description `RateTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RateTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "rate-types.deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `RateTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RateTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "rate-types.reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `RateTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RateTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "transaction-types.index": {
