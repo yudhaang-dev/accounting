@@ -30,6 +30,7 @@ final class EntryWorkflow
         private readonly ActorPermissions $permissions,
         private readonly EntryLines $lines,
         private readonly ApprovalPlanner $planner,
+        private readonly EntryValidation $checks,
     ) {}
 
     /**
@@ -45,6 +46,7 @@ final class EntryWorkflow
             $entry = Entry::query()->lockForUpdate()->findOrFail($id);
 
             $this->assertStatus($entry, [EntryStatus::Draft]);
+            $this->checks->assertValid($entry);
             $this->refreshLines($entry);
             $this->validator->validate($this->command($entry, $userId));
 
@@ -145,6 +147,7 @@ final class EntryWorkflow
     /** Posts a locked, approved entry: the ledger validates again inside this transaction (TE-FR-08). */
     private function postLocked(Entry $entry, int $userId): Entry
     {
+        $this->checks->assertValid($entry);
         $this->refreshLines($entry);
 
         $journal = $this->posting->post($this->command($entry, $userId));

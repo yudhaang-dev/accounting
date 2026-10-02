@@ -103,10 +103,7 @@ final class EntryLines
      */
     public function of(Entry $entry): array
     {
-        $version = TransactionTypeVersion::query()
-            ->where('transaction_type_id', $entry->transaction_type_id)
-            ->where('version', $entry->transaction_type_version)
-            ->firstOrFail();
+        $version = $entry->typeVersion();
         $date = $entry->accounting_date->toDateString();
 
         if ($entry->field_values !== null) {

@@ -29,6 +29,7 @@ return [
     'stage_permission_missing' => 'The next approval stage needs the permission :permission.',
     'policy_key_unknown' => 'The company has no transaction type with the key :key.',
     'policy_permission_unknown' => 'The permission :permission does not exist.',
+    'value_scale' => 'The field :field takes at most :scale decimals in the currency of the entry.',
     'lines_required' => 'A free-lines entry needs its lines.',
     'lines_not_allowed' => 'A structured entry has values, not lines; its lines come from the posting rules.',
     'values_not_allowed' => 'A free-lines entry has lines, not field values.',

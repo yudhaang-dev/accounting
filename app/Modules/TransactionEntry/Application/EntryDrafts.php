@@ -88,10 +88,7 @@ final class EntryDrafts
                 throw new ApiException(ErrorCode::InvalidStateTransition);
             }
 
-            $version = TransactionTypeVersion::query()
-                ->where('transaction_type_id', $entry->transaction_type_id)
-                ->where('version', $entry->transaction_type_version)
-                ->firstOrFail();
+            $version = $entry->typeVersion();
 
             $entry->updateLocked([
                 'accounting_date' => $data['accounting_date'],

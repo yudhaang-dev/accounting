@@ -62,6 +62,15 @@ class Entry extends VersionedCompanyModel
         ];
     }
 
+    /** The version of the transaction type this entry was made on, whatever its status now. */
+    public function typeVersion(): TransactionTypeVersion
+    {
+        return TransactionTypeVersion::query()
+            ->where('transaction_type_id', $this->transaction_type_id)
+            ->where('version', $this->transaction_type_version)
+            ->firstOrFail();
+    }
+
     /** @return HasMany<EntryDecision, $this> */
     public function decisions(): HasMany
     {

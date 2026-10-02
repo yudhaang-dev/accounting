@@ -100,6 +100,15 @@ final class EntryRates
         }
     }
 
+    /** Decimal places of amounts in the currency of an entry: the foreign currency, or the functional one when there is none. */
+    public function scaleOf(?string $currency): int
+    {
+        $companyId = $this->company->require();
+        $foreign = $this->foreign($currency);
+
+        return $foreign === null ? $this->currencies->functionalScale($companyId) : ($this->currencies->find($companyId, $foreign)->scale ?? $this->currencies->functionalScale($companyId));
+    }
+
     /** An amount in a foreign currency in the functional currency, rounded as the ledger rounds it (GL-FR-08). */
     public function toFunctional(BigDecimal $amount, string $rate): BigDecimal
     {

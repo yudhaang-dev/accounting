@@ -29,6 +29,7 @@ return [
     'stage_permission_missing' => 'Tahap approval berikutnya membutuhkan permission :permission.',
     'policy_key_unknown' => 'Perusahaan tidak memiliki Jenis Transaksi dengan key :key.',
     'policy_permission_unknown' => 'Permission :permission tidak ada.',
+    'value_scale' => 'Field :field paling banyak :scale desimal dalam mata uang entri.',
     'lines_required' => 'Entri baris bebas membutuhkan baris.',
     'lines_not_allowed' => 'Entri terstruktur berisi nilai, bukan baris; barisnya berasal dari aturan posting.',
     'values_not_allowed' => 'Entri baris bebas berisi baris, bukan nilai field.',
