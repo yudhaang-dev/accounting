@@ -3986,6 +3986,89 @@
                 }
             }
         },
+        "/companies/{companyId}/financial-events/changes": {
+            "get": {
+                "operationId": "financial-events.changes",
+                "summary": "The changes feed (TE-FR-15): the steps events took, oldest first, after `cursor` (from the start when\nabsent). Poll with `meta.next_cursor` of the last page; each step comes once and in order. A client\nsees the steps of its own events, a user with `financial-events.read` those of all",
+                "tags": [
+                    "FinancialEvent"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "pattern": "^\\d{1,18}$"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 500
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `FinancialEventChangeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/FinancialEventChangeResource"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "next_cursor": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "next_cursor"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/financial-events/{eventId}": {
             "get": {
                 "operationId": "financial-events.show",
@@ -10489,6 +10572,48 @@
                     "allocations"
                 ],
                 "title": "FieldType"
+            },
+            "FinancialEventChangeResource": {
+                "type": "object",
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "event_id": {
+                        "type": "string"
+                    },
+                    "action": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "journal_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "journal_number": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "occurred_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "cursor",
+                    "event_id",
+                    "action",
+                    "status",
+                    "journal_id",
+                    "journal_number",
+                    "occurred_at"
+                ],
+                "title": "FinancialEventChangeResource"
             },
             "FinancialEventRequest": {
                 "type": "object",

@@ -256,6 +256,89 @@ describe('idempotency of the source key (TE-FR-13, TE-AC-04, API-AC-04)', functi
     });
 });
 
+describe('changes feed (TE-FR-15, TE-AC-08, API-TR-16)', function () {
+    function evChanges(array $query = [], ?string $token = null)
+    {
+        return evSend('GET', test()->url.'/financial-events/changes'.($query === [] ? '' : '?'.http_build_query($query)), [], $token ?? test()->token);
+    }
+
+    it('gives every step once and in order, and polling from the last cursor misses nothing', function () {
+        $first = evSendEvent()->assertCreated()->json('data.event_id');
+        $page = evChanges()->assertOk()->json();
+
+        expect($page['data'])->toHaveCount(1)
+            ->and($page['data'][0])->toMatchArray(['event_id' => $first, 'action' => 'submit', 'status' => 'submitted', 'journal_id' => null])
+            ->and($page['meta']['next_cursor'])->toBe($page['data'][0]['cursor']);
+
+        // Nothing new: the same cursor comes back and the page is empty.
+        $empty = evChanges(['cursor' => $page['meta']['next_cursor']])->assertOk()->json();
+        expect($empty['data'])->toBe([])->and($empty['meta']['next_cursor'])->toBe($page['meta']['next_cursor']);
+
+        $this->actingAs($this->approver)->postJson("{$this->url}/entries/{$first}/approve")->assertOk();
+        $this->actingAs($this->approver)->postJson("{$this->url}/entries/{$first}/post")->assertOk();
+        $second = evSendEvent(['references' => ['source_transaction_id' => 'payrun-2026-04']])->assertCreated()->json('data.event_id');
+
+        $next = evChanges(['cursor' => $page['meta']['next_cursor']])->assertOk()->json();
+
+        expect(array_column($next['data'], 'action'))->toBe(['approve', 'post', 'submit'])
+            ->and(array_column($next['data'], 'status'))->toBe(['approved', 'posted', 'submitted'])
+            ->and($next['data'][1]['journal_number'])->not->toBeNull()->and($next['data'][0]['journal_id'])->toBeNull()
+            ->and($next['data'][2]['event_id'])->toBe($second);
+
+        $cursors = array_map('intval', array_column($next['data'], 'cursor'));
+        expect($cursors)->toBe([...$cursors])->and(collect($cursors)->sort()->values()->all())->toBe($cursors)->and($cursors[0])->toBeGreaterThan((int) $page['meta']['next_cursor']);
+    });
+
+    it('pages with a limit without skipping or repeating', function () {
+        foreach (['a', 'b', 'c'] as $key) {
+            evSendEvent(['references' => ['source_transaction_id' => $key]])->assertCreated();
+        }
+
+        $seen = [];
+        $cursor = null;
+
+        do {
+            $page = evChanges(array_filter(['limit' => 2, 'cursor' => $cursor]))->assertOk()->json();
+            array_push($seen, ...array_column($page['data'], 'cursor'));
+            $cursor = $page['meta']['next_cursor'];
+        } while ($page['data'] !== []);
+
+        expect($seen)->toHaveCount(3)->and(array_unique($seen))->toHaveCount(3);
+    });
+
+    it('shows a client only the steps of its own events, and a user with financial-events.read all', function () {
+        evSendEvent()->assertCreated();
+
+        $other = evClient(['name' => 'Other', 'source_system' => 'other']);
+        $theirs = evSendEvent([], evToken($other))->assertCreated()->json('data.event_id');
+
+        expect(evChanges([], evToken($other))->assertOk()->json('data.*.event_id'))->toBe([$theirs])
+            ->and(evChanges()->assertOk()->json('data'))->toHaveCount(1);
+
+        $this->actingAs($this->viewer)->getJson("{$this->url}/financial-events/changes")->assertOk()->assertJsonCount(2, 'data');
+    });
+
+    it('leaves out entries that did not come from an event', function () {
+        $this->actingAs($this->admin)->getJson("{$this->url}/financial-events/changes")->assertOk()->assertJsonCount(0, 'data');
+    });
+
+    it('refuses a bad cursor or limit, and a client without the read scope', function () {
+        evChanges(['cursor' => 'abc'])->assertUnprocessable()->assertJsonValidationErrors(['cursor']);
+        evChanges(['limit' => 0])->assertUnprocessable()->assertJsonValidationErrors(['limit']);
+
+        $writer = evClient(['name' => 'Writer', 'source_system' => 'writer', 'scopes' => ['financial-events:write']]);
+        evChanges([], evToken($writer))->assertForbidden();
+        evSend('GET', "{$this->url}/financial-events/changes")->assertUnauthorized();
+    });
+
+    it('numbers the steps of a company without gaps', function () {
+        evSendEvent()->assertCreated();
+        evSendEvent(['references' => ['source_transaction_id' => 'x']])->assertCreated();
+
+        expect(DB::table('te_entry_decisions')->where('company_id', $this->companyId)->orderBy('seq')->pluck('seq')->map(fn ($n) => (int) $n)->all())->toBe([1, 2]);
+    });
+});
+
 describe('invalid events leave nothing behind (422)', function () {
     it('refuses what the payload or the configuration does not hold', function () {
         $cases = [

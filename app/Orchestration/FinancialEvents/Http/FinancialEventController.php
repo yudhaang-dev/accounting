@@ -9,6 +9,7 @@ use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FinancialEventController
 {
@@ -41,6 +42,31 @@ class FinancialEventController
         ));
 
         return (new FinancialEventResource($result))->response()->setStatusCode($result->replayed ? 200 : 201);
+    }
+
+    /**
+     * The changes feed (TE-FR-15): the steps events took, oldest first, after `cursor` (from the start when
+     * absent). Poll with `meta.next_cursor` of the last page; each step comes once and in order. A client
+     * sees the steps of its own events, a user with `financial-events.read` those of all.
+     */
+    public function changes(Request $request, FinancialEvents $events, AccessContexts $contexts): AnonymousResourceCollection
+    {
+        $principal = $contexts->integrationPrincipal($request);
+
+        if ($principal === null) {
+            $contexts->current($request)->requirePermission('financial-events.read');
+        }
+
+        $query = $request->validate([
+            'cursor' => ['sometimes', 'nullable', 'string', 'regex:/^\d{1,18}$/'],
+            'limit' => ['sometimes', 'integer', 'min:1', 'max:500'],
+        ]);
+
+        /** @var numeric-string|null $cursor */
+        $cursor = $query['cursor'] ?? null;
+        $page = $events->changes($cursor, (int) ($query['limit'] ?? 100), $principal?->clientId);
+
+        return FinancialEventChangeResource::collection($page->changes)->additional(['meta' => ['next_cursor' => $page->nextCursor]]);
     }
 
     /**

@@ -264,7 +264,7 @@ final class EntryWorkflow
 
     private function record(Entry $entry, string $action, ?int $userId, ?string $reason, EntryStatus $previous, ?string $clientId = null): void
     {
-        EntryDecision::create(['entry_id' => $entry->id, 'action' => $action, 'actor_id' => $userId, 'client_id' => $clientId, 'reason' => $reason]);
+        EntryDecision::record($entry, $action, $userId, $reason, $clientId);
 
         $this->audit->record(
             "entry.{$action}",

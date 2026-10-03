@@ -22,6 +22,8 @@ Route::companyScoped(function () {
     // Events are idempotent by their source transaction ID (TE-FR-13), not by an Idempotency-Key (API-TR-13).
     Route::post('financial-events', [FinancialEventController::class, 'store'])
         ->middleware('permission:financial-events.create')->withoutMiddleware('idempotent')->name('financial-events.store');
+    Route::get('financial-events/changes', [FinancialEventController::class, 'changes'])
+        ->middleware('permission:financial-events.read|financial-events.read-own')->name('financial-events.changes');
     Route::get('financial-events/{eventId}', [FinancialEventController::class, 'show'])
         ->middleware('permission:financial-events.read|financial-events.read-own')->where('eventId', ApiServiceProvider::ULID)->name('financial-events.show');
 

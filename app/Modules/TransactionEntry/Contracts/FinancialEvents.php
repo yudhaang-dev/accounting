@@ -25,4 +25,13 @@ interface FinancialEvents
      * sent.
      */
     public function find(string $eventId, ?string $clientId = null): ?FinancialEventResult;
+
+    /**
+     * The steps events took after the cursor (none: from the start), oldest first, at most `$limit` (TE-FR-15).
+     * Every step is given once and in the order it became visible, so polling with the last cursor misses
+     * and repeats nothing. With a client ID, only the steps of events that client sent.
+     *
+     * @param  numeric-string|null  $cursor  as given by an earlier page
+     */
+    public function changes(?string $cursor, int $limit, ?string $clientId = null): FinancialEventChanges;
 }

@@ -149,7 +149,7 @@ final class EntryReversals
                     'created_by' => $actor,
                 ])->refresh();
 
-                EntryDecision::create(['entry_id' => $reversal->id, 'action' => 'auto_approve', 'actor_id' => $actor, 'reason' => $reason]);
+                EntryDecision::record($reversal, 'auto_approve', $actor, $reason);
 
                 $this->workflow->post($reversal->id, $actor);
 

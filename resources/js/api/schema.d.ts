@@ -809,6 +809,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/financial-events/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The changes feed (TE-FR-15): the steps events took, oldest first, after `cursor` (from the start when
+         *     absent). Poll with `meta.next_cursor` of the last page; each step comes once and in order. A client
+         *     sees the steps of its own events, a user with `financial-events.read` those of all
+         */
+        get: operations["financial-events.changes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/financial-events/{eventId}": {
         parameters: {
             query?: never;
@@ -2229,6 +2250,16 @@ export interface components {
          * @enum {string}
          */
         FieldType: "amount" | "date" | "text" | "reference" | "account" | "party" | "cash_account" | "dimension" | "allocations";
+        /** FinancialEventChangeResource */
+        FinancialEventChangeResource: {
+            cursor: string;
+            event_id: string;
+            action: string;
+            status: string;
+            journal_id: string | null;
+            journal_number: string | null;
+            occurred_at: string;
+        };
         /**
          * FinancialEventRequest
          * @description The canonical payload of a financial event (API-TR-17, API-TR-18). Only a client with the transaction
@@ -4621,6 +4652,38 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "financial-events.changes": {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `FinancialEventChangeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FinancialEventChangeResource"][];
+                        meta: {
+                            next_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
         };
     };

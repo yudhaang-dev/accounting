@@ -3,9 +3,13 @@
 namespace App\Modules\TransactionEntry\Application;
 
 use App\Modules\TransactionEntry\Contracts\FinancialEvent;
+use App\Modules\TransactionEntry\Contracts\FinancialEventChange;
+use App\Modules\TransactionEntry\Contracts\FinancialEventChanges;
 use App\Modules\TransactionEntry\Contracts\FinancialEventResult;
 use App\Modules\TransactionEntry\Contracts\FinancialEvents;
 use App\Modules\TransactionEntry\Domain\Entry;
+use App\Modules\TransactionEntry\Domain\EntryDecision;
+use App\Modules\TransactionEntry\Domain\EntryStatus;
 use App\Modules\TransactionEntry\Domain\FieldType;
 use App\Modules\TransactionEntry\Domain\TransactionType;
 use App\Modules\TransactionEntry\Domain\TransactionTypeMode;
@@ -123,6 +127,35 @@ final class FinancialEventIntake implements FinancialEvents
             ->find($eventId);
 
         return $entry === null ? null : $this->result($entry);
+    }
+
+    public function changes(?string $cursor, int $limit, ?string $clientId = null): FinancialEventChanges
+    {
+        $steps = EntryDecision::query()
+            ->whereIn('entry_id', Entry::query()->where('source', 'integration')->when($clientId !== null, fn ($query) => $query->where('integration_client_id', $clientId))->select('id'))
+            ->where('seq', '>', (int) $cursor)
+            ->orderBy('seq')
+            ->limit($limit)
+            ->get();
+
+        $entries = Entry::query()->whereIn('id', $steps->pluck('entry_id'))->get()->keyBy('id');
+
+        $changes = array_values($steps->map(function (EntryDecision $step) use ($entries): FinancialEventChange {
+            $posted = $step->status === EntryStatus::Posted->value;
+            $entry = $entries[$step->entry_id];
+
+            return new FinancialEventChange(
+                cursor: (string) $step->seq,
+                eventId: $step->entry_id,
+                action: $step->action,
+                status: $step->status,
+                journalId: $posted ? $entry->journal_id : null,
+                journalNumber: $posted ? $entry->journal_number : null,
+                occurredAt: $step->created_at->toIso8601String(),
+            );
+        })->all());
+
+        return new FinancialEventChanges($changes, $changes === [] ? $cursor : $changes[count($changes) - 1]->cursor);
     }
 
     private function result(Entry $entry, bool $replayed = false): FinancialEventResult
