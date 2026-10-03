@@ -1,6 +1,8 @@
 <?php
 
 use App\Modules\Subledger\Contracts\ControlRole;
+use App\Modules\Subledger\Http\CashAccountController;
+use App\Modules\Subledger\Http\CashTransactionController;
 use App\Modules\Subledger\Http\PartyController;
 use App\Modules\Subledger\Http\PostingProfileController;
 use App\Platform\Api\ApiServiceProvider;
@@ -29,4 +31,25 @@ Route::companyScoped(function () {
         ->middleware('permission:posting-profiles.manage')->where('id', ApiServiceProvider::ULID)->name('posting-profiles.update');
     Route::put('posting-profiles/{id}/accounts/{role}', [PostingProfileController::class, 'mapAccount'])
         ->middleware('permission:posting-profiles.manage')->where('id', ApiServiceProvider::ULID)->whereIn('role', array_column(ControlRole::cases(), 'value'))->name('posting-profiles.accounts.update');
+
+    Route::get('cash-accounts', [CashAccountController::class, 'index'])->middleware('permission:cash-accounts.read')->name('cash-accounts.index');
+    Route::post('cash-accounts', [CashAccountController::class, 'store'])->middleware('permission:cash-accounts.manage')->name('cash-accounts.store');
+    Route::get('cash-accounts/{id}', [CashAccountController::class, 'show'])
+        ->middleware('permission:cash-accounts.read')->where('id', ApiServiceProvider::ULID)->name('cash-accounts.show');
+    Route::patch('cash-accounts/{id}', [CashAccountController::class, 'update'])
+        ->middleware('permission:cash-accounts.manage')->where('id', ApiServiceProvider::ULID)->name('cash-accounts.update');
+
+    foreach (['deactivate', 'reactivate'] as $action) {
+        Route::post("cash-accounts/{id}/{$action}", [CashAccountController::class, $action])
+            ->middleware('permission:cash-accounts.manage')->where('id', ApiServiceProvider::ULID)->name("cash-accounts.{$action}");
+    }
+
+    Route::get('cash-transactions', [CashTransactionController::class, 'index'])->middleware('permission:cash-transactions.read')->name('cash-transactions.index');
+    Route::get('cash-transactions/{id}', [CashTransactionController::class, 'show'])
+        ->middleware('permission:cash-transactions.read')->where('id', ApiServiceProvider::ULID)->name('cash-transactions.show');
+
+    foreach (['clear', 'unclear'] as $action) {
+        Route::post("cash-transactions/{id}/{$action}", [CashTransactionController::class, $action])
+            ->middleware('permission:cash-transactions.clear')->where('id', ApiServiceProvider::ULID)->name("cash-transactions.{$action}");
+    }
 });

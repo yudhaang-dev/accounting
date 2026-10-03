@@ -18,7 +18,17 @@ final class ControlAccountRules
     /** @return list<string> messages in the language of the request; empty when the account is valid */
     public function problems(string $companyId, string $accountId, ControlRole $role): array
     {
-        $problems = $this->accounts->roleTargetProblems($companyId, $accountId, [AccountClass::from($role->accountClass())], JournalSource::Subledger);
+        return $this->problemsForClass($companyId, $accountId, AccountClass::from($role->accountClass()));
+    }
+
+    /**
+     * The same rule for any ledger account the subledger owns the balance of, such as a cash account.
+     *
+     * @return list<string> messages in the language of the request; empty when the account is valid
+     */
+    public function problemsForClass(string $companyId, string $accountId, AccountClass $class): array
+    {
+        $problems = $this->accounts->roleTargetProblems($companyId, $accountId, [$class], JournalSource::Subledger);
 
         $account = $this->accounts->find($companyId, $accountId);
 

@@ -110,7 +110,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 - [x] **M6-01** Pihak dan referensi eksternal per `source_system` — SL-FR-01, SL-AC-08 — profil posting pada pihak menyusul di M6-02; layar SPA di M6-12
 - [x] **M6-02** Profil posting dan peran akun kontrol — SL-FR-02 — template COA belum membatasi akun kontrol ke sumber `subledger`, jadi perusahaan mengaturnya sebelum memetakan; layar SPA di M6-12
-- [ ] **M6-03** Rekening kas/bank dan transaksi kas berstatus `cleared` — SL-FR-03, SL-FR-11
+- [x] **M6-03** Rekening kas/bank dan transaksi kas berstatus `cleared` — SL-FR-03, SL-FR-11 — transaksi kas dicatat oleh dokumen di M6-04 (kolom `document_id` belum punya FK); layar SPA di M6-12
 - [ ] **M6-04** Dokumen dan open item; rute subledger dari entri; sumber akun kontrol dan rekening pada aturan posting — SL-FR-04, TE-FR-05, TE-FR-10
 - [ ] **M6-05** Alokasi, uang muka, dan pembatalan alokasi — SL-FR-05, SL-AC-03
 - [ ] **M6-06** Selisih kurs terealisasi — SL-FR-06, SL-AC-02, TE-AC-10
