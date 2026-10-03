@@ -1218,6 +1218,7 @@ export const id = {
             source: 'sumber {{source}}',
             threshold: 'di atas {{amount}}',
             auto: 'disetujui otomatis',
+            stages_one: '{{count}} tahap persetujuan',
             stages_other: '{{count}} tahap persetujuan',
             autoPost: 'diposting otomatis',
         },
