@@ -931,6 +931,8 @@ export const id = {
         },
         allReversals: 'Semua',
         reversalFilter: 'Pembalikan terjadwal',
+        failedReversals_one:
+            'Satu pembalikan terjadwal gagal dan menunggu tindakan.',
         failedReversals_other:
             '{{count}} pembalikan terjadwal gagal dan menunggu tindakan.',
         showFailedReversals: 'Tampilkan',
