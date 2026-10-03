@@ -2,6 +2,7 @@
 
 use App\Modules\TransactionEntry\Http\EntryController;
 use App\Modules\TransactionEntry\Http\JournalReversalController;
+use App\Modules\TransactionEntry\Http\RecurringScheduleController;
 use App\Modules\TransactionEntry\Http\TransactionTypeController;
 use App\Modules\TransactionEntry\Http\TransactionTypeVersionController;
 use App\Platform\Api\ApiServiceProvider;
@@ -32,6 +33,15 @@ Route::companyScoped(function () {
         ->middleware('permission:entries.read')->where('id', ApiServiceProvider::ULID)->name('entries.show');
     Route::patch('entries/{id}', [EntryController::class, 'update'])
         ->middleware('permission:entries.create')->where('id', ApiServiceProvider::ULID)->name('entries.update');
+
+    Route::get('recurring-schedules', [RecurringScheduleController::class, 'index'])->middleware('permission:recurring-schedules.read')->name('recurring-schedules.index');
+    Route::post('recurring-schedules', [RecurringScheduleController::class, 'store'])->middleware('permission:recurring-schedules.manage')->name('recurring-schedules.store');
+    Route::get('recurring-schedules/{id}', [RecurringScheduleController::class, 'show'])
+        ->middleware('permission:recurring-schedules.read')->where('id', ApiServiceProvider::ULID)->name('recurring-schedules.show');
+    Route::put('recurring-schedules/{id}', [RecurringScheduleController::class, 'update'])
+        ->middleware('permission:recurring-schedules.manage')->where('id', ApiServiceProvider::ULID)->name('recurring-schedules.update');
+    Route::post('recurring-schedules/{id}/skip', [RecurringScheduleController::class, 'skip'])
+        ->middleware('permission:recurring-schedules.manage')->where('id', ApiServiceProvider::ULID)->name('recurring-schedules.skip');
 
     Route::post('journals/{id}/reverse', [JournalReversalController::class, 'store'])
         ->middleware('permission:entries.reverse')->where('id', ApiServiceProvider::ULID)->name('journals.reverse');

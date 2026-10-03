@@ -48,5 +48,7 @@ return [
     'value_account_not_allowed' => 'The account of the field :field is not one of the accounts allowed for it.',
     'invalid_transition' => 'The action does not apply to an entry that is :status.',
     'line_outside_scope' => 'This line is outside your data scope: it needs a value of each dimension you are limited to, within your scope.',
+    'schedule_nothing_to_skip' => 'The schedule has no date left to skip.',
+    'schedule_end_before_start' => 'The end date cannot be before the start date.',
 
 ];

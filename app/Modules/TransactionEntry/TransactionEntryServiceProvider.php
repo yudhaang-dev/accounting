@@ -7,6 +7,7 @@ use App\Modules\TransactionEntry\Application\EloquentTransactionTypeKeys;
 use App\Modules\TransactionEntry\Application\EloquentUnfinishedEntries;
 use App\Modules\TransactionEntry\Application\FinancialEventIntake;
 use App\Modules\TransactionEntry\Console\ReverseScheduledEntries;
+use App\Modules\TransactionEntry\Console\RunRecurringSchedules;
 use App\Modules\TransactionEntry\Contracts\ApprovalPolicies;
 use App\Modules\TransactionEntry\Contracts\FinancialEvents;
 use App\Modules\TransactionEntry\Contracts\TransactionTypeKeys;
@@ -21,7 +22,11 @@ class TransactionEntryServiceProvider extends ModuleServiceProvider
         parent::boot();
 
         // Hourly, because the date of a scheduled reversal is the date in the time zone of the company.
-        $this->callAfterResolving(Schedule::class, fn (Schedule $schedule) => $schedule->command('entries:reverse-scheduled')->hourly());
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            $schedule->command('entries:reverse-scheduled')->hourly();
+            // Hourly for the same reason: the date of an occurrence is the date in the time zone of the company.
+            $schedule->command('entries:run-recurring')->hourly();
+        });
     }
 
     public static function tablePrefix(): string
@@ -31,7 +36,7 @@ class TransactionEntryServiceProvider extends ModuleServiceProvider
 
     public function register(): void
     {
-        $this->commands([ReverseScheduledEntries::class]);
+        $this->commands([ReverseScheduledEntries::class, RunRecurringSchedules::class]);
 
         $this->app->bind(ApprovalPolicies::class, EloquentApprovalPolicies::class);
         $this->app->bind(FinancialEvents::class, FinancialEventIntake::class);

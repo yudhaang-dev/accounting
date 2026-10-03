@@ -7682,6 +7682,409 @@
                 }
             }
         },
+        "/companies/{companyId}/recurring-schedules": {
+            "get": {
+                "operationId": "recurring-schedules.index",
+                "summary": "Schedules of the company; `filter[status]` narrows them. Those with a `last_error` are the ones that are stuck",
+                "tags": [
+                    "RecurringSchedule"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[status]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "paused",
+                                "completed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `RecurringScheduleResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/RecurringScheduleResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "recurring-schedules.store",
+                "summary": "Creates a schedule that makes an entry of the transaction type on `start_date` and then every\n`interval_count` of the `frequency` (daily, weekly, monthly, quarterly, yearly), until `end_date`.\nThe entries are left as `draft` or `submitted` (`initial_status`)",
+                "tags": [
+                    "RecurringSchedule"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RecurringScheduleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`RecurringScheduleResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RecurringScheduleResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/recurring-schedules/{id}": {
+            "get": {
+                "operationId": "recurring-schedules.show",
+                "tags": [
+                    "RecurringSchedule"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`RecurringScheduleResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RecurringScheduleResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "recurring-schedules.update",
+                "summary": "Replaces the template, end date, status (`active` or `paused`) and where entries are left. `lock_version` is required",
+                "tags": [
+                    "RecurringSchedule"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateRecurringScheduleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`RecurringScheduleResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RecurringScheduleResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/recurring-schedules/{id}/skip": {
+            "post": {
+                "operationId": "recurring-schedules.skip",
+                "summary": "Gives up the date the schedule is stuck at, or waiting at, and goes on to the next",
+                "tags": [
+                    "RecurringSchedule"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`RecurringScheduleResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RecurringScheduleResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/periods/{id}/revaluation": {
             "post": {
                 "operationId": "periods.revaluation",
@@ -9768,6 +10171,8 @@
                                 "financial-events.create",
                                 "financial-events.read",
                                 "financial-events.read-own",
+                                "recurring-schedules.read",
+                                "recurring-schedules.manage",
                                 "journals.read",
                                 "journals.post-soft-closed",
                                 "journals.override-source",
@@ -12006,6 +12411,275 @@
                 ],
                 "title": "RecordExchangeRateRequest"
             },
+            "RecurringScheduleRequest": {
+                "type": "object",
+                "description": "A recurring schedule (TE-FR-14). The template carries what an entry carries except its date, which\nis the date of the occurrence: fixed values only, no formulas.",
+                "properties": {
+                    "transaction_type_key": {
+                        "type": "string",
+                        "maxLength": 64
+                    },
+                    "frequency": {
+                        "type": "string",
+                        "enum": [
+                            "daily",
+                            "weekly",
+                            "monthly",
+                            "quarterly",
+                            "yearly"
+                        ]
+                    },
+                    "interval_count": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 366
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "transaction_type_version": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1
+                    },
+                    "end_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    },
+                    "initial_status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "submitted"
+                        ]
+                    },
+                    "template": {
+                        "type": "object",
+                        "properties": {
+                            "description": {
+                                "type": "string",
+                                "maxLength": 500
+                            },
+                            "document_date": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "date"
+                            },
+                            "currency": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "pattern": "^[A-Z]{3}$"
+                            },
+                            "exchange_rate": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 40
+                            },
+                            "lines": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "account_id": {
+                                            "type": "string",
+                                            "minLength": 26,
+                                            "maxLength": 26
+                                        },
+                                        "debit": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 40
+                                        },
+                                        "credit": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 40
+                                        },
+                                        "description": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 500
+                                        },
+                                        "dimensions": {
+                                            "type": [
+                                                "array",
+                                                "null"
+                                            ],
+                                            "items": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "minLength": 26,
+                                                "maxLength": 26
+                                            }
+                                        },
+                                        "currency": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "pattern": "^[A-Z]{3}$"
+                                        },
+                                        "exchange_rate": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 40
+                                        }
+                                    },
+                                    "required": [
+                                        "account_id"
+                                    ]
+                                },
+                                "maxItems": 500
+                            },
+                            "values": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "required": [
+                            "description"
+                        ]
+                    }
+                },
+                "required": [
+                    "transaction_type_key",
+                    "frequency",
+                    "start_date",
+                    "name",
+                    "template"
+                ],
+                "title": "RecurringScheduleRequest"
+            },
+            "RecurringScheduleResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "transaction_type_key": {
+                        "type": "string"
+                    },
+                    "transaction_type_version": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "template": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "frequency": {
+                        "type": "string"
+                    },
+                    "interval_count": {
+                        "type": "integer"
+                    },
+                    "start_date": {
+                        "type": "string"
+                    },
+                    "end_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "initial_status": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "next_run_on": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "last_run_on": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "last_entry_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "last_error": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "last_error_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_by": {
+                        "type": "integer"
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "transaction_type_key",
+                    "transaction_type_version",
+                    "template",
+                    "frequency",
+                    "interval_count",
+                    "start_date",
+                    "end_date",
+                    "initial_status",
+                    "status",
+                    "next_run_on",
+                    "last_run_on",
+                    "last_entry_id",
+                    "last_error",
+                    "last_error_at",
+                    "created_by",
+                    "lock_version"
+                ],
+                "title": "RecurringScheduleResource"
+            },
             "ReopenFiscalYearRequest": {
                 "type": "object",
                 "properties": {
@@ -12829,6 +13503,158 @@
                 ],
                 "title": "UpdateRateTypeRequest"
             },
+            "UpdateRecurringScheduleRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "paused"
+                        ]
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "transaction_type_version": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1
+                    },
+                    "end_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    },
+                    "initial_status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "submitted"
+                        ]
+                    },
+                    "template": {
+                        "type": "object",
+                        "properties": {
+                            "description": {
+                                "type": "string",
+                                "maxLength": 500
+                            },
+                            "document_date": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "date"
+                            },
+                            "currency": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "pattern": "^[A-Z]{3}$"
+                            },
+                            "exchange_rate": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 40
+                            },
+                            "lines": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "account_id": {
+                                            "type": "string",
+                                            "minLength": 26,
+                                            "maxLength": 26
+                                        },
+                                        "debit": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 40
+                                        },
+                                        "credit": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 40
+                                        },
+                                        "description": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 500
+                                        },
+                                        "dimensions": {
+                                            "type": [
+                                                "array",
+                                                "null"
+                                            ],
+                                            "items": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "minLength": 26,
+                                                "maxLength": 26
+                                            }
+                                        },
+                                        "currency": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "pattern": "^[A-Z]{3}$"
+                                        },
+                                        "exchange_rate": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 40
+                                        }
+                                    },
+                                    "required": [
+                                        "account_id"
+                                    ]
+                                },
+                                "maxItems": 500
+                            },
+                            "values": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "required": [
+                            "description"
+                        ]
+                    }
+                },
+                "required": [
+                    "lock_version",
+                    "name",
+                    "template"
+                ],
+                "title": "UpdateRecurringScheduleRequest"
+            },
             "UpdateRoleRequest": {
                 "type": "object",
                 "properties": {
@@ -12880,6 +13706,8 @@
                                 "financial-events.create",
                                 "financial-events.read",
                                 "financial-events.read-own",
+                                "recurring-schedules.read",
+                                "recurring-schedules.manage",
                                 "journals.read",
                                 "journals.post-soft-closed",
                                 "journals.override-source",
@@ -12946,6 +13774,8 @@
                                 "financial-events.create",
                                 "financial-events.read",
                                 "financial-events.read-own",
+                                "recurring-schedules.read",
+                                "recurring-schedules.manage",
                                 "journals.read",
                                 "journals.post-soft-closed",
                                 "journals.override-source",

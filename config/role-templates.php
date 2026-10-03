@@ -7,7 +7,7 @@
 | workspace so that the first user can set the company up and work in it.
 */
 
-$read = ['company.read', 'accounts.read', 'dimensions.read', 'currencies.read', 'exchange-rates.read', 'periods.read', 'entries.read', 'journals.read', 'financial-events.read', 'reports.read'];
+$read = ['company.read', 'accounts.read', 'dimensions.read', 'currencies.read', 'exchange-rates.read', 'periods.read', 'entries.read', 'journals.read', 'financial-events.read', 'recurring-schedules.read', 'reports.read'];
 
 return [
 
@@ -24,7 +24,7 @@ return [
                 'memberships.read', 'memberships.manage',
                 'roles.read', 'roles.manage',
                 'integration-clients.manage',
-                'policies.manage',
+                'policies.manage', 'recurring-schedules.manage',
                 'reports.export',
             ],
         ],
@@ -32,7 +32,7 @@ return [
             'name' => 'preparer',
             'description' => 'Creates and submits entries.',
             'grant_to_creator' => true,
-            'permissions' => [...$read, 'entries.create', 'entries.submit', 'entries.reverse'],
+            'permissions' => [...$read, 'entries.create', 'entries.submit', 'entries.reverse', 'recurring-schedules.manage'],
         ],
         [
             'name' => 'approver',

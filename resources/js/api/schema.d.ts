@@ -1567,6 +1567,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/recurring-schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Schedules of the company; `filter[status]` narrows them. Those with a `last_error` are the ones that are stuck */
+        get: operations["recurring-schedules.index"];
+        put?: never;
+        /**
+         * Creates a schedule that makes an entry of the transaction type on `start_date` and then every
+         *     `interval_count` of the `frequency` (daily, weekly, monthly, quarterly, yearly), until `end_date`.
+         *     The entries are left as `draft` or `submitted` (`initial_status`)
+         */
+        post: operations["recurring-schedules.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/recurring-schedules/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recurring-schedules.show"];
+        /** Replaces the template, end date, status (`active` or `paused`) and where entries are left. `lock_version` is required */
+        put: operations["recurring-schedules.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/recurring-schedules/{id}/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Gives up the date the schedule is stuck at, or waiting at, and goes on to the next */
+        post: operations["recurring-schedules.skip"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/periods/{id}/revaluation": {
         parameters: {
             query?: never;
@@ -2050,7 +2106,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -2596,6 +2652,65 @@ export interface components {
             /** @description Up to 12 integer and 12 decimal digits, greater than zero, as a decimal string (API-TR-05). */
             rate: string;
         };
+        /**
+         * RecurringScheduleRequest
+         * @description A recurring schedule (TE-FR-14). The template carries what an entry carries except its date, which
+         *     is the date of the occurrence: fixed values only, no formulas.
+         */
+        RecurringScheduleRequest: {
+            transaction_type_key: string;
+            /** @enum {string} */
+            frequency: "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
+            interval_count?: number;
+            /** Format: date */
+            start_date: string;
+            name: string;
+            transaction_type_version?: number | null;
+            /** Format: date */
+            end_date?: string | null;
+            /** @enum {string} */
+            initial_status?: "draft" | "submitted";
+            template: {
+                description: string;
+                /** Format: date */
+                document_date?: string | null;
+                currency?: string | null;
+                exchange_rate?: string | null;
+                lines?: {
+                    account_id: string;
+                    debit?: string | null;
+                    credit?: string | null;
+                    description?: string | null;
+                    dimensions?: (string | null)[] | null;
+                    currency?: string | null;
+                    exchange_rate?: string | null;
+                }[];
+                values?: string[];
+            };
+        };
+        /** RecurringScheduleResource */
+        RecurringScheduleResource: {
+            id: string;
+            name: string;
+            transaction_type_key: string;
+            transaction_type_version: number | null;
+            template: {
+                [key: string]: unknown;
+            };
+            frequency: string;
+            interval_count: number;
+            start_date: string;
+            end_date: string | null;
+            initial_status: string;
+            status: string;
+            next_run_on: string | null;
+            last_run_on: string | null;
+            last_entry_id: string | null;
+            last_error: string | null;
+            last_error_at: string | null;
+            created_by: number;
+            lock_version: number;
+        };
         /** ReopenFiscalYearRequest */
         ReopenFiscalYearRequest: {
             reason: string;
@@ -2800,18 +2915,47 @@ export interface components {
             label?: string;
             max_age_days?: number | null;
         };
+        /** UpdateRecurringScheduleRequest */
+        UpdateRecurringScheduleRequest: {
+            lock_version: number;
+            /** @enum {string} */
+            status?: "active" | "paused";
+            name: string;
+            transaction_type_version?: number | null;
+            /** Format: date */
+            end_date?: string | null;
+            /** @enum {string} */
+            initial_status?: "draft" | "submitted";
+            template: {
+                description: string;
+                /** Format: date */
+                document_date?: string | null;
+                currency?: string | null;
+                exchange_rate?: string | null;
+                lines?: {
+                    account_id: string;
+                    debit?: string | null;
+                    credit?: string | null;
+                    description?: string | null;
+                    dimensions?: (string | null)[] | null;
+                    currency?: string | null;
+                    exchange_rate?: string | null;
+                }[];
+                values?: string[];
+            };
+        };
         /** UpdateRoleRequest */
         UpdateRoleRequest: {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -6227,6 +6371,174 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["RateTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "recurring-schedules.index": {
+        parameters: {
+            query?: {
+                "filter[status]"?: "active" | "paused" | "completed";
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `RecurringScheduleResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecurringScheduleResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "recurring-schedules.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecurringScheduleRequest"];
+            };
+        };
+        responses: {
+            /** @description `RecurringScheduleResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecurringScheduleResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "recurring-schedules.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `RecurringScheduleResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecurringScheduleResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "recurring-schedules.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRecurringScheduleRequest"];
+            };
+        };
+        responses: {
+            /** @description `RecurringScheduleResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecurringScheduleResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "recurring-schedules.skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `RecurringScheduleResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecurringScheduleResource"];
                     };
                 };
             };

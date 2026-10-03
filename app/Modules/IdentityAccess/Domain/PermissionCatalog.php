@@ -20,6 +20,7 @@ final class PermissionCatalog
         'transaction-types' => ['read'],
         'entries' => ['read', 'create', 'submit', 'approve', 'reject', 'post', 'reverse'],
         'financial-events' => ['create', 'read', 'read-own'],
+        'recurring-schedules' => ['read', 'manage'],
         'journals' => ['read', 'post-soft-closed', 'override-source'],
         'opening-balances' => ['import'],
         'fiscal-years' => ['close', 'reopen'],

@@ -48,5 +48,7 @@ return [
     'value_account_not_allowed' => 'Akun pada field :field bukan salah satu akun yang diizinkan.',
     'invalid_transition' => 'Aksi tidak berlaku untuk entri yang berstatus :status.',
     'line_outside_scope' => 'Baris ini di luar cakupan data Anda: baris harus memuat nilai untuk setiap dimensi yang membatasi Anda, di dalam cakupan Anda.',
+    'schedule_nothing_to_skip' => 'Jadwal tidak memiliki tanggal yang tersisa untuk dilewati.',
+    'schedule_end_before_start' => 'Tanggal akhir tidak boleh sebelum tanggal mulai.',
 
 ];
