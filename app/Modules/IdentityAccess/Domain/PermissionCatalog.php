@@ -16,6 +16,7 @@ final class PermissionCatalog
         'dimensions' => ['read', 'manage'],
         'currencies' => ['read', 'manage'],
         'parties' => ['read', 'manage'],
+        'posting-profiles' => ['read', 'manage'],
         'exchange-rates' => ['read', 'manage'],
         'periods' => ['read', 'manage', 'close', 'reopen', 'revalue'],
         'transaction-types' => ['read'],

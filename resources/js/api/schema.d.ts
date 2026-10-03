@@ -1606,6 +1606,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/posting-profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Posting profiles of the company ordered by name, each with the account that plays every
+         *     control role now (`null` when it is not mapped). `valid` is false when that account no longer
+         *     qualifies, for example because it was deactivated
+         */
+        get: operations["posting-profiles.index"];
+        put?: never;
+        /**
+         * Adds a profile. The first profile of the company becomes the default; later ones only when
+         *     `is_default` is true, which moves the default
+         */
+        post: operations["posting-profiles.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/posting-profiles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["posting-profiles.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Renames the profile or makes it the default. The default cannot be cleared, only moved to
+         *     another profile. `lock_version` is required
+         */
+        patch: operations["posting-profiles.update"];
+        trace?: never;
+    };
+    "/companies/{companyId}/posting-profiles/{id}/accounts/{role}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Maps a control role of the profile to an account as a new version; the change is audited.
+         *     The account must be an active leaf of the right class (asset for `receivables_control`,
+         *     liability for `payables_control`) that accepts the `subledger` source only. `lock_version`
+         *     is the latest version of that role (0 when never mapped). `effective_date` defaults to today,
+         *     or to all dates for the first mapping
+         */
+        put: operations["posting-profiles.accounts.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/rate-types": {
         parameters: {
             query?: never;
@@ -2301,11 +2369,18 @@ export interface components {
             is_customer?: boolean;
             is_supplier?: boolean;
             tax_id?: string | null;
+            /** @description The profile deciding its control accounts; empty means the default profile (SL-FR-02). */
+            posting_profile_id?: string | null;
             /** @description How source systems refer to this party; one reference belongs to one party per source system. */
             external_refs?: {
                 source_system: string;
                 external_ref: string;
             }[];
+        };
+        /** CreatePostingProfileRequest */
+        CreatePostingProfileRequest: {
+            name: string;
+            is_default?: boolean;
         };
         /** CreateRateTypeRequest */
         CreateRateTypeRequest: {
@@ -2320,7 +2395,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -2793,6 +2868,13 @@ export interface components {
             /** @description Same as `version`, named as the concurrency field the update expects (API-TR-14). */
             lock_version: number;
         };
+        /** MapControlAccountRequest */
+        MapControlAccountRequest: {
+            lock_version: number;
+            account_id: string;
+            /** Format: date */
+            effective_date?: string | null;
+        };
         /** MeResource */
         MeResource: {
             id: number;
@@ -2847,6 +2929,7 @@ export interface components {
             is_customer: boolean;
             is_supplier: boolean;
             tax_id: string | null;
+            posting_profile_id: string | null;
             status: string;
             external_refs: {
                 source_system: string;
@@ -3174,10 +3257,18 @@ export interface components {
             is_customer?: boolean;
             is_supplier?: boolean;
             tax_id?: string | null;
+            /** @description The profile deciding its control accounts; empty means the default profile (SL-FR-02). */
+            posting_profile_id?: string | null;
             external_refs?: {
                 source_system: string;
                 external_ref: string;
             }[];
+        };
+        /** UpdatePostingProfileRequest */
+        UpdatePostingProfileRequest: {
+            lock_version: number;
+            name?: string;
+            is_default?: boolean;
         };
         /** UpdateRateTypeRequest */
         UpdateRateTypeRequest: {
@@ -3219,13 +3310,13 @@ export interface components {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -6754,6 +6845,210 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "posting-profiles.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            name: string;
+                            is_default: boolean;
+                            lock_version: number;
+                            accounts: {
+                                key: string;
+                                account_id: string | null;
+                                effective_date: string | null;
+                                valid: string;
+                                /** @description The version of the mapping (0 when none), named as the concurrency field (API-TR-14). */
+                                lock_version: number;
+                            }[];
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "posting-profiles.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePostingProfileRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            name: string;
+                            is_default: boolean;
+                            lock_version: number;
+                            accounts: {
+                                key: string;
+                                account_id: string | null;
+                                effective_date: string | null;
+                                valid: string;
+                                /** @description The version of the mapping (0 when none), named as the concurrency field (API-TR-14). */
+                                lock_version: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "posting-profiles.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            name: string;
+                            is_default: boolean;
+                            lock_version: number;
+                            accounts: {
+                                key: string;
+                                account_id: string | null;
+                                effective_date: string | null;
+                                valid: string;
+                                /** @description The version of the mapping (0 when none), named as the concurrency field (API-TR-14). */
+                                lock_version: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "posting-profiles.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePostingProfileRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            name: string;
+                            is_default: boolean;
+                            lock_version: number;
+                            accounts: {
+                                key: string;
+                                account_id: string | null;
+                                effective_date: string | null;
+                                valid: string;
+                                /** @description The version of the mapping (0 when none), named as the concurrency field (API-TR-14). */
+                                lock_version: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "posting-profiles.accounts.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+                role: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MapControlAccountRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            name: string;
+                            is_default: boolean;
+                            lock_version: number;
+                            accounts: {
+                                key: string;
+                                account_id: string | null;
+                                effective_date: string | null;
+                                valid: string;
+                                /** @description The version of the mapping (0 when none), named as the concurrency field (API-TR-14). */
+                                lock_version: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "rate-types.index": {

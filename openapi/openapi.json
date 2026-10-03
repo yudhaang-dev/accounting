@@ -7930,6 +7930,575 @@
                 }
             }
         },
+        "/companies/{companyId}/posting-profiles": {
+            "get": {
+                "operationId": "posting-profiles.index",
+                "summary": "Posting profiles of the company ordered by name, each with the account that plays every\ncontrol role now (`null` when it is not mapped). `valid` is false when that account no longer\nqualifies, for example because it was deactivated",
+                "tags": [
+                    "PostingProfile"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "is_default": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "lock_version": {
+                                                        "type": "integer"
+                                                    },
+                                                    "accounts": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "key": {
+                                                                    "type": "string"
+                                                                },
+                                                                "account_id": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "effective_date": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "valid": {
+                                                                    "type": "string"
+                                                                },
+                                                                "lock_version": {
+                                                                    "type": "integer",
+                                                                    "description": "The version of the mapping (0 when none), named as the concurrency field (API-TR-14)."
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "key",
+                                                                "account_id",
+                                                                "effective_date",
+                                                                "valid",
+                                                                "lock_version"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "is_default",
+                                                    "lock_version",
+                                                    "accounts"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "posting-profiles.store",
+                "summary": "Adds a profile. The first profile of the company becomes the default; later ones only when\n`is_default` is true, which moves the default",
+                "tags": [
+                    "PostingProfile"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreatePostingProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "is_default": {
+                                                    "type": "boolean"
+                                                },
+                                                "lock_version": {
+                                                    "type": "integer"
+                                                },
+                                                "accounts": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "account_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "effective_date": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "valid": {
+                                                                "type": "string"
+                                                            },
+                                                            "lock_version": {
+                                                                "type": "integer",
+                                                                "description": "The version of the mapping (0 when none), named as the concurrency field (API-TR-14)."
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "account_id",
+                                                            "effective_date",
+                                                            "valid",
+                                                            "lock_version"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "is_default",
+                                                "lock_version",
+                                                "accounts"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/posting-profiles/{id}": {
+            "get": {
+                "operationId": "posting-profiles.show",
+                "tags": [
+                    "PostingProfile"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "is_default": {
+                                                    "type": "boolean"
+                                                },
+                                                "lock_version": {
+                                                    "type": "integer"
+                                                },
+                                                "accounts": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "account_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "effective_date": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "valid": {
+                                                                "type": "string"
+                                                            },
+                                                            "lock_version": {
+                                                                "type": "integer",
+                                                                "description": "The version of the mapping (0 when none), named as the concurrency field (API-TR-14)."
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "account_id",
+                                                            "effective_date",
+                                                            "valid",
+                                                            "lock_version"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "is_default",
+                                                "lock_version",
+                                                "accounts"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "posting-profiles.update",
+                "summary": "Renames the profile or makes it the default. The default cannot be cleared, only moved to\nanother profile. `lock_version` is required",
+                "tags": [
+                    "PostingProfile"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePostingProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "is_default": {
+                                                    "type": "boolean"
+                                                },
+                                                "lock_version": {
+                                                    "type": "integer"
+                                                },
+                                                "accounts": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "account_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "effective_date": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "valid": {
+                                                                "type": "string"
+                                                            },
+                                                            "lock_version": {
+                                                                "type": "integer",
+                                                                "description": "The version of the mapping (0 when none), named as the concurrency field (API-TR-14)."
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "account_id",
+                                                            "effective_date",
+                                                            "valid",
+                                                            "lock_version"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "is_default",
+                                                "lock_version",
+                                                "accounts"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/posting-profiles/{id}/accounts/{role}": {
+            "put": {
+                "operationId": "posting-profiles.accounts.update",
+                "summary": "Maps a control role of the profile to an account as a new version; the change is audited.\nThe account must be an active leaf of the right class (asset for `receivables_control`,\nliability for `payables_control`) that accepts the `subledger` source only. `lock_version`\nis the latest version of that role (0 when never mapped). `effective_date` defaults to today,\nor to all dates for the first mapping",
+                "tags": [
+                    "PostingProfile"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MapControlAccountRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "is_default": {
+                                                    "type": "boolean"
+                                                },
+                                                "lock_version": {
+                                                    "type": "integer"
+                                                },
+                                                "accounts": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "account_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "effective_date": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "valid": {
+                                                                "type": "string"
+                                                            },
+                                                            "lock_version": {
+                                                                "type": "integer",
+                                                                "description": "The version of the mapping (0 when none), named as the concurrency field (API-TR-14)."
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "account_id",
+                                                            "effective_date",
+                                                            "valid",
+                                                            "lock_version"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "is_default",
+                                                "lock_version",
+                                                "accounts"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/rate-types": {
             "get": {
                 "operationId": "rate-types.index",
@@ -11180,6 +11749,15 @@
                         ],
                         "maxLength": 64
                     },
+                    "posting_profile_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The profile deciding its control accounts; empty means the default profile (SL-FR-02).",
+                        "minLength": 26,
+                        "maxLength": 26
+                    },
                     "external_refs": {
                         "type": "array",
                         "description": "How source systems refer to this party; one reference belongs to one party per source system.",
@@ -11207,6 +11785,22 @@
                     "name"
                 ],
                 "title": "CreatePartyRequest"
+            },
+            "CreatePostingProfileRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "title": "CreatePostingProfileRequest"
             },
             "CreateRateTypeRequest": {
                 "type": "object",
@@ -11269,6 +11863,8 @@
                                 "currencies.manage",
                                 "parties.read",
                                 "parties.manage",
+                                "posting-profiles.read",
+                                "posting-profiles.manage",
                                 "exchange-rates.read",
                                 "exchange-rates.manage",
                                 "periods.read",
@@ -13295,6 +13891,32 @@
                 ],
                 "title": "LedgerPolicyResource"
             },
+            "MapControlAccountRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "account_id": {
+                        "type": "string",
+                        "minLength": 26,
+                        "maxLength": 26
+                    },
+                    "effective_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    }
+                },
+                "required": [
+                    "lock_version",
+                    "account_id"
+                ],
+                "title": "MapControlAccountRequest"
+            },
             "MeResource": {
                 "type": "object",
                 "properties": {
@@ -13491,6 +14113,12 @@
                             "null"
                         ]
                     },
+                    "posting_profile_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "status": {
                         "type": "string"
                     },
@@ -13522,6 +14150,7 @@
                     "is_customer",
                     "is_supplier",
                     "tax_id",
+                    "posting_profile_id",
                     "status",
                     "external_refs",
                     "lock_version"
@@ -14775,6 +15404,15 @@
                         ],
                         "maxLength": 64
                     },
+                    "posting_profile_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The profile deciding its control accounts; empty means the default profile (SL-FR-02).",
+                        "minLength": 26,
+                        "maxLength": 26
+                    },
                     "external_refs": {
                         "type": "array",
                         "items": {
@@ -14801,6 +15439,26 @@
                     "lock_version"
                 ],
                 "title": "UpdatePartyRequest"
+            },
+            "UpdatePostingProfileRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "lock_version"
+                ],
+                "title": "UpdatePostingProfileRequest"
             },
             "UpdateRateTypeRequest": {
                 "type": "object",
@@ -15014,6 +15672,8 @@
                                 "currencies.manage",
                                 "parties.read",
                                 "parties.manage",
+                                "posting-profiles.read",
+                                "posting-profiles.manage",
                                 "exchange-rates.read",
                                 "exchange-rates.manage",
                                 "periods.read",
@@ -15084,6 +15744,8 @@
                                 "currencies.manage",
                                 "parties.read",
                                 "parties.manage",
+                                "posting-profiles.read",
+                                "posting-profiles.manage",
                                 "exchange-rates.read",
                                 "exchange-rates.manage",
                                 "periods.read",

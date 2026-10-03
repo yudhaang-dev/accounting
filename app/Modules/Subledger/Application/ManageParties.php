@@ -5,6 +5,7 @@ namespace App\Modules\Subledger\Application;
 use App\Modules\Subledger\Domain\Party;
 use App\Modules\Subledger\Domain\PartyExternalRef;
 use App\Modules\Subledger\Domain\PartyStatus;
+use App\Modules\Subledger\Domain\PostingProfile;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Platform\Audit\Audit;
@@ -18,7 +19,7 @@ use Illuminate\Validation\ValidationException;
  */
 final class ManageParties
 {
-    private const FIELDS = ['name', 'is_customer', 'is_supplier', 'tax_id'];
+    private const FIELDS = ['name', 'is_customer', 'is_supplier', 'tax_id', 'posting_profile_id'];
 
     public function __construct(private readonly Audit $audit) {}
 
@@ -30,6 +31,7 @@ final class ManageParties
     public function create(array $data): Party
     {
         return $this->guarded(fn () => DB::transaction(function () use ($data): Party {
+            $this->assertProfile($data['posting_profile_id'] ?? null);
             $party = Party::create(array_intersect_key($data, array_flip(self::FIELDS)));
             $this->addRefs($party, $data['external_refs'] ?? []);
             $party = $this->loaded($party);
@@ -56,6 +58,7 @@ final class ManageParties
             $before = $this->snapshot($this->loaded($party));
 
             $changes = array_intersect_key($data, array_flip(self::FIELDS));
+            $this->assertProfile($changes['posting_profile_id'] ?? null);
 
             if (! ($changes['is_customer'] ?? $party->is_customer) && ! ($changes['is_supplier'] ?? $party->is_supplier)) {
                 throw ValidationException::withMessages(['is_customer' => [__('parties.role_required')]]);
@@ -144,6 +147,14 @@ final class ManageParties
         }
 
         return $added;
+    }
+
+    /** @throws ValidationException when the profile is not one of this company */
+    private function assertProfile(?string $profileId): void
+    {
+        if ($profileId !== null && ! PostingProfile::query()->whereKey($profileId)->exists()) {
+            throw ValidationException::withMessages(['posting_profile_id' => [__('posting_profiles.unknown_profile')]]);
+        }
     }
 
     /** A concurrent request may take the same reference between the check and the insert. */
