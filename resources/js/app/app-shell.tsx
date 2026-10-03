@@ -5,6 +5,7 @@ import {
     CalendarRangeIcon,
     CoinsIcon,
     FileTextIcon,
+    LayersIcon,
     ChevronsUpDownIcon,
     HouseIcon,
     ListTreeIcon,
@@ -108,6 +109,12 @@ const NAV = [
         to: '/w/$companyId/entries',
         label: 'app.navEntries',
         icon: FileTextIcon,
+        permission: 'entries.read',
+    },
+    {
+        to: '/w/$companyId/transaction-types',
+        label: 'app.navTransactionTypes',
+        icon: LayersIcon,
         permission: 'entries.read',
     },
     {

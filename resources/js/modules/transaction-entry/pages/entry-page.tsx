@@ -117,10 +117,12 @@ export function EntryPage({
 
     const debit = sumDecimals(entry.lines.map((line) => line.debit));
     const credit = sumDecimals(entry.lines.map((line) => line.credit));
-    const who = (id: number) =>
-        id === currentUserId
-            ? t('entries.detail.you')
-            : t('entries.detail.user', { id });
+    const who = (id: number | null) =>
+        id === null
+            ? t('entries.detail.client')
+            : id === currentUserId
+              ? t('entries.detail.you')
+              : t('entries.detail.user', { id });
     const busy = act.isPending;
 
     return (

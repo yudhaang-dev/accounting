@@ -1,0 +1,151 @@
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { Badge } from '@/components/ui/badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { postingRuleText } from '@/modules/transaction-entry/components/posting-rule-text';
+import { accountNamesQuery } from '@/modules/transaction-entry/entries';
+import type { TypeVersion } from '@/modules/transaction-entry/transaction-types';
+
+/** A published or retired version as the package it is (TE-FR-02): immutable, so only read here. */
+export function VersionSummary({
+    companyId,
+    version,
+}: {
+    companyId: string;
+    version: TypeVersion;
+}) {
+    const { t } = useTranslation();
+    const accounts = useQuery(accountNamesQuery(companyId));
+    const fields = version.fields ?? [];
+    const rules = version.posting_rules ?? [];
+    const accountName = (id: string) => {
+        const account = accounts.data?.[id];
+
+        return account ? `${account.code} · ${account.name}` : undefined;
+    };
+
+    return (
+        <div className="flex flex-col gap-5 text-sm">
+            <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+                <div className="flex flex-col gap-0.5">
+                    <dt className="text-muted-foreground">
+                        {t('transactionTypes.designer.mode')}
+                    </dt>
+                    <dd className="font-medium">
+                        {t(`transactionTypes.modes.${version.mode}`)}
+                    </dd>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                    <dt className="text-muted-foreground">
+                        {t('transactionTypes.designer.currencyPolicy')}
+                    </dt>
+                    <dd className="font-medium">
+                        {version.allowed_currencies?.length
+                            ? version.allowed_currencies.join(', ')
+                            : t('transactionTypes.designer.anyCurrency')}
+                        {version.allow_rate_input &&
+                            ` · ${t('transactionTypes.designer.allowRateInput')}`}
+                    </dd>
+                </div>
+            </dl>
+
+            {version.mode === 'structured' ? (
+                <>
+                    <section className="flex flex-col gap-2">
+                        <h3 className="font-medium">
+                            {t('transactionTypes.designer.fields')}
+                        </h3>
+                        <div className="overflow-x-auto rounded-lg border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>
+                                            {t(
+                                                'transactionTypes.designer.fieldLabel',
+                                            )}
+                                        </TableHead>
+                                        <TableHead>
+                                            {t(
+                                                'transactionTypes.designer.fieldName',
+                                            )}
+                                        </TableHead>
+                                        <TableHead>
+                                            {t(
+                                                'transactionTypes.designer.fieldType',
+                                            )}
+                                        </TableHead>
+                                        <TableHead />
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {fields.map((field) => (
+                                        <TableRow key={field.name}>
+                                            <TableCell className="font-medium">
+                                                {field.label}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-xs">
+                                                {field.name}
+                                            </TableCell>
+                                            <TableCell>
+                                                {t(
+                                                    `transactionTypes.fieldTypes.${field.type}`,
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {field.required === false ? (
+                                                    <Badge variant="outline">
+                                                        {t(
+                                                            'transactionTypes.import.optional',
+                                                        )}
+                                                    </Badge>
+                                                ) : null}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </section>
+                    <section className="flex flex-col gap-2">
+                        <h3 className="font-medium">
+                            {t('transactionTypes.designer.rules')}
+                        </h3>
+                        <ol className="flex list-decimal flex-col gap-1 ps-5">
+                            {rules.map((rule, index) => (
+                                <li key={index}>
+                                    {postingRuleText(
+                                        t,
+                                        rule,
+                                        fields,
+                                        accountName,
+                                    )}
+                                    {rule.reuses_field && (
+                                        <span className="text-muted-foreground">
+                                            {' '}
+                                            (
+                                            {t(
+                                                'transactionTypes.designer.reusesField',
+                                            )}
+                                            )
+                                        </span>
+                                    )}
+                                </li>
+                            ))}
+                        </ol>
+                    </section>
+                </>
+            ) : (
+                <p className="text-muted-foreground">
+                    {t('transactionTypes.designer.modeHint.free_lines')}
+                </p>
+            )}
+        </div>
+    );
+}

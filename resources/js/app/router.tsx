@@ -43,6 +43,9 @@ import { entryQuery } from '@/modules/transaction-entry/entries';
 import { EntriesPage } from '@/modules/transaction-entry/pages/entries-page';
 import { EntryFormPage } from '@/modules/transaction-entry/pages/entry-form-page';
 import { EntryPage } from '@/modules/transaction-entry/pages/entry-page';
+import { transactionTypeQuery } from '@/modules/transaction-entry/transaction-types';
+import { TransactionTypePage } from '@/modules/transaction-entry/pages/transaction-type-page';
+import { TransactionTypesPage } from '@/modules/transaction-entry/pages/transaction-types-page';
 import { CompanyHomePage } from '@/modules/master-data/pages/company-home-page';
 import { CurrenciesPage } from '@/modules/master-data/pages/currencies-page';
 import { DimensionsPage } from '@/modules/master-data/pages/dimensions-page';
@@ -688,6 +691,67 @@ const editEntryRoute = createRoute({
     },
 });
 
+const transactionTypesRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/transaction-types',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navTransactionTypes',
+                href: at(m, '/transaction-types'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('entries.read'),
+    component: function TransactionTypes() {
+        const { workspace } = transactionTypesRoute.useRouteContext();
+
+        return (
+            <TransactionTypesPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'policies.manage')}
+            />
+        );
+    },
+});
+
+const transactionTypeRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/transaction-types/$typeId',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navTransactionTypes',
+                href: at(m, '/transaction-types'),
+            },
+            {
+                label: labelOf(m),
+                href: at(m, `/transaction-types/${m.params.typeId}`),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('entries.read'),
+    loader: ({ context, params }) =>
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                transactionTypeQuery(params.companyId, params.typeId),
+            ),
+        ),
+    notFoundComponent: RecordNotFound,
+    component: function TransactionType() {
+        const { workspace } = transactionTypeRoute.useRouteContext();
+        const { typeId } = transactionTypeRoute.useParams();
+
+        return (
+            <TransactionTypePage
+                companyId={workspace.company_id}
+                typeId={typeId}
+                canManage={can(workspace, 'policies.manage')}
+            />
+        );
+    },
+});
+
 // What a route's `crumbs` function sees: the address, the route context and the loaded record.
 const at = (m: CrumbMatch, path: string) => `/w/${m.params.companyId}${path}`;
 const workspaceName = (m: CrumbMatch) =>
@@ -695,6 +759,10 @@ const workspaceName = (m: CrumbMatch) =>
 // The number of the entry or journal the route loaded, for the last step of the trail.
 const numberOf = (m: CrumbMatch) =>
     (m.loaderData as { number?: string } | undefined)?.number ?? '…';
+
+// The name of the transaction type the route loaded, for the last step of the trail.
+const labelOf = (m: CrumbMatch) =>
+    (m.loaderData as { label?: string } | undefined)?.label ?? '…';
 
 const stringSearch = (value: unknown): string | undefined =>
     typeof value === 'string' && value !== '' ? value : undefined;
@@ -916,6 +984,8 @@ const routeTree = rootRoute.addChildren([
                 newEntryRoute,
                 entryRoute,
                 editEntryRoute,
+                transactionTypesRoute,
+                transactionTypeRoute,
                 journalsRoute,
                 journalRoute,
                 trialBalanceRoute,

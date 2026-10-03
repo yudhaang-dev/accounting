@@ -17,15 +17,21 @@ import { genericErrorMessage } from '@/lib/errors';
 import { applyApiErrors } from '@/lib/forms';
 import { isApiError } from '@/lib/http';
 import { slugify } from '@/lib/slug';
-import { createTransactionType } from '@/modules/transaction-entry/entries';
+import { createTransactionType } from '@/modules/transaction-entry/transaction-types';
 
 type Values = { key: string; label: string };
 
 /**
- * Creates the first transaction type of a company (TE-FR-01). Until the designer arrives (M5), every
- * type is a `free_lines` type with its first version already published.
+ * Creates a transaction type (TE-FR-01). A new type starts as
+ * a `free_lines` type with its first version already published; the designer adds versions.
  */
-export function TransactionTypeForm({ companyId }: { companyId: string }) {
+export function TransactionTypeForm({
+    companyId,
+    onCreated,
+}: {
+    companyId: string;
+    onCreated?: () => void;
+}) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const [formError, setFormError] = useState<string | null>(null);
@@ -53,6 +59,7 @@ export function TransactionTypeForm({ companyId }: { companyId: string }) {
                 queryKey: ['companies', companyId, 'transaction-types'],
             });
             toast.success(t('entries.types.created'));
+            onCreated?.();
         },
         onError: (error) => {
             if (
@@ -76,9 +83,11 @@ export function TransactionTypeForm({ companyId }: { companyId: string }) {
             })}
         >
             <FieldGroup>
-                <p className="text-sm text-muted-foreground">
-                    {t('entries.types.createDescription')}
-                </p>
+                {!onCreated && (
+                    <p className="text-sm text-muted-foreground">
+                        {t('entries.types.createDescription')}
+                    </p>
+                )}
                 {formError && <FormAlert>{formError}</FormAlert>}
                 <div className="grid gap-4 sm:grid-cols-2">
                     <Field data-invalid={errors.label ? true : undefined}>

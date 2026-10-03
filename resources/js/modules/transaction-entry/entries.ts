@@ -7,7 +7,10 @@ export type Entry = components['schemas']['EntryResource'];
 export type EntryStatus = components['schemas']['EntryStatus'];
 export type EntryInput = components['schemas']['EntryRequest'];
 export type UpdateEntryInput = components['schemas']['UpdateEntryRequest'];
-export type TransactionType = components['schemas']['TransactionTypeResource'];
+export {
+    transactionTypesQuery,
+    type TransactionType,
+} from '@/modules/transaction-entry/transaction-types';
 
 export const ENTRY_STATUSES: EntryStatus[] = [
     'draft',
@@ -71,19 +74,6 @@ export const entryQuery = (companyId: string, id: string) =>
                 await unwrap(
                     api.GET('/companies/{companyId}/entries/{id}', {
                         params: { path: { companyId, id } },
-                    }),
-                )
-            ).data,
-    });
-
-export const transactionTypesQuery = (companyId: string) =>
-    queryOptions({
-        queryKey: ['companies', companyId, 'transaction-types'],
-        queryFn: async (): Promise<TransactionType[]> =>
-            (
-                await unwrap(
-                    api.GET('/companies/{companyId}/transaction-types', {
-                        params: { path: { companyId } },
                     }),
                 )
             ).data,
@@ -359,18 +349,4 @@ export async function runEntryAction(
                 )
             ).data;
     }
-}
-
-export async function createTransactionType(
-    companyId: string,
-    body: { key: string; label: string },
-): Promise<TransactionType> {
-    return (
-        await unwrap(
-            api.POST('/companies/{companyId}/transaction-types', {
-                params: { path: { companyId } },
-                body,
-            }),
-        )
-    ).data;
 }
