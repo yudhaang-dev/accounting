@@ -7,6 +7,8 @@ return [
     'number_prefix_required' => 'The entry number needs a fixed prefix before the first token, for example ENT/{yyyy}/{seq}.',
     'number_prefix_taken' => 'The number prefix :prefix is already used by another transaction type.',
     'attachments_locked' => 'Attachments of an entry with status :status can no longer be changed.',
+    'template_unknown' => 'This transaction type template does not exist.',
+    'template_type_unknown' => 'The template has no transaction type :key.',
     'type_unknown' => 'The transaction type :key does not exist in this company.',
     'version_unknown' => 'Version :version of this transaction type does not exist.',
     'version_unpublished' => 'Version :version of this transaction type is not published.',

@@ -7,6 +7,8 @@ return [
     'number_prefix_required' => 'Nomor entri memerlukan prefix tetap sebelum token pertama, misalnya ENT/{yyyy}/{seq}.',
     'number_prefix_taken' => 'Prefix nomor :prefix sudah dipakai Jenis Transaksi lain.',
     'attachments_locked' => 'Lampiran entri berstatus :status tidak dapat diubah lagi.',
+    'template_unknown' => 'Template Jenis Transaksi ini tidak ada.',
+    'template_type_unknown' => 'Template tidak memiliki Jenis Transaksi :key.',
     'type_unknown' => 'Jenis Transaksi :key tidak ada di perusahaan ini.',
     'version_unknown' => 'Versi :version Jenis Transaksi ini tidak ada.',
     'version_unpublished' => 'Versi :version Jenis Transaksi ini belum terbit.',

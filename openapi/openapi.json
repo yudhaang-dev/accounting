@@ -9093,6 +9093,247 @@
                 }
             }
         },
+        "/companies/{companyId}/transaction-type-templates": {
+            "get": {
+                "operationId": "transaction-type-templates.index",
+                "summary": "Transaction type templates the company can review. A template is only a suggestion",
+                "tags": [
+                    "TransactionTypeTemplate"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "version": {
+                                                        "type": "integer"
+                                                    },
+                                                    "type_count": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "key",
+                                                    "name",
+                                                    "version",
+                                                    "type_count"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/transaction-type-templates/{key}": {
+            "get": {
+                "operationId": "transaction-type-templates.show",
+                "summary": "Every type of a template with its mode, fields and posting rules, for review before the import is confirmed",
+                "tags": [
+                    "TransactionTypeTemplate"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "key",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "key": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "version": {
+                                                    "type": "integer"
+                                                },
+                                                "types": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "mode": {
+                                                                "type": "string"
+                                                            },
+                                                            "fields": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "additionalProperties": {}
+                                                                }
+                                                            },
+                                                            "posting_rules": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "additionalProperties": {}
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "label",
+                                                            "mode",
+                                                            "fields",
+                                                            "posting_rules"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "key",
+                                                "name",
+                                                "version",
+                                                "types"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFoundHttpException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/transaction-types/import-template": {
+            "post": {
+                "operationId": "transaction-types.import-template",
+                "summary": "Creates the picked types of a template, each with a published first version. `confirmed` must be\ntrue: the template is only a suggestion until the company confirms it. Fails as a whole when a key\nis already used in the company",
+                "tags": [
+                    "TransactionTypeTemplate"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportTypeTemplateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "template": {
+                                                    "type": "string"
+                                                },
+                                                "created": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                }
+                                            },
+                                            "required": [
+                                                "template",
+                                                "created"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/transaction-types/{id}/versions": {
             "post": {
                 "operationId": "transaction-types.versions.store",
@@ -12050,6 +12291,40 @@
                     "confirmed"
                 ],
                 "title": "ImportTemplateRequest"
+            },
+            "ImportTypeTemplateRequest": {
+                "type": "object",
+                "properties": {
+                    "template": {
+                        "type": "string",
+                        "maxLength": 64
+                    },
+                    "confirmed": {
+                        "enum": [
+                            "yes",
+                            "on",
+                            "1",
+                            1,
+                            "true",
+                            true
+                        ]
+                    },
+                    "keys": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "template",
+                    "confirmed",
+                    "keys"
+                ],
+                "title": "ImportTypeTemplateRequest"
             },
             "IntegrationClientResource": {
                 "type": "object",

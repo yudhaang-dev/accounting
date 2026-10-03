@@ -5,6 +5,7 @@ use App\Modules\TransactionEntry\Http\EntryController;
 use App\Modules\TransactionEntry\Http\JournalReversalController;
 use App\Modules\TransactionEntry\Http\RecurringScheduleController;
 use App\Modules\TransactionEntry\Http\TransactionTypeController;
+use App\Modules\TransactionEntry\Http\TransactionTypeTemplateController;
 use App\Modules\TransactionEntry\Http\TransactionTypeVersionController;
 use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::companyScoped(function () {
     Route::get('transaction-types', [TransactionTypeController::class, 'index'])->middleware('permission:entries.read|transaction-types.read')->name('transaction-types.index');
+    Route::get('transaction-type-templates', [TransactionTypeTemplateController::class, 'index'])
+        ->middleware('permission:policies.manage')->name('transaction-type-templates.index');
+    Route::get('transaction-type-templates/{key}', [TransactionTypeTemplateController::class, 'show'])
+        ->middleware('permission:policies.manage')->where('key', '[a-z0-9-]+')->name('transaction-type-templates.show');
+    Route::post('transaction-types/import-template', [TransactionTypeTemplateController::class, 'import'])
+        ->middleware('permission:policies.manage')->name('transaction-types.import-template');
     Route::post('transaction-types', [TransactionTypeController::class, 'store'])->middleware('permission:policies.manage')->name('transaction-types.store');
     Route::get('transaction-types/{id}', [TransactionTypeController::class, 'show'])
         ->middleware('permission:entries.read|transaction-types.read')->where('id', ApiServiceProvider::ULID)->name('transaction-types.show');

@@ -1834,6 +1834,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/transaction-type-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Transaction type templates the company can review. A template is only a suggestion */
+        get: operations["transaction-type-templates.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/transaction-type-templates/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every type of a template with its mode, fields and posting rules, for review before the import is confirmed */
+        get: operations["transaction-type-templates.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/transaction-types/import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Creates the picked types of a template, each with a published first version. `confirmed` must be
+         *     true: the template is only a suggestion until the company confirms it. Fails as a whole when a key
+         *     is already used in the company
+         */
+        post: operations["transaction-types.import-template"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/transaction-types/{id}/versions": {
         parameters: {
             query?: never;
@@ -2533,6 +2588,13 @@ export interface components {
             /** @enum {unknown} */
             confirmed: "yes" | "on" | "1" | 1 | "true" | true;
             exclude?: string[];
+        };
+        /** ImportTypeTemplateRequest */
+        ImportTypeTemplateRequest: {
+            template: string;
+            /** @enum {unknown} */
+            confirmed: "yes" | "on" | "1" | 1 | "true" | true;
+            keys: string[];
         };
         /** IntegrationClientResource */
         IntegrationClientResource: {
@@ -7113,6 +7175,108 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["TransactionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "transaction-type-templates.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            name: string;
+                            version: number;
+                            type_count: number;
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "transaction-type-templates.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            name: string;
+                            version: number;
+                            types: {
+                                key: string;
+                                label: string;
+                                mode: string;
+                                fields: {
+                                    [key: string]: unknown;
+                                }[];
+                                posting_rules: {
+                                    [key: string]: unknown;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["NotFoundHttpException"];
+        };
+    };
+    "transaction-types.import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportTypeTemplateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            template: string;
+                            created: unknown[];
+                        };
                     };
                 };
             };
