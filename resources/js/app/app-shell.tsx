@@ -9,6 +9,7 @@ import {
     ChevronsUpDownIcon,
     HouseIcon,
     InboxIcon,
+    ListChecksIcon,
     ListTreeIcon,
     LockKeyholeIcon,
     LogOutIcon,
@@ -117,6 +118,12 @@ const NAV = [
         label: 'app.navApprovals',
         icon: InboxIcon,
         permission: 'entries.approve',
+    },
+    {
+        to: '/w/$companyId/approval-policy',
+        label: 'app.navApprovalPolicy',
+        icon: ListChecksIcon,
+        permission: 'policies.manage',
     },
     {
         to: '/w/$companyId/transaction-types',

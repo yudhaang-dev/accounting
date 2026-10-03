@@ -40,6 +40,7 @@ import { OpeningBalancesPage } from '@/modules/general-ledger/pages/opening-bala
 import { PeriodsPage } from '@/modules/general-ledger/pages/periods-page';
 import { can } from '@/modules/identity-access/permissions';
 import { entryQuery } from '@/modules/transaction-entry/entries';
+import { ApprovalPolicyPage } from '@/modules/transaction-entry/pages/approval-policy-page';
 import { ApprovalsPage } from '@/modules/transaction-entry/pages/approvals-page';
 import { EntriesPage } from '@/modules/transaction-entry/pages/entries-page';
 import { EntryFormPage } from '@/modules/transaction-entry/pages/entry-form-page';
@@ -618,6 +619,25 @@ const approvalsRoute = createRoute({
     },
 });
 
+const approvalPolicyRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/approval-policy',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navApprovalPolicy',
+                href: at(m, '/approval-policy'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('policies.manage'),
+    component: function ApprovalPolicy() {
+        const { workspace } = approvalPolicyRoute.useRouteContext();
+
+        return <ApprovalPolicyPage companyId={workspace.company_id} />;
+    },
+});
+
 const newEntryRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/entries/new',
@@ -1005,6 +1025,7 @@ const routeTree = rootRoute.addChildren([
                 rateTypesRoute,
                 entriesRoute,
                 approvalsRoute,
+                approvalPolicyRoute,
                 newEntryRoute,
                 entryRoute,
                 editEntryRoute,
