@@ -29,6 +29,7 @@ import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
 import { useTypeLabel } from '@/modules/transaction-entry/type-labels';
 import { EntryStatusBadge } from '@/modules/transaction-entry/components/entry-status-badge';
+import { AttachmentsCard } from '@/modules/transaction-entry/components/attachments-card';
 import { EntryValuesCard } from '@/modules/transaction-entry/components/entry-values-card';
 import { ReasonDialog } from '@/modules/transaction-entry/components/reason-dialog';
 import {
@@ -372,6 +373,12 @@ export function EntryPage({
                     </div>
                 </CardContent>
             </Card>
+
+            <AttachmentsCard
+                companyId={companyId}
+                entry={entry}
+                canChange={can.create}
+            />
 
             <Card>
                 <CardHeader>

@@ -350,3 +350,46 @@ export async function runEntryAction(
             ).data;
     }
 }
+
+/** Every entry waiting for a decision, for the approval inbox; the list is held whole and narrowed in the browser. */
+export const submittedEntriesQuery = (companyId: string) =>
+    queryOptions({
+        queryKey: ['companies', companyId, 'entries', 'inbox'],
+        queryFn: async (): Promise<Entry[]> =>
+            fetchAll((page) =>
+                unwrap(
+                    api.GET('/companies/{companyId}/entries', {
+                        params: {
+                            path: { companyId },
+                            query: {
+                                'filter[status]': 'submitted',
+                                per_page: 200,
+                                page,
+                            },
+                        },
+                    }),
+                ),
+            ),
+    });
+
+/** The permission the next approval stage of an entry needs (TE-FR-09); one approval by `entries.approve` when no plan says more. */
+export function nextStage(entry: Entry): string {
+    return entry.approval?.stages[entry.approval.approved] ?? 'entries.approve';
+}
+
+/**
+ * Whether the user can take the entry's next approval step: they hold the permission of that stage
+ * and, when separation of duties is on, did not make the entry themselves. The server decides in the
+ * end; this only keeps the inbox to what the user can act on.
+ */
+export function canDecide(
+    entry: Entry,
+    permissions: string[],
+    userId: number,
+): boolean {
+    return (
+        permissions.includes('entries.approve') &&
+        permissions.includes(nextStage(entry)) &&
+        !(entry.approval?.separation_of_duties && entry.created_by === userId)
+    );
+}

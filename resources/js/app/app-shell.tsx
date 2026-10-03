@@ -8,6 +8,7 @@ import {
     LayersIcon,
     ChevronsUpDownIcon,
     HouseIcon,
+    InboxIcon,
     ListTreeIcon,
     LockKeyholeIcon,
     LogOutIcon,
@@ -110,6 +111,12 @@ const NAV = [
         label: 'app.navEntries',
         icon: FileTextIcon,
         permission: 'entries.read',
+    },
+    {
+        to: '/w/$companyId/approvals',
+        label: 'app.navApprovals',
+        icon: InboxIcon,
+        permission: 'entries.approve',
     },
     {
         to: '/w/$companyId/transaction-types',

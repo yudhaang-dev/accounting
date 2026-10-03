@@ -40,6 +40,7 @@ import { OpeningBalancesPage } from '@/modules/general-ledger/pages/opening-bala
 import { PeriodsPage } from '@/modules/general-ledger/pages/periods-page';
 import { can } from '@/modules/identity-access/permissions';
 import { entryQuery } from '@/modules/transaction-entry/entries';
+import { ApprovalsPage } from '@/modules/transaction-entry/pages/approvals-page';
 import { EntriesPage } from '@/modules/transaction-entry/pages/entries-page';
 import { EntryFormPage } from '@/modules/transaction-entry/pages/entry-form-page';
 import { EntryPage } from '@/modules/transaction-entry/pages/entry-page';
@@ -595,6 +596,28 @@ const entriesRoute = createRoute({
     },
 });
 
+const approvalsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/approvals',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navApprovals', href: at(m, '/approvals') },
+        ],
+    },
+    beforeLoad: requirePermission('entries.approve'),
+    component: function Approvals() {
+        const { workspace, me } = approvalsRoute.useRouteContext();
+
+        return (
+            <ApprovalsPage
+                companyId={workspace.company_id}
+                permissions={workspace.permissions}
+                userId={me.id}
+            />
+        );
+    },
+});
+
 const newEntryRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/entries/new',
@@ -981,6 +1004,7 @@ const routeTree = rootRoute.addChildren([
                 exchangeRatesRoute,
                 rateTypesRoute,
                 entriesRoute,
+                approvalsRoute,
                 newEntryRoute,
                 entryRoute,
                 editEntryRoute,
