@@ -11,6 +11,8 @@ import {
     workspace,
 } from '@/test/harness';
 
+type Routes = Parameters<typeof mockApi>[0];
+
 const base = `/api/v1/companies/${workspace.company_id}`;
 const typesPath = `/w/${workspace.company_id}/transaction-types`;
 
@@ -342,7 +344,7 @@ describe('template import', () => {
         ],
     };
 
-    const routes = (overrides: Record<string, unknown> = {}) => ({
+    const routes = (overrides: Routes = {}) => ({
         ...withPermissions(manage),
         [`GET ${base}/transaction-types`]: listing([typeRow()]),
         [`GET ${base}/transaction-type-templates`]: () =>
@@ -435,7 +437,7 @@ describe('template import', () => {
 
 describe('version designer', () => {
     const designer = (id = payroll().id) => `${typesPath}/${id}`;
-    const route = (overrides: Record<string, unknown> = {}) => ({
+    const route = (overrides: Routes = {}) => ({
         ...withPermissions(manage),
         ...lookups,
         [`GET ${base}/transaction-types/${payroll().id}`]: () =>

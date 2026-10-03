@@ -41,11 +41,24 @@ import {
     isPositive,
     sumDecimals,
 } from '@/lib/decimal';
-import { todayIso } from '@/lib/date';
 import { genericErrorMessage } from '@/lib/errors';
 import { applyApiErrors } from '@/lib/forms';
 import { isApiError } from '@/lib/http';
+import {
+    blankLine,
+    valuesOf,
+    type Values,
+} from '@/modules/transaction-entry/components/entry-values';
+import { StructuredSection } from '@/modules/transaction-entry/components/structured-section';
 import { TransactionTypeForm } from '@/modules/transaction-entry/components/transaction-type-form';
+import {
+    valuesBody,
+    versionSchemaQuery,
+} from '@/modules/transaction-entry/field-schema';
+import {
+    activeVersion,
+    usableTypes,
+} from '@/modules/transaction-entry/transaction-types';
 import {
     createEntry,
     dimensionsBody,
@@ -59,55 +72,6 @@ import {
     type LineDimensionType,
     type TransactionType,
 } from '@/modules/transaction-entry/entries';
-
-type Line = {
-    account_id: string;
-    debit: string;
-    credit: string;
-    description: string;
-    /** Dimension type key to value id; a type left out has no value. */
-    dimensions: Record<string, string>;
-};
-
-type Values = {
-    transaction_type_key: string;
-    accounting_date: string;
-    document_date: string;
-    description: string;
-    lines: Line[];
-};
-
-const blankLine = (): Line => ({
-    account_id: '',
-    debit: '',
-    credit: '',
-    description: '',
-    dimensions: {},
-});
-
-const valuesOf = (entry: Entry | undefined, typeKey: string): Values =>
-    entry
-        ? {
-              transaction_type_key: entry.transaction_type_key,
-              accounting_date: entry.accounting_date,
-              document_date: entry.document_date ?? '',
-              description: entry.description,
-              lines: entry.lines.map((line) => ({
-                  account_id: line.account_id,
-                  // The API answers "0" for the side a line does not use.
-                  debit: isPositive(line.debit) ? line.debit : '',
-                  credit: isPositive(line.credit) ? line.credit : '',
-                  description: line.description ?? '',
-                  dimensions: { ...line.dimensions },
-              })),
-          }
-        : {
-              transaction_type_key: typeKey,
-              accounting_date: todayIso(),
-              document_date: '',
-              description: '',
-              lines: [blankLine(), blankLine()],
-          };
 
 function Totals({ control }: { control: Control<Values> }) {
     const { t, i18n } = useTranslation();
@@ -241,6 +205,22 @@ function EntryFields({
         control,
         name: 'lines',
     });
+    const typeKey = useWatch({ control, name: 'transaction_type_key' });
+    const type = types.find((candidate) => candidate.key === typeKey);
+    // A draft keeps the version it was made against; a new entry takes the latest published one.
+    const version =
+        type &&
+        ((entry &&
+            type.versions.find(
+                (candidate) =>
+                    candidate.version === entry.transaction_type_version,
+            )) ||
+            activeVersion(type));
+    const structured = version?.mode === 'structured';
+    const schema = useQuery({
+        ...versionSchemaQuery(companyId, type?.id ?? '', version?.version ?? 0),
+        enabled: Boolean(structured && type && version),
+    });
 
     const accountItems = accounts.map((account) => ({
         value: account.id,
@@ -253,6 +233,31 @@ function EntryFields({
 
     const save = useMutation({
         mutationFn: (values: Values) => {
+            if (structured && version) {
+                const common = {
+                    accounting_date: values.accounting_date,
+                    document_date: values.document_date || null,
+                    description: values.description,
+                    values: valuesBody(
+                        schema.data ?? [],
+                        values.values,
+                    ) as unknown as string[],
+                    currency: values.currency || null,
+                    exchange_rate: values.exchange_rate || null,
+                };
+
+                return entry
+                    ? updateEntry(companyId, entry.id, {
+                          lock_version: entry.lock_version,
+                          ...common,
+                      })
+                    : createEntry(companyId, {
+                          transaction_type_key: values.transaction_type_key,
+                          transaction_type_version: version.version,
+                          ...common,
+                      });
+            }
+
             const lines = values.lines.map((line) => ({
                 account_id: line.account_id,
                 debit: line.debit || null,
@@ -485,182 +490,212 @@ function EntryFields({
                     )}
                 </Field>
 
-                <div className="flex flex-col gap-3">
-                    <h2 className="text-sm font-medium">
-                        {t('entries.form.lines')}
-                    </h2>
+                {structured && version ? (
+                    schema.isError ? (
+                        <FormAlert>
+                            {genericErrorMessage(schema.error, t)}
+                        </FormAlert>
+                    ) : schema.data === undefined ? (
+                        <Skeleton className="h-40 w-full" />
+                    ) : (
+                        <StructuredSection
+                            companyId={companyId}
+                            version={version}
+                            fields={schema.data}
+                            form={form}
+                            accounts={accounts}
+                            dimensionTypes={dimensionTypes}
+                        />
+                    )
+                ) : (
+                    <div className="flex flex-col gap-3">
+                        <h2 className="text-sm font-medium">
+                            {t('entries.form.lines')}
+                        </h2>
 
-                    <ul className="flex flex-col gap-3">
-                        {fields.map((field, index) => {
-                            const n = index + 1;
-                            const row = errors.lines?.[index];
-                            // Every problem of the line, once each: a missing account must not hide a bad amount.
-                            const rowMessages = [
-                                ...new Set(
-                                    [
-                                        row?.account_id?.message,
-                                        row?.debit?.message,
-                                        row?.credit?.message,
-                                        row?.description?.message,
-                                        ...Object.values(
-                                            (row?.dimensions ?? {}) as Record<
-                                                string,
-                                                { message?: string } | undefined
-                                            >,
-                                        ).map((error) => error?.message),
-                                    ].filter((message): message is string =>
-                                        Boolean(message),
-                                    ),
-                                ),
-                            ];
-
-                            return (
-                                <li
-                                    key={field.id}
-                                    className="flex flex-col gap-2 rounded-lg border p-3"
-                                >
-                                    <div className="grid gap-2 lg:grid-cols-[minmax(0,2fr)_9rem_9rem_minmax(0,1.5fr)_auto]">
-                                        <Controller
-                                            control={control}
-                                            name={`lines.${index}.account_id`}
-                                            rules={{
-                                                required: t('common.required'),
-                                            }}
-                                            render={({ field: account }) => (
-                                                <SearchableSelect
-                                                    items={accountItems}
-                                                    value={account.value}
-                                                    onValueChange={
-                                                        account.onChange
-                                                    }
-                                                    placeholder={t(
-                                                        'entries.form.chooseAccount',
-                                                    )}
-                                                    emptyText={t(
-                                                        'common.noMatch',
-                                                    )}
-                                                    aria-label={`${t('entries.form.account')} ${t('entries.form.line', { n })}`}
-                                                    aria-invalid={
-                                                        row?.account_id
-                                                            ? true
-                                                            : undefined
-                                                    }
-                                                />
-                                            )}
-                                        />
-                                        {(['debit', 'credit'] as const).map(
-                                            (side) => (
-                                                <Controller
-                                                    key={side}
-                                                    control={control}
-                                                    name={`lines.${index}.${side}`}
-                                                    rules={amountRules(
-                                                        index,
-                                                        side,
-                                                    )}
-                                                    render={({
-                                                        field: money,
-                                                    }) => (
-                                                        <MoneyInput
-                                                            placeholder={t(
-                                                                `entries.form.${side}`,
-                                                            )}
-                                                            aria-label={`${t(`entries.form.${side}`)} ${t('entries.form.line', { n })}`}
-                                                            aria-invalid={
-                                                                row?.[side]
-                                                                    ? true
-                                                                    : undefined
-                                                            }
-                                                            value={money.value}
-                                                            onBlur={
-                                                                money.onBlur
-                                                            }
-                                                            onChange={(
-                                                                next,
-                                                            ) => {
-                                                                money.onChange(
-                                                                    next,
-                                                                );
-                                                                onSide(
-                                                                    index,
-                                                                    side,
-                                                                    next,
-                                                                );
-                                                            }}
-                                                        />
-                                                    )}
-                                                />
-                                            ),
-                                        )}
-                                        <Input
-                                            placeholder={t(
-                                                'entries.form.lineDescription',
-                                            )}
-                                            aria-label={`${t('entries.form.lineDescription')} ${t('entries.form.line', { n })}`}
-                                            maxLength={500}
-                                            {...register(
-                                                `lines.${index}.description`,
-                                            )}
-                                        />
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            disabled={fields.length <= 2}
-                                            aria-label={t(
-                                                'entries.form.removeLine',
-                                                { n },
-                                            )}
-                                            onClick={() => remove(index)}
-                                        >
-                                            <Trash2Icon aria-hidden />
-                                        </Button>
-                                    </div>
-                                    {dimensionTypes.length > 0 && (
-                                        <LineDimensions
-                                            control={control}
-                                            index={index}
-                                            types={dimensionTypes}
-                                            rowErrors={
-                                                row?.dimensions as
-                                                    | Record<
-                                                          string,
-                                                          | { message?: string }
-                                                          | undefined
-                                                      >
+                        <ul className="flex flex-col gap-3">
+                            {fields.map((field, index) => {
+                                const n = index + 1;
+                                const row = errors.lines?.[index];
+                                // Every problem of the line, once each: a missing account must not hide a bad amount.
+                                const rowMessages = [
+                                    ...new Set(
+                                        [
+                                            row?.account_id?.message,
+                                            row?.debit?.message,
+                                            row?.credit?.message,
+                                            row?.description?.message,
+                                            ...Object.values(
+                                                (row?.dimensions ??
+                                                    {}) as Record<
+                                                    string,
+                                                    | { message?: string }
                                                     | undefined
-                                            }
-                                        />
-                                    )}
-                                    {rowMessages.length > 0 && (
-                                        <ul
-                                            role="alert"
-                                            className="flex flex-col gap-0.5 text-sm text-destructive"
-                                        >
-                                            {rowMessages.map((message) => (
-                                                <li key={message}>{message}</li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </li>
-                            );
-                        })}
-                    </ul>
+                                                >,
+                                            ).map((error) => error?.message),
+                                        ].filter((message): message is string =>
+                                            Boolean(message),
+                                        ),
+                                    ),
+                                ];
 
-                    <div>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => append(blankLine())}
-                        >
-                            <PlusIcon data-icon="inline-start" />
-                            {t('entries.form.addLine')}
-                        </Button>
+                                return (
+                                    <li
+                                        key={field.id}
+                                        className="flex flex-col gap-2 rounded-lg border p-3"
+                                    >
+                                        <div className="grid gap-2 lg:grid-cols-[minmax(0,2fr)_9rem_9rem_minmax(0,1.5fr)_auto]">
+                                            <Controller
+                                                control={control}
+                                                name={`lines.${index}.account_id`}
+                                                rules={{
+                                                    required:
+                                                        t('common.required'),
+                                                }}
+                                                render={({
+                                                    field: account,
+                                                }) => (
+                                                    <SearchableSelect
+                                                        items={accountItems}
+                                                        value={account.value}
+                                                        onValueChange={
+                                                            account.onChange
+                                                        }
+                                                        placeholder={t(
+                                                            'entries.form.chooseAccount',
+                                                        )}
+                                                        emptyText={t(
+                                                            'common.noMatch',
+                                                        )}
+                                                        aria-label={`${t('entries.form.account')} ${t('entries.form.line', { n })}`}
+                                                        aria-invalid={
+                                                            row?.account_id
+                                                                ? true
+                                                                : undefined
+                                                        }
+                                                    />
+                                                )}
+                                            />
+                                            {(['debit', 'credit'] as const).map(
+                                                (side) => (
+                                                    <Controller
+                                                        key={side}
+                                                        control={control}
+                                                        name={`lines.${index}.${side}`}
+                                                        rules={amountRules(
+                                                            index,
+                                                            side,
+                                                        )}
+                                                        render={({
+                                                            field: money,
+                                                        }) => (
+                                                            <MoneyInput
+                                                                placeholder={t(
+                                                                    `entries.form.${side}`,
+                                                                )}
+                                                                aria-label={`${t(`entries.form.${side}`)} ${t('entries.form.line', { n })}`}
+                                                                aria-invalid={
+                                                                    row?.[side]
+                                                                        ? true
+                                                                        : undefined
+                                                                }
+                                                                value={
+                                                                    money.value
+                                                                }
+                                                                onBlur={
+                                                                    money.onBlur
+                                                                }
+                                                                onChange={(
+                                                                    next,
+                                                                ) => {
+                                                                    money.onChange(
+                                                                        next,
+                                                                    );
+                                                                    onSide(
+                                                                        index,
+                                                                        side,
+                                                                        next,
+                                                                    );
+                                                                }}
+                                                            />
+                                                        )}
+                                                    />
+                                                ),
+                                            )}
+                                            <Input
+                                                placeholder={t(
+                                                    'entries.form.lineDescription',
+                                                )}
+                                                aria-label={`${t('entries.form.lineDescription')} ${t('entries.form.line', { n })}`}
+                                                maxLength={500}
+                                                {...register(
+                                                    `lines.${index}.description`,
+                                                )}
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                disabled={fields.length <= 2}
+                                                aria-label={t(
+                                                    'entries.form.removeLine',
+                                                    { n },
+                                                )}
+                                                onClick={() => remove(index)}
+                                            >
+                                                <Trash2Icon aria-hidden />
+                                            </Button>
+                                        </div>
+                                        {dimensionTypes.length > 0 && (
+                                            <LineDimensions
+                                                control={control}
+                                                index={index}
+                                                types={dimensionTypes}
+                                                rowErrors={
+                                                    row?.dimensions as
+                                                        | Record<
+                                                              string,
+                                                              | {
+                                                                    message?: string;
+                                                                }
+                                                              | undefined
+                                                          >
+                                                        | undefined
+                                                }
+                                            />
+                                        )}
+                                        {rowMessages.length > 0 && (
+                                            <ul
+                                                role="alert"
+                                                className="flex flex-col gap-0.5 text-sm text-destructive"
+                                            >
+                                                {rowMessages.map((message) => (
+                                                    <li key={message}>
+                                                        {message}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+
+                        <div>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => append(blankLine())}
+                            >
+                                <PlusIcon data-icon="inline-start" />
+                                {t('entries.form.addLine')}
+                            </Button>
+                        </div>
+
+                        <Totals control={control} />
                     </div>
-
-                    <Totals control={control} />
-                </div>
+                )}
 
                 <div className="flex flex-wrap gap-2">
                     <SubmitButton
@@ -735,6 +770,12 @@ export function EntryForm({
         return <Skeleton className="h-96 w-full" />;
     }
 
+    const usable = types.data.filter(
+        (type) =>
+            usableTypes([type]).length > 0 ||
+            type.key === entry?.transaction_type_key,
+    );
+
     if (types.data.length === 0) {
         return canManageTypes ? (
             <TransactionTypeForm companyId={companyId} />
@@ -743,11 +784,15 @@ export function EntryForm({
         );
     }
 
+    if (usable.length === 0) {
+        return <FormAlert>{t('entries.types.noneUsable')}</FormAlert>;
+    }
+
     return (
         <EntryFields
             companyId={companyId}
             entry={entry}
-            types={types.data}
+            types={usable}
             accounts={accounts.data}
             dimensionTypes={dimensions.data ?? []}
         />

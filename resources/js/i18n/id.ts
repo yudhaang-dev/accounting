@@ -835,6 +835,9 @@ export const id = {
                 revise: 'Direvisi',
                 cancel: 'Dibatalkan',
             },
+            values: 'Isian entri',
+            currency: 'Mata uang',
+            rate: 'kurs {{rate}}',
         },
         form: {
             newTitle: 'Entri baru',
@@ -865,6 +868,13 @@ export const id = {
             conflict:
                 'Draf sudah diubah di tempat lain. Data terbaru telah dimuat; periksa lalu simpan lagi.',
             notEditable: 'Hanya entri berstatus draf yang dapat diubah.',
+            unsupportedField:
+                'Field ini bergantung pada modul subledger dan belum dapat diisi dari form ini.',
+            optional: 'opsional',
+            chooseDimension: 'Pilih nilai dimensi',
+            currency: 'Mata uang',
+            rate: 'Kurs {{from}} ke {{to}}',
+            rateHint: 'Kosongkan untuk memakai kurs dari tabel kurs.',
         },
         reason: {
             rejectTitle: 'Tolak entri {{number}}',
@@ -892,6 +902,8 @@ export const id = {
             create: 'Buat jenis',
             creating: 'Membuat…',
             created: 'Jenis transaksi dibuat.',
+            noneUsable:
+                'Belum ada jenis transaksi yang terbit. Minta administrator menerbitkan versinya di perancang jenis transaksi.',
         },
     },
     transactionTypes: {

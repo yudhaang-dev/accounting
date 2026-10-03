@@ -29,6 +29,7 @@ import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
 import { useTypeLabel } from '@/modules/transaction-entry/type-labels';
 import { EntryStatusBadge } from '@/modules/transaction-entry/components/entry-status-badge';
+import { EntryValuesCard } from '@/modules/transaction-entry/components/entry-values-card';
 import { ReasonDialog } from '@/modules/transaction-entry/components/reason-dialog';
 import {
     accountNamesQuery,
@@ -276,6 +277,12 @@ export function EntryPage({
                     </dl>
                 </CardContent>
             </Card>
+
+            <EntryValuesCard
+                companyId={companyId}
+                entry={entry}
+                canReadDimensions={can.dimensions}
+            />
 
             <Card>
                 <CardHeader>

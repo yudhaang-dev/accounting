@@ -839,6 +839,9 @@ export const en: Widen<typeof id> = {
                 revise: 'Revised',
                 cancel: 'Cancelled',
             },
+            values: 'Entry values',
+            currency: 'Currency',
+            rate: 'rate {{rate}}',
         },
         form: {
             newTitle: 'New entry',
@@ -870,6 +873,13 @@ export const en: Widen<typeof id> = {
             conflict:
                 'The draft was changed elsewhere. The latest data has been loaded; review it and save again.',
             notEditable: 'Only an entry in draft can be edited.',
+            unsupportedField:
+                'This field depends on the subledger module and cannot be filled in from this form yet.',
+            optional: 'optional',
+            chooseDimension: 'Choose a dimension value',
+            currency: 'Currency',
+            rate: 'Rate {{from}} to {{to}}',
+            rateHint: 'Leave empty to use the rate from the rate table.',
         },
         reason: {
             rejectTitle: 'Reject entry {{number}}',
@@ -897,6 +907,8 @@ export const en: Widen<typeof id> = {
             create: 'Create type',
             creating: 'Creating…',
             created: 'Transaction type created.',
+            noneUsable:
+                'No transaction type is published yet. Ask an administrator to publish a version in the transaction type designer.',
         },
     },
     transactionTypes: {

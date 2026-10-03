@@ -100,7 +100,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [ ] **M5-14** SPA: perancang Jenis Transaksi, form dinamis dari skema, kotak approval, kebijakan approval, jadwal berulang, alur pembalikan
   - [x] **M5-14a** Daftar Jenis Transaksi: buat jenis, impor template dengan tinjauan dan konfirmasi, seri nomor dan kebijakan titik penomoran — TE-FR-01, TE-FR-16
   - [x] **M5-14b** Perancang versi: editor field, aturan posting, kebijakan mata uang, terbitkan dan hentikan — TE-FR-02, TE-FR-04, TE-FR-05, TE-FR-06 — tipe field `party`, `cash_account`, dan `allocations` belum ditawarkan sampai lookup subledger ada (M6)
-  - [ ] **M5-14c** Form entri dinamis dari skema versi `structured`, termasuk mata uang dan kurs — TE-FR-04, TE-FR-06, TE-AC-01
+  - [x] **M5-14c** Form entri dinamis dari skema versi `structured`, termasuk mata uang dan kurs — TE-FR-04, TE-FR-06, TE-AC-01 — field `party`, `cash_account`, dan `allocations` tampil sebagai catatan sampai lookup subledger ada (M6)
   - [ ] **M5-14d** Lampiran pada detail entri dan kotak approval (entri menunggu tahap yang bisa disetujui user) — X-FR-04, TE-FR-09
   - [ ] **M5-14e** Kebijakan approval: aturan per key, sumber, ambang, tahap, SoD, posting otomatis — TE-FR-09, TE-AC-05
   - [ ] **M5-14f** Pembalikan jurnal, entri pengganti, `auto_reverse_on`, dan daftar pembalikan terjadwal yang gagal — TE-FR-11, TE-AC-09
