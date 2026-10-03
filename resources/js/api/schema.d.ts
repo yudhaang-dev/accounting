@@ -1783,6 +1783,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/transaction-types/{id}/numbering": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Sets the number series of a type and when its entries are numbered (TE-FR-16) */
+        put: operations["transaction-types.numbering"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/transaction-types/{id}/versions": {
         parameters: {
             query?: never;
@@ -2227,7 +2244,7 @@ export interface components {
         /** EntryResource */
         EntryResource: {
             id: string;
-            number: string;
+            number: string | null;
             status: string;
             source: string;
             transaction_type_key: string;
@@ -2596,6 +2613,14 @@ export interface components {
             data_scope: string;
             lock_version: number;
         };
+        /** NumberingRequest */
+        NumberingRequest: {
+            pattern: string;
+            padding: number;
+            reset: components["schemas"]["ResetPeriod"];
+            /** @enum {string} */
+            policy: "on_create" | "on_submit";
+        };
         /** OpeningBalanceBatchResource */
         OpeningBalanceBatchResource: {
             id: string;
@@ -2719,6 +2744,11 @@ export interface components {
         ReopenPeriodRequest: {
             reason: string;
         };
+        /**
+         * ResetPeriod
+         * @enum {string}
+         */
+        ResetPeriod: "never" | "yearly" | "monthly" | "daily";
         /** ReverseJournalRequest */
         ReverseJournalRequest: {
             /** Format: date */
@@ -2764,6 +2794,11 @@ export interface components {
             id: string;
             key: string;
             label: string;
+            numbering: {
+                policy: string;
+            } & {
+                [key: string]: unknown;
+            };
             versions: {
                 version: number;
                 mode: string;
@@ -6895,6 +6930,37 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "transaction-types.numbering": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NumberingRequest"];
+            };
+        };
+        responses: {
+            /** @description `TransactionTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TransactionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "transaction-types.versions.store": {

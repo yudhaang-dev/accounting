@@ -4,6 +4,8 @@
 return [
 
     'type_key_taken' => 'The transaction type key :key is already used in this company.',
+    'number_prefix_required' => 'The entry number needs a fixed prefix before the first token, for example ENT/{yyyy}/{seq}.',
+    'number_prefix_taken' => 'The number prefix :prefix is already used by another transaction type.',
     'type_unknown' => 'The transaction type :key does not exist in this company.',
     'version_unknown' => 'Version :version of this transaction type does not exist.',
     'version_unpublished' => 'Version :version of this transaction type is not published.',

@@ -91,7 +91,7 @@ describe('entry lifecycle (TE-FR-07, TE-FR-10)', function () {
             ->assertJsonPath('data.status', 'draft')
             ->assertJsonPath('data.source', 'manual')
             ->assertJsonPath('data.transaction_type_version', 1)
-            ->assertJsonPath('data.number', 'ENT/2026/03/000001')
+            ->assertJsonPath('data.number', 'GENERAL-JOURNAL/2026/03/000001')
             ->assertJsonPath('data.created_by', $this->preparer->id);
     });
 

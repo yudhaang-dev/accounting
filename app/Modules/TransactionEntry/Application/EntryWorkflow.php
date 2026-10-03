@@ -15,6 +15,7 @@ use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Platform\Audit\Audit;
 use App\Support\Access\ActorPermissions;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -32,6 +33,7 @@ final class EntryWorkflow
         private readonly EntryLines $lines,
         private readonly ApprovalPlanner $planner,
         private readonly EntryValidation $checks,
+        private readonly EntryNumbers $numbers,
     ) {}
 
     /**
@@ -52,7 +54,12 @@ final class EntryWorkflow
             $this->validate($entry, $userId);
 
             $plan = $this->planner->plan($entry);
-            $entry->forceFill(['status' => EntryStatus::Submitted, 'approval' => $plan])->save();
+            $entry->forceFill([
+                'status' => EntryStatus::Submitted,
+                'approval' => $plan,
+                // The type may number its entries only now (TE-FR-16); a number given at creation stays.
+                'number' => $entry->number ?? $this->numbers->next($entry->transaction_type_key, CarbonImmutable::parse($entry->accounting_date->toDateString())),
+            ])->save();
             $this->record($entry, 'submit', $userId, null, EntryStatus::Draft, $clientId);
 
             if ($plan['stages'] === []) {
@@ -268,7 +275,7 @@ final class EntryWorkflow
 
         $this->audit->record(
             "entry.{$action}",
-            "Entry {$entry->number}: {$action}.",
+            'Entry '.($entry->number ?? $entry->id).": {$action}.",
             $entry,
             before: ['status' => $previous->value],
             after: ['status' => $entry->status->value],

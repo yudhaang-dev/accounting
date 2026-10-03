@@ -9,17 +9,18 @@ return [
     'default_rate_type' => 'spot',
 
     /*
-    | Number prefix of the transaction types the code defines, which do not share the default pattern
-    | because the numbers of an entry are unique across the types of a company.
+    | Number prefix of the transaction types the code defines. A type without an entry here is
+    | prefixed with its key, so the types of a company never share a prefix: the numbers of an
+    | entry are unique across the types of a company.
     */
     'system_number_prefixes' => ['system.reversal' => 'REV'],
 
     /*
-    | Entry number series created per transaction type on first use (TE-FR-16). Numbers are issued
-    | when the entry is created. The journal number is a separate series owned by the ledger.
+    | Entry number series created per transaction type on first use (TE-FR-16), as
+    | "<prefix>/{yyyy}/{mm}/{seq}". A company changes the series of a type through the API. The
+    | journal number is a separate series owned by the ledger.
     */
     'number' => [
-        'pattern' => 'ENT/{yyyy}/{mm}/{seq}',
         'padding' => 6,
         'reset' => 'monthly',
     ],

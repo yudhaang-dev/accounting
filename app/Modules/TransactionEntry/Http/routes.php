@@ -16,6 +16,9 @@ Route::companyScoped(function () {
     Route::get('transaction-types/{id}', [TransactionTypeController::class, 'show'])
         ->middleware('permission:entries.read|transaction-types.read')->where('id', ApiServiceProvider::ULID)->name('transaction-types.show');
 
+    Route::put('transaction-types/{id}/numbering', [TransactionTypeController::class, 'numbering'])
+        ->middleware('permission:policies.manage')->where('id', ApiServiceProvider::ULID)->name('transaction-types.numbering');
+
     Route::post('transaction-types/{id}/versions', [TransactionTypeVersionController::class, 'store'])
         ->middleware('permission:policies.manage')->where('id', ApiServiceProvider::ULID)->name('transaction-types.versions.store');
     Route::get('transaction-types/{id}/versions/{version}/schema', [TransactionTypeVersionController::class, 'schema'])

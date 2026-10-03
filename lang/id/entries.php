@@ -4,6 +4,8 @@
 return [
 
     'type_key_taken' => 'Key Jenis Transaksi :key sudah dipakai di perusahaan ini.',
+    'number_prefix_required' => 'Nomor entri memerlukan prefix tetap sebelum token pertama, misalnya ENT/{yyyy}/{seq}.',
+    'number_prefix_taken' => 'Prefix nomor :prefix sudah dipakai Jenis Transaksi lain.',
     'type_unknown' => 'Jenis Transaksi :key tidak ada di perusahaan ini.',
     'version_unknown' => 'Versi :version Jenis Transaksi ini tidak ada.',
     'version_unpublished' => 'Versi :version Jenis Transaksi ini belum terbit.',

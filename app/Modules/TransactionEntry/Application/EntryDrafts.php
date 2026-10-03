@@ -54,7 +54,7 @@ final class EntryDrafts
                 'transaction_type_id' => $type->id,
                 'transaction_type_key' => $type->key,
                 'transaction_type_version' => $resolved->version,
-                'number' => $this->numbers->next($type->key, CarbonImmutable::parse($data['accounting_date'])),
+                'number' => $type->number_policy === TransactionType::NUMBER_ON_CREATE ? $this->numbers->next($type->key, CarbonImmutable::parse($data['accounting_date'])) : null,
                 'accounting_date' => $data['accounting_date'],
                 'document_date' => $data['document_date'] ?? null,
                 'description' => $data['description'],
@@ -64,7 +64,7 @@ final class EntryDrafts
                 'created_by' => $userId,
             ])->refresh();
 
-            $this->audit->record('entry.created', "Entry {$entry->number} created.", $entry, after: ['number' => $entry->number, 'status' => $entry->status->value], companyId: $entry->company_id);
+            $this->audit->record('entry.created', 'Entry '.($entry->number ?? $entry->id).' created.', $entry, after: ['number' => $entry->number, 'status' => $entry->status->value], companyId: $entry->company_id);
 
             return $entry;
         });
@@ -100,7 +100,7 @@ final class EntryDrafts
                 ...$this->links($data, $data['accounting_date']),
             ], $expectedVersion);
 
-            $this->audit->record('entry.updated', "Entry {$entry->number} updated.", $entry, companyId: $entry->company_id);
+            $this->audit->record('entry.updated', 'Entry '.($entry->number ?? $entry->id).' updated.', $entry, companyId: $entry->company_id);
 
             return $entry->refresh();
         });

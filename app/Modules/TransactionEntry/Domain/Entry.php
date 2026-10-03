@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
  * @property string $transaction_type_id
  * @property string $transaction_type_key
  * @property int $transaction_type_version
- * @property string $number
+ * @property string|null $number null for a draft whose type numbers entries on submit (TE-FR-16)
  * @property EntryStatus $status
  * @property string $source
  * @property Carbon $accounting_date

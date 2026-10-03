@@ -8815,6 +8815,69 @@
                 }
             }
         },
+        "/companies/{companyId}/transaction-types/{id}/numbering": {
+            "put": {
+                "operationId": "transaction-types.numbering",
+                "summary": "Sets the number series of a type and when its entries are numbered (TE-FR-16)",
+                "tags": [
+                    "TransactionType"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NumberingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`TransactionTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/TransactionTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/transaction-types/{id}/versions": {
             "post": {
                 "operationId": "transaction-types.versions.store",
@@ -10609,7 +10672,10 @@
                         "type": "string"
                     },
                     "number": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "status": {
                         "type": "string"
@@ -12227,6 +12293,37 @@
                 ],
                 "title": "MembershipResource"
             },
+            "NumberingRequest": {
+                "type": "object",
+                "properties": {
+                    "pattern": {
+                        "type": "string",
+                        "maxLength": 64
+                    },
+                    "padding": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 18
+                    },
+                    "reset": {
+                        "$ref": "#/components/schemas/ResetPeriod"
+                    },
+                    "policy": {
+                        "type": "string",
+                        "enum": [
+                            "on_create",
+                            "on_submit"
+                        ]
+                    }
+                },
+                "required": [
+                    "pattern",
+                    "padding",
+                    "reset",
+                    "policy"
+                ],
+                "title": "NumberingRequest"
+            },
             "OpeningBalanceBatchResource": {
                 "type": "object",
                 "properties": {
@@ -12706,6 +12803,16 @@
                 ],
                 "title": "ReopenPeriodRequest"
             },
+            "ResetPeriod": {
+                "type": "string",
+                "enum": [
+                    "never",
+                    "yearly",
+                    "monthly",
+                    "daily"
+                ],
+                "title": "ResetPeriod"
+            },
             "ReverseJournalRequest": {
                 "type": "object",
                 "properties": {
@@ -12838,6 +12945,18 @@
                     "label": {
                         "type": "string"
                     },
+                    "numbering": {
+                        "type": "object",
+                        "properties": {
+                            "policy": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "policy"
+                        ],
+                        "additionalProperties": {}
+                    },
                     "versions": {
                         "type": "array",
                         "items": {
@@ -12888,6 +13007,7 @@
                     "id",
                     "key",
                     "label",
+                    "numbering",
                     "versions",
                     "lock_version"
                 ],
