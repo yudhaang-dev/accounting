@@ -41,6 +41,9 @@ import { PeriodsPage } from '@/modules/general-ledger/pages/periods-page';
 import { can } from '@/modules/identity-access/permissions';
 import { entryQuery } from '@/modules/transaction-entry/entries';
 import { ReverseJournalButton } from '@/modules/transaction-entry/components/reverse-journal-button';
+import { RecurringSchedulesPage } from '@/modules/transaction-entry/pages/recurring-schedules-page';
+import { ScheduleFormPage } from '@/modules/transaction-entry/pages/schedule-form-page';
+import { scheduleQuery } from '@/modules/transaction-entry/recurring-schedules';
 import { ApprovalPolicyPage } from '@/modules/transaction-entry/pages/approval-policy-page';
 import { ApprovalsPage } from '@/modules/transaction-entry/pages/approvals-page';
 import { EntriesPage } from '@/modules/transaction-entry/pages/entries-page';
@@ -742,6 +745,90 @@ const editEntryRoute = createRoute({
     },
 });
 
+const schedulesRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/recurring-schedules',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navSchedules',
+                href: at(m, '/recurring-schedules'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('recurring-schedules.read'),
+    component: function Schedules() {
+        const { workspace } = schedulesRoute.useRouteContext();
+
+        return (
+            <RecurringSchedulesPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'recurring-schedules.manage')}
+            />
+        );
+    },
+});
+
+const newScheduleRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/recurring-schedules/new',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navSchedules',
+                href: at(m, '/recurring-schedules'),
+            },
+            { labelKey: 'breadcrumb.new' },
+        ],
+    },
+    beforeLoad: requirePermission('recurring-schedules.manage'),
+    component: function NewSchedule() {
+        const { workspace } = newScheduleRoute.useRouteContext();
+
+        return (
+            <ScheduleFormPage
+                companyId={workspace.company_id}
+                canUseDimensions={can(workspace, 'dimensions.read')}
+            />
+        );
+    },
+});
+
+const editScheduleRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/recurring-schedules/$scheduleId/edit',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navSchedules',
+                href: at(m, '/recurring-schedules'),
+            },
+            { label: nameOf(m) },
+            { labelKey: 'breadcrumb.edit' },
+        ],
+    },
+    beforeLoad: requirePermission('recurring-schedules.manage'),
+    loader: ({ context, params }) =>
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                scheduleQuery(params.companyId, params.scheduleId),
+            ),
+        ),
+    notFoundComponent: RecordNotFound,
+    component: function EditSchedule() {
+        const { workspace } = editScheduleRoute.useRouteContext();
+        const { scheduleId } = editScheduleRoute.useParams();
+
+        return (
+            <ScheduleFormPage
+                companyId={workspace.company_id}
+                scheduleId={scheduleId}
+                canUseDimensions={can(workspace, 'dimensions.read')}
+            />
+        );
+    },
+});
+
 const transactionTypesRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/transaction-types',
@@ -810,6 +897,10 @@ const workspaceName = (m: CrumbMatch) =>
 // The number of the entry or journal the route loaded, for the last step of the trail.
 const numberOf = (m: CrumbMatch) =>
     (m.loaderData as { number?: string | null } | undefined)?.number ?? '…';
+
+// The name of the schedule the route loaded, for the middle step of the trail.
+const nameOf = (m: CrumbMatch) =>
+    (m.loaderData as { name?: string } | undefined)?.name ?? '…';
 
 // The name of the transaction type the route loaded, for the last step of the trail.
 const labelOf = (m: CrumbMatch) =>
@@ -1047,6 +1138,9 @@ const routeTree = rootRoute.addChildren([
                 newEntryRoute,
                 entryRoute,
                 editEntryRoute,
+                schedulesRoute,
+                newScheduleRoute,
+                editScheduleRoute,
                 transactionTypesRoute,
                 transactionTypeRoute,
                 journalsRoute,

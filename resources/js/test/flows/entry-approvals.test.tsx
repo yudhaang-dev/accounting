@@ -1,5 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { File as NodeFile } from 'node:buffer';
 import { describe, expect, it, vi } from 'vitest';
 import { confirmWith } from '@/test/actions';
 import {
@@ -115,6 +116,24 @@ const typeRoute: Routes = {
     [`GET ${base}/accounts`]: () => page([]),
 };
 
+/**
+ * A multipart body built by jsdom's own FormData and File cannot go into the Request of the test runtime,
+ * which is not a browser. These give the upload the runtime's own, so the call that leaves the screen is
+ * the one the API would receive.
+ */
+async function runtimeFormData() {
+    const sample = await new Response(
+        new URLSearchParams({ a: '1' }),
+    ).formData();
+
+    vi.stubGlobal('FormData', sample.constructor);
+}
+
+const pdf = (name: string) =>
+    new NodeFile(['%PDF-1.4'], name, {
+        type: 'application/pdf',
+    }) as unknown as File;
+
 describe('entry attachments', () => {
     const detail = (
         permissions: string[],
@@ -183,7 +202,7 @@ describe('entry attachments', () => {
 
     it('adds a file to a draft as a multipart upload', async () => {
         const upload = `POST ${base}/entries/${entry().id}/attachments`;
-        const appended = vi.spyOn(FormData.prototype, 'append');
+        await runtimeFormData();
         const api = detail(['entries.read', 'entries.create'], 'draft', [], {
             [upload]: () => json({ data: attachment() }, 201),
         });
@@ -194,22 +213,18 @@ describe('entry attachments', () => {
         await screen.findByText(/Belum ada lampiran/);
         await typist.upload(
             screen.getByLabelText('Pilih berkas lampiran'),
-            new File(['%PDF-1.4'], 'invoice-oktober.pdf', {
-                type: 'application/pdf',
-            }),
+            pdf('invoice-oktober.pdf'),
         );
 
         await waitFor(() => expect(api.called(upload)).toHaveLength(1));
         // The field is named `file` and carries the file under its own name.
-        expect(String(api.called(upload)[0]?.body)).toContain('name="file"');
-        expect(appended).toHaveBeenCalledWith(
-            'file',
-            expect.any(File),
-            'invoice-oktober.pdf',
-        );
+        const body = String(api.called(upload)[0]?.body);
+
+        expect(body).toContain('name="file"; filename="invoice-oktober.pdf"');
     });
 
     it('says why the server refused a file', async () => {
+        await runtimeFormData();
         detail(['entries.read', 'entries.create'], 'draft', [], {
             [`POST ${base}/entries/${entry().id}/attachments`]: () =>
                 json(
@@ -229,7 +244,7 @@ describe('entry attachments', () => {
         await screen.findByText(/Belum ada lampiran/);
         await typist.upload(
             screen.getByLabelText('Pilih berkas lampiran'),
-            new File(['x'], 'besar.pdf', { type: 'application/pdf' }),
+            pdf('besar.pdf'),
         );
 
         expect(

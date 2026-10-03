@@ -14,6 +14,7 @@ import {
     LockKeyholeIcon,
     LogOutIcon,
     PlugIcon,
+    RepeatIcon,
     ShapesIcon,
     ShieldCheckIcon,
     SigmaIcon,
@@ -112,6 +113,12 @@ const NAV = [
         label: 'app.navEntries',
         icon: FileTextIcon,
         permission: 'entries.read',
+    },
+    {
+        to: '/w/$companyId/recurring-schedules',
+        label: 'app.navSchedules',
+        icon: RepeatIcon,
+        permission: 'recurring-schedules.read',
     },
     {
         to: '/w/$companyId/approvals',
