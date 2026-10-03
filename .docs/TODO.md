@@ -108,7 +108,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 ## M6 — Subledger
 
-- [ ] **M6-01** Pihak dan referensi eksternal per `source_system` — SL-FR-01, SL-AC-08
+- [x] **M6-01** Pihak dan referensi eksternal per `source_system` — SL-FR-01, SL-AC-08 — profil posting pada pihak menyusul di M6-02; layar SPA di M6-12
 - [ ] **M6-02** Profil posting dan peran akun kontrol — SL-FR-02
 - [ ] **M6-03** Rekening kas/bank dan transaksi kas berstatus `cleared` — SL-FR-03, SL-FR-11
 - [ ] **M6-04** Dokumen dan open item; rute subledger dari entri; sumber akun kontrol dan rekening pada aturan posting — SL-FR-04, TE-FR-05, TE-FR-10
