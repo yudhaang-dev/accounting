@@ -185,7 +185,7 @@ describe('approval policy', () => {
 
         await waitFor(() => expect(api.called(save)).toHaveLength(1));
         expect(
-            (api.called(save)[0]?.body as { rules: unknown[] }).rules,
+            (api.called(save)[0]!.body as { rules: unknown[] }).rules,
         ).toEqual([
             {
                 transaction_type_key: null,
@@ -235,7 +235,7 @@ describe('approval policy', () => {
 
         await waitFor(() => expect(api.called(save)).toHaveLength(1));
         expect(
-            (api.called(save)[0]?.body as { rules: unknown[] }).rules,
+            (api.called(save)[0]!.body as { rules: unknown[] }).rules,
         ).toEqual([
             {
                 transaction_type_key: null,
