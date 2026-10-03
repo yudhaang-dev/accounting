@@ -23,6 +23,8 @@ export type Values = {
     /** Empty means the functional currency. */
     currency: string;
     exchange_rate: string;
+    /** Date the system reverses the entry on once it is posted; empty for none (TE-FR-11). */
+    auto_reverse_on: string;
 };
 
 export const blankLine = (): Line => ({
@@ -62,6 +64,7 @@ export const valuesOf = (entry: Entry | undefined, typeKey: string): Values =>
               values: textValues(entry.values),
               currency: entry.currency ?? '',
               exchange_rate: entry.exchange_rate ?? '',
+              auto_reverse_on: entry.auto_reverse_on ?? '',
           }
         : {
               transaction_type_key: typeKey,
@@ -72,4 +75,12 @@ export const valuesOf = (entry: Entry | undefined, typeKey: string): Values =>
               values: {},
               currency: '',
               exchange_rate: '',
+              auto_reverse_on: '',
           };
+
+/** A new entry that starts as a copy of a posted one: same type and content, dated today, with no schedule of its own. */
+export const valuesFromReplaced = (source: Entry): Values => ({
+    ...valuesOf(source, source.transaction_type_key),
+    accounting_date: todayIso(),
+    auto_reverse_on: '',
+});

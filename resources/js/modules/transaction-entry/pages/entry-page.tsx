@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FormAlert } from '@/components/form-alert';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,
@@ -31,6 +32,7 @@ import { useTypeLabel } from '@/modules/transaction-entry/type-labels';
 import { EntryStatusBadge } from '@/modules/transaction-entry/components/entry-status-badge';
 import { AttachmentsCard } from '@/modules/transaction-entry/components/attachments-card';
 import { EntryValuesCard } from '@/modules/transaction-entry/components/entry-values-card';
+import { ReverseJournalButton } from '@/modules/transaction-entry/components/reverse-journal-button';
 import { ReasonDialog } from '@/modules/transaction-entry/components/reason-dialog';
 import {
     accountNamesQuery,
@@ -47,6 +49,8 @@ export type EntryPermissions = {
     approve: boolean;
     reject: boolean;
     post: boolean;
+    /** Reverses the posted journal of the entry. */
+    reverse: boolean;
     /** Links the posted journal. */
     journals: boolean;
     /** Names the dimensions of the lines instead of leaving them out. */
@@ -87,7 +91,11 @@ export function EntryPage({
     // `asking` keeps the wording while the dialog fades out after `confirming` is cleared.
     const asking = useLastDefined(confirming) ?? 'post';
 
-    useDocumentTitle(t('entries.detail.title', { number: entry.number }));
+    useDocumentTitle(
+        t('entries.detail.title', {
+            number: entry.number ?? t('entries.unnumbered'),
+        }),
+    );
 
     const act = useMutation({
         mutationFn: (action: Exclude<EntryAction, 'reject' | 'cancel'>) =>
@@ -132,7 +140,9 @@ export function EntryPage({
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3">
                     <h1 className="text-xl font-semibold tracking-tight">
-                        {t('entries.detail.title', { number: entry.number })}
+                        {t('entries.detail.title', {
+                            number: entry.number ?? t('entries.unnumbered'),
+                        })}
                     </h1>
                     <EntryStatusBadge status={entry.status} />
                 </div>
@@ -197,6 +207,33 @@ export function EntryPage({
                             {t('entries.detail.actions.revise')}
                         </Button>
                     )}
+                    {entry.status === 'posted' &&
+                        entry.journal_id &&
+                        can.reverse && (
+                            <ReverseJournalButton
+                                companyId={companyId}
+                                journalId={entry.journal_id}
+                                journalNumber={
+                                    entry.journal_number ?? entry.number ?? ''
+                                }
+                            />
+                        )}
+                    {entry.status === 'posted' &&
+                        can.create &&
+                        !entry.reverses_journal_id && (
+                            <Button
+                                variant="outline"
+                                render={
+                                    <Link
+                                        to="/w/$companyId/entries/new"
+                                        params={{ companyId }}
+                                        search={{ replaces: entry.id }}
+                                    />
+                                }
+                            >
+                                {t('entries.detail.actions.replace')}
+                            </Button>
+                        )}
                     {(entry.status === 'draft' ||
                         entry.status === 'rejected') &&
                         can.create && (
@@ -212,6 +249,69 @@ export function EntryPage({
             </div>
 
             {actionError && <FormAlert>{actionError}</FormAlert>}
+
+            {entry.auto_reverse_on &&
+                entry.auto_reversal_status === 'failed' && (
+                    <Alert variant="destructive" role="alert">
+                        <AlertTitle>
+                            {t('entries.detail.autoReversalFailedTitle', {
+                                date: entry.auto_reverse_on,
+                            })}
+                        </AlertTitle>
+                        <AlertDescription className="flex flex-col items-start gap-2">
+                            <span>
+                                {entry.auto_reversal_error ??
+                                    t(
+                                        'entries.detail.autoReversalFailedUnknown',
+                                    )}
+                            </span>
+                            <span>
+                                {t('entries.detail.autoReversalFailedHint')}
+                            </span>
+                            {can.reverse && entry.journal_id && (
+                                <ReverseJournalButton
+                                    companyId={companyId}
+                                    journalId={entry.journal_id}
+                                    journalNumber={
+                                        entry.journal_number ??
+                                        entry.number ??
+                                        ''
+                                    }
+                                />
+                            )}
+                        </AlertDescription>
+                    </Alert>
+                )}
+            {entry.auto_reverse_on &&
+                entry.auto_reversal_status !== 'failed' && (
+                    <Alert>
+                        <AlertDescription>
+                            {entry.auto_reversal_status === 'done' &&
+                            entry.auto_reversal_entry_id ? (
+                                <>
+                                    {t('entries.detail.autoReversalDone', {
+                                        date: entry.auto_reverse_on,
+                                    })}{' '}
+                                    <Link
+                                        to="/w/$companyId/entries/$entryId"
+                                        params={{
+                                            companyId,
+                                            entryId:
+                                                entry.auto_reversal_entry_id,
+                                        }}
+                                        className="underline underline-offset-4"
+                                    >
+                                        {t('entries.detail.autoReversalOpen')}
+                                    </Link>
+                                </>
+                            ) : (
+                                t('entries.detail.autoReversalPending', {
+                                    date: entry.auto_reverse_on,
+                                })
+                            )}
+                        </AlertDescription>
+                    </Alert>
+                )}
 
             <Card>
                 <CardContent>
@@ -266,6 +366,50 @@ export function EntryPage({
                                             number: entry.journal_number,
                                         })
                                     )}
+                                </dd>
+                            </div>
+                        )}
+                        {entry.reverses_journal_id && (
+                            <div className="flex flex-col gap-0.5">
+                                <dt className="text-muted-foreground">
+                                    {t('entries.detail.reverses')}
+                                </dt>
+                                <dd className="font-medium">
+                                    {can.journals ? (
+                                        <Link
+                                            to="/w/$companyId/journals/$journalId"
+                                            params={{
+                                                companyId,
+                                                journalId:
+                                                    entry.reverses_journal_id,
+                                            }}
+                                            className="underline-offset-4 hover:underline"
+                                        >
+                                            {t('entries.detail.openJournal')}
+                                        </Link>
+                                    ) : (
+                                        t('entries.detail.openJournal')
+                                    )}
+                                    {entry.reason ? ' · ' + entry.reason : ''}
+                                </dd>
+                            </div>
+                        )}
+                        {entry.replaces_entry_id && (
+                            <div className="flex flex-col gap-0.5">
+                                <dt className="text-muted-foreground">
+                                    {t('entries.detail.replaces')}
+                                </dt>
+                                <dd className="font-medium">
+                                    <Link
+                                        to="/w/$companyId/entries/$entryId"
+                                        params={{
+                                            companyId,
+                                            entryId: entry.replaces_entry_id,
+                                        }}
+                                        className="underline-offset-4 hover:underline"
+                                    >
+                                        {t('entries.detail.openEntry')}
+                                    </Link>
                                 </dd>
                             </div>
                         )}
@@ -435,7 +579,7 @@ export function EntryPage({
                     }
                 }}
                 title={t(`confirm.${asking}.title`, {
-                    number: entry.number,
+                    number: entry.number ?? t('entries.unnumbered'),
                 })}
                 description={t(`confirm.${asking}.description`)}
                 confirmLabel={t(`confirm.${asking}.action`)}

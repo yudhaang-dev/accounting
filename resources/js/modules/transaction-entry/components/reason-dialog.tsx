@@ -154,7 +154,7 @@ export function ReasonDialog({
                             shown === 'cancel'
                                 ? 'entries.reason.cancelTitle'
                                 : 'entries.reason.rejectTitle',
-                            { number: entry.number },
+                            { number: entry.number ?? t('entries.unnumbered') },
                         )}
                     </DialogTitle>
                     <DialogDescription>

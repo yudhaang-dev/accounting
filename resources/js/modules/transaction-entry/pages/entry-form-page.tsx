@@ -22,13 +22,19 @@ function EditEntry({
     const { t } = useTranslation();
     const { data: entry } = useSuspenseQuery(entryQuery(companyId, entryId));
 
-    useDocumentTitle(t('entries.form.editTitle', { number: entry.number }));
+    useDocumentTitle(
+        t('entries.form.editTitle', {
+            number: entry.number ?? t('entries.unnumbered'),
+        }),
+    );
 
     return (
         <Card>
             <CardHeader>
                 <CardTitle role="heading" aria-level={1}>
-                    {t('entries.form.editTitle', { number: entry.number })}
+                    {t('entries.form.editTitle', {
+                        number: entry.number ?? t('entries.unnumbered'),
+                    })}
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -60,15 +66,65 @@ function EditEntry({
     );
 }
 
-/** New draft (no `entryId`) or the edit of an existing draft. */
+function ReplaceEntry({
+    companyId,
+    replacesId,
+    canManageTypes,
+    canUseDimensions,
+}: {
+    companyId: string;
+    replacesId: string;
+    canManageTypes: boolean;
+    canUseDimensions: boolean;
+}) {
+    const { t } = useTranslation();
+    const { data: replaces } = useSuspenseQuery(
+        entryQuery(companyId, replacesId),
+    );
+
+    useDocumentTitle(
+        t('entries.form.replaceTitle', { number: replaces.number }),
+    );
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle role="heading" aria-level={1}>
+                    {t('entries.form.replaceTitle', {
+                        number: replaces.number,
+                    })}
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                {replaces.status === 'posted' ? (
+                    <EntryForm
+                        companyId={companyId}
+                        replaces={replaces}
+                        canManageTypes={canManageTypes}
+                        canUseDimensions={canUseDimensions}
+                    />
+                ) : (
+                    <FormAlert>{t('entries.form.notReplaceable')}</FormAlert>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+/**
+ * New draft (no `entryId`), the edit of an existing draft, or a new entry that replaces a posted one
+ * (`replacesId`, TE-FR-11) and starts as a copy of it.
+ */
 export function EntryFormPage({
     companyId,
     entryId,
+    replacesId,
     canManageTypes,
     canUseDimensions,
 }: {
     companyId: string;
     entryId?: string;
+    replacesId?: string;
     canManageTypes: boolean;
     canUseDimensions: boolean;
 }) {
@@ -81,6 +137,17 @@ export function EntryFormPage({
             <EditEntry
                 companyId={companyId}
                 entryId={entryId}
+                canManageTypes={canManageTypes}
+                canUseDimensions={canUseDimensions}
+            />
+        );
+    }
+
+    if (replacesId) {
+        return (
+            <ReplaceEntry
+                companyId={companyId}
+                replacesId={replacesId}
                 canManageTypes={canManageTypes}
                 canUseDimensions={canUseDimensions}
             />

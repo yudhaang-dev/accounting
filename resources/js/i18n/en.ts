@@ -824,6 +824,7 @@ export const en: Widen<typeof id> = {
                 revise: 'Revise',
                 cancel: 'Cancel',
                 edit: 'Edit',
+                replace: 'Create replacement entry',
             },
             done: {
                 submit: 'Entry submitted.',
@@ -844,6 +845,20 @@ export const en: Widen<typeof id> = {
             values: 'Entry values',
             currency: 'Currency',
             rate: 'rate {{rate}}',
+            reverses: 'Reverses journal',
+            openJournal: 'Open journal',
+            replaces: 'Replaces entry',
+            openEntry: 'Open entry',
+            autoReversalFailedTitle:
+                'The scheduled reversal of {{date}} failed',
+            autoReversalFailedUnknown:
+                'The system could not post the reversal.',
+            autoReversalFailedHint:
+                'The system does not try again. Fix the cause, for example reopen the period, then reverse the journal by hand.',
+            autoReversalDone: 'Reversed automatically on {{date}}.',
+            autoReversalOpen: 'Open the reversal entry',
+            autoReversalPending:
+                'Will be reversed automatically on {{date}} once posted.',
         },
         form: {
             newTitle: 'New entry',
@@ -882,6 +897,13 @@ export const en: Widen<typeof id> = {
             currency: 'Currency',
             rate: 'Rate {{from}} to {{to}}',
             rateHint: 'Leave empty to use the rate from the rate table.',
+            autoReverse: 'Reverse automatically on (optional)',
+            autoReverseHint:
+                'Once posted, the system reverses this entry on that date. It must be after the accounting date.',
+            replacing:
+                'This entry replaces {{number}}. Its content was copied from that entry; the replaced entry does not change, so reverse its journal separately if needed.',
+            replaceTitle: 'Replacement for entry {{number}}',
+            notReplaceable: 'Only a posted entry can be replaced.',
         },
         reason: {
             rejectTitle: 'Reject entry {{number}}',
@@ -912,6 +934,17 @@ export const en: Widen<typeof id> = {
             noneUsable:
                 'No transaction type is published yet. Ask an administrator to publish a version in the transaction type designer.',
         },
+        allReversals: 'All',
+        reversalFilter: 'Scheduled reversal',
+        failedReversals_one: 'One scheduled reversal failed and needs action.',
+        failedReversals_other:
+            '{{count}} scheduled reversals failed and need action.',
+        showFailedReversals: 'Show them',
+        reversalFailedOn: 'The reversal of {{date}} failed.',
+        reversalStatus_pending: 'Waiting for its date',
+        reversalStatus_done: 'Reversed',
+        reversalStatus_failed: 'Failed',
+        unnumbered: '(not numbered yet)',
     },
     transactionTypes: {
         pageTitle: 'Transaction types',
@@ -1196,6 +1229,18 @@ export const en: Widen<typeof id> = {
             stages_other: '{{count}} approval stages',
             autoPost: 'posted automatically',
         },
+    },
+    reversal: {
+        action: 'Reverse journal',
+        title: 'Reverse journal {{number}}',
+        description:
+            'A reversal is always in full and happens once. The result is a draft reversal entry that still has to be submitted, approved and posted.',
+        date: 'Reversal date',
+        dateHint: 'Its period must still accept postings.',
+        reason: 'Reason',
+        submit: 'Create reversal draft',
+        working: 'Creating…',
+        requested: 'Reversal draft created. Submit and approve it to post.',
     },
     journals: {
         pageTitle: 'Journal {{number}}',

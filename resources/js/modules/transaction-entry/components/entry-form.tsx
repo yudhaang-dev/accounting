@@ -12,10 +12,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { FormAlert } from '@/components/form-alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
 import {
     Field,
+    FieldDescription,
     FieldError,
     FieldGroup,
     FieldLabel,
@@ -46,6 +48,7 @@ import { applyApiErrors } from '@/lib/forms';
 import { isApiError } from '@/lib/http';
 import {
     blankLine,
+    valuesFromReplaced,
     valuesOf,
     type Values,
 } from '@/modules/transaction-entry/components/entry-values';
@@ -176,6 +179,7 @@ function LineDimensions({
 }
 
 function EntryFields({
+    replaces,
     companyId,
     entry,
     types,
@@ -184,6 +188,8 @@ function EntryFields({
 }: {
     companyId: string;
     entry?: Entry;
+    /** A posted entry this one replaces (TE-FR-11); its content is the starting point. */
+    replaces?: Entry;
     types: TransactionType[];
     accounts: LineAccount[];
     dimensionTypes: LineDimensionType[];
@@ -193,7 +199,11 @@ function EntryFields({
     const navigate = useNavigate();
     const [formError, setFormError] = useState<string | null>(null);
     const form = useForm<Values>({
-        defaultValues: valuesOf(entry, types[0]?.key ?? ''),
+        defaultValues: entry
+            ? valuesOf(entry, '')
+            : replaces
+              ? valuesFromReplaced(replaces)
+              : valuesOf(undefined, types[0]?.key ?? ''),
     });
     const {
         register,
@@ -233,11 +243,15 @@ function EntryFields({
 
     const save = useMutation({
         mutationFn: (values: Values) => {
+            const linked = replaces?.id ?? entry?.replaces_entry_id ?? null;
+
             if (structured && version) {
                 const common = {
                     accounting_date: values.accounting_date,
                     document_date: values.document_date || null,
                     description: values.description,
+                    auto_reverse_on: values.auto_reverse_on || null,
+                    replaces_entry_id: linked,
                     values: valuesBody(
                         schema.data ?? [],
                         values.values,
@@ -269,6 +283,8 @@ function EntryFields({
                 accounting_date: values.accounting_date,
                 document_date: values.document_date || null,
                 description: values.description,
+                auto_reverse_on: values.auto_reverse_on || null,
+                replaces_entry_id: linked,
                 lines,
             };
 
@@ -361,6 +377,15 @@ function EntryFields({
         >
             <FieldGroup>
                 {formError && <FormAlert>{formError}</FormAlert>}
+                {replaces && (
+                    <Alert>
+                        <AlertDescription>
+                            {t('entries.form.replacing', {
+                                number: replaces.number,
+                            })}
+                        </AlertDescription>
+                    </Alert>
+                )}
 
                 <div className="grid gap-4 sm:grid-cols-3">
                     <Field
@@ -378,7 +403,7 @@ function EntryFields({
                                 <Select
                                     value={field.value}
                                     items={typeItems}
-                                    disabled={Boolean(entry)}
+                                    disabled={Boolean(entry || replaces)}
                                     onValueChange={field.onChange}
                                 >
                                     <SelectTrigger
@@ -470,6 +495,43 @@ function EntryFields({
                         )}
                     </Field>
                 </div>
+
+                <Field
+                    data-invalid={errors.auto_reverse_on ? true : undefined}
+                    className="sm:max-w-xs"
+                >
+                    <FieldLabel
+                        id="entry-auto-reverse-label"
+                        htmlFor="entry-auto-reverse"
+                    >
+                        {t('entries.form.autoReverse')}
+                    </FieldLabel>
+                    <Controller
+                        control={control}
+                        name="auto_reverse_on"
+                        render={({ field }) => (
+                            <DatePicker
+                                id="entry-auto-reverse"
+                                labelledBy="entry-auto-reverse-label"
+                                value={field.value}
+                                onChange={field.onChange}
+                                clearable
+                                aria-invalid={
+                                    errors.auto_reverse_on ? true : undefined
+                                }
+                            />
+                        )}
+                    />
+                    {errors.auto_reverse_on ? (
+                        <FieldError>
+                            {errors.auto_reverse_on.message}
+                        </FieldError>
+                    ) : (
+                        <FieldDescription>
+                            {t('entries.form.autoReverseHint')}
+                        </FieldDescription>
+                    )}
+                </Field>
 
                 <Field data-invalid={errors.description ? true : undefined}>
                     <FieldLabel htmlFor="entry-description">
@@ -734,6 +796,7 @@ function EntryFields({
  * running totals. Amounts stay decimal strings from keyboard to API (API-TR-05).
  */
 export function EntryForm({
+    replaces,
     companyId,
     entry,
     canManageTypes,
@@ -741,6 +804,8 @@ export function EntryForm({
 }: {
     companyId: string;
     entry?: Entry;
+    /** A posted entry the new one replaces. */
+    replaces?: Entry;
     canManageTypes: boolean;
     /** Whether the user may read dimensions, and so pick them on a line. */
     canUseDimensions: boolean;
@@ -792,6 +857,7 @@ export function EntryForm({
         <EntryFields
             companyId={companyId}
             entry={entry}
+            replaces={replaces}
             types={usable}
             accounts={accounts.data}
             dimensionTypes={dimensions.data ?? []}

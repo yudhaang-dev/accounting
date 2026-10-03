@@ -81,7 +81,11 @@ export function ApprovalsPage({
             await queryClient.invalidateQueries({
                 queryKey: ['companies', companyId, 'entries'],
             });
-            toast.success(t('approvals.approved', { number: entry.number }));
+            toast.success(
+                t('approvals.approved', {
+                    number: entry.number ?? t('entries.unnumbered'),
+                }),
+            );
         },
         // The server says why in the user's language: the entry was changed, the approver may not be its author.
         onError: (failure) => setError(actionErrorMessage(failure, t)),
@@ -189,7 +193,8 @@ export function ApprovalsPage({
                                                 }}
                                                 className="underline-offset-4 hover:underline"
                                             >
-                                                {entry.number}
+                                                {entry.number ??
+                                                    t('entries.unnumbered')}
                                             </Link>
                                             <div className="max-w-xs truncate text-xs font-normal text-muted-foreground">
                                                 {entry.description}
@@ -244,7 +249,11 @@ export function ApprovalsPage({
                                                             aria-label={t(
                                                                 'approvals.reject',
                                                                 {
-                                                                    number: entry.number,
+                                                                    number:
+                                                                        entry.number ??
+                                                                        t(
+                                                                            'entries.unnumbered',
+                                                                        ),
                                                                 },
                                                             )}
                                                             onClick={() =>
@@ -264,7 +273,11 @@ export function ApprovalsPage({
                                                         aria-label={t(
                                                             'approvals.approve',
                                                             {
-                                                                number: entry.number,
+                                                                number:
+                                                                    entry.number ??
+                                                                    t(
+                                                                        'entries.unnumbered',
+                                                                    ),
                                                             },
                                                         )}
                                                         onClick={() => {

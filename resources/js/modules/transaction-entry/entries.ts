@@ -21,8 +21,18 @@ export const ENTRY_STATUSES: EntryStatus[] = [
     'cancelled',
 ];
 
+/** Where a scheduled reversal (`auto_reverse_on`) stands (TE-FR-11). */
+export type AutoReversalStatus = 'pending' | 'done' | 'failed';
+
+export const AUTO_REVERSAL_STATUSES: AutoReversalStatus[] = [
+    'pending',
+    'done',
+    'failed',
+];
+
 export type EntryFilters = {
     status?: EntryStatus;
+    autoReversal?: AutoReversalStatus;
     from?: string;
     to?: string;
     page: number;
@@ -47,6 +57,8 @@ export const entriesQuery = (companyId: string, filters: EntryFilters) =>
                         path: { companyId },
                         query: {
                             'filter[status]': filters.status,
+                            'filter[auto_reversal_status]':
+                                filters.autoReversal,
                             'filter[from]': filters.from || undefined,
                             'filter[to]': filters.to || undefined,
                             page: filters.page,
@@ -393,3 +405,45 @@ export function canDecide(
         !(entry.approval?.separation_of_duties && entry.created_by === userId)
     );
 }
+
+export type ReverseJournalInput =
+    components['schemas']['ReverseJournalRequest'];
+
+/**
+ * Asks for the reversal of a posted journal (TE-FR-11). It answers a draft entry of the type
+ * `system.reversal`, which goes through submit, approval and posting like any other.
+ */
+export async function reverseJournal(
+    companyId: string,
+    journalId: string,
+    body: ReverseJournalInput,
+): Promise<Entry> {
+    return (
+        await unwrap(
+            api.POST('/companies/{companyId}/journals/{id}/reverse', {
+                params: { path: { companyId, id: journalId } },
+                body,
+            }),
+        )
+    ).data;
+}
+
+/** How many scheduled reversals are stuck: the system tried, could not post, and left it for a person. */
+export const failedReversalsQuery = (companyId: string) =>
+    queryOptions({
+        queryKey: ['companies', companyId, 'entries', 'failed-reversals'],
+        queryFn: async (): Promise<number> =>
+            (
+                await unwrap(
+                    api.GET('/companies/{companyId}/entries', {
+                        params: {
+                            path: { companyId },
+                            query: {
+                                'filter[auto_reversal_status]': 'failed',
+                                per_page: 1,
+                            },
+                        },
+                    }),
+                )
+            ).meta.total,
+    });

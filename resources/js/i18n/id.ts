@@ -820,6 +820,7 @@ export const id = {
                 revise: 'Revisi',
                 cancel: 'Batalkan',
                 edit: 'Ubah',
+                replace: 'Buat entri pengganti',
             },
             done: {
                 submit: 'Entri diajukan.',
@@ -840,6 +841,19 @@ export const id = {
             values: 'Isian entri',
             currency: 'Mata uang',
             rate: 'kurs {{rate}}',
+            reverses: 'Membalik jurnal',
+            openJournal: 'Buka jurnal',
+            replaces: 'Menggantikan entri',
+            openEntry: 'Buka entri',
+            autoReversalFailedTitle: 'Pembalikan terjadwal {{date}} gagal',
+            autoReversalFailedUnknown:
+                'Sistem tidak dapat memposting pembaliknya.',
+            autoReversalFailedHint:
+                'Sistem tidak mencoba lagi. Perbaiki penyebabnya, misalnya buka kembali periodenya, lalu balik jurnalnya secara manual.',
+            autoReversalDone: 'Dibalik otomatis pada {{date}}.',
+            autoReversalOpen: 'Buka entri pembalikan',
+            autoReversalPending:
+                'Akan dibalik otomatis pada {{date}} setelah diposting.',
         },
         form: {
             newTitle: 'Entri baru',
@@ -877,6 +891,14 @@ export const id = {
             currency: 'Mata uang',
             rate: 'Kurs {{from}} ke {{to}}',
             rateHint: 'Kosongkan untuk memakai kurs dari tabel kurs.',
+            autoReverse: 'Balik otomatis pada (opsional)',
+            autoReverseHint:
+                'Setelah diposting, sistem membalik entri ini pada tanggal tersebut. Tanggalnya harus setelah tanggal akuntansi.',
+            replacing:
+                'Entri ini menggantikan {{number}}. Isinya disalin dari entri itu; entri yang diganti tidak berubah, jadi balik jurnalnya secara terpisah bila perlu.',
+            replaceTitle: 'Pengganti entri {{number}}',
+            notReplaceable:
+                'Hanya entri yang sudah diposting yang dapat diganti.',
         },
         reason: {
             rejectTitle: 'Tolak entri {{number}}',
@@ -907,6 +929,16 @@ export const id = {
             noneUsable:
                 'Belum ada jenis transaksi yang terbit. Minta administrator menerbitkan versinya di perancang jenis transaksi.',
         },
+        allReversals: 'Semua',
+        reversalFilter: 'Pembalikan terjadwal',
+        failedReversals_other:
+            '{{count}} pembalikan terjadwal gagal dan menunggu tindakan.',
+        showFailedReversals: 'Tampilkan',
+        reversalFailedOn: 'Pembalikan tanggal {{date}} gagal.',
+        reversalStatus_pending: 'Menunggu tanggalnya',
+        reversalStatus_done: 'Sudah dibalik',
+        reversalStatus_failed: 'Gagal',
+        unnumbered: '(belum bernomor)',
     },
     transactionTypes: {
         pageTitle: 'Jenis transaksi',
@@ -1186,10 +1218,22 @@ export const id = {
             source: 'sumber {{source}}',
             threshold: 'di atas {{amount}}',
             auto: 'disetujui otomatis',
-            stages_one: '{{count}} tahap persetujuan',
             stages_other: '{{count}} tahap persetujuan',
             autoPost: 'diposting otomatis',
         },
+    },
+    reversal: {
+        action: 'Balik jurnal',
+        title: 'Balik jurnal {{number}}',
+        description:
+            'Pembalikan selalu penuh dan hanya sekali. Hasilnya berupa draf entri pembalikan yang masih perlu diajukan, disetujui, dan diposting.',
+        date: 'Tanggal pembalikan',
+        dateHint: 'Periodenya harus masih menerima posting.',
+        reason: 'Alasan',
+        submit: 'Buat draf pembalikan',
+        working: 'Membuat…',
+        requested:
+            'Draf pembalikan dibuat. Ajukan dan setujui untuk memposting.',
     },
     journals: {
         pageTitle: 'Jurnal {{number}}',

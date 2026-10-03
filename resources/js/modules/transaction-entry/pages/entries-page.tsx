@@ -7,6 +7,7 @@ import { FileTextIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form-alert';
+import { Alert, AlertAction, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Empty,
@@ -40,8 +41,11 @@ import { genericErrorMessage } from '@/lib/errors';
 import { useTypeLabel } from '@/modules/transaction-entry/type-labels';
 import { EntryStatusBadge } from '@/modules/transaction-entry/components/entry-status-badge';
 import {
+    AUTO_REVERSAL_STATUSES,
     ENTRY_STATUSES,
     entriesQuery,
+    failedReversalsQuery,
+    type AutoReversalStatus,
     type EntryStatus,
 } from '@/modules/transaction-entry/entries';
 
@@ -58,6 +62,9 @@ export function EntriesPage({
     const { t, i18n } = useTranslation();
     const typeLabel = useTypeLabel(companyId);
     const [status, setStatus] = useState<EntryStatus | undefined>();
+    const [autoReversal, setAutoReversal] = useState<
+        AutoReversalStatus | undefined
+    >();
     const [from, setFrom] = useState('');
     const [to, setTo] = useState('');
     const [page, setPage] = useState(1);
@@ -66,9 +73,24 @@ export function EntriesPage({
     useDocumentTitle(t('entries.pageTitle'));
 
     const list = useQuery(
-        entriesQuery(companyId, { status, from, to, page, perPage: pageSize }),
+        entriesQuery(companyId, {
+            status,
+            autoReversal,
+            from,
+            to,
+            page,
+            perPage: pageSize,
+        }),
     );
-    const filtered = Boolean(status || from || to);
+    const failed = useQuery(failedReversalsQuery(companyId));
+    const filtered = Boolean(status || autoReversal || from || to);
+    const reversalItems = [
+        { value: ALL, label: t('entries.allReversals') },
+        ...AUTO_REVERSAL_STATUSES.map((value) => ({
+            value,
+            label: t(`entries.reversalStatus_${value}`),
+        })),
+    ];
     const statusItems = [
         { value: ALL, label: t('entries.allStatuses') },
         ...ENTRY_STATUSES.map((value) => ({
@@ -102,6 +124,26 @@ export function EntriesPage({
                 {canCreate && newEntry}
             </div>
 
+            {(failed.data ?? 0) > 0 && autoReversal !== 'failed' && (
+                <Alert variant="destructive" role="alert">
+                    <AlertDescription>
+                        {t('entries.failedReversals', { count: failed.data })}
+                    </AlertDescription>
+                    <AlertAction>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                setAutoReversal('failed');
+                                setPage(1);
+                            }}
+                        >
+                            {t('entries.showFailedReversals')}
+                        </Button>
+                    </AlertAction>
+                </Alert>
+            )}
+
             <div className="flex flex-wrap items-end gap-3">
                 <Field className="w-56">
                     <FieldLabel htmlFor="entries-status">
@@ -125,6 +167,39 @@ export function EntriesPage({
                         <SelectContent>
                             <SelectGroup>
                                 {statusItems.map((item) => (
+                                    <SelectItem
+                                        key={item.value}
+                                        value={item.value}
+                                    >
+                                        {item.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </Field>
+                <Field className="w-56">
+                    <FieldLabel htmlFor="entries-reversal">
+                        {t('entries.reversalFilter')}
+                    </FieldLabel>
+                    <Select
+                        value={autoReversal ?? ALL}
+                        items={reversalItems}
+                        onValueChange={(value) => {
+                            setAutoReversal(
+                                value === ALL
+                                    ? undefined
+                                    : (value as AutoReversalStatus),
+                            );
+                            setPage(1);
+                        }}
+                    >
+                        <SelectTrigger id="entries-reversal" className="w-full">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                {reversalItems.map((item) => (
                                     <SelectItem
                                         key={item.value}
                                         value={item.value}
@@ -222,18 +297,37 @@ export function EntriesPage({
                                                     entryId: entry.id,
                                                 }}
                                                 aria-label={t('entries.open', {
-                                                    number: entry.number,
+                                                    number:
+                                                        entry.number ??
+                                                        t('entries.unnumbered'),
                                                 })}
                                                 className="underline-offset-4 hover:underline"
                                             >
-                                                {entry.number}
+                                                {entry.number ??
+                                                    t('entries.unnumbered')}
                                             </Link>
                                         </TableCell>
                                         <TableCell>
                                             {entry.accounting_date}
                                         </TableCell>
-                                        <TableCell className="max-w-xs truncate">
-                                            {entry.description}
+                                        <TableCell className="max-w-xs">
+                                            <div className="truncate">
+                                                {entry.description}
+                                            </div>
+                                            {entry.auto_reversal_status ===
+                                                'failed' && (
+                                                <div className="text-xs text-destructive">
+                                                    {t(
+                                                        'entries.reversalFailedOn',
+                                                        {
+                                                            date: entry.auto_reverse_on,
+                                                        },
+                                                    )}
+                                                    {entry.auto_reversal_error
+                                                        ? ` ${entry.auto_reversal_error}`
+                                                        : ''}
+                                                </div>
+                                            )}
                                         </TableCell>
                                         <TableCell>
                                             {typeLabel(

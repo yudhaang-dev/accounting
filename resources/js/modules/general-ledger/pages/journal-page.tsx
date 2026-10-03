@@ -1,6 +1,7 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { LockIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -61,11 +62,14 @@ export function JournalPage({
     journalId,
     currentUserId,
     access,
+    actions,
 }: {
     companyId: string;
     journalId: string;
     currentUserId: number;
     access: JournalAccess;
+    /** What the app offers for this journal (reversing it), put beside the title. */
+    actions?: ReactNode;
 }) {
     const { t, i18n } = useTranslation();
     const { data: journal } = useSuspenseQuery(
@@ -113,6 +117,7 @@ export function JournalPage({
                         defaultValue: journal.source,
                     })}
                 </Badge>
+                {actions && <div className="ms-auto flex gap-2">{actions}</div>}
             </div>
 
             <Alert className="max-w-3xl">

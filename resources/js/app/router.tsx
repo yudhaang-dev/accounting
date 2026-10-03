@@ -40,6 +40,7 @@ import { OpeningBalancesPage } from '@/modules/general-ledger/pages/opening-bala
 import { PeriodsPage } from '@/modules/general-ledger/pages/periods-page';
 import { can } from '@/modules/identity-access/permissions';
 import { entryQuery } from '@/modules/transaction-entry/entries';
+import { ReverseJournalButton } from '@/modules/transaction-entry/components/reverse-journal-button';
 import { ApprovalPolicyPage } from '@/modules/transaction-entry/pages/approval-policy-page';
 import { ApprovalsPage } from '@/modules/transaction-entry/pages/approvals-page';
 import { EntriesPage } from '@/modules/transaction-entry/pages/entries-page';
@@ -641,6 +642,10 @@ const approvalPolicyRoute = createRoute({
 const newEntryRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/entries/new',
+    validateSearch: (search: Record<string, unknown>): { replaces?: string } =>
+        typeof search.replaces === 'string' && search.replaces !== ''
+            ? { replaces: search.replaces }
+            : {},
     staticData: {
         crumbs: (m) => [
             { labelKey: 'app.navEntries', href: at(m, '/entries') },
@@ -650,10 +655,12 @@ const newEntryRoute = createRoute({
     beforeLoad: requirePermission('entries.create'),
     component: function NewEntry() {
         const { workspace } = newEntryRoute.useRouteContext();
+        const { replaces } = newEntryRoute.useSearch();
 
         return (
             <EntryFormPage
                 companyId={workspace.company_id}
+                replacesId={replaces}
                 canManageTypes={can(workspace, 'policies.manage')}
                 canUseDimensions={can(workspace, 'dimensions.read')}
             />
@@ -693,6 +700,7 @@ const entryRoute = createRoute({
                     approve: can(workspace, 'entries.approve'),
                     reject: can(workspace, 'entries.reject'),
                     post: can(workspace, 'entries.post'),
+                    reverse: can(workspace, 'entries.reverse'),
                     journals: can(workspace, 'journals.read'),
                     dimensions: can(workspace, 'dimensions.read'),
                 }}
@@ -801,7 +809,7 @@ const workspaceName = (m: CrumbMatch) =>
     (m.context.workspace as Workspace | undefined)?.name ?? '';
 // The number of the entry or journal the route loaded, for the last step of the trail.
 const numberOf = (m: CrumbMatch) =>
-    (m.loaderData as { number?: string } | undefined)?.number ?? '…';
+    (m.loaderData as { number?: string | null } | undefined)?.number ?? '…';
 
 // The name of the transaction type the route loaded, for the last step of the trail.
 const labelOf = (m: CrumbMatch) =>
@@ -890,12 +898,22 @@ const journalRoute = createRoute({
     component: function Journal() {
         const { workspace, me } = journalRoute.useRouteContext();
         const { journalId } = journalRoute.useParams();
+        const journal = journalRoute.useLoaderData();
 
         return (
             <JournalPage
                 companyId={workspace.company_id}
                 journalId={journalId}
                 currentUserId={me.id}
+                actions={
+                    can(workspace, 'entries.reverse') ? (
+                        <ReverseJournalButton
+                            companyId={workspace.company_id}
+                            journalId={journalId}
+                            journalNumber={journal.number}
+                        />
+                    ) : undefined
+                }
                 access={{
                     entries: can(workspace, 'entries.read'),
                     periods: can(workspace, 'periods.read'),
