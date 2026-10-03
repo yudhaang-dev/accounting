@@ -798,7 +798,8 @@ export interface paths {
         /**
          * Sends a financial event (TE-FR-12). It becomes an entry of the source `integration`, is validated
          *     and submitted, and follows the approval policy like any entry; an approver, never the client,
-         *     decides. 201 with the identity and status of the event. 422 for a payload or a configuration that
+         *     decides. 201 with the identity and status of the event; 200 with the original result when the same content
+         *     comes again under its source key, 409 SOURCE_TRANSACTION_CONFLICT when other content does (TE-FR-13). 422 for a payload or a configuration that
          *     does not hold, with nothing recorded; 403 for a transaction type outside the allowlist of the client
          */
         post: operations["financial-events.store"];
@@ -4610,15 +4611,12 @@ export interface operations {
             };
         };
         responses: {
-            /** @description `FinancialEventResource` */
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        data: components["schemas"]["FinancialEventResource"];
-                    };
+                    "application/json": string;
                 };
             };
             401: components["responses"]["AuthenticationException"];

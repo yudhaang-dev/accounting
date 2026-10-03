@@ -15,7 +15,8 @@ class FinancialEventController
     /**
      * Sends a financial event (TE-FR-12). It becomes an entry of the source `integration`, is validated
      * and submitted, and follows the approval policy like any entry; an approver, never the client,
-     * decides. 201 with the identity and status of the event. 422 for a payload or a configuration that
+     * decides. 201 with the identity and status of the event; 200 with the original result when the same content
+     * comes again under its source key, 409 SOURCE_TRANSACTION_CONFLICT when other content does (TE-FR-13). 422 for a payload or a configuration that
      * does not hold, with nothing recorded; 403 for a transaction type outside the allowlist of the client.
      */
     public function store(FinancialEventRequest $request, FinancialEvents $events, AccessContexts $contexts): JsonResponse
@@ -39,7 +40,7 @@ class FinancialEventController
             links: array_filter(['party' => $data['party'] ?? null, 'cash_account' => $data['cash_account'] ?? null, 'allocations' => $data['allocations'] ?? null], fn (mixed $value): bool => $value !== null),
         ));
 
-        return (new FinancialEventResource($result))->response()->setStatusCode(201);
+        return (new FinancialEventResource($result))->response()->setStatusCode($result->replayed ? 200 : 201);
     }
 
     /**

@@ -10,7 +10,9 @@ interface FinancialEvents
 {
     /**
      * Records the event as an entry from the source `integration`, submits it and returns its result.
-     * An invalid event leaves nothing behind.
+     * An invalid event leaves nothing behind. The key is the company, the source system and the source
+     * transaction ID (TE-FR-13): the same content again returns the original result as `replayed`, however
+     * many are sent at once; other content under the key fails with SOURCE_TRANSACTION_CONFLICT.
      *
      * Fails with a validation error keyed by the fields of the event (`amounts.<field>`,
      * `dimensions.<type key>`, `references.<field>`, `currency`, `accounting_date`, `transaction_type.key`),

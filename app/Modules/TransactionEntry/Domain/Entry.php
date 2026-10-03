@@ -36,6 +36,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $integration_client_id the client that sent the financial event this entry came from
  * @property string|null $source_system
  * @property string|null $source_transaction_id
+ * @property string|null $source_payload_hash
  * @property string|null $source_document_number
  * @property array<string, mixed>|null $source_references metadata of the event, as sent
  * @property int|null $created_by null for an entry that came from a financial event
@@ -58,7 +59,7 @@ class Entry extends VersionedCompanyModel
 
     protected $fillable = [
         'transaction_type_id', 'transaction_type_key', 'transaction_type_version', 'number', 'status', 'source',
-        'accounting_date', 'document_date', 'description', 'lines', 'field_values', 'currency', 'exchange_rate', 'approval', 'reverses_journal_id', 'reason', 'replaces_entry_id', 'auto_reverse_on', 'auto_reversal_status', 'auto_reversal_error', 'auto_reversal_entry_id', 'integration_client_id', 'source_system', 'source_transaction_id', 'source_document_number', 'source_references', 'created_by', 'journal_id', 'journal_number', 'posted_at',
+        'accounting_date', 'document_date', 'description', 'lines', 'field_values', 'currency', 'exchange_rate', 'approval', 'reverses_journal_id', 'reason', 'replaces_entry_id', 'auto_reverse_on', 'auto_reversal_status', 'auto_reversal_error', 'auto_reversal_entry_id', 'integration_client_id', 'source_system', 'source_transaction_id', 'source_document_number', 'source_references', 'source_payload_hash', 'created_by', 'journal_id', 'journal_number', 'posted_at',
     ];
 
     protected function casts(): array

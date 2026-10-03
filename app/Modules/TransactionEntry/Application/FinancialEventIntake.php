@@ -9,6 +9,10 @@ use App\Modules\TransactionEntry\Domain\Entry;
 use App\Modules\TransactionEntry\Domain\FieldType;
 use App\Modules\TransactionEntry\Domain\TransactionType;
 use App\Modules\TransactionEntry\Domain\TransactionTypeMode;
+use App\Platform\Api\ApiException;
+use App\Platform\Api\ErrorCode;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -17,7 +21,9 @@ use Illuminate\Validation\ValidationException;
  * version by kind: `amounts` fill the amount fields, `dimensions` the dimension fields by their type key,
  * `references` the date, text and reference fields by name, and `party`, `cash_account` and `allocations`
  * the fields of those types. Nothing is computed from the values (P-02). The entry then takes the same
- * validation and approval as one entered by hand, with the client as the one who submitted it.
+ * validation and approval as one entered by hand, with the client as the one who submitted it. The source key
+ * makes it idempotent (TE-FR-13): the database lets one entry hold it, and a resend is compared by the hash
+ * of the canonical payload.
  */
 final class FinancialEventIntake implements FinancialEvents
 {
@@ -28,10 +34,50 @@ final class FinancialEventIntake implements FinancialEvents
 
     public function receive(FinancialEvent $event): FinancialEventResult
     {
+        $hash = CanonicalEventPayload::hash($event);
+
+        // A resend is answered before anything is validated: the period may have closed since, and the
+        // original result stands.
+        $existing = $this->sourceKey($event)->first();
+
+        if ($existing === null) {
+            try {
+                return $this->record($event, $hash);
+            } catch (UniqueConstraintViolationException $e) {
+                // Another request with the same key got in first and its entry is committed by now.
+                $existing = $this->sourceKey($event)->first() ?? throw $e;
+            }
+        }
+
+        return $this->replay($existing, $hash);
+    }
+
+    /**
+     * @return Builder<Entry>
+     */
+    private function sourceKey(FinancialEvent $event): Builder
+    {
+        return Entry::query()
+            ->where('source', 'integration')
+            ->where('source_system', $event->sourceSystem)
+            ->where('source_transaction_id', (string) ($event->references['source_transaction_id'] ?? ''));
+    }
+
+    private function replay(Entry $entry, string $hash): FinancialEventResult
+    {
+        if ($entry->source_payload_hash !== $hash) {
+            throw new ApiException(ErrorCode::SourceTransactionConflict);
+        }
+
+        return $this->result($entry, replayed: true);
+    }
+
+    private function record(FinancialEvent $event, string $hash): FinancialEventResult
+    {
         $fields = [];
 
         try {
-            $entry = DB::transaction(function () use ($event, &$fields): Entry {
+            $entry = DB::transaction(function () use ($event, $hash, &$fields): Entry {
                 $type = TransactionType::query()->where('key', $event->transactionTypeKey)->first()
                     ?? throw ValidationException::withMessages(['transaction_type.key' => [__('entries.type_unknown', ['key' => $event->transactionTypeKey])]]);
 
@@ -57,6 +103,7 @@ final class FinancialEventIntake implements FinancialEvents
                     'source_transaction_id' => (string) ($event->references['source_transaction_id'] ?? ''),
                     'source_document_number' => isset($event->references['source_document_number']) ? (string) $event->references['source_document_number'] : null,
                     'source_references' => $event->references,
+                    'source_payload_hash' => $hash,
                 ]);
 
                 return $this->workflow->submit($entry->id, null, $event->clientId);
@@ -78,9 +125,9 @@ final class FinancialEventIntake implements FinancialEvents
         return $entry === null ? null : $this->result($entry);
     }
 
-    private function result(Entry $entry): FinancialEventResult
+    private function result(Entry $entry, bool $replayed = false): FinancialEventResult
     {
-        return new FinancialEventResult($entry->id, $entry->status->value, $entry->journal_id, $entry->journal_number);
+        return new FinancialEventResult($entry->id, $entry->status->value, $entry->journal_id, $entry->journal_number, $replayed);
     }
 
     /**

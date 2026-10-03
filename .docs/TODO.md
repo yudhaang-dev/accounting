@@ -90,8 +90,8 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M5-04** Kebijakan approval/SoD: aturan per key, sumber, dan ambang; tahap dan permission; posting otomatis setelah approval — TE-FR-09, TE-AC-05
 - [x] **M5-05** Validasi lengkap saat submit dan posting — TE-FR-08, TE-AC-03
 - [x] **M5-06** Pembalikan, penggantian, dan pembalikan terjadwal — TE-FR-11, TE-AC-09 — pembalikan jurnal sumber subledger masih langsung ke GL, dialihkan di M6-08
-- [x] **M5-07** Endpoint Peristiwa Keuangan beserta status HTTP-nya — TE-FR-12, API-TR-16, API-TR-17, API-TR-18, API-TR-19, API-TR-20, API-AC-03, API-AC-05, API-AC-06 — kiriman ulang (200) dan konflik kunci (409) di M5-08; sampai itu kiriman ulang membuat entri baru
-- [ ] **M5-08** Idempotensi kunci sumber dengan payload kanonis, aman terhadap kiriman bersamaan — TE-FR-13, TE-AC-04, API-AC-04
+- [x] **M5-07** Endpoint Peristiwa Keuangan beserta status HTTP-nya — TE-FR-12, API-TR-16, API-TR-17, API-TR-18, API-TR-19, API-TR-20, API-AC-03, API-AC-05, API-AC-06
+- [x] **M5-08** Idempotensi kunci sumber dengan payload kanonis, aman terhadap kiriman bersamaan — TE-FR-13, TE-AC-04, API-AC-04
 - [ ] **M5-09** Changes feed berbasis cursor — TE-FR-15, TE-AC-08
 - [ ] **M5-10** Jurnal berulang — TE-FR-14
 - [ ] **M5-11** Penomoran entri per Jenis Transaksi — TE-FR-16 — seri bawaan semua jenis memakai pola yang sama padahal nomor entri unik per perusahaan, jadi dua jenis bisa bentrok; hanya `system.reversal` yang sudah berawalan sendiri

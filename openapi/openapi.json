@@ -3939,7 +3939,7 @@
         "/companies/{companyId}/financial-events": {
             "post": {
                 "operationId": "financial-events.store",
-                "summary": "Sends a financial event (TE-FR-12). It becomes an entry of the source `integration`, is validated\nand submitted, and follows the approval policy like any entry; an approver, never the client,\ndecides. 201 with the identity and status of the event. 422 for a payload or a configuration that\ndoes not hold, with nothing recorded; 403 for a transaction type outside the allowlist of the client",
+                "summary": "Sends a financial event (TE-FR-12). It becomes an entry of the source `integration`, is validated\nand submitted, and follows the approval policy like any entry; an approver, never the client,\ndecides. 201 with the identity and status of the event; 200 with the original result when the same content\ncomes again under its source key, 409 SOURCE_TRANSACTION_CONFLICT when other content does (TE-FR-13). 422 for a payload or a configuration that\ndoes not hold, with nothing recorded; 403 for a transaction type outside the allowlist of the client",
                 "tags": [
                     "FinancialEvent"
                 ],
@@ -3964,20 +3964,12 @@
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "`FinancialEventResource`",
+                    "200": {
+                        "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/FinancialEventResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "string"
                                 }
                             }
                         }

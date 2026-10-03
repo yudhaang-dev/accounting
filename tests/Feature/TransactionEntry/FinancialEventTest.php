@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Modules\GeneralLedger\Domain\Account;
 use App\Support\Company\CompanyScope;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -160,6 +161,98 @@ describe('receiving an event (TE-FR-12, API-TR-19, API-TR-20)', function () {
         $lines = $this->actingAs($this->admin)->getJson("{$this->url}/entries/{$event['event_id']}")->json('data.lines');
 
         expect($lines[0]['dimensions'])->toBe(['department' => $sales])->and($lines[1]['dimensions'])->toBe([]);
+    });
+});
+
+describe('idempotency of the source key (TE-FR-13, TE-AC-04, API-AC-04)', function () {
+    it('answers an identical resend with the original result and no second entry', function () {
+        $first = evSendEvent()->assertCreated()->json('data');
+
+        $again = evSendEvent()->assertOk()->json('data');
+
+        expect($again)->toBe($first)->and(evEntries())->toBe(1);
+    });
+
+    it('does not care for the order of keys or the format of decimals', function () {
+        $first = evSendEvent()->assertCreated()->json('data');
+
+        $payload = evPayload();
+        $payload['amounts'] = ['withholding_payable' => '500000.00', 'net_payable' => '9500000.0', 'salary_expense' => '010000000'];
+        $payload['references'] = array_reverse($payload['references']);
+        $payload['dimensions'] = [];
+
+        evSend('POST', "{$this->url}/financial-events", $payload, $this->token)->assertOk()->assertJsonPath('data.event_id', $first['event_id']);
+
+        expect(evEntries())->toBe(1);
+    });
+
+    it('answers a resend with the original result even when the period has closed since', function () {
+        $first = evSendEvent()->assertCreated()->json('data');
+
+        DB::table('gl_periods')->where('company_id', $this->companyId)->update(['status' => 'closed']);
+
+        evSendEvent()->assertOk()->assertJsonPath('data.event_id', $first['event_id']);
+    });
+
+    it('returns where the original stands now, with its journal once posted', function () {
+        $first = evSendEvent()->assertCreated()->json('data');
+
+        $this->actingAs($this->approver)->postJson("{$this->url}/entries/{$first['event_id']}/approve")->assertOk();
+        $this->actingAs($this->approver)->postJson("{$this->url}/entries/{$first['event_id']}/post")->assertOk();
+
+        evSendEvent()->assertOk()->assertJsonPath('data.event_id', $first['event_id'])->assertJsonPath('data.status', 'posted')
+            ->assertJsonPath('data.journal_number', fn ($number) => $number !== null);
+
+        expect(DB::table('gl_journals')->count())->toBe(1);
+    });
+
+    it('refuses other content under the same key and leaves the original as it was (409)', function () {
+        $first = evSendEvent()->assertCreated()->json('data');
+
+        $changed = ['amounts' => ['salary_expense' => '10000001', 'net_payable' => '9500001', 'withholding_payable' => '500000']];
+        evSendEvent($changed)->assertConflict()->assertJsonPath('code', 'SOURCE_TRANSACTION_CONFLICT');
+
+        evSendEvent(['accounting_date' => '2026-03-30'])->assertConflict()->assertJsonPath('code', 'SOURCE_TRANSACTION_CONFLICT');
+        evSendEvent(['references' => ['source_transaction_id' => 'payrun-2026-03', 'source_document_number' => 'PAYRUN-2026-03-B']])->assertConflict();
+
+        $entry = $this->actingAs($this->admin)->getJson("{$this->url}/entries/{$first['event_id']}")->assertOk()->json('data');
+
+        expect(evEntries())->toBe(1)->and($entry['values']['salary_expense'])->toBe('10000000')->and($entry['lock_version'])->toBeInt();
+    });
+
+    it('keeps the key apart per source system and per company', function () {
+        $first = evSendEvent()->assertCreated()->json('data');
+
+        $other = evClient(['name' => 'Other', 'source_system' => 'other']);
+        $second = evSendEvent([], evToken($other))->assertCreated()->json('data');
+
+        expect($second['event_id'])->not->toBe($first['event_id'])->and(evEntries())->toBe(2);
+    });
+
+    it('makes a new key a new event', function () {
+        evSendEvent()->assertCreated();
+        evSendEvent(['references' => ['source_transaction_id' => 'payrun-2026-04']])->assertCreated();
+
+        expect(evEntries())->toBe(2);
+    });
+
+    it('records nothing for an invalid payload, so that the corrected one under the same key is new', function () {
+        evSendEvent(['amounts' => ['salary_expense' => '100', 'net_payable' => '90', 'withholding_payable' => '0']])->assertUnprocessable();
+
+        expect(evEntries())->toBe(0);
+
+        evSendEvent()->assertCreated();
+    });
+
+    it('holds one entry per key in the database, whatever the application does', function () {
+        evSendEvent()->assertCreated();
+
+        $row = (array) DB::table('te_entries')->where('company_id', $this->companyId)->first();
+        unset($row['id']);
+        $row['id'] = (string) Str::ulid();
+        $row['number'] = 'DUP-1';
+
+        expect(fn () => DB::table('te_entries')->insert($row))->toThrow(UniqueConstraintViolationException::class);
     });
 });
 
