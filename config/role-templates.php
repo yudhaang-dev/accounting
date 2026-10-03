@@ -7,7 +7,7 @@
 | workspace so that the first user can set the company up and work in it.
 */
 
-$read = ['company.read', 'accounts.read', 'dimensions.read', 'currencies.read', 'exchange-rates.read', 'periods.read', 'entries.read', 'journals.read', 'reports.read'];
+$read = ['company.read', 'accounts.read', 'dimensions.read', 'currencies.read', 'exchange-rates.read', 'periods.read', 'entries.read', 'journals.read', 'financial-events.read', 'reports.read'];
 
 return [
 

@@ -37,13 +37,13 @@ final class EntryWorkflow
     /**
      * Validates the entry against the ledger rules and sends it to approval by the plan the policy gives
      * it (TE-FR-08, TE-FR-09). An entry the policy approves automatically goes straight to `approved`, and
-     * on to the ledger when the policy says so.
+     * on to the ledger when the policy says so. An entry from a financial event is submitted by its client.
      *
      * @throws ApiException INVALID_STATE_TRANSITION, or any code of PostingValidator
      */
-    public function submit(string $id, int $userId): Entry
+    public function submit(string $id, ?int $userId, ?string $clientId = null): Entry
     {
-        return DB::transaction(function () use ($id, $userId): Entry {
+        return DB::transaction(function () use ($id, $userId, $clientId): Entry {
             $entry = Entry::query()->lockForUpdate()->findOrFail($id);
 
             $this->assertStatus($entry, [EntryStatus::Draft]);
@@ -53,14 +53,14 @@ final class EntryWorkflow
 
             $plan = $this->planner->plan($entry);
             $entry->forceFill(['status' => EntryStatus::Submitted, 'approval' => $plan])->save();
-            $this->record($entry, 'submit', $userId, null, EntryStatus::Draft);
+            $this->record($entry, 'submit', $userId, null, EntryStatus::Draft, $clientId);
 
             if ($plan['stages'] === []) {
                 $entry->forceFill(['status' => EntryStatus::Approved])->save();
-                $this->record($entry, 'auto_approve', $userId, null, EntryStatus::Submitted);
+                $this->record($entry, 'auto_approve', $userId, null, EntryStatus::Submitted, $clientId);
 
                 if ($plan['auto_post']) {
-                    return $this->postLocked($entry, $userId);
+                    return $this->postLocked($entry, $userId, $clientId);
                 }
             }
 
@@ -146,7 +146,7 @@ final class EntryWorkflow
     }
 
     /** Posts a locked, approved entry: the ledger validates again inside this transaction (TE-FR-08). */
-    private function postLocked(Entry $entry, int $userId): Entry
+    private function postLocked(Entry $entry, ?int $userId, ?string $clientId = null): Entry
     {
         $this->checks->assertValid($entry);
         $this->refreshLines($entry);
@@ -164,7 +164,7 @@ final class EntryWorkflow
             'auto_reversal_status' => $entry->auto_reverse_on === null ? null : 'pending',
         ])->save();
 
-        $this->record($entry, 'post', $userId, null, EntryStatus::Approved);
+        $this->record($entry, 'post', $userId, null, EntryStatus::Approved, $clientId);
 
         return $entry->refresh();
     }
@@ -212,7 +212,7 @@ final class EntryWorkflow
     }
 
     /** Checks what the ledger will check when it posts the entry (TE-FR-08). */
-    private function validate(Entry $entry, int $userId): void
+    private function validate(Entry $entry, ?int $userId): void
     {
         if ($entry->reverses_journal_id === null) {
             $this->validator->validate($this->command($entry, $userId));
@@ -221,7 +221,7 @@ final class EntryWorkflow
         }
     }
 
-    private function reversal(Entry $entry, int $userId): ReverseJournal
+    private function reversal(Entry $entry, ?int $userId): ReverseJournal
     {
         return new ReverseJournal(
             companyId: $entry->company_id,
@@ -234,7 +234,7 @@ final class EntryWorkflow
         );
     }
 
-    private function command(Entry $entry, int $userId): PostJournal
+    private function command(Entry $entry, ?int $userId): PostJournal
     {
         return new PostJournal(
             companyId: $entry->company_id,
@@ -262,9 +262,9 @@ final class EntryWorkflow
         );
     }
 
-    private function record(Entry $entry, string $action, int $userId, ?string $reason, EntryStatus $previous): void
+    private function record(Entry $entry, string $action, ?int $userId, ?string $reason, EntryStatus $previous, ?string $clientId = null): void
     {
-        EntryDecision::create(['entry_id' => $entry->id, 'action' => $action, 'actor_id' => $userId, 'reason' => $reason]);
+        EntryDecision::create(['entry_id' => $entry->id, 'action' => $action, 'actor_id' => $userId, 'client_id' => $clientId, 'reason' => $reason]);
 
         $this->audit->record(
             "entry.{$action}",

@@ -37,6 +37,8 @@ return [
     'auto_reversal_reason' => 'Pembalikan terjadwal entri :number',
     'auto_reverse_after' => 'Tanggal pembalikan otomatis harus setelah tanggal akuntansi.',
     'replaces_unknown' => 'Entri yang diganti harus berupa entri terposting di perusahaan ini.',
+    'event_needs_structured' => 'Jenis Transaksi :key tidak memiliki versi terstruktur yang menerima peristiwa keuangan.',
+    'event_section_unknown' => 'Payload tidak memiliki bagian :section; peristiwa keuangan hanya membawa bagian kanonis.',
     'lines_required' => 'Entri baris bebas membutuhkan baris.',
     'lines_not_allowed' => 'Entri terstruktur berisi nilai, bukan baris; barisnya berasal dari aturan posting.',
     'values_not_allowed' => 'Entri baris bebas berisi baris, bukan nilai field.',

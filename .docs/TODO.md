@@ -58,7 +58,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M3-02** Siklus membership: undangan, pencabutan, kedaluwarsa — IA-FR-01, IA-AC-02
 - [x] **M3-03** Cakupan data per nilai dimensi beserta turunannya, diterapkan sebagai filter di semua modul — IA-FR-03, IA-AC-04, X-AC-01 — laporan M8 menerima `DataScope` dan menandai `restricted`; entri klien integrasi (M3-05) butuh cakupan sendiri
 - [x] **M3-04** Kebijakan keamanan: 2FA wajib per permission, batas sesi idle, allowlist IP klien — IA-FR-04, IA-FR-05, IA-AC-05 — 2FA hanya memeriksa 2FA terpasang di akun, bukan tantangan per sesi
-- [x] **M3-05** Klien integrasi: Passport Client Credentials di `/api/v1/oauth/token`, scope, allowlist, rotasi dan pencabutan langsung — IA-FR-06, IA-AC-06, IA-AC-07, API-TR-22, API-TR-23, API-TR-24 — permission `financial-events.*` dan penegakan allowlist Jenis Transaksi di M5-07. Deploy: `php artisan passport:keys`, migrasi Passport, atur `API_TOKEN_TTL_SECONDS`
+- [x] **M3-05** Klien integrasi: Passport Client Credentials di `/api/v1/oauth/token`, scope, allowlist, rotasi dan pencabutan langsung — IA-FR-06, IA-AC-06, IA-AC-07, API-TR-22, API-TR-23, API-TR-24. Deploy: `php artisan passport:keys`, migrasi Passport, atur `API_TOKEN_TTL_SECONDS`
 - [x] **M3-06** SPA: anggota dan role, cakupan data, kebijakan keamanan, klien integrasi (secret tampil sekali)
 
 ## M4 — Buku besar
@@ -90,7 +90,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M5-04** Kebijakan approval/SoD: aturan per key, sumber, dan ambang; tahap dan permission; posting otomatis setelah approval — TE-FR-09, TE-AC-05
 - [x] **M5-05** Validasi lengkap saat submit dan posting — TE-FR-08, TE-AC-03
 - [x] **M5-06** Pembalikan, penggantian, dan pembalikan terjadwal — TE-FR-11, TE-AC-09 — pembalikan jurnal sumber subledger masih langsung ke GL, dialihkan di M6-08
-- [ ] **M5-07** Endpoint Peristiwa Keuangan beserta status HTTP-nya — TE-FR-12, API-TR-16, API-TR-17, API-TR-18, API-TR-19, API-TR-20, API-AC-03, API-AC-05, API-AC-06
+- [x] **M5-07** Endpoint Peristiwa Keuangan beserta status HTTP-nya — TE-FR-12, API-TR-16, API-TR-17, API-TR-18, API-TR-19, API-TR-20, API-AC-03, API-AC-05, API-AC-06 — kiriman ulang (200) dan konflik kunci (409) di M5-08; sampai itu kiriman ulang membuat entri baru
 - [ ] **M5-08** Idempotensi kunci sumber dengan payload kanonis, aman terhadap kiriman bersamaan — TE-FR-13, TE-AC-04, API-AC-04
 - [ ] **M5-09** Changes feed berbasis cursor — TE-FR-15, TE-AC-08
 - [ ] **M5-10** Jurnal berulang — TE-FR-14

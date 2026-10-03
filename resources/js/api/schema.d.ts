@@ -786,6 +786,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/financial-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sends a financial event (TE-FR-12). It becomes an entry of the source `integration`, is validated
+         *     and submitted, and follows the approval policy like any entry; an approver, never the client,
+         *     decides. 201 with the identity and status of the event. 422 for a payload or a configuration that
+         *     does not hold, with nothing recorded; 403 for a transaction type outside the allowlist of the client
+         */
+        post: operations["financial-events.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/financial-events/{eventId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Where an event stands. A client sees only what it sent; a user needs `financial-events.read`.
+         *     Another client's event is 404, not 403
+         */
+        get: operations["financial-events.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/fiscal-calendar": {
         parameters: {
             query?: never;
@@ -1986,7 +2028,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -2145,13 +2187,16 @@ export interface components {
             auto_reversal_status: string | null;
             auto_reversal_error: string | null;
             auto_reversal_entry_id: string | null;
-            created_by: number;
+            created_by: number | null;
+            source_system: string | null;
+            source_transaction_id: string | null;
             journal_id: string | null;
             journal_number: string | null;
             posted_at: string | null;
             decisions: {
                 action: string;
-                actor_id: number;
+                actor_id: number | null;
+                client_id: string;
                 reason: string | null;
                 at: string;
             }[] | null;
@@ -2183,6 +2228,40 @@ export interface components {
          * @enum {string}
          */
         FieldType: "amount" | "date" | "text" | "reference" | "account" | "party" | "cash_account" | "dimension" | "allocations";
+        /**
+         * FinancialEventRequest
+         * @description The canonical payload of a financial event (API-TR-17, API-TR-18). Only a client with the transaction
+         *     type on its allowlist may send it; the check comes before validation so that nothing is said about a
+         *     type the client may not use.
+         */
+        FinancialEventRequest: {
+            transaction_type: {
+                key: string;
+                version?: number | null;
+            };
+            /** Format: date */
+            accounting_date: string;
+            currency?: string | null;
+            exchange_rate?: string | null;
+            amounts: string[];
+            dimensions?: (string | null)[];
+            party?: string | null;
+            cash_account?: string | null;
+            allocations?: string[] | null;
+            references: {
+                source_transaction_id: string;
+                source_document_number?: string | null;
+            };
+            source_system?: string;
+        };
+        /** FinancialEventResource */
+        FinancialEventResource: {
+            event_id: string;
+            /** @description The status of the entry the event became; the journal is there once it is posted. */
+            status: string;
+            journal_id: string | null;
+            journal_number: string | null;
+        };
         /** FiscalCalendarResource */
         FiscalCalendarResource: {
             id: string;
@@ -2694,13 +2773,13 @@ export interface components {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -2792,6 +2871,18 @@ export interface components {
         };
         /** @description Not found */
         ModelNotFoundException: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    /** @description Error overview. */
+                    message: string;
+                };
+            };
+        };
+        /** @description Authorization error */
+        AuthorizationException: {
             headers: {
                 [name: string]: unknown;
             };
@@ -4498,6 +4589,63 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["ExchangeRateResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "financial-events.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinancialEventRequest"];
+            };
+        };
+        responses: {
+            /** @description `FinancialEventResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FinancialEventResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "financial-events.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `FinancialEventResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FinancialEventResource"];
                     };
                 };
             };

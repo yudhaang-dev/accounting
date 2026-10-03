@@ -13,7 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class EntryResource extends JsonResource
 {
     /**
-     * @return array{id: string, number: string, status: string, source: string, transaction_type_key: string, transaction_type_version: int, accounting_date: string, document_date: string|null, description: string, lines: list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>, currency: string|null, exchange_rate: string|null, applied_rate: string|null}>, values: array<string, mixed>|null, currency: string|null, exchange_rate: string|null, approval: array{stages: list<string>, approved: int, auto_post: bool, separation_of_duties: bool}|null, reverses_journal_id: string|null, reason: string|null, replaces_entry_id: string|null, auto_reverse_on: string|null, auto_reversal_status: string|null, auto_reversal_error: string|null, auto_reversal_entry_id: string|null, created_by: int, journal_id: string|null, journal_number: string|null, posted_at: string|null, decisions: list<array{action: string, actor_id: int, reason: string|null, at: string}>|null, lock_version: int}
+     * @return array{id: string, number: string, status: string, source: string, transaction_type_key: string, transaction_type_version: int, accounting_date: string, document_date: string|null, description: string, lines: list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>, currency: string|null, exchange_rate: string|null, applied_rate: string|null}>, values: array<string, mixed>|null, currency: string|null, exchange_rate: string|null, approval: array{stages: list<string>, approved: int, auto_post: bool, separation_of_duties: bool}|null, reverses_journal_id: string|null, reason: string|null, replaces_entry_id: string|null, auto_reverse_on: string|null, auto_reversal_status: string|null, auto_reversal_error: string|null, auto_reversal_entry_id: string|null, created_by: int|null, source_system: string|null, source_transaction_id: string|null, journal_id: string|null, journal_number: string|null, posted_at: string|null, decisions: list<array{action: string, actor_id: int|null, client_id: string|null, reason: string|null, at: string}>|null, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -40,6 +40,8 @@ class EntryResource extends JsonResource
             'auto_reversal_error' => $this->resource->auto_reversal_error,
             'auto_reversal_entry_id' => $this->resource->auto_reversal_entry_id,
             'created_by' => $this->resource->created_by,
+            'source_system' => $this->resource->source_system,
+            'source_transaction_id' => $this->resource->source_transaction_id,
             'journal_id' => $this->resource->journal_id,
             'journal_number' => $this->resource->journal_number,
             'posted_at' => $this->resource->posted_at?->toIso8601String(),
@@ -89,7 +91,7 @@ class EntryResource extends JsonResource
     }
 
     /**
-     * @return list<array{action: string, actor_id: int, reason: string|null, at: string}>
+     * @return list<array{action: string, actor_id: int|null, client_id: string|null, reason: string|null, at: string}>
      */
     private function decisions(): array
     {
@@ -98,7 +100,8 @@ class EntryResource extends JsonResource
         foreach ($this->resource->decisions as $decision) {
             $decisions[] = [
                 'action' => $decision->action,
-                'actor_id' => (int) $decision->actor_id,
+                'actor_id' => $decision->actor_id === null ? null : (int) $decision->actor_id,
+                'client_id' => $decision->client_id,
                 'reason' => $decision->reason === null ? null : (string) $decision->reason,
                 'at' => $decision->created_at->toIso8601String(),
             ];

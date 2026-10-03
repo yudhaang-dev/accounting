@@ -3936,6 +3936,114 @@
                 }
             }
         },
+        "/companies/{companyId}/financial-events": {
+            "post": {
+                "operationId": "financial-events.store",
+                "summary": "Sends a financial event (TE-FR-12). It becomes an entry of the source `integration`, is validated\nand submitted, and follows the approval policy like any entry; an approver, never the client,\ndecides. 201 with the identity and status of the event. 422 for a payload or a configuration that\ndoes not hold, with nothing recorded; 403 for a transaction type outside the allowlist of the client",
+                "tags": [
+                    "FinancialEvent"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FinancialEventRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`FinancialEventResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/FinancialEventResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/financial-events/{eventId}": {
+            "get": {
+                "operationId": "financial-events.show",
+                "summary": "Where an event stands. A client sees only what it sent; a user needs `financial-events.read`.\nAnother client's event is 404, not 403",
+                "tags": [
+                    "FinancialEvent"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`FinancialEventResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/FinancialEventResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/fiscal-calendar": {
             "get": {
                 "operationId": "fiscal-calendar.show",
@@ -9582,6 +9690,9 @@
                                 "entries.reject",
                                 "entries.post",
                                 "entries.reverse",
+                                "financial-events.create",
+                                "financial-events.read",
+                                "financial-events.read-own",
                                 "journals.read",
                                 "journals.post-soft-closed",
                                 "journals.override-source",
@@ -10186,7 +10297,22 @@
                         ]
                     },
                     "created_by": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "source_system": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "source_transaction_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "journal_id": {
                         "type": [
@@ -10218,7 +10344,13 @@
                                     "type": "string"
                                 },
                                 "actor_id": {
-                                    "type": "integer"
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "client_id": {
+                                    "type": "string"
                                 },
                                 "reason": {
                                     "type": [
@@ -10233,6 +10365,7 @@
                             "required": [
                                 "action",
                                 "actor_id",
+                                "client_id",
                                 "reason",
                                 "at"
                             ]
@@ -10265,6 +10398,8 @@
                     "auto_reversal_error",
                     "auto_reversal_entry_id",
                     "created_by",
+                    "source_system",
+                    "source_transaction_id",
                     "journal_id",
                     "journal_number",
                     "posted_at",
@@ -10362,6 +10497,151 @@
                     "allocations"
                 ],
                 "title": "FieldType"
+            },
+            "FinancialEventRequest": {
+                "type": "object",
+                "description": "The canonical payload of a financial event (API-TR-17, API-TR-18). Only a client with the transaction\ntype on its allowlist may send it; the check comes before validation so that nothing is said about a\ntype the client may not use.",
+                "properties": {
+                    "transaction_type": {
+                        "type": "object",
+                        "properties": {
+                            "key": {
+                                "type": "string",
+                                "maxLength": 64
+                            },
+                            "version": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ],
+                                "minimum": 1
+                            }
+                        },
+                        "required": [
+                            "key"
+                        ]
+                    },
+                    "accounting_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "currency": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "pattern": "^[A-Z]{3}$"
+                    },
+                    "exchange_rate": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 40
+                    },
+                    "amounts": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "dimensions": {
+                        "type": "array",
+                        "items": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
+                    },
+                    "party": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 26,
+                        "maxLength": 26
+                    },
+                    "cash_account": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 26,
+                        "maxLength": 26
+                    },
+                    "allocations": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "references": {
+                        "type": "object",
+                        "properties": {
+                            "source_transaction_id": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "source_document_number": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            }
+                        },
+                        "required": [
+                            "source_transaction_id"
+                        ]
+                    },
+                    "source_system": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "transaction_type",
+                    "accounting_date",
+                    "amounts",
+                    "references"
+                ],
+                "title": "FinancialEventRequest"
+            },
+            "FinancialEventResource": {
+                "type": "object",
+                "properties": {
+                    "event_id": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "The status of the entry the event became; the journal is there once it is posted."
+                    },
+                    "journal_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "journal_number": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "event_id",
+                    "status",
+                    "journal_id",
+                    "journal_number"
+                ],
+                "title": "FinancialEventResource"
             },
             "FiscalCalendarResource": {
                 "type": "object",
@@ -12480,6 +12760,9 @@
                                 "entries.reject",
                                 "entries.post",
                                 "entries.reverse",
+                                "financial-events.create",
+                                "financial-events.read",
+                                "financial-events.read-own",
                                 "journals.read",
                                 "journals.post-soft-closed",
                                 "journals.override-source",
@@ -12543,6 +12826,9 @@
                                 "entries.reject",
                                 "entries.post",
                                 "entries.reverse",
+                                "financial-events.create",
+                                "financial-events.read",
+                                "financial-events.read-own",
                                 "journals.read",
                                 "journals.post-soft-closed",
                                 "journals.override-source",
@@ -12837,6 +13123,25 @@
             },
             "ModelNotFoundException": {
                 "description": "Not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "AuthorizationException": {
+                "description": "Authorization error",
                 "content": {
                     "application/json": {
                         "schema": {

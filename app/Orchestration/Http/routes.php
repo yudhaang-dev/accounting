@@ -2,6 +2,7 @@
 
 use App\Orchestration\Approval\Http\ApprovalPolicyController;
 use App\Orchestration\Company\Http\CompanyActivationController;
+use App\Orchestration\FinancialEvents\Http\FinancialEventController;
 use App\Orchestration\Ledger\Http\FiscalYearClosingController;
 use App\Orchestration\Ledger\Http\HistoryImportController;
 use App\Orchestration\Ledger\Http\LedgerPolicyController;
@@ -17,6 +18,12 @@ Route::post('workspaces', [WorkspaceController::class, 'store'])->middleware(['a
 Route::companyScoped(function () {
     Route::post('activate', [CompanyActivationController::class, 'activate'])
         ->middleware('permission:company.activate')->name('company.activate');
+
+    // Events are idempotent by their source transaction ID (TE-FR-13), not by an Idempotency-Key (API-TR-13).
+    Route::post('financial-events', [FinancialEventController::class, 'store'])
+        ->middleware('permission:financial-events.create')->withoutMiddleware('idempotent')->name('financial-events.store');
+    Route::get('financial-events/{eventId}', [FinancialEventController::class, 'show'])
+        ->middleware('permission:financial-events.read|financial-events.read-own')->where('eventId', ApiServiceProvider::ULID)->name('financial-events.show');
 
     Route::get('approval-policy', [ApprovalPolicyController::class, 'show'])->middleware('permission:policies.manage')->name('approval-policy.show');
     Route::put('approval-policy', [ApprovalPolicyController::class, 'update'])->middleware('permission:policies.manage')->name('approval-policy.update');

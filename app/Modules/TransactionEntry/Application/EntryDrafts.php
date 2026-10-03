@@ -36,13 +36,14 @@ final class EntryDrafts
 
     /**
      * @param  EntryInput  $data
+     * @param  array<string, mixed>  $origin  columns for an entry that does not come from a user: `source` and the fields of the financial event
      *
      * @throws ValidationException when the transaction type or version does not exist
      * @throws ApiException TRANSACTION_TYPE_VERSION_RETIRED, FORBIDDEN when a line is outside the data scope of the user
      */
-    public function create(string $typeKey, ?int $version, array $data, int $userId): Entry
+    public function create(string $typeKey, ?int $version, array $data, ?int $userId, array $origin = []): Entry
     {
-        return DB::transaction(function () use ($typeKey, $version, $data, $userId): Entry {
+        return DB::transaction(function () use ($typeKey, $version, $data, $userId, $origin): Entry {
             $type = TransactionType::query()->where('key', $typeKey)->first()
                 ?? throw ValidationException::withMessages(['transaction_type_key' => [__('entries.type_unknown', ['key' => $typeKey])]]);
 
@@ -59,6 +60,7 @@ final class EntryDrafts
                 'description' => $data['description'],
                 ...$content,
                 ...$this->links($data, $data['accounting_date']),
+                ...$origin,
                 'created_by' => $userId,
             ])->refresh();
 
@@ -161,7 +163,7 @@ final class EntryDrafts
      * @throws ValidationException when the requested version does not exist
      * @throws ApiException TRANSACTION_TYPE_VERSION_RETIRED
      */
-    private function version(TransactionType $type, ?int $requested): TransactionTypeVersion
+    public function version(TransactionType $type, ?int $requested): TransactionTypeVersion
     {
         $versions = TransactionTypeVersion::query()->where('transaction_type_id', $type->id);
 

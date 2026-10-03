@@ -11,7 +11,8 @@ use Illuminate\Support\Carbon;
  * @property string $id
  * @property string $entry_id
  * @property string $action
- * @property int $actor_id
+ * @property int|null $actor_id the user; null for an integration client or the system
+ * @property string|null $client_id the integration client that took the step
  * @property string|null $reason
  * @property Carbon $created_at
  */
@@ -21,5 +22,5 @@ class EntryDecision extends CompanyScopedModel
 
     protected $table = 'te_entry_decisions';
 
-    protected $fillable = ['entry_id', 'action', 'actor_id', 'reason'];
+    protected $fillable = ['entry_id', 'action', 'actor_id', 'client_id', 'reason'];
 }

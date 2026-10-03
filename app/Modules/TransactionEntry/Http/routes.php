@@ -34,7 +34,7 @@ Route::companyScoped(function () {
         ->middleware('permission:entries.create')->where('id', ApiServiceProvider::ULID)->name('entries.update');
 
     Route::post('journals/{id}/reverse', [JournalReversalController::class, 'store'])
-        ->middleware('permission:entries.create')->where('id', ApiServiceProvider::ULID)->name('journals.reverse');
+        ->middleware('permission:entries.reverse')->where('id', ApiServiceProvider::ULID)->name('journals.reverse');
 
     $permissions = [
         'submit' => 'entries.submit',

@@ -37,6 +37,8 @@ return [
     'auto_reversal_reason' => 'Scheduled reversal of entry :number',
     'auto_reverse_after' => 'The date of the automatic reversal must come after the accounting date.',
     'replaces_unknown' => 'The entry to replace must be a posted entry of this company.',
+    'event_needs_structured' => 'The transaction type :key has no structured version that takes financial events.',
+    'event_section_unknown' => 'The payload has no section :section; a financial event carries only the canonical sections.',
     'lines_required' => 'A free-lines entry needs its lines.',
     'lines_not_allowed' => 'A structured entry has values, not lines; its lines come from the posting rules.',
     'values_not_allowed' => 'A free-lines entry has lines, not field values.',
