@@ -95,7 +95,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M5-09** Changes feed berbasis cursor — TE-FR-15, TE-AC-08
 - [x] **M5-10** Jurnal berulang — TE-FR-14
 - [x] **M5-11** Penomoran entri per Jenis Transaksi — TE-FR-16 — pengaturan seri dan titik pemberian nomor lewat layar SPA di M5-14
-- [ ] **M5-12** Lampiran entri (Platform Attachments) — X-FR-04
+- [x] **M5-12** Lampiran entri (Platform Attachments) — X-FR-04 — `Attachments` siap dipakai dokumen subledger di M6-04; layar SPA di M5-14
 - [ ] **M5-13** Template Jenis Transaksi yang wajib dikonfirmasi — TE-FR-01
 - [ ] **M5-14** SPA: perancang Jenis Transaksi, form dinamis dari skema, kotak approval, kebijakan approval, jadwal berulang, alur pembalikan
 

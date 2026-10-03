@@ -9,6 +9,7 @@ use App\Modules\Subledger\SubledgerServiceProvider;
 use App\Modules\TransactionEntry\TransactionEntryServiceProvider;
 use App\Orchestration\OrchestrationServiceProvider;
 use App\Platform\Api\ApiServiceProvider;
+use App\Platform\Attachments\AttachmentsServiceProvider;
 use App\Platform\Audit\AuditServiceProvider;
 use App\Platform\Localization\LocalizationServiceProvider;
 use App\Platform\Numbering\NumberingServiceProvider;
@@ -23,6 +24,7 @@ return [
     SupportServiceProvider::class,
     ApiServiceProvider::class,
     AuditServiceProvider::class,
+    AttachmentsServiceProvider::class,
     NumberingServiceProvider::class,
     RetentionServiceProvider::class,
     LocalizationServiceProvider::class,

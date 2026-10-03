@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\TransactionEntry\Http\EntryAttachmentController;
 use App\Modules\TransactionEntry\Http\EntryController;
 use App\Modules\TransactionEntry\Http\JournalReversalController;
 use App\Modules\TransactionEntry\Http\RecurringScheduleController;
@@ -36,6 +37,15 @@ Route::companyScoped(function () {
         ->middleware('permission:entries.read')->where('id', ApiServiceProvider::ULID)->name('entries.show');
     Route::patch('entries/{id}', [EntryController::class, 'update'])
         ->middleware('permission:entries.create')->where('id', ApiServiceProvider::ULID)->name('entries.update');
+
+    Route::get('entries/{id}/attachments', [EntryAttachmentController::class, 'index'])
+        ->middleware('permission:entries.read')->where('id', ApiServiceProvider::ULID)->name('entries.attachments.index');
+    Route::post('entries/{id}/attachments', [EntryAttachmentController::class, 'store'])
+        ->middleware('permission:entries.create')->where('id', ApiServiceProvider::ULID)->name('entries.attachments.store');
+    Route::get('entries/{id}/attachments/{attachmentId}', [EntryAttachmentController::class, 'download'])
+        ->middleware('permission:entries.read')->where('id', ApiServiceProvider::ULID)->where('attachmentId', ApiServiceProvider::ULID)->name('entries.attachments.download');
+    Route::delete('entries/{id}/attachments/{attachmentId}', [EntryAttachmentController::class, 'destroy'])
+        ->middleware('permission:entries.create')->where('id', ApiServiceProvider::ULID)->where('attachmentId', ApiServiceProvider::ULID)->name('entries.attachments.destroy');
 
     Route::get('recurring-schedules', [RecurringScheduleController::class, 'index'])->middleware('permission:recurring-schedules.read')->name('recurring-schedules.index');
     Route::post('recurring-schedules', [RecurringScheduleController::class, 'store'])->middleware('permission:recurring-schedules.manage')->name('recurring-schedules.store');
