@@ -161,6 +161,8 @@ describe('entry list', () => {
         expect(
             api
                 .called(`GET ${base}/entries`)
+                // The count of failed reversals asks for one row on its own.
+                .filter((call) => !call.query['filter[auto_reversal_status]'])
                 .every((call) => call.query.per_page === '25'),
         ).toBe(true);
 
@@ -386,6 +388,8 @@ describe('entry form', () => {
             accounting_date: '2026-10-02',
             document_date: null,
             description: 'Setoran modal awal',
+            auto_reverse_on: null,
+            replaces_entry_id: null,
             lines: [
                 {
                     account_id: cash,
