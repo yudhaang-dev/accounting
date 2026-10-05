@@ -2,6 +2,7 @@ import { Link, useMatchRoute, useParams } from '@tanstack/react-router';
 import {
     ArrowDownToLineIcon,
     ArrowRightLeftIcon,
+    ClipboardListIcon,
     LandmarkIcon,
     BookTextIcon,
     CalendarRangeIcon,
@@ -212,6 +213,12 @@ const NAV = [
         label: 'app.navAging',
         icon: HourglassIcon,
         permission: 'reports.read',
+    },
+    {
+        to: '/w/$companyId/plans',
+        label: 'app.navPlans',
+        icon: ClipboardListIcon,
+        permission: 'plans.read',
     },
     {
         to: '/w/$companyId/members',

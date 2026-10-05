@@ -126,6 +126,7 @@ export const en: Widen<typeof id> = {
         navAllocations: 'Allocations',
         navReconciliations: 'Reconciliation',
         navAging: 'Aging',
+        navPlans: 'Budgets',
         navEntries: 'Entries',
         navSchedules: 'Recurring journals',
         navApprovalPolicy: 'Approval policy',
@@ -378,7 +379,8 @@ export const en: Widen<typeof id> = {
         runDate: 'As of',
         run: 'Run reconciliation',
         running: 'Running…',
-        ran_one: 'Reconciled {{count}} account, {{differences}} with a difference.',
+        ran_one:
+            'Reconciled {{count}} account, {{differences}} with a difference.',
         ran_other:
             'Reconciled {{count}} accounts, {{differences}} with a difference.',
         empty: 'No reconciliation yet',
@@ -419,6 +421,157 @@ export const en: Widen<typeof id> = {
         reason: 'Reason',
         waiveSubmit: 'Waive difference',
         waived: 'Difference waived.',
+    },
+    plans: {
+        pageTitle: 'Budgets and forecasts',
+        title: 'Budgets and forecasts',
+        description:
+            'Planned income and expenses by period, account and dimension, in several versions. A plan never becomes a journal.',
+        empty: 'No plans yet',
+        emptyDescription:
+            'Create a plan for a fiscal year, then fill in its versions by period and account.',
+        status: {
+            draft: 'Draft',
+            published: 'Published',
+            archived: 'Archived',
+        },
+        plan: {
+            create: 'New plan',
+            createTitle: 'New plan',
+            editTitle: 'Edit plan {{name}}',
+            edit: 'Edit plan {{name}}',
+            editShort: 'Edit',
+            name: 'Plan name',
+            fiscalYear: 'Fiscal year',
+            fiscalYearHint:
+                'The fiscal year the plan projects; it cannot change afterwards.',
+            fiscalYearLocked:
+                'The fiscal year cannot change once the plan exists.',
+            description: 'Description',
+            created: 'Plan {{name}} created.',
+            saved: 'Plan {{name}} saved.',
+            conflict:
+                'Someone else changed the plan. The latest values are shown; review and save again.',
+        },
+        versions: {
+            add: 'New version',
+            addFor: 'New version for {{name}}',
+            none: 'This plan has no versions yet.',
+            name: 'Version',
+            status: 'Status',
+            lines: 'Lines',
+            actions: 'Actions',
+            origin: 'Copy of {{name}}',
+            default: 'Default comparison',
+            edit: 'Fill in lines',
+            view: 'View lines',
+            rename: 'Rename',
+            publish: 'Publish',
+            revise: 'Change published version',
+        },
+        versionDialog: {
+            description: 'The version name must be unique within its plan.',
+            name: 'Version name',
+            conflict:
+                'Someone else changed the version. The latest values are shown; review and save again.',
+            createTitle: 'New version',
+            createHint: 'For example: initial budget, Q2 forecast.',
+            createSubmit: 'Create version',
+            createDone: 'Version {{name}} created.',
+            reviseTitle: 'Change published version',
+            reviseHint:
+                'Creates a new draft that copies the published version; the published version stays as it is.',
+            reviseSubmit: 'Create draft',
+            reviseDone: 'Draft {{name}} created from the published version.',
+            renameTitle: 'Rename version',
+            renameHint: 'Only a draft can be renamed.',
+            renameSubmit: 'Save',
+            renameDone: 'Version renamed to {{name}}.',
+        },
+        publish: {
+            title: 'Publish {{name}}?',
+            description:
+                'A published version cannot change any more; changing it means creating a new draft. A version without lines cannot be published.',
+            action: 'Publish',
+            done: 'Version {{name}} published.',
+            conflict:
+                'Someone else changed the version. Reload, then publish again if it is still right.',
+        },
+        policy: {
+            open: 'Policy',
+            title: 'Budget policy',
+            description:
+                'The publisher rule and the default comparison version of each fiscal year.',
+            distinct: 'The publisher must differ from whoever changed it last',
+            distinctHint:
+                'Whoever last changed the lines of a version cannot publish it.',
+            defaults: 'Default comparison version',
+            defaultsHint:
+                'Only a published version of a plan of the same fiscal year can be the comparison.',
+            noDefault: 'No default',
+            noPublished: 'No published version for this year yet.',
+            saved: 'Budget policy saved.',
+            conflict:
+                'Someone else changed the policy. The latest values are shown; review and save again.',
+        },
+        import: {
+            open: 'Import CSV',
+            title: 'Import plan lines',
+            description:
+                'Adds or replaces lines of the draft from a CSV file. All or nothing.',
+            file: 'CSV file',
+            format: 'Columns period (a date inside the period), account_code, amount, and note and dimension.<dimension type key> when needed.',
+            chooseFile: 'Choose a CSV file first.',
+            rejected: 'The file was rejected; fix these lines and try again.',
+            problems: 'Problems in the file',
+            line: 'Line {{line}}:',
+            more: '…and {{count}} more problems.',
+            importing: 'Importing…',
+            submit: 'Import',
+            done: '{{created}} new lines, {{updated}} lines updated.',
+        },
+        copy: {
+            open: 'Copy',
+            title: 'Copy into this draft',
+            description:
+                'A starting point from another version of the same fiscal year or from the actuals of one period. Cells that exist take the copied amounts.',
+            source: 'Copy source',
+            fromVersion: 'From another version',
+            fromActuals: 'From the actuals of a period',
+            version: 'Source version',
+            actualsPeriod: 'Actuals of period',
+            toPeriod: 'Copy into period',
+            submit: 'Copy',
+            incomplete: 'Complete the copy source.',
+            done: '{{created}} new lines, {{updated}} updated, {{skipped}} skipped.',
+        },
+        grid: {
+            descriptionDraft:
+                'Enter amounts by account and period in the functional currency, then save. Emptying a cell removes its line.',
+            descriptionReadOnly:
+                'This version cannot change. To change its values, create a new draft from the published version.',
+            export: 'Export CSV',
+            exportFailed: 'The plan lines could not be exported.',
+            account: 'Account',
+            total: 'Total',
+            emptyDraft:
+                'This version has no lines yet. Add a row, import a CSV or copy from another version.',
+            emptyReadOnly: 'This version has no lines.',
+            addRow: 'Add a row',
+            add: 'Add',
+            chooseAccount: 'Choose an account first.',
+            rowExists: 'That account and those dimensions are already a row.',
+            save: 'Save changes',
+            discard: 'Discard changes',
+            noChanges: 'No changes.',
+            pending_one: '{{count}} unsaved change.',
+            pending_other: '{{count}} unsaved changes.',
+            saved: 'Changes saved.',
+            rejected:
+                'The changes were rejected; fix these cells and save again.',
+            problems: 'Problems in the cells',
+            back: 'Back to plans',
+        },
     },
     aging: {
         pageTitle: 'Aging',
@@ -512,7 +665,8 @@ export const en: Widen<typeof id> = {
             date: 'The date "{{detail}}" must look like YYYY-MM-DD.',
             code: 'Row {{line}}: the account or party code is empty.',
             role: 'Row {{line}}: control_role "{{detail}}" must be receivables or payables.',
-            document: 'Row {{line}}: the document kind or number "{{detail}}" is not valid (kind: invoice or credit_note, a number is required).',
+            document:
+                'Row {{line}}: the document kind or number "{{detail}}" is not valid (kind: invoice or credit_note, a number is required).',
             more: '…and {{count}} more problems.',
         },
         opening: {

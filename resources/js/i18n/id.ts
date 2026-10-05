@@ -124,6 +124,7 @@ export const id = {
         navAllocations: 'Alokasi',
         navReconciliations: 'Rekonsiliasi',
         navAging: 'Umur piutang/utang',
+        navPlans: 'Anggaran',
         navEntries: 'Entri',
         navSchedules: 'Jurnal berulang',
         navApprovalPolicy: 'Kebijakan persetujuan',
@@ -416,6 +417,157 @@ export const id = {
         waiveSubmit: 'Waiver selisih',
         waived: 'Selisih di-waiver.',
     },
+    plans: {
+        pageTitle: 'Anggaran dan proyeksi',
+        title: 'Anggaran dan proyeksi',
+        description:
+            'Rencana pendapatan dan biaya per periode, akun, dan dimensi, dalam beberapa versi. Rencana tidak pernah menjadi jurnal.',
+        empty: 'Belum ada rencana',
+        emptyDescription:
+            'Buat rencana untuk satu tahun buku, lalu isi versinya per periode dan akun.',
+        status: {
+            draft: 'Draf',
+            published: 'Terbit',
+            archived: 'Diarsipkan',
+        },
+        plan: {
+            create: 'Rencana baru',
+            createTitle: 'Rencana baru',
+            editTitle: 'Ubah rencana {{name}}',
+            edit: 'Ubah rencana {{name}}',
+            editShort: 'Ubah',
+            name: 'Nama rencana',
+            fiscalYear: 'Tahun buku',
+            fiscalYearHint:
+                'Tahun buku yang diproyeksikan; tidak dapat diubah kemudian.',
+            fiscalYearLocked:
+                'Tahun buku tidak dapat diubah setelah rencana dibuat.',
+            description: 'Deskripsi',
+            created: 'Rencana {{name}} dibuat.',
+            saved: 'Rencana {{name}} disimpan.',
+            conflict:
+                'Rencana diubah orang lain. Nilai terbaru ditampilkan; periksa lalu simpan lagi.',
+        },
+        versions: {
+            add: 'Versi baru',
+            addFor: 'Versi baru untuk {{name}}',
+            none: 'Rencana ini belum punya versi.',
+            name: 'Versi',
+            status: 'Status',
+            lines: 'Baris',
+            actions: 'Aksi',
+            origin: 'Salinan dari {{name}}',
+            default: 'Pembanding default',
+            edit: 'Isi baris',
+            view: 'Lihat baris',
+            rename: 'Ubah nama',
+            publish: 'Terbitkan',
+            revise: 'Ubah versi terbit',
+        },
+        versionDialog: {
+            description: 'Nama versi harus unik dalam rencananya.',
+            name: 'Nama versi',
+            conflict:
+                'Versi diubah orang lain. Nilai terbaru ditampilkan; periksa lalu simpan lagi.',
+            createTitle: 'Versi baru',
+            createHint: 'Contoh: anggaran awal, forecast Q2.',
+            createSubmit: 'Buat versi',
+            createDone: 'Versi {{name}} dibuat.',
+            reviseTitle: 'Ubah versi terbit',
+            reviseHint:
+                'Membuat draf baru yang menyalin isi versi terbit; versi terbit tidak berubah.',
+            reviseSubmit: 'Buat draf',
+            reviseDone: 'Draf {{name}} dibuat dari versi terbit.',
+            renameTitle: 'Ubah nama versi',
+            renameHint: 'Hanya draf yang dapat diubah namanya.',
+            renameSubmit: 'Simpan',
+            renameDone: 'Versi diganti nama menjadi {{name}}.',
+        },
+        publish: {
+            title: 'Terbitkan {{name}}?',
+            description:
+                'Versi terbit tidak dapat diubah lagi; mengubahnya berarti membuat draf baru. Versi tanpa baris tidak dapat diterbitkan.',
+            action: 'Terbitkan',
+            done: 'Versi {{name}} diterbitkan.',
+            conflict:
+                'Versi diubah orang lain. Muat ulang lalu terbitkan lagi bila sudah sesuai.',
+        },
+        policy: {
+            open: 'Kebijakan',
+            title: 'Kebijakan anggaran',
+            description:
+                'Syarat penerbit dan versi pembanding default per tahun buku.',
+            distinct: 'Penerbit harus berbeda dari pengubah terakhir',
+            distinctHint:
+                'Siapa pun yang terakhir mengubah baris sebuah versi tidak dapat menerbitkannya.',
+            defaults: 'Versi pembanding default',
+            defaultsHint:
+                'Hanya versi terbit dari rencana tahun buku yang sama yang dapat menjadi pembanding.',
+            noDefault: 'Tanpa default',
+            noPublished: 'Belum ada versi terbit untuk tahun ini.',
+            saved: 'Kebijakan anggaran disimpan.',
+            conflict:
+                'Kebijakan diubah orang lain. Nilai terbaru ditampilkan; periksa lalu simpan lagi.',
+        },
+        import: {
+            open: 'Impor CSV',
+            title: 'Impor baris rencana',
+            description:
+                'Menambah atau mengganti baris draf dari file CSV. Semua atau tidak sama sekali.',
+            file: 'File CSV',
+            format: 'Kolom period (tanggal dalam periode), account_code, amount, serta note dan dimension.<kunci jenis dimensi> bila perlu.',
+            chooseFile: 'Pilih file CSV terlebih dahulu.',
+            rejected: 'File ditolak; perbaiki baris berikut lalu coba lagi.',
+            problems: 'Masalah pada file',
+            line: 'Baris {{line}}:',
+            more: '…dan {{count}} masalah lain.',
+            importing: 'Mengimpor…',
+            submit: 'Impor',
+            done: '{{created}} baris baru, {{updated}} baris diperbarui.',
+        },
+        copy: {
+            open: 'Salin',
+            title: 'Salin ke draf ini',
+            description:
+                'Titik awal dari versi lain pada tahun buku yang sama atau dari realisasi satu periode. Sel yang sudah ada memakai nilai salinan.',
+            source: 'Sumber salinan',
+            fromVersion: 'Dari versi lain',
+            fromActuals: 'Dari realisasi satu periode',
+            version: 'Versi sumber',
+            actualsPeriod: 'Realisasi periode',
+            toPeriod: 'Disalin ke periode',
+            submit: 'Salin',
+            incomplete: 'Lengkapi sumber salinan.',
+            done: '{{created}} baris baru, {{updated}} diperbarui, {{skipped}} dilewati.',
+        },
+        grid: {
+            descriptionDraft:
+                'Isi nilai per akun dan periode dalam mata uang fungsional, lalu simpan. Sel yang dikosongkan menghapus barisnya.',
+            descriptionReadOnly:
+                'Versi ini tidak dapat diubah. Untuk mengubah nilainya, buat draf baru dari versi terbit.',
+            export: 'Ekspor CSV',
+            exportFailed: 'Baris rencana tidak dapat diekspor.',
+            account: 'Akun',
+            total: 'Total',
+            emptyDraft:
+                'Versi ini belum punya baris. Tambah baris, impor CSV, atau salin dari versi lain.',
+            emptyReadOnly: 'Versi ini tidak punya baris.',
+            addRow: 'Tambah baris',
+            add: 'Tambah',
+            chooseAccount: 'Pilih akun terlebih dahulu.',
+            rowExists: 'Akun dan dimensi itu sudah ada sebagai baris.',
+            save: 'Simpan perubahan',
+            discard: 'Buang perubahan',
+            noChanges: 'Tidak ada perubahan.',
+            pending_one: '{{count}} perubahan belum disimpan.',
+            pending_other: '{{count}} perubahan belum disimpan.',
+            saved: 'Perubahan disimpan.',
+            rejected:
+                'Perubahan ditolak; perbaiki sel berikut lalu simpan lagi.',
+            problems: 'Masalah pada sel',
+            back: 'Kembali ke daftar rencana',
+        },
+    },
     aging: {
         pageTitle: 'Umur piutang/utang',
         title: 'Umur piutang dan utang',
@@ -440,7 +592,8 @@ export const id = {
         bucketCurrent: 'Belum jatuh tempo',
         bucketRange: '{{from}}–{{to}} hari',
         bucketOver: 'Lebih dari {{to}} hari',
-        itemDetail: 'jatuh tempo {{due}}, {{age}} hari, {{currency}} {{amount}}',
+        itemDetail:
+            'jatuh tempo {{due}}, {{age}} hari, {{currency}} {{amount}}',
         export: 'Ekspor CSV',
         exporting: 'Mengekspor…',
         exportFailed: 'Laporan umur tidak dapat diekspor.',
@@ -509,7 +662,8 @@ export const id = {
             date: 'Tanggal "{{detail}}" harus berbentuk TTTT-BB-HH.',
             code: 'Baris {{line}}: kode akun atau pihak kosong.',
             role: 'Baris {{line}}: control_role "{{detail}}" harus receivables atau payables.',
-            document: 'Baris {{line}}: jenis atau nomor dokumen "{{detail}}" tidak valid (kind: invoice atau credit_note, nomor wajib).',
+            document:
+                'Baris {{line}}: jenis atau nomor dokumen "{{detail}}" tidak valid (kind: invoice atau credit_note, nomor wajib).',
             more: '…dan {{count}} masalah lain.',
         },
         opening: {

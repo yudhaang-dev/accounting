@@ -63,6 +63,9 @@ import { AllocationsPage } from '@/modules/subledger/pages/allocations-page';
 import { DocumentsPage } from '@/modules/subledger/pages/documents-page';
 import { OpenItemsPage } from '@/modules/subledger/pages/open-items-page';
 import { PartiesPage } from '@/modules/subledger/pages/parties-page';
+import { PlanVersionPage } from '@/modules/planning/pages/plan-version-page';
+import { PlansPage } from '@/modules/planning/pages/plans-page';
+import { versionQuery } from '@/modules/planning/plans';
 import { AgingPage } from '@/modules/subledger/pages/aging-page';
 import { ReconciliationsPage } from '@/modules/subledger/pages/reconciliations-page';
 import { PostingProfilesPage } from '@/modules/subledger/pages/posting-profiles-page';
@@ -655,10 +658,9 @@ const allocationsRoute = createRoute({
 const reconciliationsRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/reconciliations',
-    validateSearch: (
-        search: Record<string, unknown>,
-    ): { as_of?: string } =>
-        typeof search.as_of === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(search.as_of)
+    validateSearch: (search: Record<string, unknown>): { as_of?: string } =>
+        typeof search.as_of === 'string' &&
+        /^\d{4}-\d{2}-\d{2}$/.test(search.as_of)
             ? { as_of: search.as_of }
             : {},
     staticData: {
@@ -1224,6 +1226,62 @@ const agingRoute = createRoute({
     },
 });
 
+const plansRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/plans',
+    staticData: {
+        crumbs: (m) => [{ labelKey: 'app.navPlans', href: at(m, '/plans') }],
+    },
+    beforeLoad: requirePermission('plans.read'),
+    component: function PlansScreen() {
+        const { workspace } = plansRoute.useRouteContext();
+
+        return (
+            <PlansPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'plans.manage')}
+                canPublish={can(workspace, 'plans.publish')}
+                canManagePolicy={can(workspace, 'planning-policy.manage')}
+            />
+        );
+    },
+});
+
+const planVersionRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/plan-versions/$versionId',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navPlans', href: at(m, '/plans') },
+            {
+                label: nameOf(m),
+                href: at(m, `/plan-versions/${m.params.versionId}`),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('plans.read'),
+    loader: ({ context, params }) =>
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                versionQuery(params.companyId, params.versionId),
+            ),
+        ),
+    notFoundComponent: RecordNotFound,
+    component: function PlanVersionScreen() {
+        const { workspace } = planVersionRoute.useRouteContext();
+        const { versionId } = planVersionRoute.useParams();
+
+        return (
+            <PlanVersionPage
+                companyId={workspace.company_id}
+                versionId={versionId}
+                canManage={can(workspace, 'plans.manage')}
+                canPublish={can(workspace, 'plans.publish')}
+            />
+        );
+    },
+});
+
 const journalRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/journals/$journalId',
@@ -1413,6 +1471,8 @@ const routeTree = rootRoute.addChildren([
                 journalRoute,
                 trialBalanceRoute,
                 agingRoute,
+                plansRoute,
+                planVersionRoute,
                 membersRoute,
                 rolesRoute,
                 securityPolicyRoute,

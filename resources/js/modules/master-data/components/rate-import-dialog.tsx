@@ -15,38 +15,15 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+    problemsOf,
+    readText,
+    SHOWN_PROBLEMS as SHOWN,
+    type Problem,
+} from '@/lib/csv-import';
 import { actionErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
 import { importRates } from '@/modules/master-data/exchange-rates';
-
-/** The text of a chosen file. */
-const readText = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onload = () =>
-            resolve(typeof reader.result === 'string' ? reader.result : '');
-        reader.onerror = () => reject(reader.error);
-        reader.readAsText(file);
-    });
-
-/** How many problems the dialog lists; the rest are counted. */
-const SHOWN = 20;
-
-type Problem = { line: string; field: string; message: string };
-
-/** `rows.3.currency` is line 3, field currency; `rows.3` is the line as a whole; anything else has no line. */
-function problemsOf(errors: Record<string, string[]>): Problem[] {
-    return Object.entries(errors).flatMap(([key, messages]) => {
-        const match = key.match(/^rows\.(\d+)(?:\.(.+))?$/);
-
-        return messages.map((message) => ({
-            line: match?.[1] ?? '',
-            field: match?.[2] ?? (match ? '' : key),
-            message,
-        }));
-    });
-}
 
 function RateImportForm({
     companyId,

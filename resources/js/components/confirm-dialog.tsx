@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { FormAlert } from '@/components/form-alert';
 import { Spinner } from '@/components/ui/spinner';
 import {
     AlertDialog,
@@ -20,6 +21,8 @@ type Props = {
     confirmLabel: string;
     /** True while the action runs: the dialog stays open and cannot be confirmed twice. */
     pending?: boolean;
+    /** Why the last attempt failed, shown above the buttons while the question stays open. */
+    error?: string | null;
     /** For an action that is hard to take back. */
     destructive?: boolean;
     onConfirm: () => void;
@@ -37,6 +40,7 @@ export function ConfirmDialog({
     description,
     confirmLabel,
     pending = false,
+    error = null,
     destructive = false,
     onConfirm,
 }: Props) {
@@ -58,6 +62,7 @@ export function ConfirmDialog({
                         {description}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
+                {error && <FormAlert>{error}</FormAlert>}
                 <AlertDialogFooter>
                     <AlertDialogCancel disabled={pending}>
                         {t('common.cancel')}
