@@ -6,7 +6,9 @@ import {
     BookTextIcon,
     CalendarRangeIcon,
     CoinsIcon,
+    FileStackIcon,
     FileTextIcon,
+    ReceiptTextIcon,
     LayersIcon,
     ChevronsUpDownIcon,
     HouseIcon,
@@ -135,6 +137,18 @@ const NAV = [
         label: 'app.navCashTransactions',
         icon: ArrowRightLeftIcon,
         permission: 'cash-transactions.read',
+    },
+    {
+        to: '/w/$companyId/documents',
+        label: 'app.navDocuments',
+        icon: FileStackIcon,
+        permission: 'documents.read',
+    },
+    {
+        to: '/w/$companyId/open-items',
+        label: 'app.navOpenItems',
+        icon: ReceiptTextIcon,
+        permission: 'open-items.read',
     },
     {
         to: '/w/$companyId/entries',

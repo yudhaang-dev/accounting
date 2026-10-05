@@ -123,7 +123,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
   - [x] **M6-12a** Pihak: daftar, form, referensi eksternal per `source_system`, profil posting pada pihak, nonaktifkan — SL-FR-01, SL-AC-08
   - [x] **M6-12b** Profil posting dan pemetaan akun kontrol berversi, termasuk petunjuk membatasi akun kontrol ke sumber `subledger` — SL-FR-02
   - [x] **M6-12c** Rekening kas/bank dan transaksi kas: daftar, form, tandai dan batalkan `cleared` — SL-FR-03, SL-FR-11
-  - [ ] **M6-12d** Dokumen dan open item: daftar dengan filter, detail beserta tautan ke jurnal dan entri, status `reversed` dan `is_opening` — SL-FR-04
+  - [x] **M6-12d** Dokumen dan open item: daftar dengan filter, detail beserta tautan ke jurnal dan entri, status `reversed` dan `is_opening` — SL-FR-04
   - [ ] **M6-12e** Alokasi: daftar per open item, alokasi atas dokumen yang sudah terposting (uang muka), pembatalan beralasan, selisih kurs terealisasi — SL-FR-05, SL-FR-06
   - [ ] **M6-12f** Perancang Jenis Transaksi dan form entri: tipe field `party`, `cash_account`, `allocations` dengan lookup, editor rute subledger, `write_off`, `auto_reverse_on` untuk entri berrute — TE-FR-05, TE-FR-10 — melengkapi M5-14b dan M5-14c
   - [ ] **M6-12g** Pembalikan dokumen dari detail dokumen atau jurnal, dengan pesan alokasi aktif yang menghalangi — SL-FR-12, SL-AC-07

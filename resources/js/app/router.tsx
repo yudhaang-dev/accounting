@@ -59,6 +59,8 @@ import { ExchangeRatesPage } from '@/modules/master-data/pages/exchange-rates-pa
 import { RateTypesPage } from '@/modules/master-data/pages/rate-types-page';
 import { CashAccountsPage } from '@/modules/subledger/pages/cash-accounts-page';
 import { CashTransactionsPage } from '@/modules/subledger/pages/cash-transactions-page';
+import { DocumentsPage } from '@/modules/subledger/pages/documents-page';
+import { OpenItemsPage } from '@/modules/subledger/pages/open-items-page';
 import { PartiesPage } from '@/modules/subledger/pages/parties-page';
 import { PostingProfilesPage } from '@/modules/subledger/pages/posting-profiles-page';
 import { ForgotPasswordPage } from '@/modules/identity-access/pages/forgot-password-page';
@@ -545,6 +547,52 @@ const cashTransactionsRoute = createRoute({
                 companyId={workspace.company_id}
                 canClear={can(workspace, 'cash-transactions.clear')}
                 canReadJournals={can(workspace, 'journals.read')}
+            />
+        );
+    },
+});
+
+const documentsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/documents',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navDocuments', href: at(m, '/documents') },
+        ],
+    },
+    beforeLoad: requirePermission('documents.read'),
+    component: function Documents() {
+        const { workspace } = documentsRoute.useRouteContext();
+
+        return (
+            <DocumentsPage
+                companyId={workspace.company_id}
+                access={{
+                    parties: can(workspace, 'parties.read'),
+                    journals: can(workspace, 'journals.read'),
+                    entries: can(workspace, 'entries.read'),
+                }}
+            />
+        );
+    },
+});
+
+const openItemsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/open-items',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navOpenItems', href: at(m, '/open-items') },
+        ],
+    },
+    beforeLoad: requirePermission('open-items.read'),
+    component: function OpenItems() {
+        const { workspace } = openItemsRoute.useRouteContext();
+
+        return (
+            <OpenItemsPage
+                companyId={workspace.company_id}
+                canReadParties={can(workspace, 'parties.read')}
             />
         );
     },
@@ -1233,6 +1281,8 @@ const routeTree = rootRoute.addChildren([
                 partiesRoute,
                 cashAccountsRoute,
                 cashTransactionsRoute,
+                documentsRoute,
+                openItemsRoute,
                 postingProfilesRoute,
                 entriesRoute,
                 approvalsRoute,
