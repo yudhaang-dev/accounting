@@ -36,6 +36,10 @@ return [
     'allocation_same_item' => 'Open item tidak dapat dilunasi terhadap dirinya sendiri.',
     'allocation_before_document' => 'Alokasi tidak boleh bertanggal sebelum salah satu dokumen.',
     'realized_difference' => 'Selisih kurs terealisasi',
+    'revaluation_description' => 'Revaluasi open item :period',
+    'revaluation_reversal_description' => 'Pembalikan revaluasi open item :period',
+    'revaluation_line' => 'Revaluasi open item dalam :currency',
+    'revaluation_later_allocations' => 'Ada alokasi bertanggal setelah akhir periode ini, sehingga open item tidak lagi menunjukkan nilainya pada akhir periode. Lakukan revaluasi pada periode terbaru.',
     'realized_difference_allocation' => 'Selisih kurs terealisasi: :debit dilunasi terhadap :credit',
     'realized_difference_cancelled' => 'Selisih kurs terealisasi dibatalkan: alokasi :debit dibatalkan',
 

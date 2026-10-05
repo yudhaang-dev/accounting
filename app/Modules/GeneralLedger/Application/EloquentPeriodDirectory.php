@@ -42,6 +42,13 @@ final class EloquentPeriodDirectory implements PeriodDirectory
         );
     }
 
+    public function find(string $companyId, string $periodId): ?PeriodData
+    {
+        $period = Period::query()->withoutGlobalScope(CompanyScope::class)->where('company_id', $companyId)->find($periodId);
+
+        return $period === null ? null : new PeriodData($period->id, $period->fiscal_year_id, $period->name, $period->start_date->toDateString(), $period->end_date->toDateString(), $period->status->value);
+    }
+
     public function fiscalYear(string $companyId, string $fiscalYearId): ?FiscalYearData
     {
         $year = FiscalYear::query()->withoutGlobalScope(CompanyScope::class)->where('company_id', $companyId)->find($fiscalYearId);

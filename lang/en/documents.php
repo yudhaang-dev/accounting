@@ -36,6 +36,10 @@ return [
     'allocation_same_item' => 'An open item cannot be settled against itself.',
     'allocation_before_document' => 'The allocation cannot be dated before either document.',
     'realized_difference' => 'Realized exchange difference',
+    'revaluation_description' => 'Open item revaluation :period',
+    'revaluation_reversal_description' => 'Reversal of open item revaluation :period',
+    'revaluation_line' => 'Revaluation of open items in :currency',
+    'revaluation_later_allocations' => 'An allocation is dated after the end of this period, so the open items no longer show their value at its end. Revalue the latest period instead.',
     'realized_difference_allocation' => 'Realized exchange difference: :debit settled against :credit',
     'realized_difference_cancelled' => 'Realized exchange difference undone: allocation of :debit cancelled',
 

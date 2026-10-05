@@ -8626,6 +8626,121 @@
                 }
             }
         },
+        "/companies/{companyId}/periods/{id}/open-item-revaluation": {
+            "post": {
+                "operationId": "periods.open-item-revaluation",
+                "description": "Answers 201 with the run and the adjustments, or 200 with `id: null` when nothing needed adjusting.\nRunning again only posts what changed since the last run. Answers 422 `MAPPING_REQUIRED` when the\npolicy has no rate type or a role is not mapped, 422 `EXCHANGE_RATE_NOT_FOUND` when a currency has no\nclosing rate, and 422 when an allocation is dated after the period.",
+                "summary": "Revalues the foreign currency open items as of the last day of the period, at the closing rate of the\nrate type named by the ledger policy (SL-FR-07). The difference is posted as a `system.fx_revaluation`\njournal to the control accounts and the unrealized gain or loss accounts; with auto-reversal in the\npolicy, its reversal is dated the first day of the next period",
+                "tags": [
+                    "OpenItemRevaluation"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "period_id": {
+                                                    "type": "string"
+                                                },
+                                                "journal_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "reversal_journal_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "adjustments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "open_item_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "currency": {
+                                                                "type": "string"
+                                                            },
+                                                            "remaining_amount": {
+                                                                "type": "string"
+                                                            },
+                                                            "carried": {
+                                                                "type": "string"
+                                                            },
+                                                            "revalued": {
+                                                                "type": "string"
+                                                            },
+                                                            "adjustment": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "open_item_id",
+                                                            "currency",
+                                                            "remaining_amount",
+                                                            "carried",
+                                                            "revalued",
+                                                            "adjustment"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "period_id",
+                                                "journal_id",
+                                                "reversal_journal_id",
+                                                "adjustments"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/opening-balance-imports": {
             "get": {
                 "operationId": "opening-balance-imports.show",

@@ -12,6 +12,9 @@ interface PeriodDirectory
     /** The period that contains the date, both boundaries included; null outside the calendar. */
     public function forDate(string $companyId, DateTimeInterface|string $date): ?PeriodData;
 
+    /** The period, or null when the company has none with that ID. */
+    public function find(string $companyId, string $periodId): ?PeriodData;
+
     /** The fiscal year, or null when the company has none with that ID. */
     public function fiscalYear(string $companyId, string $fiscalYearId): ?FiscalYearData;
 

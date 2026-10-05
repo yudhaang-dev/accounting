@@ -6,6 +6,7 @@ use App\Modules\Subledger\Http\CashAccountController;
 use App\Modules\Subledger\Http\CashTransactionController;
 use App\Modules\Subledger\Http\DocumentController;
 use App\Modules\Subledger\Http\OpenItemController;
+use App\Modules\Subledger\Http\OpenItemRevaluationController;
 use App\Modules\Subledger\Http\PartyController;
 use App\Modules\Subledger\Http\PostingProfileController;
 use App\Platform\Api\ApiServiceProvider;
@@ -63,6 +64,9 @@ Route::companyScoped(function () {
     Route::get('open-items', [OpenItemController::class, 'index'])->middleware('permission:open-items.read')->name('open-items.index');
     Route::get('open-items/{id}', [OpenItemController::class, 'show'])
         ->middleware('permission:open-items.read')->where('id', ApiServiceProvider::ULID)->name('open-items.show');
+
+    Route::post('periods/{id}/open-item-revaluation', [OpenItemRevaluationController::class, 'store'])
+        ->middleware('permission:periods.revalue')->where('id', ApiServiceProvider::ULID)->name('periods.open-item-revaluation');
 
     Route::get('allocations', [AllocationController::class, 'index'])->middleware('permission:allocations.read')->name('allocations.index');
     Route::post('allocations', [AllocationController::class, 'store'])->middleware('permission:allocations.manage')->name('allocations.store');
