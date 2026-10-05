@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class DocumentResource extends JsonResource
 {
     /**
-     * @return array{id: string, kind: string, control_role: string, party_id: string, cash_account_id: string|null, journal_id: string, entry_id: string|null, document_number: string, document_date: string, due_date: string, accounting_date: string, currency: string, amount: string, functional_amount: string, exchange_rate: string, description: string, reversal_journal_id: string|null, reversal_date: string|null}
+     * @return array{id: string, kind: string, control_role: string, party_id: string, cash_account_id: string|null, journal_id: string, entry_id: string|null, document_number: string, document_date: string, due_date: string, accounting_date: string, currency: string, amount: string, functional_amount: string, exchange_rate: string, description: string, is_opening: bool, reversal_journal_id: string|null, reversal_date: string|null}
      */
     public function toArray(Request $request): array
     {
@@ -33,6 +33,8 @@ class DocumentResource extends JsonResource
             'functional_amount' => (string) $this->resource->functional_amount,
             'exchange_rate' => (string) $this->resource->exchange_rate,
             'description' => $this->resource->description,
+            // An open item of the conversion date, recorded with the opening balance journal.
+            'is_opening' => $this->resource->is_opening,
             'reversal_journal_id' => $this->resource->reversal?->journal_id,
             'reversal_date' => $this->resource->reversal?->reversal_date->toDateString(),
         ];

@@ -206,7 +206,7 @@ final class AccountReconciliations implements ReconciliationStatus
         $details = array_fill_keys($accountIds, BigDecimal::zero());
         $placeholders = implode(',', array_fill(0, count($accountIds), '?'));
         // The control account a document posted to is the one of its journal that holds the amount of the document.
-        $account = "(select l.account_id from gl_journal_lines l where l.company_id = d.company_id and l.journal_id = d.journal_id and l.account_id in ({$placeholders}) and l.transaction_amount > 0 order by l.line_number limit 1)";
+        $account = "coalesce(d.control_account_id, (select l.account_id from gl_journal_lines l where l.company_id = d.company_id and l.journal_id = d.journal_id and l.account_id in ({$placeholders}) and l.transaction_amount > 0 order by l.line_number limit 1))";
 
         $items = DB::select(
             "select {$account} as account_id, o.side, o.original_functional as amount

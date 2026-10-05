@@ -49,4 +49,11 @@ return [
     'reversal_cash_description' => 'Pembalikan :number',
     'allocation_item_reversed' => 'Open item :number milik dokumen yang sudah dibalik.',
     'reconciliation_not_waivable' => 'Rekonsiliasi berstatus :status, sehingga tidak ada selisih yang dapat di-waiver.',
+    'opening_open_item' => 'Open item awal :number',
+    'opening_kind' => 'Open item awal berupa invoice (menaikkan saldo akun kontrol) atau credit note (menurunkannya).',
+    'opening_party_unknown' => 'Pihak tidak ada di perusahaan ini, atau referensinya belum dipetakan untuk sistem sumber.',
+    'opening_duplicate' => 'Dokumen :number muncul lebih dari sekali untuk pihak dan akun kontrol yang sama.',
+    'opening_after_start' => 'Open item awal tidak boleh bertanggal setelah tanggal mulai buku besar :date.',
+    'opening_currency_inactive' => 'Mata uang :currency tidak aktif di perusahaan ini.',
+    'opening_rate_required' => 'Open item dalam :currency memerlukan kurs.',
 ];

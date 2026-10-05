@@ -166,6 +166,11 @@ final class EloquentOpeningBalances implements OpeningBalances
             'lines' => array_map(fn ($line): array => (array) $line, $command->lines),
         ];
 
+        // Left out when absent, so the hash of a batch imported before it existed stays what it was.
+        if ($command->controlDetailDigest !== null) {
+            $payload['control_detail'] = $command->controlDetailDigest;
+        }
+
         return $this->mapper->hash($payload);
     }
 

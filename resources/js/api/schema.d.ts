@@ -1718,7 +1718,7 @@ export interface paths {
          *     were imported before and nothing was posted. Answers 422 `MAPPING_REQUIRED` for a source account
          *     or dimension value code without a mapping, 422 for a batch that does not balance, for accounts
          *     or dimensions that the posting rules refuse, or for a line on a control account of a subledger
-         *     that differs from its open items; 409 `IDEMPOTENCY_KEY_REUSED` for a known `source_key` with other
+         *     that differs from its open items (`open_items`, SL-FR-10); 409 `IDEMPOTENCY_KEY_REUSED` for a known `source_key` with other
          *     content and 409 `INVALID_STATE_TRANSITION` when the company already has opening balances
          */
         post: operations["opening-balance-imports.store"];
@@ -2960,6 +2960,8 @@ export interface components {
             functional_amount: string;
             exchange_rate: string;
             description: string;
+            /** @description An open item of the conversion date, recorded with the opening balance journal. */
+            is_opening: boolean;
             reversal_journal_id: string;
             reversal_date: string;
         };
@@ -3235,6 +3237,21 @@ export interface components {
                 exchange_rate?: string | null;
                 dimensions?: string[] | null;
                 description?: string | null;
+            }[];
+            open_items?: {
+                party_id?: string | null;
+                party_ref?: string | null;
+                control_role: components["schemas"]["ControlRole"];
+                /** @enum {string} */
+                kind: "invoice" | "credit_note";
+                document_number: string;
+                /** Format: date */
+                document_date: string;
+                /** Format: date */
+                due_date?: string | null;
+                currency?: string | null;
+                amount: string;
+                exchange_rate?: string | null;
             }[];
         };
         /** ImportTemplateRequest */

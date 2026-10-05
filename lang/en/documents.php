@@ -49,4 +49,11 @@ return [
     'reversal_cash_description' => 'Reversal of :number',
     'allocation_item_reversed' => 'The open item :number belongs to a reversed document.',
     'reconciliation_not_waivable' => 'The reconciliation is :status, so it has no difference to waive.',
+    'opening_open_item' => 'Opening open item :number',
+    'opening_kind' => 'An opening open item is an invoice (raises the balance of the control account) or a credit note (lowers it).',
+    'opening_party_unknown' => 'The party does not exist in this company, or the reference is not mapped for the source system.',
+    'opening_duplicate' => 'The document :number appears more than once for the same party and control account.',
+    'opening_after_start' => 'An opening open item cannot be dated after the ledger start date :date.',
+    'opening_currency_inactive' => 'The currency :currency is not active in this company.',
+    'opening_rate_required' => 'An open item in :currency needs an exchange rate.',
 ];

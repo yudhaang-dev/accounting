@@ -16,6 +16,7 @@ final readonly class OpeningBalanceImport
      * @param  list<OpeningBalanceLine>  $lines
      * @param  array<string, string>|null  $controlTotals  net debit minus credit per control account ID that the subledger holds in open items; control accounts of the batch must match it, and the batch is refused for a control account that is not in it
      * @param  list<string>  $actorPermissions  permissions the application layer found the actor to hold
+     * @param  string|null  $controlDetailDigest  digest of what stands behind `$controlTotals`, so that importing the batch again with other detail under the same totals is refused
      */
     public function __construct(
         public string $companyId,
@@ -29,5 +30,6 @@ final readonly class OpeningBalanceImport
         public ?string $sourceSystem = null,
         public ?array $controlTotals = null,
         public array $actorPermissions = [],
+        public ?string $controlDetailDigest = null,
     ) {}
 }

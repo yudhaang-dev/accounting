@@ -8781,7 +8781,7 @@
             },
             "post": {
                 "operationId": "opening-balance-imports.store",
-                "summary": "Imports the opening balances as one `system.opening_balance` journal dated `ledger_start_date`,\natomically (GL-FR-11). Answers 201 with the batch, or 200 when the same `source_key` and content\nwere imported before and nothing was posted. Answers 422 `MAPPING_REQUIRED` for a source account\nor dimension value code without a mapping, 422 for a batch that does not balance, for accounts\nor dimensions that the posting rules refuse, or for a line on a control account of a subledger\nthat differs from its open items; 409 `IDEMPOTENCY_KEY_REUSED` for a known `source_key` with other\ncontent and 409 `INVALID_STATE_TRANSITION` when the company already has opening balances",
+                "summary": "Imports the opening balances as one `system.opening_balance` journal dated `ledger_start_date`,\natomically (GL-FR-11). Answers 201 with the batch, or 200 when the same `source_key` and content\nwere imported before and nothing was posted. Answers 422 `MAPPING_REQUIRED` for a source account\nor dimension value code without a mapping, 422 for a batch that does not balance, for accounts\nor dimensions that the posting rules refuse, or for a line on a control account of a subledger\nthat differs from its open items (`open_items`, SL-FR-10); 409 `IDEMPOTENCY_KEY_REUSED` for a known `source_key` with other\ncontent and 409 `INVALID_STATE_TRANSITION` when the company already has opening balances",
                 "tags": [
                     "OpeningBalanceImport"
                 ],
@@ -14857,6 +14857,10 @@
                     "description": {
                         "type": "string"
                     },
+                    "is_opening": {
+                        "type": "boolean",
+                        "description": "An open item of the conversion date, recorded with the opening balance journal."
+                    },
                     "reversal_journal_id": {
                         "type": "string"
                     },
@@ -14881,6 +14885,7 @@
                     "functional_amount",
                     "exchange_rate",
                     "description",
+                    "is_opening",
                     "reversal_journal_id",
                     "reversal_date"
                 ],
@@ -16115,6 +16120,81 @@
                         },
                         "minItems": 2,
                         "maxItems": 20000
+                    },
+                    "open_items": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "party_id": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "minLength": 26,
+                                    "maxLength": 26
+                                },
+                                "party_ref": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 128
+                                },
+                                "control_role": {
+                                    "$ref": "#/components/schemas/ControlRole"
+                                },
+                                "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                        "invoice",
+                                        "credit_note"
+                                    ]
+                                },
+                                "document_number": {
+                                    "type": "string",
+                                    "maxLength": 100
+                                },
+                                "document_date": {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                "due_date": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "format": "date"
+                                },
+                                "currency": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "minLength": 3,
+                                    "maxLength": 3
+                                },
+                                "amount": {
+                                    "type": "string",
+                                    "pattern": "^\\d+(\\.\\d{1,6})?$"
+                                },
+                                "exchange_rate": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "pattern": "^\\d+(\\.\\d+)?$"
+                                }
+                            },
+                            "required": [
+                                "control_role",
+                                "kind",
+                                "document_number",
+                                "document_date",
+                                "amount"
+                            ]
+                        },
+                        "maxItems": 50000
                     }
                 },
                 "required": [

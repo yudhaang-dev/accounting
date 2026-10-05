@@ -31,6 +31,8 @@ use Illuminate\Support\Carbon;
  * @property BigDecimal $functional_amount
  * @property BigDecimal $exchange_rate functional currency per 1 unit of `currency`
  * @property string $description
+ * @property bool $is_opening an open item of the conversion date, recorded with the opening balance journal (SL-FR-10)
+ * @property string|null $control_account_id the control account of an opening document, whose journal holds several
  * @property int|null $created_by
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -42,6 +44,7 @@ class Document extends CompanyScopedModel
     protected $fillable = [
         'kind', 'control_role', 'party_id', 'cash_account_id', 'journal_id', 'entry_id', 'document_number', 'document_date', 'due_date',
         'accounting_date', 'currency', 'amount', 'functional_amount', 'exchange_rate', 'description', 'created_by',
+        'is_opening', 'control_account_id',
     ];
 
     protected function casts(): array
@@ -52,6 +55,7 @@ class Document extends CompanyScopedModel
             'document_date' => 'date',
             'due_date' => 'date',
             'accounting_date' => 'date',
+            'is_opening' => 'boolean',
             'amount' => DecimalCast::class.':6',
             'functional_amount' => DecimalCast::class.':6',
             'exchange_rate' => DecimalCast::class.':12',
