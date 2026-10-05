@@ -56,4 +56,5 @@ return [
     'opening_after_start' => 'Open item awal tidak boleh bertanggal setelah tanggal mulai buku besar :date.',
     'opening_currency_inactive' => 'Mata uang :currency tidak aktif di perusahaan ini.',
     'opening_rate_required' => 'Open item dalam :currency memerlukan kurs.',
+    'aging_buckets_ascending' => 'Bucket harus berupa jumlah hari yang berurutan naik tanpa duplikat.',
 ];

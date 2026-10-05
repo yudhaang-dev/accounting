@@ -218,6 +218,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/reports/aging": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Receivables (`control_role=receivables_control`) or payables (`payables_control`) by age on `as_of`, which may
+         *     be a past date: only allocations dated up to it count (SL-AC-04). Amounts are per party and document, in the
+         *     transaction currency and in the functional one, and positive when they raise the balance of the control
+         *     account (invoices) and negative when they lower it (credit notes, advances not applied). The buckets and the
+         *     date the age counts from come from the aging policy; `basis` (`due_date` or `document_date`) overrides the
+         *     date for this report. `party_id` narrows it to one party. Drill down with `open_item_id` and `document_id`
+         *     of each item. With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)
+         */
+        get: operations["reports.aging"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/aging-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The buckets and the date aging counts from (SL-FR-08). A company that never set a policy reads the defaults
+         *     with `lock_version` 0, the version its first change is made from
+         */
+        get: operations["aging-policy.show"];
+        /**
+         * Sets `basis` and `buckets`, the upper bound in days of each bucket after the current one, ascending. The
+         *     change applies to every aging report from now on and alters no stored amount. `lock_version` is required
+         */
+        put: operations["aging-policy.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/allocations": {
         parameters: {
             query?: never;
@@ -2853,7 +2902,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -3704,6 +3753,13 @@ export interface components {
             /** Format: date */
             effective_date?: string | null;
         };
+        /** UpdateAgingPolicyRequest */
+        UpdateAgingPolicyRequest: {
+            lock_version: number;
+            /** @enum {string} */
+            basis: "due_date" | "document_date";
+            buckets: number[];
+        };
         /** UpdateApprovalPolicyRequest */
         UpdateApprovalPolicyRequest: {
             lock_version: number;
@@ -3881,13 +3937,13 @@ export interface components {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -4422,6 +4478,148 @@ export interface operations {
                         data: {
                             template: string;
                             created: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reports.aging": {
+        parameters: {
+            query: {
+                as_of: string;
+                control_role: components["schemas"]["ControlRole"];
+                party_id?: string;
+                basis?: "due_date" | "document_date";
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            parameters: {
+                                as_of: string;
+                                control_role: string;
+                                party_id: string | null;
+                                basis: string;
+                                buckets: {
+                                    key: string;
+                                    from_days: number | null;
+                                    to_days: number | null;
+                                }[];
+                            };
+                            functional_currency: string;
+                            totals: {
+                                [key: string]: string;
+                            };
+                            currency_totals: {
+                                currency: string;
+                                buckets: {
+                                    [key: string]: string;
+                                };
+                                total: string;
+                            }[];
+                            parties: {
+                                party_id: string;
+                                party_name: string;
+                                totals: {
+                                    [key: string]: string;
+                                };
+                                items: {
+                                    open_item_id: string;
+                                    document_id: string;
+                                    document_number: string;
+                                    kind: string;
+                                    document_date: string;
+                                    due_date: string;
+                                    currency: string;
+                                    remaining_amount: string;
+                                    remaining_functional: string;
+                                    age_days: number;
+                                    bucket: string;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "aging-policy.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            basis: string;
+                            buckets: [
+                                30,
+                                60,
+                                90
+                            ] | unknown[];
+                            lock_version: string | 0;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "aging-policy.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAgingPolicyRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            basis: string;
+                            buckets: [
+                                30,
+                                60,
+                                90
+                            ] | unknown[];
+                            lock_version: string | 0;
                         };
                     };
                 };

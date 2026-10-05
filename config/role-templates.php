@@ -19,7 +19,7 @@ return [
             'permissions' => [
                 ...$read,
                 'company.update', 'company.activate', 'company.deactivate',
-                'accounts.manage', 'dimensions.manage', 'currencies.manage', 'exchange-rates.manage', 'parties.manage', 'posting-profiles.manage', 'cash-accounts.manage', 'cash-transactions.clear', 'allocations.manage', 'reconciliations.run', 'reconciliations.waive',
+                'accounts.manage', 'dimensions.manage', 'currencies.manage', 'exchange-rates.manage', 'parties.manage', 'posting-profiles.manage', 'cash-accounts.manage', 'cash-transactions.clear', 'allocations.manage', 'reconciliations.run', 'reconciliations.waive', 'aging-policy.manage',
                 'periods.manage', 'periods.close', 'periods.reopen', 'periods.revalue', 'journals.post-soft-closed', 'opening-balances.import', 'fiscal-years.close', 'fiscal-years.reopen',
                 'memberships.read', 'memberships.manage',
                 'roles.read', 'roles.manage',

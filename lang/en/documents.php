@@ -56,4 +56,5 @@ return [
     'opening_after_start' => 'An opening open item cannot be dated after the ledger start date :date.',
     'opening_currency_inactive' => 'The currency :currency is not active in this company.',
     'opening_rate_required' => 'An open item in :currency needs an exchange rate.',
+    'aging_buckets_ascending' => 'The buckets must be days in strictly ascending order.',
 ];

@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Subledger\Contracts\ControlRole;
+use App\Modules\Subledger\Http\AgingController;
 use App\Modules\Subledger\Http\AllocationController;
 use App\Modules\Subledger\Http\CashAccountController;
 use App\Modules\Subledger\Http\CashTransactionController;
@@ -73,6 +74,10 @@ Route::companyScoped(function () {
     Route::post('allocations', [AllocationController::class, 'store'])->middleware('permission:allocations.manage')->name('allocations.store');
     Route::get('allocations/{id}', [AllocationController::class, 'show'])
         ->middleware('permission:allocations.read')->where('id', ApiServiceProvider::ULID)->name('allocations.show');
+    Route::get('reports/aging', [AgingController::class, 'show'])->middleware('permission:reports.read')->name('reports.aging');
+    Route::get('aging-policy', [AgingController::class, 'showPolicy'])->middleware('permission:reports.read')->name('aging-policy.show');
+    Route::put('aging-policy', [AgingController::class, 'updatePolicy'])->middleware('permission:aging-policy.manage')->name('aging-policy.update');
+
     Route::get('reconciliations', [ReconciliationController::class, 'index'])->middleware('permission:reconciliations.read')->name('reconciliations.index');
     Route::post('reconciliations', [ReconciliationController::class, 'store'])->middleware('permission:reconciliations.run')->name('reconciliations.store');
     Route::get('reconciliations/{id}', [ReconciliationController::class, 'show'])

@@ -23,6 +23,7 @@ final class PermissionCatalog
         'open-items' => ['read'],
         'allocations' => ['read', 'manage'],
         'reconciliations' => ['read', 'run', 'waive'],
+        'aging-policy' => ['manage'],
         'exchange-rates' => ['read', 'manage'],
         'periods' => ['read', 'manage', 'close', 'reopen', 'revalue'],
         'transaction-types' => ['read'],
