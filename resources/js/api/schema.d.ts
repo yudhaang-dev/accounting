@@ -2008,6 +2008,111 @@ export interface paths {
         patch: operations["plans.update"];
         trace?: never;
     };
+    "/companies/{companyId}/plan-versions/{id}/lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lines of a version ordered by period, account and dimension set. Filters: `filter[period_id]`,
+         *     `filter[account_id]`. `per_page` defaults to 100, at most 500
+         */
+        get: operations["plan-versions.lines.index"];
+        /**
+         * Enters cells in a draft version. A cell is a period of the fiscal year of the plan, a leaf
+         *     income or expense account that is active, and a dimension set given as `dimensions`; a cell that
+         *     exists takes the new amount and note. All or nothing: any invalid row rejects the request and
+         *     every problem is listed under `lines.<index>.<field>`. A version that is not a draft gives 409
+         *     `INVALID_STATE_TRANSITION`
+         */
+        put: operations["plan-versions.lines.enter"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/plan-versions/{id}/lines/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The lines of a version as CSV, in the layout that the import reads */
+        get: operations["plan-versions.lines.export"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/plan-versions/{id}/lines/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enters lines from CSV into a draft version, as a multipart `file` or a `text/csv` body. Columns:
+         *     `period` (a date inside the period), `account_code`, `amount`, optionally `note` and one
+         *     `dimension.<type key>` column with value codes. At most 5000 rows. All or nothing: any invalid row
+         *     rejects the whole file and every problem is listed under `rows.<line>.<field>`
+         */
+        post: operations["plan-versions.lines.import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/plan-versions/{id}/lines/copy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Copies lines into a draft version as a starting point, from another version of the same fiscal
+         *     year (`from_version_id`) or from what was posted in a period (`actuals_period_id` into
+         *     `to_period_id`). Cells that exist take the copied amounts. `skipped` counts actuals of accounts
+         *     that cannot be planned any more
+         */
+        post: operations["plan-versions.lines.copy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/plan-versions/{id}/lines/{lineId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Deletes a line of a draft version */
+        delete: operations["plan-versions.lines.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/plans/{id}/versions": {
         parameters: {
             query?: never;
@@ -2899,6 +3004,15 @@ export interface components {
          * @enum {string}
          */
         ControlRole: "receivables_control" | "payables_control";
+        /** CopyPlanLinesRequest */
+        CopyPlanLinesRequest: {
+            /** @description Copy the lines of another version of the same fiscal year ... */
+            from_version_id?: string;
+            /** @description ... or what was posted in this period (income and expense accounts per dimension set) ... */
+            actuals_period_id?: string;
+            /** @description ... into this period of the plan; required with `actuals_period_id`. */
+            to_period_id?: string;
+        };
         /** CreateAccountRequest */
         CreateAccountRequest: {
             allowed_sources?: components["schemas"]["JournalSource"][];
@@ -3144,6 +3258,22 @@ export interface components {
             is_opening: boolean;
             reversal_journal_id: string;
             reversal_date: string;
+        };
+        /** EnterPlanLinesRequest */
+        EnterPlanLinesRequest: {
+            /**
+             * @description Cells to enter, at most 500 per request. A cell is a period, an account and a dimension set;
+             *     a cell that exists takes the new amount and note.
+             */
+            lines: {
+                period_id: string;
+                account_id: string;
+                /** @description Dimension type key => dimension value ID; leave out for general activity. */
+                dimensions?: (string | null)[] | null;
+                /** @description Decimal string in the functional currency, at most 6 decimals. */
+                amount: string;
+                note?: string | null;
+            }[];
         };
         /**
          * EntryRequest
@@ -3669,6 +3799,18 @@ export interface components {
          * @enum {string}
          */
         PeriodStatus: "open" | "soft_closed" | "closed";
+        /** PlanLineResource */
+        PlanLineResource: {
+            id: string;
+            plan_version_id: string;
+            period_id: string;
+            account_id: string;
+            dimension_set_id: string;
+            /** @description Dimension type key => dimension value ID. */
+            dimensions: unknown;
+            amount: string;
+            note: string | null;
+        };
         /** PlanResource */
         PlanResource: {
             id: string;
@@ -8636,6 +8778,207 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "plan-versions.lines.index": {
+        parameters: {
+            query?: {
+                "filter[period_id]"?: string;
+                "filter[account_id]"?: string;
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `PlanLineResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlanLineResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "plan-versions.lines.enter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnterPlanLinesRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            created: number;
+                            updated: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "plan-versions.lines.export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Transfer-Encoding": "chunked";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv; charset=UTF-8": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "plan-versions.lines.import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            created: number;
+                            updated: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "plan-versions.lines.copy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CopyPlanLinesRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            created: number;
+                            updated: number;
+                            skipped: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "plan-versions.lines.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+                lineId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "plans.versions.store": {

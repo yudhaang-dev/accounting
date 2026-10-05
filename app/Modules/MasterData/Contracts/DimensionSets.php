@@ -96,4 +96,21 @@ interface DimensionSets
      * @return list<string>
      */
     public function setIdsWithin(string $companyId, array $allowed): array;
+
+    /**
+     * Codes of dimension values by ID, whatever their status. Unknown IDs are left out.
+     *
+     * @param  list<string>  $valueIds
+     * @return array<string, string> value ID => code
+     */
+    public function valueCodes(string $companyId, array $valueIds): array;
+
+    /**
+     * IDs of the values of one dimension type by code, whatever their status. Unknown codes and an
+     * unknown type key are left out.
+     *
+     * @param  list<string>  $codes
+     * @return array<string, string> code => value ID
+     */
+    public function valueIdsByCode(string $companyId, string $typeKey, array $codes): array;
 }

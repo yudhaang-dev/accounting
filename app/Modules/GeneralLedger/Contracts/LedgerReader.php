@@ -30,6 +30,18 @@ interface LedgerReader
     public function currencyBalances(string $companyId, string $asOf, ?string $accountId = null, ?array $dimensionSetIds = null): array;
 
     /**
+     * Movement per account and dimension set between two dates, closing journals left out, for the
+     * accounts of the given classes; combinations that net to zero are left out. The realization that
+     * a plan starts from (PL-FR-03).
+     *
+     * @param  string  $from  `YYYY-MM-DD`
+     * @param  string  $to  `YYYY-MM-DD`
+     * @param  list<AccountClass>  $classes
+     * @return list<AccountMovementRow> ordered by account code, then dimension set
+     */
+    public function movementByDimensionSet(string $companyId, string $from, string $to, array $classes): array;
+
+    /**
      * The lines of an account up to and including a date that did not come from the source given, oldest
      * first. They are what makes the ledger differ from a subledger that is the only source of the account
      * (SL-FR-09).

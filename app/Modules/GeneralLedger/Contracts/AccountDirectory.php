@@ -10,6 +10,9 @@ interface AccountDirectory
     /** The account, or null when it does not exist in that company. */
     public function find(string $companyId, string $accountId): ?AccountData;
 
+    /** The account with that code, or null when the company has none. */
+    public function findByCode(string $companyId, string $code): ?AccountData;
+
     /**
      * Classes that have no active leaf account yet; empty when the chart can take postings of every kind.
      *

@@ -4,6 +4,7 @@ namespace App\Modules\GeneralLedger\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountClass;
 use App\Modules\GeneralLedger\Contracts\AccountLineRow;
+use App\Modules\GeneralLedger\Contracts\AccountMovementRow;
 use App\Modules\GeneralLedger\Contracts\CurrencyBalanceRow;
 use App\Modules\GeneralLedger\Contracts\JournalSource;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
@@ -123,6 +124,32 @@ final class EloquentLedgerReader implements LedgerReader
     private function amount(BigDecimal $value, int $scale): string
     {
         return (string) $value->toScale($scale, RoundingMode::HalfUp);
+    }
+
+    public function movementByDimensionSet(string $companyId, string $from, string $to, array $classes): array
+    {
+        $rows = DB::table('gl_journal_lines as l')
+            ->join('gl_journals as j', fn ($join) => $join->on('j.company_id', '=', 'l.company_id')->on('j.id', '=', 'l.journal_id'))
+            ->join('gl_accounts as a', fn ($join) => $join->on('a.company_id', '=', 'l.company_id')->on('a.id', '=', 'l.account_id'))
+            ->where('l.company_id', $companyId)
+            ->whereIn('a.class', array_map(fn (AccountClass $class): string => $class->value, $classes))
+            ->whereBetween('l.accounting_date', [$from, $to])
+            ->whereRaw('j.transaction_type_key is distinct from ?', [EloquentFiscalYearClosing::TRANSACTION_TYPE_KEY])
+            ->groupBy('l.account_id', 'a.code', 'l.dimension_set_id')
+            ->havingRaw('sum(l.debit - l.credit) <> 0')
+            ->orderBy('a.code')
+            ->orderBy('l.dimension_set_id')
+            ->selectRaw('l.account_id, l.dimension_set_id, sum(l.debit) as debit, sum(l.credit) as credit')
+            ->get();
+
+        $scale = $this->currencies->functionalScale($companyId);
+        $result = [];
+
+        foreach ($rows as $row) {
+            $result[] = new AccountMovementRow($row->account_id, $row->dimension_set_id, $this->amount(BigDecimal::of($row->debit), $scale), $this->amount(BigDecimal::of($row->credit), $scale));
+        }
+
+        return $result;
     }
 
     public function linesNotFromSource(string $companyId, string $accountId, string $asOf, JournalSource $source): array

@@ -30,6 +30,29 @@ final class EloquentDimensionSets implements DimensionSets
         return array_values(array_map('strval', DB::table('md_dimension_types')->where('company_id', $companyId)->where('status', 'active')->orderBy('key')->pluck('key')->all()));
     }
 
+    public function valueCodes(string $companyId, array $valueIds): array
+    {
+        if ($valueIds === []) {
+            return [];
+        }
+
+        return array_map('strval', DB::table('md_dimension_values')->where('company_id', $companyId)->whereIn('id', $valueIds)->pluck('code', 'id')->all());
+    }
+
+    public function valueIdsByCode(string $companyId, string $typeKey, array $codes): array
+    {
+        if ($codes === []) {
+            return [];
+        }
+
+        return array_map('strval', DB::table('md_dimension_values as v')
+            ->join('md_dimension_types as t', fn ($join) => $join->on('t.company_id', '=', 'v.company_id')->on('t.id', '=', 'v.dimension_type_id'))
+            ->where('v.company_id', $companyId)
+            ->where('t.key', $typeKey)
+            ->whereIn('v.code', $codes)
+            ->pluck('v.id', 'v.code')->all());
+    }
+
     public function resolve(string $companyId, array $dimensions, string $date): string
     {
         $dimensions = array_filter($dimensions, fn (?string $valueId): bool => $valueId !== null);

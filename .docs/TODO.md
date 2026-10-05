@@ -134,8 +134,8 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 ## M7 — Anggaran & proyeksi
 
-- [x] **M7-01** Rencana dan versi (salin saat mengubah versi terbit) — PL-FR-01, PL-AC-01 — tabel `pl_plan_lines` sudah ada karena revisi menyalinnya, tetapi baris belum bisa diisi lewat API (M7-02); status `published` baru dapat dicapai lewat M7-03, jadi `POST /plan-versions/{id}/revise` hanya teruji dengan versi yang diterbitkan langsung di DB; kolom `last_modified_by` disiapkan untuk syarat penerbit di M7-03 (baris belum mengubahnya); layar SPA di M7-04
-- [ ] **M7-02** Baris rencana, impor/ekspor CSV, salin dari versi lain atau realisasi — PL-FR-02, PL-FR-03, PL-AC-02
+- [x] **M7-01** Rencana dan versi (salin saat mengubah versi terbit) — PL-FR-01, PL-AC-01 — tabel `pl_plan_lines` sudah ada; status `published` baru dapat dicapai lewat M7-03, jadi `POST /plan-versions/{id}/revise` hanya teruji dengan versi yang diterbitkan langsung di DB; layar SPA di M7-04
+- [x] **M7-02** Baris rencana, impor/ekspor CSV, salin dari versi lain atau realisasi — PL-FR-02, PL-FR-03, PL-AC-02 — perubahan baris memperbarui `last_modified_by` (dasar syarat penerbit M7-03); kewajiban dimensi akun tidak ditegakkan pada baris rencana; `PlanReader` untuk M8-09 belum ada; layar SPA di M7-04
 - [ ] **M7-03** Penerbitan, kebijakan penerbit, dan versi pembanding default — PL-FR-04, PL-AC-03
 - [ ] **M7-04** SPA: editor grid rencana, impor, penerbitan
 

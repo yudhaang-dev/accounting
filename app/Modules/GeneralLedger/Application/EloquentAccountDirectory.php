@@ -21,10 +21,18 @@ final class EloquentAccountDirectory implements AccountDirectory
     {
         $account = $this->forCompany($companyId)->find($accountId);
 
-        if ($account === null) {
-            return null;
-        }
+        return $account === null ? null : $this->data($account);
+    }
 
+    public function findByCode(string $companyId, string $code): ?AccountData
+    {
+        $account = $this->forCompany($companyId)->where('code', $code)->first();
+
+        return $account === null ? null : $this->data($account);
+    }
+
+    private function data(Account $account): AccountData
+    {
         return new AccountData(
             $account->id,
             $account->company_id,
