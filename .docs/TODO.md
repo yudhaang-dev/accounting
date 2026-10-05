@@ -119,7 +119,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M6-09** Rekonsiliasi akun kontrol dan waiver; integrasi ke kesiapan tutup tahun — SL-FR-09, SL-AC-05, GL-AC-09 — akun kontrol dibandingkan dalam mata uang fungsional dan akun kas/bank dalam mata uang rekeningnya; batch saldo konversi pada akun kontrol atau kas tampil sebagai selisih sampai M6-10 mengimpor open item awal; checklist tutup tahun sudah menampilkan cek `reconciliation`, sedangkan daftar selisih dan waiver di SPA di M6-12
 - [x] **M6-10** Impor open item awal dan pencocokan total kontrol dengan batch saldo konversi — SL-FR-10, SL-AC-01, GL-AC-07 — hanya batch saldo konversi; impor histori (M4-09) pada akun kontrol tetap ditolak; item awal dicatat sebagai dokumen `invoice`/`credit_note` bertanda `is_opening` pada jurnal saldo konversi; wizard SPA (M4-12e) belum mengirim `open_items`, dikerjakan di M6-12
 - [x] **M6-11** Laporan aging dengan bucket kebijakan — SL-FR-08, SL-AC-04 — `GET /reports/aging` (JSON dan CSV) dan `GET`/`PUT /aging-policy`; belum ada pemisahan per akun kontrol selain `control_role`; layar SPA di M6-12
-- [ ] **M6-12** SPA: pihak, profil posting, rekening, open item dan alokasi, rekonsiliasi, aging
+- [x] **M6-12** SPA: pihak, profil posting, rekening, open item dan alokasi, rekonsiliasi, aging
   - [x] **M6-12a** Pihak: daftar, form, referensi eksternal per `source_system`, profil posting pada pihak, nonaktifkan — SL-FR-01, SL-AC-08
   - [x] **M6-12b** Profil posting dan pemetaan akun kontrol berversi, termasuk petunjuk membatasi akun kontrol ke sumber `subledger` — SL-FR-02
   - [x] **M6-12c** Rekening kas/bank dan transaksi kas: daftar, form, tandai dan batalkan `cleared` — SL-FR-03, SL-FR-11
@@ -130,7 +130,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
   - [x] **M6-12h** Revaluasi open item pada layar periode — SL-FR-07 — melengkapi M4-12d
   - [x] **M6-12i** Rekonsiliasi: jalankan per tanggal, daftar selisih beserta jurnal penyebab, waiver beralasan, tautan dari checklist tutup tahun — SL-FR-09, SL-AC-05
   - [x] **M6-12j** Aging: laporan per pihak dan dokumen dengan drill-down dan ekspor CSV, editor kebijakan bucket — SL-FR-08, SL-AC-04
-  - [ ] **M6-12k** Wizard saldo konversi: `open_items` beserta pemetaan pihak sumber dan pencocokan total kontrol — SL-FR-10, SL-AC-01 — melengkapi M4-12e
+  - [x] **M6-12k** Wizard saldo konversi: `open_items` beserta pemetaan pihak sumber dan pencocokan total kontrol — SL-FR-10, SL-AC-01 — melengkapi M4-12e
 
 ## M7 — Anggaran & proyeksi
 

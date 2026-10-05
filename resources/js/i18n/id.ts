@@ -507,7 +507,9 @@ export const id = {
             column: 'Kolom {{detail}} tidak ada di baris judul.',
             amount: 'Baris {{line}}: "{{detail}}" bukan angka. Pakai titik untuk desimal, mis. 1500.50.',
             date: 'Tanggal "{{detail}}" harus berbentuk TTTT-BB-HH.',
-            code: 'Baris {{line}}: kode akun kosong.',
+            code: 'Baris {{line}}: kode akun atau pihak kosong.',
+            role: 'Baris {{line}}: control_role "{{detail}}" harus receivables atau payables.',
+            document: 'Baris {{line}}: jenis atau nomor dokumen "{{detail}}" tidak valid (kind: invoice atau credit_note, nomor wajib).',
             more: '…dan {{count}} masalah lain.',
         },
         opening: {
@@ -515,6 +517,7 @@ export const id = {
                 details: 'Data impor',
                 file: 'Berkas saldo',
                 mapping: 'Pemetaan akun',
+                parties: 'Pemetaan pihak',
                 review: 'Tinjau',
             },
             sourceKey: 'Kunci sumber',
@@ -531,6 +534,22 @@ export const id = {
             file: 'Neraca saldo awal',
             fileHint:
                 'CSV dengan kolom source_code, debit, credit (dan description bila ada), per {{date}}. Pakai titik untuk desimal. Bila mulai di tengah tahun buku, sertakan saldo pendapatan dan beban tahun berjalan.',
+            itemsFile: 'Open item awal (opsional)',
+            itemsFileHint:
+                'Wajib bila ada akun kontrol piutang atau utang di neraca saldo. CSV dengan kolom control_role (receivables atau payables), party, kind (invoice atau credit_note), document_number, document_date, amount, dan opsional due_date, currency, exchange_rate. Total per akun kontrol harus sama dengan saldonya di berkas.',
+            itemsRead: '{{count}} open item terbaca.',
+            items: 'Open item',
+            partyRef: 'Pihak di sistem sumber',
+            party: 'Pihak',
+            partyFor: 'Pihak untuk {{ref}}',
+            chooseParty: 'Pilih pihak',
+            partiesHint:
+                'Pilih pihak di sistem ini untuk setiap pihak sumber. Pihak harus sudah dibuat dan sesuai perannya (pelanggan untuk piutang, pemasok untuk utang).',
+            partiesUnmapped: '{{count}} pihak sumber belum dipetakan.',
+            controlDiffers:
+                'Saldo akun kontrol {{account}} di berkas ({{balance}}) berbeda dari total open item ({{items}}). Selisih sekecil apa pun menolak seluruh impor.',
+            controlByServer:
+                'Open item bermata uang asing dikonversi dan dibulatkan server; kecocokan totalnya diperiksa saat impor.',
             import: 'Impor saldo konversi',
             imported: 'Saldo konversi',
             done: 'Saldo konversi diposting sebagai jurnal {{number}}.',

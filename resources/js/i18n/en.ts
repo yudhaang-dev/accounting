@@ -510,7 +510,9 @@ export const en: Widen<typeof id> = {
             column: 'The column {{detail}} is missing from the header row.',
             amount: 'Row {{line}}: "{{detail}}" is not a number. Use a dot for decimals, e.g. 1500.50.',
             date: 'The date "{{detail}}" must look like YYYY-MM-DD.',
-            code: 'Row {{line}}: the account code is empty.',
+            code: 'Row {{line}}: the account or party code is empty.',
+            role: 'Row {{line}}: control_role "{{detail}}" must be receivables or payables.',
+            document: 'Row {{line}}: the document kind or number "{{detail}}" is not valid (kind: invoice or credit_note, a number is required).',
             more: '…and {{count}} more problems.',
         },
         opening: {
@@ -518,6 +520,7 @@ export const en: Widen<typeof id> = {
                 details: 'Details',
                 file: 'Balances file',
                 mapping: 'Account mapping',
+                parties: 'Party mapping',
                 review: 'Review',
             },
             sourceKey: 'Source key',
@@ -534,6 +537,22 @@ export const en: Widen<typeof id> = {
             file: 'Opening trial balance',
             fileHint:
                 'CSV with the columns source_code, debit, credit (and description if you have it), as of {{date}}. Use a dot for decimals. When starting in the middle of a fiscal year, include the year-to-date income and expense balances.',
+            itemsFile: 'Opening open items (optional)',
+            itemsFileHint:
+                'Required when the trial balance has a receivables or payables control account. CSV with the columns control_role (receivables or payables), party, kind (invoice or credit_note), document_number, document_date, amount, and optionally due_date, currency, exchange_rate. The total per control account must equal its balance in the file.',
+            itemsRead: '{{count}} open items read.',
+            items: 'Open items',
+            partyRef: 'Party in the source system',
+            party: 'Party',
+            partyFor: 'Party for {{ref}}',
+            chooseParty: 'Choose a party',
+            partiesHint:
+                'Choose the party in this system for each source party. The party must exist and fit the role (a customer for receivables, a supplier for payables).',
+            partiesUnmapped: '{{count}} source parties are not mapped yet.',
+            controlDiffers:
+                'The balance of control account {{account}} in the file ({{balance}}) differs from the total of its open items ({{items}}). Any difference rejects the whole import.',
+            controlByServer:
+                'Foreign currency open items are converted and rounded by the server; the control totals are checked on import.',
             import: 'Import opening balances',
             imported: 'Opening balances',
             done: 'Opening balances posted as journal {{number}}.',

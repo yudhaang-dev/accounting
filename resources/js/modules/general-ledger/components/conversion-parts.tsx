@@ -9,6 +9,7 @@ import { isApiError } from '@/lib/http';
 import { cn } from '@/lib/utils';
 import type { Account } from '@/modules/general-ledger/accounts';
 import type { Problem } from '@/modules/general-ledger/conversion';
+import type { Party } from '@/modules/subledger/parties';
 
 /** The steps of a conversion wizard, the ones behind ticked and the current one marked. */
 export function ConversionSteps({
@@ -269,6 +270,93 @@ export function suggestMapping(
 
         if (next[code] === undefined && match !== undefined) {
             next[code] = match;
+        }
+    }
+
+    return next;
+}
+
+/** One row per party reference of the open items, each with the party of the company it stands for (SL-FR-10). */
+export function PartyMappingTable({
+    refs,
+    parties,
+    mapping,
+    onChange,
+}: {
+    refs: string[];
+    parties: Party[];
+    /** Party reference => party ID. */
+    mapping: Record<string, string>;
+    onChange: (mapping: Record<string, string>) => void;
+}) {
+    const { t } = useTranslation();
+    const items = parties
+        .filter((party) => party.status === 'active')
+        .map((party) => ({ value: party.id, label: party.name }));
+
+    return (
+        <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full text-sm">
+                <thead>
+                    <tr className="border-b text-start text-muted-foreground">
+                        <th className="px-3 py-2 text-start font-medium">
+                            {t('conversion.opening.partyRef')}
+                        </th>
+                        <th className="px-3 py-2 text-start font-medium">
+                            {t('conversion.opening.party')}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {refs.map((ref) => (
+                        <tr key={ref} className="border-b last:border-0">
+                            <td className="px-3 py-2 align-middle font-mono">
+                                {ref}
+                            </td>
+                            <td className="min-w-64 px-3 py-2">
+                                <SearchableSelect
+                                    aria-label={t('conversion.opening.partyFor', {
+                                        ref,
+                                    })}
+                                    items={items}
+                                    value={mapping[ref] ?? ''}
+                                    onValueChange={(partyId) =>
+                                        onChange({ ...mapping, [ref]: partyId })
+                                    }
+                                    placeholder={t(
+                                        'conversion.opening.chooseParty',
+                                    )}
+                                    emptyText={t('common.noMatch')}
+                                />
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
+/** Pre-fills the mapping: a reference the source system already has on a party is that party. */
+export function suggestPartyMapping(
+    refs: string[],
+    parties: Party[],
+    sourceSystem: string,
+    current: Record<string, string>,
+): Record<string, string> {
+    const next = { ...current };
+
+    for (const ref of refs) {
+        const match = parties.find((party) =>
+            party.external_refs.some(
+                (external) =>
+                    external.source_system === sourceSystem &&
+                    external.external_ref === ref,
+            ),
+        );
+
+        if (next[ref] === undefined && match !== undefined) {
+            next[ref] = match.id;
         }
     }
 

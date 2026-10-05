@@ -15,6 +15,9 @@ export type HistoryImport = components['schemas']['HistoryImportResource'];
 export type OpeningBalancesInput =
     components['schemas']['ImportOpeningBalancesRequest'];
 export type HistoryInput = components['schemas']['ImportHistoryRequest'];
+export type OpeningOpenItemInput = NonNullable<
+    OpeningBalancesInput['open_items']
+>[number];
 
 export type Granularity = 'period_summary' | 'transactions';
 export const GRANULARITIES: Granularity[] = ['period_summary', 'transactions'];
@@ -37,7 +40,7 @@ export type SourceJournal = {
 export type Problem = {
     /** Line of the file, counting its header as line 1. */
     line: number;
-    kind: 'column' | 'amount' | 'date' | 'code';
+    kind: 'column' | 'amount' | 'date' | 'code' | 'role' | 'document';
     /** The column that is missing, or the value that was refused. */
     detail: string;
 };
@@ -327,4 +330,206 @@ export async function importHistory(
     )) as unknown as { data: HistoryImport };
 
     return answer.data;
+}
+
+/** One open item of the source system at the conversion date (SL-FR-10); the party is still the source's reference. */
+export type SourceOpenItem = {
+    party_ref: string;
+    control_role: OpeningOpenItemInput['control_role'];
+    kind: OpeningOpenItemInput['kind'];
+    document_number: string;
+    document_date: string;
+    due_date: string | null;
+    currency: string | null;
+    amount: string;
+    exchange_rate: string | null;
+};
+
+const ROLES: Record<string, SourceOpenItem['control_role']> = {
+    receivables: 'receivables_control',
+    receivables_control: 'receivables_control',
+    payables: 'payables_control',
+    payables_control: 'payables_control',
+};
+
+/**
+ * Reads `control_role, party, kind, document_number, document_date, amount` and optionally `due_date`,
+ * `currency` and `exchange_rate`, one row per open item. `kind` is `invoice` or `credit_note`.
+ */
+export function parseOpenItems(text: string): {
+    items: SourceOpenItem[];
+    problems: Problem[];
+} {
+    // The file is optional: nothing pasted is no open items, not a missing header.
+    if (text.trim() === '') {
+        return { items: [], problems: [] };
+    }
+
+    const rows = parseCsv(text);
+    const problems: Problem[] = [];
+    const header = rows[0]?.map((name) => name.toLowerCase()) ?? [];
+    const index = columns(
+        header,
+        [
+            'control_role',
+            'party',
+            'kind',
+            'document_number',
+            'document_date',
+            'amount',
+        ],
+        problems,
+    );
+    const items: SourceOpenItem[] = [];
+    const cell = (row: string[], name: string) =>
+        (row[index.get(name) ?? -1] ?? '').trim();
+
+    if (problems.length === 0) {
+        rows.slice(1).forEach((row, i) => {
+            const line = i + 2;
+            const role = ROLES[cell(row, 'control_role').toLowerCase()];
+            const kind = cell(row, 'kind').toLowerCase();
+            const documentDate = cell(row, 'document_date');
+            const dueDate = cell(row, 'due_date');
+            const amountText = cell(row, 'amount');
+            const rate = cell(row, 'exchange_rate');
+
+            if (role === undefined) {
+                problems.push({
+                    line,
+                    kind: 'role',
+                    detail: cell(row, 'control_role'),
+                });
+            } else if (kind !== 'invoice' && kind !== 'credit_note') {
+                problems.push({ line, kind: 'document', detail: kind });
+            } else if (cell(row, 'party') === '') {
+                problems.push({ line, kind: 'code', detail: '' });
+            } else if (cell(row, 'document_number') === '') {
+                problems.push({ line, kind: 'document', detail: '' });
+            } else if (!ISO_DATE.test(documentDate)) {
+                problems.push({ line, kind: 'date', detail: documentDate });
+            } else if (dueDate !== '' && !ISO_DATE.test(dueDate)) {
+                problems.push({ line, kind: 'date', detail: dueDate });
+            } else if (!isDecimal(amountText)) {
+                problems.push({ line, kind: 'amount', detail: amountText });
+            } else if (rate !== '' && !isDecimal(rate)) {
+                problems.push({ line, kind: 'amount', detail: rate });
+            } else {
+                items.push({
+                    party_ref: cell(row, 'party'),
+                    control_role: role,
+                    kind,
+                    document_number: cell(row, 'document_number'),
+                    document_date: documentDate,
+                    due_date: dueDate || null,
+                    currency: cell(row, 'currency') || null,
+                    exchange_rate: rate || null,
+                    amount: amountText,
+                });
+            }
+        });
+    }
+
+    return { items, problems };
+}
+
+/** The distinct party references of open items, in order of first appearance. */
+export const partyRefsOf = (items: SourceOpenItem[]): string[] => [
+    ...new Set(items.map((item) => item.party_ref)),
+];
+
+/**
+ * What the open items add to each control role, as net debit minus credit in the functional currency,
+ * or null when an item is in a foreign currency, whose conversion the server rounds (SL-FR-10).
+ */
+export function openItemTotals(
+    items: SourceOpenItem[],
+): Record<SourceOpenItem['control_role'], string> | null {
+    if (items.some((item) => item.exchange_rate !== null)) {
+        return null;
+    }
+
+    const total = (role: SourceOpenItem['control_role']) => {
+        const raising = items.filter(
+            (item) => item.control_role === role && item.kind === 'invoice',
+        );
+        const lowering = items.filter(
+            (item) => item.control_role === role && item.kind !== 'invoice',
+        );
+        const gross = sumDecimals(raising.map((item) => item.amount));
+        const less = sumDecimals(lowering.map((item) => item.amount));
+        const net = differenceDecimals(gross, less);
+        // Invoices raise a receivables account on the debit side and a payables account on the credit side.
+        const debit =
+            role === 'receivables_control'
+                ? compareDecimals(gross, less) >= 0
+                : compareDecimals(gross, less) <= 0;
+
+        return compareDecimals(net, '0') === 0 ? '0' : debit ? net : `-${net}`;
+    };
+
+    return {
+        receivables_control: total('receivables_control'),
+        payables_control: total('payables_control'),
+    };
+}
+
+/** A control account whose balance in the file differs from the open items that stand behind it. */
+export type ControlMismatch = {
+    role: SourceOpenItem['control_role'];
+    accountId: string;
+    /** Net debit (positive) or credit (negative) of the file's lines on the account. */
+    balance: string;
+    openItems: string;
+};
+
+const sameSigned = (a: string, b: string): boolean => {
+    const sign = (value: string) => (value.startsWith('-') ? -1 : 1);
+    const magnitude = (value: string) => value.replace(/^-/, '');
+    const zero = (value: string) => compareDecimals(magnitude(value), '0') === 0;
+
+    return zero(a) && zero(b)
+        ? true
+        : sign(a) === sign(b) &&
+              compareDecimals(magnitude(a), magnitude(b)) === 0;
+};
+
+/**
+ * Holds each control account of the file to the total of its open items before sending (SL-FR-10, SL-AC-01);
+ * the server decides, this only tells sooner. `roleAccounts` is the account each role maps to.
+ */
+export function controlMismatches(
+    lines: SourceLine[],
+    mapping: Record<string, string>,
+    roleAccounts: Partial<Record<SourceOpenItem['control_role'], string>>,
+    totals: Record<SourceOpenItem['control_role'], string>,
+): ControlMismatch[] {
+    const mismatches: ControlMismatch[] = [];
+
+    for (const role of Object.keys(totals) as SourceOpenItem['control_role'][]) {
+        const accountId = roleAccounts[role];
+
+        if (accountId === undefined) {
+            continue;
+        }
+
+        const own = lines.filter(
+            (line) => mapping[line.source_account_code] === accountId,
+        );
+        const { debit, credit } = totalsOf(own);
+        const net = differenceDecimals(debit, credit);
+        const balance =
+            compareDecimals(debit, credit) < 0 ? `-${net}` : net;
+
+        if (!sameSigned(balance, totals[role])) {
+            mismatches.push({
+                role,
+                accountId,
+                balance,
+                openItems: totals[role],
+            });
+        }
+    }
+
+    return mismatches;
 }
