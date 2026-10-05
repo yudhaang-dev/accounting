@@ -16,7 +16,7 @@ class DocumentController
     {
         $filter = $request->validated('filter') ?? [];
 
-        $documents = Document::query()
+        $documents = Document::query()->with('reversal')
             ->when(isset($filter['party_id']), fn ($query) => $query->where('party_id', $filter['party_id']))
             ->when(isset($filter['kind']), fn ($query) => $query->where('kind', $filter['kind']))
             ->when(isset($filter['date_from']), fn ($query) => $query->whereDate('document_date', '>=', $filter['date_from']))
@@ -31,6 +31,6 @@ class DocumentController
 
     public function show(string $companyId, string $id): DocumentResource
     {
-        return new DocumentResource(Document::query()->findOrFail($id));
+        return new DocumentResource(Document::query()->with('reversal')->findOrFail($id));
     }
 }

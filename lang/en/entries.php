@@ -81,7 +81,5 @@ return [
     'route_allocations_required' => 'A document of the kind :kind needs the field that names the open items it settles.',
     'field_party_unknown' => 'The party does not exist in this company.',
     'field_cash_account_unknown' => 'The cash account does not exist in this company.',
-    'route_no_auto_reverse' => 'An entry that records a subledger document cannot be reversed automatically on a date.',
-    'journal_from_subledger' => 'Journal :number comes from the subledger and cannot be reversed from here yet.',
 
 ];

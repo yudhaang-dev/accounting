@@ -58,6 +58,12 @@ class Document extends CompanyScopedModel
         ];
     }
 
+    /** @return HasOne<DocumentReversal, $this> */
+    public function reversal(): HasOne
+    {
+        return $this->hasOne(DocumentReversal::class);
+    }
+
     /** @return HasOne<OpenItem, $this> */
     public function openItem(): HasOne
     {

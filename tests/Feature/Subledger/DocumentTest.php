@@ -301,16 +301,6 @@ describe('an invoice (SL-FR-04)', function () {
         expect(DB::table('sl_documents')->count())->toBe(0)->and(DB::table('gl_journals')->count())->toBe(0);
     });
 
-    it('cannot be reversed through the ledger, which would leave its open item standing', function () {
-        $id = docEntry('credit_sale', ['party' => $this->customer, 'total' => '1000'])->assertCreated()->json('data.id');
-        $posted = docPosted($id);
-
-        $this->actingAs($this->preparer)->postJson("{$this->url}/journals/{$posted['journal_id']}/reverse", ['reversal_date' => '2026-03-20', 'reason' => 'Salah'])
-            ->assertStatus(409)->assertJsonPath('code', 'INVALID_STATE_TRANSITION');
-
-        docEntry('credit_sale', ['party' => $this->customer, 'total' => '1000'], ['auto_reverse_on' => '2026-04-10'])->assertUnprocessable()->assertJsonValidationErrors(['auto_reverse_on']);
-    });
-
     it('keeps documents unchanged and open items to their remaining amount', function () {
         $id = docEntry('credit_sale', ['party' => $this->customer, 'total' => '1000'])->assertCreated()->json('data.id');
         docPosted($id);

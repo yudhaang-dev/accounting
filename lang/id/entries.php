@@ -81,7 +81,5 @@ return [
     'route_allocations_required' => 'Dokumen berjenis :kind memerlukan field yang menyebut open item yang dilunasinya.',
     'field_party_unknown' => 'Pihak tidak ada di perusahaan ini.',
     'field_cash_account_unknown' => 'Rekening kas tidak ada di perusahaan ini.',
-    'route_no_auto_reverse' => 'Entri yang mencatat dokumen subledger tidak dapat dibalik otomatis pada tanggal tertentu.',
-    'journal_from_subledger' => 'Jurnal :number berasal dari subledger dan belum dapat dibalik dari sini.',
 
 ];

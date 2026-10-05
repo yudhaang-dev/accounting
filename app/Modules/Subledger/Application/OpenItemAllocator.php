@@ -36,7 +36,9 @@ final class OpenItemAllocator
         $number = $item->document_number;
         $problems = [];
 
-        if ($item->status !== OpenItemStatus::Open) {
+        if ($item->status === OpenItemStatus::Reversed) {
+            $problems[] = __('documents.allocation_item_reversed', ['number' => $number]);
+        } elseif ($item->status !== OpenItemStatus::Open) {
             $problems[] = __('documents.allocation_item_settled', ['number' => $number]);
         }
 

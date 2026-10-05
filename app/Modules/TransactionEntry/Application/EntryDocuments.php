@@ -2,13 +2,20 @@
 
 namespace App\Modules\TransactionEntry\Application;
 
+use App\Modules\GeneralLedger\Contracts\JournalDirectory;
+use App\Modules\GeneralLedger\Contracts\JournalSource;
 use App\Modules\GeneralLedger\Contracts\PostedJournal;
+use App\Modules\GeneralLedger\Contracts\PostingService;
+use App\Modules\GeneralLedger\Contracts\PostingValidator;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
+use App\Modules\GeneralLedger\Contracts\ReverseJournal;
 use App\Modules\Subledger\Contracts\CashTransfer;
 use App\Modules\Subledger\Contracts\SubledgerDocument;
 use App\Modules\Subledger\Contracts\SubledgerPosting;
 use App\Modules\TransactionEntry\Domain\Entry;
 use App\Modules\TransactionEntry\Domain\SubledgerRoute;
+use App\Platform\Api\ApiException;
+use App\Platform\Api\ErrorCode;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -21,11 +28,17 @@ use Illuminate\Validation\ValidationException;
  */
 final class EntryDocuments
 {
-    public function __construct(private readonly SubledgerPosting $subledger) {}
+    public function __construct(
+        private readonly SubledgerPosting $subledger,
+        private readonly JournalDirectory $journals,
+        private readonly PostingValidator $validator,
+        private readonly PostingService $posting,
+    ) {}
 
     /**
      * The route of the version of the entry, or null when the entry goes straight to the ledger. A
-     * reversal never has one: reversing the journal of a document is not an entry of its own type.
+     * reversal never has one: reversing the journal of a document is not an entry of its own type, but
+     * `reverse()` hands it to the subledger all the same.
      *
      * @return Route|null
      */
@@ -49,6 +62,33 @@ final class EntryDocuments
         } catch (ValidationException $e) {
             throw $this->onFields($e, $route);
         }
+    }
+
+    /**
+     * Checks a reversal the way `reverse()` will: a journal the subledger posted is the subledger's to reverse (SL-FR-12).
+     *
+     * @throws ApiException NOT_FOUND, and the codes of the ledger and the subledger for a reversal
+     */
+    public function validateReversal(ReverseJournal $reversal): void
+    {
+        $this->fromSubledger($reversal)
+            ? $this->subledger->validateReversal($reversal)
+            : $this->validator->validateReversal($reversal);
+    }
+
+    /**
+     * @throws ApiException as `validateReversal()`
+     */
+    public function reverse(ReverseJournal $reversal): PostedJournal
+    {
+        return $this->fromSubledger($reversal) ? $this->subledger->reverse($reversal) : $this->posting->reverse($reversal);
+    }
+
+    private function fromSubledger(ReverseJournal $reversal): bool
+    {
+        $journal = $this->journals->find($reversal->companyId, $reversal->journalId) ?? throw new ApiException(ErrorCode::NotFound);
+
+        return $journal->source === JournalSource::Subledger;
     }
 
     /**

@@ -42,5 +42,11 @@ return [
     'revaluation_later_allocations' => 'An allocation is dated after the end of this period, so the open items no longer show their value at its end. Revalue the latest period instead.',
     'realized_difference_allocation' => 'Realized exchange difference: :debit settled against :credit',
     'realized_difference_cancelled' => 'Realized exchange difference undone: allocation of :debit cancelled',
+    'realized_difference_restored' => 'Realized exchange difference restored: document :debit reversed after its allocation was cancelled',
+    'reversal_not_document' => 'Journal :number was not posted for a document, so it cannot be reversed from here.',
+    'reversal_has_allocations' => 'Document :number still has active allocations; cancel them before reversing it.',
+    'reversal_revalued' => 'Document :number carries a revaluation that is not reversed automatically, so it cannot be reversed.',
+    'reversal_cash_description' => 'Reversal of :number',
+    'allocation_item_reversed' => 'The open item :number belongs to a reversed document.',
 
 ];

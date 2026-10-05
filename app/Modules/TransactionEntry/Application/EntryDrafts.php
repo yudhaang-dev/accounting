@@ -199,11 +199,6 @@ final class EntryDrafts
      */
     private function content(TransactionTypeVersion $version, array $data): array
     {
-        // Reversing the journal of a document is the subledger's to do, which entries cannot ask for yet.
-        if ($version->subledger_route !== null && ($data['auto_reverse_on'] ?? null) !== null) {
-            throw ValidationException::withMessages(['auto_reverse_on' => [__('entries.route_no_auto_reverse')]]);
-        }
-
         if ($version->mode === TransactionTypeMode::Structured) {
             if (isset($data['lines'])) {
                 throw ValidationException::withMessages(['lines' => [__('entries.lines_not_allowed')]]);

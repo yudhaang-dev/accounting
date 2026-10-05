@@ -10,6 +10,7 @@ use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\GeneralLedger\Contracts\PostJournalLine;
+use App\Modules\GeneralLedger\Contracts\ReverseJournal;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
 use App\Modules\MasterData\Contracts\CurrencyRounding;
@@ -66,6 +67,7 @@ final class DocumentPosting implements SubledgerPosting
         private readonly Currencies $currencies,
         private readonly ExchangeRates $rates,
         private readonly CashTransferPosting $transfers,
+        private readonly DocumentReversals $reversals,
     ) {}
 
     public function validate(SubledgerDocument $document): void
@@ -84,6 +86,16 @@ final class DocumentPosting implements SubledgerPosting
     public function postTransfer(CashTransfer $transfer): PostedJournal
     {
         return $this->transfers->post($transfer);
+    }
+
+    public function validateReversal(ReverseJournal $reversal): void
+    {
+        $this->reversals->validate($reversal);
+    }
+
+    public function reverse(ReverseJournal $reversal): PostedJournal
+    {
+        return $this->reversals->reverse($reversal);
     }
 
     public function post(SubledgerDocument $document): PostedDocument

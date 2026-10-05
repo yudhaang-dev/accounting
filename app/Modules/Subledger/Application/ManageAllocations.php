@@ -152,10 +152,26 @@ final class ManageAllocations
     }
 
     /**
+     * Books again the difference that a cancelled allocation of a document took back, when the journal of the
+     * document is reversed: the reversal takes the difference out of the ledger once more, and
+     * cancelling had taken it out already (SL-FR-12). Returns the ID of the journal, null without a difference.
+     */
+    public function restoreDifference(Allocation $allocation, string $date, ?int $userId): ?string
+    {
+        if ($allocation->realized_difference->isZero()) {
+            return null;
+        }
+
+        $debit = OpenItem::query()->findOrFail($allocation->debit_item_id);
+
+        return $this->book($debit, $date, $allocation->realized_difference, $userId, __('documents.realized_difference_restored', ['debit' => $debit->document_number]));
+    }
+
+    /**
      * Books a realized exchange difference of the open items of an item's party and control account in a
      * journal of its own, and returns the ID of the journal.
      */
-    private function book(OpenItem $item, string $date, BigDecimal $difference, int $userId, string $description, ?bool $gainAccount = null): string
+    private function book(OpenItem $item, string $date, BigDecimal $difference, ?int $userId, string $description, ?bool $gainAccount = null): string
     {
         $control = $this->controlAccounts->require($item->company_id, $item->control_role, $item->party_id, $date);
         $lines = $this->differences->lines($item->company_id, $date, $control->accountId, $item->currency, (string) $item->exchange_rate, $difference, $gainAccount);

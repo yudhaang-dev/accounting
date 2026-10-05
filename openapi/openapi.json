@@ -4208,9 +4208,6 @@
                             }
                         }
                     },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -14473,6 +14470,12 @@
                     },
                     "description": {
                         "type": "string"
+                    },
+                    "reversal_journal_id": {
+                        "type": "string"
+                    },
+                    "reversal_date": {
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -14491,7 +14494,9 @@
                     "amount",
                     "functional_amount",
                     "exchange_rate",
-                    "description"
+                    "description",
+                    "reversal_journal_id",
+                    "reversal_date"
                 ],
                 "title": "DocumentResource"
             },
@@ -16430,7 +16435,8 @@
                 "type": "string",
                 "enum": [
                     "open",
-                    "settled"
+                    "settled",
+                    "reversed"
                 ],
                 "title": "OpenItemStatus"
             },

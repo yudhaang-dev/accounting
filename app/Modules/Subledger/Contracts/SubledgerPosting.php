@@ -3,6 +3,7 @@
 namespace App\Modules\Subledger\Contracts;
 
 use App\Modules\GeneralLedger\Contracts\PostedJournal;
+use App\Modules\GeneralLedger\Contracts\ReverseJournal;
 
 /**
  * Validates and records the documents of entries that have a subledger route, then posts their journal
@@ -42,4 +43,21 @@ interface SubledgerPosting
      * Posting the same entry again returns its journal and records nothing more.
      */
     public function postTransfer(CashTransfer $transfer): PostedJournal;
+
+    /**
+     * Checks what reversing the journal of a document will check (SL-FR-12): the ledger's own rules for a
+     * reversal, that the journal is one a document was posted with, and that the document has no active
+     * allocation. Nothing is stored.
+     *
+     * Fails with ApiException NOT_FOUND, INVALID_STATE_TRANSITION (reversed already, not the journal of a
+     * document, active allocations), COMPANY_READ_ONLY or PERIOD_NOT_OPEN.
+     */
+    public function validateReversal(ReverseJournal $reversal): void;
+
+    /**
+     * Reverses the journal of a document through the ledger and takes the document out of the open items,
+     * returning its cash. Fails like `validateReversal()`; reversing again with the same entry returns the
+     * reversal that exists.
+     */
+    public function reverse(ReverseJournal $reversal): PostedJournal;
 }

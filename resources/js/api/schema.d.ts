@@ -2903,6 +2903,8 @@ export interface components {
             functional_amount: string;
             exchange_rate: string;
             description: string;
+            reversal_journal_id: string;
+            reversal_date: string;
         };
         /**
          * EntryRequest
@@ -3356,7 +3358,7 @@ export interface components {
          * OpenItemStatus
          * @enum {string}
          */
-        OpenItemStatus: "open" | "settled";
+        OpenItemStatus: "open" | "settled" | "reversed";
         /** OpeningBalanceBatchResource */
         OpeningBalanceBatchResource: {
             id: string;
@@ -5675,7 +5677,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "entries.index": {

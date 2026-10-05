@@ -42,5 +42,11 @@ return [
     'revaluation_later_allocations' => 'Ada alokasi bertanggal setelah akhir periode ini, sehingga open item tidak lagi menunjukkan nilainya pada akhir periode. Lakukan revaluasi pada periode terbaru.',
     'realized_difference_allocation' => 'Selisih kurs terealisasi: :debit dilunasi terhadap :credit',
     'realized_difference_cancelled' => 'Selisih kurs terealisasi dibatalkan: alokasi :debit dibatalkan',
+    'realized_difference_restored' => 'Selisih kurs terealisasi dikembalikan: dokumen :debit dibalik setelah alokasinya dibatalkan',
+    'reversal_not_document' => 'Jurnal :number tidak diposting untuk dokumen, sehingga tidak dapat dibalik dari sini.',
+    'reversal_has_allocations' => 'Dokumen :number masih memiliki alokasi aktif; batalkan alokasinya sebelum membalik dokumen.',
+    'reversal_revalued' => 'Dokumen :number membawa revaluasi yang tidak dibalik otomatis, sehingga tidak dapat dibalik.',
+    'reversal_cash_description' => 'Pembalikan :number',
+    'allocation_item_reversed' => 'Open item :number milik dokumen yang sudah dibalik.',
 
 ];
