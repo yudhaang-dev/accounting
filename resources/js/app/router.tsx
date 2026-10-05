@@ -57,6 +57,8 @@ import { CurrenciesPage } from '@/modules/master-data/pages/currencies-page';
 import { DimensionsPage } from '@/modules/master-data/pages/dimensions-page';
 import { ExchangeRatesPage } from '@/modules/master-data/pages/exchange-rates-page';
 import { RateTypesPage } from '@/modules/master-data/pages/rate-types-page';
+import { CashAccountsPage } from '@/modules/subledger/pages/cash-accounts-page';
+import { CashTransactionsPage } from '@/modules/subledger/pages/cash-transactions-page';
 import { PartiesPage } from '@/modules/subledger/pages/parties-page';
 import { PostingProfilesPage } from '@/modules/subledger/pages/posting-profiles-page';
 import { ForgotPasswordPage } from '@/modules/identity-access/pages/forgot-password-page';
@@ -496,6 +498,53 @@ const rateTypesRoute = createRoute({
             <RateTypesPage
                 companyId={workspace.company_id}
                 canManage={can(workspace, 'exchange-rates.manage')}
+            />
+        );
+    },
+});
+
+const cashAccountsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/cash-accounts',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navCashAccounts', href: at(m, '/cash-accounts') },
+        ],
+    },
+    beforeLoad: requirePermission('cash-accounts.read'),
+    component: function CashAccounts() {
+        const { workspace } = cashAccountsRoute.useRouteContext();
+
+        return (
+            <CashAccountsPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'cash-accounts.manage')}
+                canReadAccounts={can(workspace, 'accounts.read')}
+            />
+        );
+    },
+});
+
+const cashTransactionsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/cash-transactions',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navCashTransactions',
+                href: at(m, '/cash-transactions'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('cash-transactions.read'),
+    component: function CashTransactions() {
+        const { workspace } = cashTransactionsRoute.useRouteContext();
+
+        return (
+            <CashTransactionsPage
+                companyId={workspace.company_id}
+                canClear={can(workspace, 'cash-transactions.clear')}
+                canReadJournals={can(workspace, 'journals.read')}
             />
         );
     },
@@ -1182,6 +1231,8 @@ const routeTree = rootRoute.addChildren([
                 exchangeRatesRoute,
                 rateTypesRoute,
                 partiesRoute,
+                cashAccountsRoute,
+                cashTransactionsRoute,
                 postingProfilesRoute,
                 entriesRoute,
                 approvalsRoute,

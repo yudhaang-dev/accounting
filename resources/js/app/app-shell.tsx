@@ -1,6 +1,8 @@
 import { Link, useMatchRoute, useParams } from '@tanstack/react-router';
 import {
     ArrowDownToLineIcon,
+    ArrowRightLeftIcon,
+    LandmarkIcon,
     BookTextIcon,
     CalendarRangeIcon,
     CoinsIcon,
@@ -121,6 +123,18 @@ const NAV = [
         label: 'app.navPostingProfiles',
         icon: WorkflowIcon,
         permission: 'posting-profiles.read',
+    },
+    {
+        to: '/w/$companyId/cash-accounts',
+        label: 'app.navCashAccounts',
+        icon: LandmarkIcon,
+        permission: 'cash-accounts.read',
+    },
+    {
+        to: '/w/$companyId/cash-transactions',
+        label: 'app.navCashTransactions',
+        icon: ArrowRightLeftIcon,
+        permission: 'cash-transactions.read',
     },
     {
         to: '/w/$companyId/entries',
