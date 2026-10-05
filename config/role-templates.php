@@ -7,7 +7,7 @@
 | workspace so that the first user can set the company up and work in it.
 */
 
-$read = ['company.read', 'accounts.read', 'dimensions.read', 'currencies.read', 'exchange-rates.read', 'parties.read', 'posting-profiles.read', 'cash-accounts.read', 'cash-transactions.read', 'documents.read', 'open-items.read', 'periods.read', 'entries.read', 'journals.read', 'financial-events.read', 'recurring-schedules.read', 'reports.read'];
+$read = ['company.read', 'accounts.read', 'dimensions.read', 'currencies.read', 'exchange-rates.read', 'parties.read', 'posting-profiles.read', 'cash-accounts.read', 'cash-transactions.read', 'documents.read', 'open-items.read', 'allocations.read', 'periods.read', 'entries.read', 'journals.read', 'financial-events.read', 'recurring-schedules.read', 'reports.read'];
 
 return [
 
@@ -19,7 +19,7 @@ return [
             'permissions' => [
                 ...$read,
                 'company.update', 'company.activate', 'company.deactivate',
-                'accounts.manage', 'dimensions.manage', 'currencies.manage', 'exchange-rates.manage', 'parties.manage', 'posting-profiles.manage', 'cash-accounts.manage', 'cash-transactions.clear',
+                'accounts.manage', 'dimensions.manage', 'currencies.manage', 'exchange-rates.manage', 'parties.manage', 'posting-profiles.manage', 'cash-accounts.manage', 'cash-transactions.clear', 'allocations.manage',
                 'periods.manage', 'periods.close', 'periods.reopen', 'periods.revalue', 'journals.post-soft-closed', 'opening-balances.import', 'fiscal-years.close', 'fiscal-years.reopen',
                 'memberships.read', 'memberships.manage',
                 'roles.read', 'roles.manage',
@@ -32,7 +32,7 @@ return [
             'name' => 'preparer',
             'description' => 'Creates and submits entries.',
             'grant_to_creator' => true,
-            'permissions' => [...$read, 'entries.create', 'entries.submit', 'entries.reverse', 'recurring-schedules.manage'],
+            'permissions' => [...$read, 'entries.create', 'entries.submit', 'entries.reverse', 'allocations.manage', 'recurring-schedules.manage'],
         ],
         [
             'name' => 'approver',

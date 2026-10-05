@@ -964,6 +964,386 @@
                 }
             }
         },
+        "/companies/{companyId}/allocations": {
+            "get": {
+                "operationId": "allocations.index",
+                "summary": "Allocations, newest first. Filters: `filter[open_item_id]` (on either side), `filter[document_id]`\nand `filter[status]`. `per_page` defaults to 50, at most 200",
+                "tags": [
+                    "Allocation"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[open_item_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
+                    },
+                    {
+                        "name": "filter[document_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
+                    },
+                    {
+                        "name": "filter[status]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "cancelled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `AllocationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AllocationResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "allocations.store",
+                "summary": "Settles an amount of two open items of the same party, control account and currency against each\nother, one on the debit side and one on the credit side, for example an advance against an invoice.\nMakes no journal",
+                "tags": [
+                    "Allocation"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AllocateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`AllocationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AllocationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/allocations/{id}": {
+            "get": {
+                "operationId": "allocations.show",
+                "tags": [
+                    "Allocation"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AllocationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AllocationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/allocations/{id}/cancel": {
+            "post": {
+                "operationId": "allocations.cancel",
+                "summary": "Cancels an active allocation with a reason. The open items it settled open again by its amount",
+                "tags": [
+                    "Allocation"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CancelAllocationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AllocationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AllocationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/approval-policy": {
             "get": {
                 "operationId": "approval-policy.show",
@@ -12600,6 +12980,107 @@
                 ],
                 "title": "ActivatedCompanyResource"
             },
+            "AllocateRequest": {
+                "type": "object",
+                "properties": {
+                    "open_item_id": {
+                        "type": "string",
+                        "minLength": 26,
+                        "maxLength": 26
+                    },
+                    "counterpart_open_item_id": {
+                        "type": "string",
+                        "minLength": 26,
+                        "maxLength": 26
+                    },
+                    "amount": {
+                        "type": "string",
+                        "pattern": "^[0-9]+(\\.[0-9]{1,6})?$"
+                    },
+                    "allocation_date": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                },
+                "required": [
+                    "open_item_id",
+                    "counterpart_open_item_id",
+                    "amount",
+                    "allocation_date"
+                ],
+                "title": "AllocateRequest"
+            },
+            "AllocationResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "debit_item_id": {
+                        "type": "string"
+                    },
+                    "credit_item_id": {
+                        "type": "string"
+                    },
+                    "document_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "amount": {
+                        "type": "string"
+                    },
+                    "functional_amount": {
+                        "type": "string"
+                    },
+                    "allocation_date": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "created_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "cancelled_on": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "cancelled_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "cancel_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "debit_item_id",
+                    "credit_item_id",
+                    "document_id",
+                    "amount",
+                    "functional_amount",
+                    "allocation_date",
+                    "status",
+                    "created_by",
+                    "cancelled_on",
+                    "cancelled_by",
+                    "cancel_reason"
+                ],
+                "title": "AllocationResource"
+            },
             "ApprovalPolicyResource": {
                 "type": "object",
                 "properties": {
@@ -12719,6 +13200,19 @@
                     "free"
                 ],
                 "title": "CalendarPattern"
+            },
+            "CancelAllocationRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 500
+                    }
+                },
+                "required": [
+                    "reason"
+                ],
+                "title": "CancelAllocationRequest"
             },
             "CashAccountKind": {
                 "type": "string",
@@ -13456,6 +13950,8 @@
                                 "cash-transactions.clear",
                                 "documents.read",
                                 "open-items.read",
+                                "allocations.read",
+                                "allocations.manage",
                                 "exchange-rates.read",
                                 "exchange-rates.manage",
                                 "periods.read",
@@ -13772,7 +14268,8 @@
                     "invoice",
                     "credit_note",
                     "payment",
-                    "advance"
+                    "advance",
+                    "write_off"
                 ],
                 "title": "DocumentKind"
             },
@@ -17475,6 +17972,8 @@
                                 "cash-transactions.clear",
                                 "documents.read",
                                 "open-items.read",
+                                "allocations.read",
+                                "allocations.manage",
                                 "exchange-rates.read",
                                 "exchange-rates.manage",
                                 "periods.read",
@@ -17553,6 +18052,8 @@
                                 "cash-transactions.clear",
                                 "documents.read",
                                 "open-items.read",
+                                "allocations.read",
+                                "allocations.manage",
                                 "exchange-rates.read",
                                 "exchange-rates.manage",
                                 "periods.read",
@@ -17794,6 +18295,13 @@
                                 "maxLength": 64
                             },
                             "cash_account_field": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 64
+                            },
+                            "allocations_field": {
                                 "type": [
                                     "string",
                                     "null"

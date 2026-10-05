@@ -13,13 +13,20 @@ enum DocumentKind: string
     case CreditNote = 'credit_note';
     case Payment = 'payment';
     case Advance = 'advance';
+    case WriteOff = 'write_off';
+
+    /** Whether the document may settle open items when it is posted: the kinds that lower a balance, except an advance, which waits for them (SL-FR-05). */
+    public function allocates(): bool
+    {
+        return in_array($this, [self::CreditNote, self::Payment, self::WriteOff], true);
+    }
 
     /** Whether the document moves cash and so needs a cash account (SL-FR-11). */
     public function movesCash(): bool
     {
         return match ($this) {
             self::Payment, self::Advance => true,
-            self::Invoice, self::CreditNote => false,
+            self::Invoice, self::CreditNote, self::WriteOff => false,
         };
     }
 

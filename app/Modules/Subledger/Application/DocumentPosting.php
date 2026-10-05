@@ -14,6 +14,7 @@ use App\Modules\Subledger\Contracts\CashAccountData;
 use App\Modules\Subledger\Contracts\CashAccountDirectory;
 use App\Modules\Subledger\Contracts\ControlAccount;
 use App\Modules\Subledger\Contracts\ControlAccounts;
+use App\Modules\Subledger\Contracts\DocumentKind;
 use App\Modules\Subledger\Contracts\PartyDirectory;
 use App\Modules\Subledger\Contracts\PostedDocument;
 use App\Modules\Subledger\Contracts\SubledgerDocument;
@@ -55,6 +56,7 @@ final class DocumentPosting implements SubledgerPosting
         private readonly AccountDirectory $accounts,
         private readonly CompanyContext $company,
         private readonly Audit $audit,
+        private readonly OpenItemAllocator $allocator,
     ) {}
 
     public function validate(SubledgerDocument $document): void
@@ -147,6 +149,10 @@ final class DocumentPosting implements SubledgerPosting
 
         if ($errors !== []) {
             throw ValidationException::withMessages(['lines' => $errors]);
+        }
+
+        if (($errors = $this->allocationErrors($document, $control)) !== []) {
+            throw ValidationException::withMessages(['allocations' => $errors]);
         }
 
         return ['control' => $control, 'cash' => $cash];
@@ -267,7 +273,7 @@ final class DocumentPosting implements SubledgerPosting
             'created_by' => $command->postedBy,
         ]);
 
-        OpenItem::create([
+        $own = OpenItem::create([
             'document_id' => $recorded->id,
             'party_id' => $document->partyId,
             'control_role' => $document->role,
@@ -296,7 +302,95 @@ final class DocumentPosting implements SubledgerPosting
             companyId: $command->companyId,
         );
 
+        $this->allocate($document, $own, $recorded);
+
         return $recorded;
+    }
+
+    /**
+     * What the document says it settles must be settled by it (SL-FR-05): the open items exist, are open,
+     * belong to the party and control account on the other side and in the same currency, have enough
+     * left, and together do not exceed the document. A write-off settles in full.
+     *
+     * @return list<string>
+     */
+    private function allocationErrors(SubledgerDocument $document, ControlAccount $control, bool $lock = false): array
+    {
+        $kind = $document->kind;
+
+        if ($document->allocations === []) {
+            return $kind === DocumentKind::WriteOff ? [__('documents.allocations_required', ['kind' => $kind->value])] : [];
+        }
+
+        if (! $kind->allocates()) {
+            return [__('documents.allocations_not_allowed', ['kind' => $kind->value])];
+        }
+
+        $functional = $this->companies->find($document->journal->companyId)->functionalCurrency ?? '';
+        $total = BigDecimal::zero();
+        $currency = $functional;
+
+        foreach ($document->journal->lines as $line) {
+            if ($line->accountId === $control->accountId) {
+                $total = $total->plus($line->debit)->plus($line->credit);
+                $currency = $line->currency ?? $functional;
+            }
+        }
+
+        $side = $kind->controlSide($document->role);
+        $errors = [];
+        $sum = BigDecimal::zero();
+        $seen = [];
+
+        foreach ($document->allocations as $allocation) {
+            $amount = BigDecimal::of($allocation['amount']);
+
+            if (isset($seen[$allocation['open_item_id']])) {
+                $errors[] = __('documents.allocation_repeated');
+
+                continue;
+            }
+
+            $seen[$allocation['open_item_id']] = true;
+            $item = OpenItem::query()->when($lock, fn ($query) => $query->lockForUpdate())->find($allocation['open_item_id']);
+
+            if (! $amount->isPositive()) {
+                $errors[] = __('documents.allocation_amount_positive');
+            }
+
+            array_push($errors, ...$this->allocator->problems($item, $document->partyId, $document->role, $side, $currency, $amount));
+            $sum = $sum->plus($amount);
+        }
+
+        if ($sum->isGreaterThan($total)) {
+            $errors[] = __('documents.allocation_exceeds_document', ['total' => (string) $total]);
+        } elseif ($kind === DocumentKind::WriteOff && ! $sum->isEqualTo($total)) {
+            $errors[] = __('documents.allocations_required', ['kind' => $kind->value]);
+        }
+
+        return array_values(array_unique($errors));
+    }
+
+    /** Settles the open items the document names against its own open item, in the order of their IDs so concurrent postings lock alike. */
+    private function allocate(SubledgerDocument $document, OpenItem $own, Document $recorded): void
+    {
+        if ($document->allocations === []) {
+            return;
+        }
+
+        // The items were checked before the journal was posted; check them again now that they are locked.
+        $control = $this->controlAccounts->require($document->journal->companyId, $document->role, $document->partyId, $document->journal->accountingDate);
+        $locked = $document->allocations;
+        usort($locked, fn (array $a, array $b): int => strcmp($a['open_item_id'], $b['open_item_id']));
+        $document = new SubledgerDocument($document->kind, $document->role, $document->partyId, $document->journal, $document->cashAccountId, $document->documentNumber, $document->dueDate, $locked);
+
+        if (($errors = $this->allocationErrors($document, $control, lock: true)) !== []) {
+            throw ValidationException::withMessages(['allocations' => $errors]);
+        }
+
+        foreach ($locked as $allocation) {
+            $this->allocator->apply($own, OpenItem::query()->findOrFail($allocation['open_item_id']), BigDecimal::of($allocation['amount']), $document->journal->accountingDate, $recorded->id, $document->journal->postedBy);
+        }
     }
 
     private function recordCash(CashAccountData $cash, PostedJournal $journal, Document $document, string $reference): void

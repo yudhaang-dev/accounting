@@ -21,6 +21,7 @@ final class PermissionCatalog
         'cash-transactions' => ['read', 'clear'],
         'documents' => ['read'],
         'open-items' => ['read'],
+        'allocations' => ['read', 'manage'],
         'exchange-rates' => ['read', 'manage'],
         'periods' => ['read', 'manage', 'close', 'reopen', 'revalue'],
         'transaction-types' => ['read'],

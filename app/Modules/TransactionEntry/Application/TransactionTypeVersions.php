@@ -327,7 +327,7 @@ final class TransactionTypeVersions
      * @param  list<FieldDefinition>|null  $fields
      * @param  list<RuleLine>|null  $rules
      * @param  array<string, mixed>|null  $route
-     * @return array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null}|null
+     * @return array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null}|null
      *
      * @throws ValidationException
      */
@@ -388,6 +388,14 @@ final class TransactionTypeVersions
             }
         }
 
+        if ($kind !== null) {
+            if (! $kind->allocates() && $stored['allocations_field'] !== null) {
+                $errors['subledger_route.allocations_field'] = [__('entries.route_allocations_not_allowed', ['kind' => $kind->value])];
+            } elseif ($kind === DocumentKind::WriteOff && $stored['allocations_field'] === null) {
+                $errors['subledger_route.allocations_field'] = [__('entries.route_allocations_required', ['kind' => $kind->value])];
+            }
+        }
+
         if ($errors === []) {
             $errors = $this->ruleErrors($rules ?? [], $stored, $kind->controlSide($role), $kind->movesCash());
         }
@@ -401,7 +409,7 @@ final class TransactionTypeVersions
 
     /**
      * @param  list<RuleLine>  $rules
-     * @param  array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null}  $route
+     * @param  array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null}  $route
      * @param  'debit'|'credit'  $controlSide
      * @return array<string, list<string>>
      */

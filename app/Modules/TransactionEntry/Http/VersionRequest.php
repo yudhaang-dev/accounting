@@ -54,6 +54,7 @@ class VersionRequest extends FormRequest
             'subledger_route.document_number_field' => ['sometimes', 'nullable', 'string', 'max:64'],
             'subledger_route.due_date_field' => ['sometimes', 'nullable', 'string', 'max:64'],
             'subledger_route.cash_account_field' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'subledger_route.allocations_field' => ['sometimes', 'nullable', 'string', 'max:64'],
         ];
     }
 }

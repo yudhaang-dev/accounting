@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Subledger\Contracts\ControlRole;
+use App\Modules\Subledger\Http\AllocationController;
 use App\Modules\Subledger\Http\CashAccountController;
 use App\Modules\Subledger\Http\CashTransactionController;
 use App\Modules\Subledger\Http\DocumentController;
@@ -62,4 +63,11 @@ Route::companyScoped(function () {
     Route::get('open-items', [OpenItemController::class, 'index'])->middleware('permission:open-items.read')->name('open-items.index');
     Route::get('open-items/{id}', [OpenItemController::class, 'show'])
         ->middleware('permission:open-items.read')->where('id', ApiServiceProvider::ULID)->name('open-items.show');
+
+    Route::get('allocations', [AllocationController::class, 'index'])->middleware('permission:allocations.read')->name('allocations.index');
+    Route::post('allocations', [AllocationController::class, 'store'])->middleware('permission:allocations.manage')->name('allocations.store');
+    Route::get('allocations/{id}', [AllocationController::class, 'show'])
+        ->middleware('permission:allocations.read')->where('id', ApiServiceProvider::ULID)->name('allocations.show');
+    Route::post('allocations/{id}/cancel', [AllocationController::class, 'cancel'])
+        ->middleware('permission:allocations.manage')->where('id', ApiServiceProvider::ULID)->name('allocations.cancel');
 });

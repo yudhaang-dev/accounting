@@ -78,7 +78,20 @@ final class EntryDocuments
             cashAccountId: $this->value($values, $route['cash_account_field']),
             documentNumber: $this->value($values, $route['document_number_field']) ?? $entry->number,
             dueDate: $this->value($values, $route['due_date_field']),
+            allocations: $this->allocations($values, $route['allocations_field']),
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     * @return list<array{open_item_id: string, amount: string}>
+     */
+    private function allocations(array $values, ?string $field): array
+    {
+        $value = $field === null ? null : ($values[$field] ?? null);
+
+        /** @var list<array{open_item_id: string, amount: string}> */
+        return is_array($value) ? $value : [];
     }
 
     /**
@@ -103,6 +116,7 @@ final class EntryDocuments
             'party_id' => "values.{$route['party_field']}",
             'cash_account_id' => 'values.'.($route['cash_account_field'] ?? 'cash_account_id'),
             'due_date' => 'values.'.($route['due_date_field'] ?? 'due_date'),
+            'allocations' => 'values.'.($route['allocations_field'] ?? 'allocations'),
         ];
         $errors = [];
 

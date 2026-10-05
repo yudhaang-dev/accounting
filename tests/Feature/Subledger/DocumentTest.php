@@ -425,7 +425,7 @@ describe('the subledger route of a version (TE-FR-02, TE-FR-10)', function () {
 
         expect(collect($versions)->last()['subledger_route'])->toEqualCanonicalizing([
             'kind' => 'invoice', 'control_role' => 'receivables_control', 'party_field' => 'party',
-            'document_number_field' => 'number', 'due_date_field' => 'due', 'cash_account_field' => null,
+            'document_number_field' => 'number', 'due_date_field' => 'due', 'cash_account_field' => null, 'allocations_field' => null,
         ])->and($versions[0]['subledger_route'])->toBeNull();
     });
 

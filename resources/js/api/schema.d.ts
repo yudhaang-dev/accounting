@@ -218,6 +218,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/allocations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Allocations, newest first. Filters: `filter[open_item_id]` (on either side), `filter[document_id]`
+         *     and `filter[status]`. `per_page` defaults to 50, at most 200
+         */
+        get: operations["allocations.index"];
+        put?: never;
+        /**
+         * Settles an amount of two open items of the same party, control account and currency against each
+         *     other, one on the debit side and one on the credit side, for example an advance against an invoice.
+         *     Makes no journal
+         */
+        post: operations["allocations.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/allocations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["allocations.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/allocations/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancels an active allocation with a reason. The open items it settled open again by its amount */
+        post: operations["allocations.cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/approval-policy": {
         parameters: {
             query?: never;
@@ -2442,6 +2500,29 @@ export interface components {
             status: string;
             lock_version: number;
         };
+        /** AllocateRequest */
+        AllocateRequest: {
+            open_item_id: string;
+            counterpart_open_item_id: string;
+            amount: string;
+            /** Format: date */
+            allocation_date: string;
+        };
+        /** AllocationResource */
+        AllocationResource: {
+            id: string;
+            debit_item_id: string;
+            credit_item_id: string;
+            document_id: string | null;
+            amount: string;
+            functional_amount: string;
+            allocation_date: string;
+            status: string;
+            created_by: number | null;
+            cancelled_on: string | null;
+            cancelled_by: number | null;
+            cancel_reason: string | null;
+        };
         /** ApprovalPolicyResource */
         ApprovalPolicyResource: {
             /** @description 0 while the company has never set a policy. */
@@ -2481,6 +2562,10 @@ export interface components {
          * @enum {string}
          */
         CalendarPattern: "monthly" | "four_four_five" | "free";
+        /** CancelAllocationRequest */
+        CancelAllocationRequest: {
+            reason: string;
+        };
         /**
          * CashAccountKind
          * @enum {string}
@@ -2680,7 +2765,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -2768,7 +2853,7 @@ export interface components {
          * @description The kinds of document the subledger records (SL-FR-04). A mechanism of the system, not data a company defines: an invoice creates an open item; the others settle open items, and what they leave unsettled stays an open item of its own until it is allocated (SL-FR-05).
          * @enum {string}
          */
-        DocumentKind: "invoice" | "credit_note" | "payment" | "advance";
+        DocumentKind: "invoice" | "credit_note" | "payment" | "advance" | "write_off";
         /** DocumentResource */
         DocumentResource: {
             id: string;
@@ -3652,13 +3737,13 @@ export interface components {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -3706,6 +3791,7 @@ export interface components {
                 document_number_field?: string | null;
                 due_date_field?: string | null;
                 cash_account_field?: string | null;
+                allocations_field?: string | null;
             };
         };
         /** WorkspaceResource */
@@ -4188,6 +4274,151 @@ export interface operations {
                             template: string;
                             created: number;
                         };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "allocations.index": {
+        parameters: {
+            query?: {
+                "filter[open_item_id]"?: string;
+                "filter[document_id]"?: string;
+                "filter[status]"?: "active" | "cancelled";
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `AllocationResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AllocationResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "allocations.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllocateRequest"];
+            };
+        };
+        responses: {
+            /** @description `AllocationResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AllocationResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "allocations.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `AllocationResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AllocationResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "allocations.cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelAllocationRequest"];
+            };
+        };
+        responses: {
+            /** @description `AllocationResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AllocationResource"];
                     };
                 };
             };

@@ -11,7 +11,7 @@ use App\Modules\Subledger\Contracts\DocumentKind;
  * document moves cash, to the account of the cash account named by another field (TE-FR-10, SL-FR-04).
  * The optional fields give the number and the due date of the document.
  *
- * @phpstan-type Route array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null}
+ * @phpstan-type Route array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null}
  */
 final class SubledgerRoute
 {
@@ -30,6 +30,7 @@ final class SubledgerRoute
             'document_number_field' => self::optional($input['document_number_field'] ?? null),
             'due_date_field' => self::optional($input['due_date_field'] ?? null),
             'cash_account_field' => self::optional($input['cash_account_field'] ?? null),
+            'allocations_field' => self::optional($input['allocations_field'] ?? null),
         ];
     }
 
@@ -58,6 +59,7 @@ final class SubledgerRoute
             'document_number_field' => FieldType::Reference,
             'due_date_field' => FieldType::Date,
             'cash_account_field' => FieldType::CashAccount,
+            'allocations_field' => FieldType::Allocations,
         ];
         $used = [];
 
