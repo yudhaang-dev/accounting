@@ -4,6 +4,7 @@ namespace App\Modules\TransactionEntry\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountRole;
 use App\Modules\GeneralLedger\Contracts\AccountRoles;
+use App\Modules\Subledger\Contracts\CashAccountData;
 use App\Modules\Subledger\Contracts\CashAccountDirectory;
 use App\Modules\Subledger\Contracts\ControlAccounts;
 use App\Modules\Subledger\Contracts\PartyDirectory;
@@ -59,6 +60,8 @@ final class EntryLines
         $lines = [];
         $fxRules = [];
         $balance = BigDecimal::zero();
+        $pending = $foreign !== null && $applied === null;
+        $transfer = SubledgerRoute::isTransfer($version->subledger_route);
 
         foreach ($version->posting_rules ?? [] as $index => $rule) {
             $dimensionsOf = $rule['apply_dimensions'] ? $dimensions : [];
@@ -76,15 +79,26 @@ final class EntryLines
             }
 
             $debit = ($rule['side'] ?? null) === 'debit';
-            $functional = $applied === null ? $amount : $this->rates->toFunctional($amount, $applied['rate']);
+            $accountId = $this->accountOf($rule, $values, $version, $accountingDate);
+            [$lineCurrency, $lineApplied, $lineInput] = [$foreign, $applied, $inputRate];
+
+            // The cash of a transfer is in the currency of its account, at the rate in the table (TE-FR-06).
+            if ($transfer && ($rule['account']['source'] ?? null) === PostingRules::CASH_ACCOUNT) {
+                $lineCurrency = $this->rates->foreign($this->cashAccountData($rule['account']['field'] ?? '', $values)->currency);
+                $lineInput = null;
+                $lineApplied = $lineCurrency === null ? null : $this->rates->resolve($version, $lineCurrency, null, $accountingDate, $strict);
+                $pending = $pending || ($lineCurrency !== null && $lineApplied === null);
+            }
+
+            $functional = $lineApplied === null ? $amount : $this->rates->toFunctional($amount, $lineApplied['rate']);
             $balance = $debit ? $balance->plus($functional) : $balance->minus($functional);
 
-            $lines[$index] = $this->line($this->accountOf($rule, $values, $version, $accountingDate), $amount, $debit, $dimensionsOf)
-                + ($foreign === null ? [] : ['currency' => $foreign, 'exchange_rate' => $inputRate, 'applied_rate' => $applied['rate'] ?? null, 'rate_type_key' => $applied['rate_type_key'] ?? null]);
+            $lines[$index] = $this->line($accountId, $amount, $debit, $dimensionsOf)
+                + ($lineCurrency === null ? [] : ['currency' => $lineCurrency, 'exchange_rate' => $lineInput, 'applied_rate' => $lineApplied['rate'] ?? null, 'rate_type_key' => $lineApplied['rate_type_key'] ?? null]);
         }
 
         // Without a rate there is nothing to say yet about what is left over in the functional currency.
-        if (! $balance->isZero() && ($foreign === null || $applied !== null)) {
+        if (! $balance->isZero() && ! $pending) {
             foreach ($fxRules as $index => $dimensionsOf) {
                 // More debit than credit is made up with a credit, a gain, and the other way round.
                 $gain = $balance->isPositive();
@@ -198,6 +212,16 @@ final class EntryLines
      */
     private function cashAccountOf(string $field, array $values): string
     {
+        return $this->cashAccountData($field, $values)->accountId;
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     *
+     * @throws ValidationException
+     */
+    private function cashAccountData(string $field, array $values): CashAccountData
+    {
         $cashAccountId = $values[$field] ?? null;
 
         if (! is_string($cashAccountId) || $cashAccountId === '') {
@@ -210,7 +234,7 @@ final class EntryLines
             throw ValidationException::withMessages(["values.{$field}" => [__('entries.field_cash_account_unknown')]]);
         }
 
-        return $cash->accountId;
+        return $cash;
     }
 
     /**

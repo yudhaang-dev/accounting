@@ -2,8 +2,9 @@
 
 namespace App\Modules\TransactionEntry\Application;
 
+use App\Modules\GeneralLedger\Contracts\PostedJournal;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
-use App\Modules\Subledger\Contracts\PostedDocument;
+use App\Modules\Subledger\Contracts\CashTransfer;
 use App\Modules\Subledger\Contracts\SubledgerDocument;
 use App\Modules\Subledger\Contracts\SubledgerPosting;
 use App\Modules\TransactionEntry\Domain\Entry;
@@ -42,7 +43,9 @@ final class EntryDocuments
     public function validate(Entry $entry, array $route, PostJournal $journal): void
     {
         try {
-            $this->subledger->validate($this->document($entry, $route, $journal));
+            SubledgerRoute::isTransfer($route)
+                ? $this->subledger->validateTransfer($this->transfer($entry, $route, $journal))
+                : $this->subledger->validate($this->document($entry, $route, $journal));
         } catch (ValidationException $e) {
             throw $this->onFields($e, $route);
         }
@@ -54,13 +57,25 @@ final class EntryDocuments
      *
      * @throws ValidationException
      */
-    public function post(Entry $entry, array $route, PostJournal $journal): PostedDocument
+    public function post(Entry $entry, array $route, PostJournal $journal): PostedJournal
     {
         try {
-            return $this->subledger->post($this->document($entry, $route, $journal));
+            return SubledgerRoute::isTransfer($route)
+                ? $this->subledger->postTransfer($this->transfer($entry, $route, $journal))
+                : $this->subledger->post($this->document($entry, $route, $journal))->journal;
         } catch (ValidationException $e) {
             throw $this->onFields($e, $route);
         }
+    }
+
+    /**
+     * @param  Route  $route
+     */
+    private function transfer(Entry $entry, array $route, PostJournal $journal): CashTransfer
+    {
+        $values = $entry->field_values ?? [];
+
+        return new CashTransfer($journal, $this->value($values, $route['cash_account_field']) ?? '', $this->value($values, $route['counterpart_cash_account_field']) ?? '');
     }
 
     /**
@@ -115,6 +130,7 @@ final class EntryDocuments
         $fields = [
             'party_id' => "values.{$route['party_field']}",
             'cash_account_id' => 'values.'.($route['cash_account_field'] ?? 'cash_account_id'),
+            'counterpart_cash_account_id' => 'values.'.($route['counterpart_cash_account_field'] ?? 'counterpart_cash_account_id'),
             'due_date' => 'values.'.($route['due_date_field'] ?? 'due_date'),
             'allocations' => 'values.'.($route['allocations_field'] ?? 'allocations'),
         ];

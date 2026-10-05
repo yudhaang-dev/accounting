@@ -20,6 +20,8 @@ return [
     'cash_line_currency' => 'Baris ke rekening kas :name harus dalam mata uangnya, :currency.',
     'stray_control_line' => 'Akun :account adalah akun kontrol sebuah profil posting; hanya dokumen pihak tersebut yang dapat memposting ke sana.',
     'stray_cash_line' => 'Akun :account milik sebuah rekening kas; hanya dokumen yang menggerakkan kasnya yang dapat memposting ke sana.',
+    'transfer_same_account' => 'Transfer memerlukan dua rekening kas yang berbeda.',
+    'transfer_line_side' => 'Transfer diposting ke rekening kas :name di sisi :side.',
     'allocations_required' => 'Dokumen berjenis :kind harus melunasi open item sebesar nilai penuhnya.',
     'allocations_not_allowed' => 'Dokumen berjenis :kind tidak melunasi open item.',
     'allocation_repeated' => 'Satu open item hanya boleh disebut sekali.',
@@ -33,6 +35,8 @@ return [
     'allocation_item_amount' => 'Open item :number tinggal :remaining.',
     'allocation_same_item' => 'Open item tidak dapat dilunasi terhadap dirinya sendiri.',
     'allocation_before_document' => 'Alokasi tidak boleh bertanggal sebelum salah satu dokumen.',
-    'allocation_rates_differ' => 'Open item :debit dan :credit dicatat pada kurs berbeda; selisih kurs belum dibukukan.',
+    'realized_difference' => 'Selisih kurs terealisasi',
+    'realized_difference_allocation' => 'Selisih kurs terealisasi: :debit dilunasi terhadap :credit',
+    'realized_difference_cancelled' => 'Selisih kurs terealisasi dibatalkan: alokasi :debit dibatalkan',
 
 ];

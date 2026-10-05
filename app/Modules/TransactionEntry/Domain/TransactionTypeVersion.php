@@ -20,7 +20,7 @@ use Illuminate\Support\Carbon;
  * @property list<string>|null $allowed_currencies foreign currencies the version accepts; null for any active one
  * @property string|null $rate_type_key rate type to look rates up in; null for the default of the system
  * @property bool $allow_rate_input whether an entry may bring its own rate
- * @property array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null}|null $subledger_route the document an entry records in the subledger; null for entries that go straight to the ledger (TE-FR-10)
+ * @property array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null}|null $subledger_route the document an entry records in the subledger; null for entries that go straight to the ledger (TE-FR-10)
  * @property Carbon|null $created_at
  */
 class TransactionTypeVersion extends CompanyScopedModel

@@ -327,7 +327,7 @@ final class TransactionTypeVersions
      * @param  list<FieldDefinition>|null  $fields
      * @param  list<RuleLine>|null  $rules
      * @param  array<string, mixed>|null  $route
-     * @return array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null}|null
+     * @return array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null}|null
      *
      * @throws ValidationException
      */
@@ -354,6 +354,11 @@ final class TransactionTypeVersions
         }
 
         $stored = SubledgerRoute::normalize($route);
+
+        if ($stored['kind'] === SubledgerRoute::TRANSFER) {
+            return $this->checkedTransferRoute($stored, $fields, $rules);
+        }
+
         $kind = DocumentKind::tryFrom($stored['kind']);
         $role = ControlRole::tryFrom($stored['control_role']);
         $typeOf = [];
@@ -408,8 +413,92 @@ final class TransactionTypeVersions
     }
 
     /**
+     * The route of a transfer between cash accounts: two cash account fields, the one the cash leaves,
+     * credited, and the one it enters, debited. A transfer has no party, no document and no control account.
+     *
+     * @param  array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null}  $stored
+     * @param  list<FieldDefinition>|null  $fields
+     * @param  list<RuleLine>|null  $rules
+     * @return array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null}
+     *
+     * @throws ValidationException
+     */
+    private function checkedTransferRoute(array $stored, ?array $fields, ?array $rules): array
+    {
+        $typeOf = [];
+        $errors = [];
+
+        foreach ($fields ?? [] as $field) {
+            $typeOf[$field['name']] = $field['type'];
+        }
+
+        foreach (SubledgerRoute::fields($stored) as $used) {
+            if (in_array($used['key'], ['cash_account_field', 'counterpart_cash_account_field'], true)) {
+                if (($typeOf[$used['name']] ?? null) !== $used['type']->value) {
+                    $errors["subledger_route.{$used['key']}"] = [__('entries.route_field_type', ['field' => $used['name'], 'type' => $used['type']->value])];
+                }
+            } else {
+                $errors["subledger_route.{$used['key']}"] = [__('entries.route_transfer_field_not_allowed', ['field' => $used['name']])];
+            }
+        }
+
+        foreach (['cash_account_field', 'counterpart_cash_account_field'] as $key) {
+            if ($stored[$key] === null) {
+                $errors["subledger_route.{$key}"] = [__('entries.route_cash_field_required', ['kind' => SubledgerRoute::TRANSFER])];
+            }
+        }
+
+        if ($stored['cash_account_field'] !== null && $stored['cash_account_field'] === $stored['counterpart_cash_account_field']) {
+            $errors['subledger_route.counterpart_cash_account_field'] = [__('entries.route_transfer_same')];
+        }
+
+        if ($stored['control_role'] !== '') {
+            $errors['subledger_route.control_role'] = [__('entries.route_transfer_field_not_allowed', ['field' => $stored['control_role']])];
+        }
+
+        $out = 0;
+        $in = 0;
+
+        foreach ($rules ?? [] as $index => $rule) {
+            $source = $rule['account']['source'] ?? null;
+
+            if ($source === PostingRules::CONTROL_ACCOUNT) {
+                $errors["posting_rules.{$index}.account"] = [__('entries.rule_control_transfer')];
+            } elseif ($source === PostingRules::CASH_ACCOUNT) {
+                $field = $rule['account']['field'] ?? null;
+
+                if ($field === $stored['cash_account_field']) {
+                    $out++;
+                    $side = 'credit';
+                } elseif ($field === $stored['counterpart_cash_account_field']) {
+                    $in++;
+                    $side = 'debit';
+                } else {
+                    $errors["posting_rules.{$index}.account.field"] = [__('entries.rule_transfer_cash_field')];
+
+                    continue;
+                }
+
+                if (($rule['side'] ?? null) !== $side) {
+                    $errors["posting_rules.{$index}.side"] = [__('entries.rule_cash_side', ['kind' => SubledgerRoute::TRANSFER, 'side' => $side])];
+                }
+            }
+        }
+
+        if ($errors === [] && ($out === 0 || $in === 0)) {
+            $errors['subledger_route'] = [__('entries.route_transfer_rule_required')];
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $stored;
+    }
+
+    /**
      * @param  list<RuleLine>  $rules
-     * @param  array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null}  $route
+     * @param  array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null}  $route
      * @param  'debit'|'credit'  $controlSide
      * @return array<string, list<string>>
      */

@@ -8,10 +8,15 @@ use App\Modules\GeneralLedger\Contracts\PostedJournal;
 use App\Modules\GeneralLedger\Contracts\PostedJournalLine;
 use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
+use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\GeneralLedger\Contracts\PostJournalLine;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
+use App\Modules\MasterData\Contracts\Currencies;
+use App\Modules\MasterData\Contracts\CurrencyRounding;
+use App\Modules\MasterData\Contracts\ExchangeRates;
 use App\Modules\Subledger\Contracts\CashAccountData;
 use App\Modules\Subledger\Contracts\CashAccountDirectory;
+use App\Modules\Subledger\Contracts\CashTransfer;
 use App\Modules\Subledger\Contracts\ControlAccount;
 use App\Modules\Subledger\Contracts\ControlAccounts;
 use App\Modules\Subledger\Contracts\DocumentKind;
@@ -57,14 +62,28 @@ final class DocumentPosting implements SubledgerPosting
         private readonly CompanyContext $company,
         private readonly Audit $audit,
         private readonly OpenItemAllocator $allocator,
+        private readonly RealizedDifference $differences,
+        private readonly Currencies $currencies,
+        private readonly ExchangeRates $rates,
+        private readonly CashTransferPosting $transfers,
     ) {}
 
     public function validate(SubledgerDocument $document): void
     {
         $this->company->run($document->journal->companyId, function () use ($document): void {
-            $this->check($document);
-            $this->validator->validate($document->journal);
+            $checked = $this->check($document);
+            $this->validator->validate($this->withLines($document->journal, $this->settlement($document, $checked['control'], lock: false)['lines']));
         });
+    }
+
+    public function validateTransfer(CashTransfer $transfer): void
+    {
+        $this->transfers->validate($transfer);
+    }
+
+    public function postTransfer(CashTransfer $transfer): PostedJournal
+    {
+        return $this->transfers->post($transfer);
     }
 
     public function post(SubledgerDocument $document): PostedDocument
@@ -80,13 +99,14 @@ final class DocumentPosting implements SubledgerPosting
             }
 
             $checked = $this->check($document);
-            $journal = $this->posting->post($journalCommand);
+            $plan = $this->settlement($document, $checked['control'], lock: true);
+            $journal = $this->posting->post($this->withLines($journalCommand, $plan['lines']));
 
             if ($journal->replayed && ($recorded = Document::query()->where('journal_id', $journal->id)->first()) !== null) {
                 return new PostedDocument($recorded->id, $journal);
             }
 
-            return new PostedDocument($this->record($document, $checked['control'], $checked['cash'], $journal)->id, $journal);
+            return new PostedDocument($this->record($document, $checked['control'], $checked['cash'], $journal, $plan['steps'])->id, $journal);
         }));
     }
 
@@ -242,13 +262,16 @@ final class DocumentPosting implements SubledgerPosting
     }
 
     /**
-     * Writes the document, its open item and, for cash, the cash transaction from what the ledger stored.
+     * Writes the document, its open item and, for cash, the cash transaction from what the ledger stored,
+     * then settles what the document names with the steps of the plan.
+     *
+     * @param  list<array{item: string, amount: BigDecimal, own: BigDecimal|null, target: BigDecimal|null}>  $steps
      */
-    private function record(SubledgerDocument $document, ControlAccount $control, ?CashAccountData $cash, PostedJournal $journal): Document
+    private function record(SubledgerDocument $document, ControlAccount $control, ?CashAccountData $cash, PostedJournal $journal, array $steps): Document
     {
         $command = $document->journal;
         $side = $document->kind->controlSide($document->role);
-        $lines = array_values(array_filter($journal->lines, fn (PostedJournalLine $line): bool => $line->accountId === $control->accountId));
+        $lines = array_values(array_filter($journal->lines, fn (PostedJournalLine $line): bool => $line->accountId === $control->accountId && BigDecimal::of($line->transactionAmount)->isPositive()));
         $amount = array_reduce($lines, fn (BigDecimal $sum, PostedJournalLine $line): BigDecimal => $sum->plus($line->transactionAmount), BigDecimal::zero());
         $functional = array_reduce($lines, fn (BigDecimal $sum, PostedJournalLine $line): BigDecimal => $sum->plus($side === 'debit' ? $line->debit : $line->credit), BigDecimal::zero());
         $date = $command->documentDate ?? $command->accountingDate;
@@ -302,7 +325,9 @@ final class DocumentPosting implements SubledgerPosting
             companyId: $command->companyId,
         );
 
-        $this->allocate($document, $own, $recorded);
+        foreach ($steps as $step) {
+            $this->allocator->apply($own, OpenItem::query()->whereKey($step['item'])->firstOrFail(), $step['amount'], $command->accountingDate, $recorded->id, $command->postedBy, $step['own'], $step['target']);
+        }
 
         return $recorded;
     }
@@ -371,26 +396,100 @@ final class DocumentPosting implements SubledgerPosting
         return array_values(array_unique($errors));
     }
 
-    /** Settles the open items the document names against its own open item, in the order of their IDs so concurrent postings lock alike. */
-    private function allocate(SubledgerDocument $document, OpenItem $own, Document $recorded): void
+    /**
+     * What settling the open items the document names does to the journal and to the open items (SL-FR-05,
+     * SL-FR-06). In the functional currency nothing differs. In a foreign one the control account line
+     * of the document carries the amount at the rate of the document, while each open item it settles
+     * carries its own functional value, so the journal gets the lines that book the difference. Each step
+     * is the share of the document and of the open item, in the functional currency, that an allocation settles.
+     *
+     * @param  bool  $lock  lock the open items, as posting does; validating does not
+     * @return array{lines: list<PostJournalLine>, steps: list<array{item: string, amount: BigDecimal, own: BigDecimal|null, target: BigDecimal|null}>}
+     *
+     * @throws ValidationException
+     */
+    private function settlement(SubledgerDocument $document, ControlAccount $control, bool $lock): array
     {
         if ($document->allocations === []) {
-            return;
+            return ['lines' => [], 'steps' => []];
         }
 
-        // The items were checked before the journal was posted; check them again now that they are locked.
-        $control = $this->controlAccounts->require($document->journal->companyId, $document->role, $document->partyId, $document->journal->accountingDate);
-        $locked = $document->allocations;
-        usort($locked, fn (array $a, array $b): int => strcmp($a['open_item_id'], $b['open_item_id']));
-        $document = new SubledgerDocument($document->kind, $document->role, $document->partyId, $document->journal, $document->cashAccountId, $document->documentNumber, $document->dueDate, $locked);
-
-        if (($errors = $this->allocationErrors($document, $control, lock: true)) !== []) {
+        // The items were checked with the document; check them again now that they are locked.
+        if ($lock && ($errors = $this->allocationErrors($document, $control, lock: true)) !== []) {
             throw ValidationException::withMessages(['allocations' => $errors]);
         }
 
-        foreach ($locked as $allocation) {
-            $this->allocator->apply($own, OpenItem::query()->findOrFail($allocation['open_item_id']), BigDecimal::of($allocation['amount']), $document->journal->accountingDate, $recorded->id, $document->journal->postedBy);
+        $command = $document->journal;
+        $companyId = $command->companyId;
+        $functional = $this->companies->find($companyId)->functionalCurrency ?? '';
+        $allocations = $document->allocations;
+        usort($allocations, fn (array $a, array $b): int => strcmp($a['open_item_id'], $b['open_item_id']));
+
+        $controlLines = array_values(array_filter($command->lines, fn (PostJournalLine $line): bool => $line->accountId === $control->accountId));
+        $currency = $controlLines[0]->currency ?? $functional;
+
+        if ($currency === $functional) {
+            return ['lines' => [], 'steps' => array_map(fn (array $allocation): array => ['item' => $allocation['open_item_id'], 'amount' => BigDecimal::of($allocation['amount']), 'own' => null, 'target' => null], $allocations)];
         }
+
+        $scale = $this->currencies->functionalScale($companyId);
+        $mode = ($this->currencies->find($companyId, $functional)->rounding ?? CurrencyRounding::HalfUp)->brick();
+        $rate = $controlLines[0]->exchangeRate ?? $this->rates->find($companyId, (string) $controlLines[0]->rateTypeKey, $currency, $command->accountingDate)->rate;
+        $remaining = BigDecimal::zero();
+        $remainingFunctional = BigDecimal::zero();
+
+        foreach ($controlLines as $line) {
+            $lineAmount = BigDecimal::of($line->debit)->plus($line->credit);
+            $lineRate = $line->exchangeRate ?? $this->rates->find($companyId, (string) $line->rateTypeKey, $currency, $command->accountingDate)->rate;
+            $remaining = $remaining->plus($lineAmount);
+            $remainingFunctional = $remainingFunctional->plus($lineAmount->multipliedBy($lineRate)->toScale($scale, $mode));
+        }
+
+        $ownIsCredit = $document->kind->controlSide($document->role) === 'credit';
+        $difference = BigDecimal::zero();
+        $steps = [];
+
+        foreach ($allocations as $allocation) {
+            $amount = BigDecimal::of($allocation['amount']);
+            $target = OpenItem::query()->when($lock, fn ($query) => $query->lockForUpdate())->findOrFail($allocation['open_item_id']);
+
+            $own = $amount->isEqualTo($remaining) ? $remainingFunctional : $remainingFunctional->multipliedBy($amount)->dividedBy($remaining, $scale, $mode);
+            $theirs = $this->allocator->functionalPart($target, $amount, $scale, $mode);
+            $remaining = $remaining->minus($amount);
+            $remainingFunctional = $remainingFunctional->minus($own);
+
+            $difference = $difference->plus($ownIsCredit ? $own->minus($theirs) : $theirs->minus($own));
+            $steps[] = ['item' => $target->id, 'amount' => $amount, 'own' => $own, 'target' => $theirs];
+        }
+
+        return ['lines' => $this->differences->lines($companyId, $command->accountingDate, $control->accountId, $currency, $rate, $difference), 'steps' => $steps];
+    }
+
+    /**
+     * @param  list<PostJournalLine>  $extra
+     */
+    private function withLines(PostJournal $command, array $extra): PostJournal
+    {
+        if ($extra === []) {
+            return $command;
+        }
+
+        return new PostJournal(
+            companyId: $command->companyId,
+            accountingDate: $command->accountingDate,
+            description: $command->description,
+            source: $command->source,
+            lines: [...$command->lines, ...$extra],
+            documentDate: $command->documentDate,
+            transactionTypeKey: $command->transactionTypeKey,
+            transactionTypeVersion: $command->transactionTypeVersion,
+            references: $command->references,
+            entryId: $command->entryId,
+            postedBy: $command->postedBy,
+            actorPermissions: $command->actorPermissions,
+            sourceOverrideReason: $command->sourceOverrideReason,
+            openingBalance: $command->openingBalance,
+        );
     }
 
     private function recordCash(CashAccountData $cash, PostedJournal $journal, Document $document, string $reference): void

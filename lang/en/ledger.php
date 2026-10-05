@@ -24,7 +24,7 @@ return [
     'rate_invalid' => 'The exchange rate must be a positive decimal number with at most 12 decimals.',
     'rate_required' => 'A line in :currency needs an exchange_rate or a rate_type_key.',
     'converted_zero' => 'The amount converts to zero in the functional currency.',
-    'adjustment_not_allowed' => 'A valuation adjustment is only for a foreign currency line of a system posting.',
+    'adjustment_not_allowed' => 'A valuation adjustment is only for a foreign currency line of a system or subledger posting.',
     'revaluation_rate_type_missing' => 'The ledger policy names no rate type for the closing rate of a revaluation.',
     'revaluation_line' => 'Revaluation of :currency balance',
     'revaluation_description' => 'Foreign currency revaluation :period',

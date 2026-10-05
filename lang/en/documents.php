@@ -20,6 +20,8 @@ return [
     'cash_line_currency' => 'Lines to the cash account :name must be in its currency, :currency.',
     'stray_control_line' => 'Account :account is the control account of a posting profile; only the document of that party can post to it.',
     'stray_cash_line' => 'Account :account belongs to a cash account; only a document that moves its cash can post to it.',
+    'transfer_same_account' => 'A transfer needs two different cash accounts.',
+    'transfer_line_side' => 'A transfer posts to the cash account :name on the :side side.',
     'allocations_required' => 'A document of the kind :kind must settle open items for its full amount.',
     'allocations_not_allowed' => 'A document of the kind :kind does not settle open items.',
     'allocation_repeated' => 'An open item can be named only once.',
@@ -33,6 +35,8 @@ return [
     'allocation_item_amount' => 'The open item :number has only :remaining left.',
     'allocation_same_item' => 'An open item cannot be settled against itself.',
     'allocation_before_document' => 'The allocation cannot be dated before either document.',
-    'allocation_rates_differ' => 'The open items :debit and :credit were recorded at different rates; the exchange difference is not recorded yet.',
+    'realized_difference' => 'Realized exchange difference',
+    'realized_difference_allocation' => 'Realized exchange difference: :debit settled against :credit',
+    'realized_difference_cancelled' => 'Realized exchange difference undone: allocation of :debit cancelled',
 
 ];

@@ -49,11 +49,12 @@ class VersionRequest extends FormRequest
             // The document an entry of the version records in the subledger (TE-FR-10); how it fits the fields and rules is checked by the application layer.
             'subledger_route' => ['sometimes', 'nullable', 'array'],
             'subledger_route.kind' => ['required_with:subledger_route', 'string', 'max:32'],
-            'subledger_route.control_role' => ['required_with:subledger_route', 'string', 'max:32'],
-            'subledger_route.party_field' => ['required_with:subledger_route', 'string', 'max:64'],
+            'subledger_route.control_role' => ['sometimes', 'nullable', 'string', 'max:32'],
+            'subledger_route.party_field' => ['sometimes', 'nullable', 'string', 'max:64'],
             'subledger_route.document_number_field' => ['sometimes', 'nullable', 'string', 'max:64'],
             'subledger_route.due_date_field' => ['sometimes', 'nullable', 'string', 'max:64'],
             'subledger_route.cash_account_field' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'subledger_route.counterpart_cash_account_field' => ['sometimes', 'nullable', 'string', 'max:64'],
             'subledger_route.allocations_field' => ['sometimes', 'nullable', 'string', 'max:64'],
         ];
     }

@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $transaction_date
  * @property string|null $reference
  * @property string|null $document_id
+ * @property string|null $journal_id the journal of a transfer between cash accounts, which has no document
  * @property Carbon|null $cleared_on
  * @property int|null $cleared_by
  * @property Carbon|null $created_at
@@ -32,7 +33,7 @@ class CashTransaction extends CompanyScopedModel
 
     protected $table = 'sl_cash_transactions';
 
-    protected $fillable = ['cash_account_id', 'direction', 'amount', 'currency', 'transaction_date', 'reference', 'document_id'];
+    protected $fillable = ['cash_account_id', 'direction', 'amount', 'currency', 'transaction_date', 'reference', 'document_id', 'journal_id'];
 
     protected function casts(): array
     {

@@ -164,7 +164,7 @@ final class EntryWorkflow
         // An entry with a subledger route records its document and posts through the subledger (TE-FR-10).
         $journal = match (true) {
             $entry->reverses_journal_id !== null => $this->posting->reverse($this->reversal($entry, $userId)),
-            $route !== null => $this->documents->post($entry, $route, $this->command($entry, $userId, JournalSource::Subledger))->journal,
+            $route !== null => $this->documents->post($entry, $route, $this->command($entry, $userId, JournalSource::Subledger)),
             default => $this->posting->post($this->command($entry, $userId)),
         };
 

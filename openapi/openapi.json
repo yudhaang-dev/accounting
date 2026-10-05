@@ -13034,6 +13034,24 @@
                     "functional_amount": {
                         "type": "string"
                     },
+                    "credit_functional_amount": {
+                        "type": "string"
+                    },
+                    "realized_difference": {
+                        "type": "string"
+                    },
+                    "journal_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "cancel_journal_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "allocation_date": {
                         "type": "string"
                     },
@@ -13072,6 +13090,10 @@
                     "document_id",
                     "amount",
                     "functional_amount",
+                    "credit_functional_amount",
+                    "realized_difference",
+                    "journal_id",
+                    "cancel_journal_id",
                     "allocation_date",
                     "status",
                     "created_by",
@@ -13305,6 +13327,12 @@
                             "null"
                         ]
                     },
+                    "journal_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "cleared": {
                         "type": "boolean"
                     },
@@ -13330,6 +13358,7 @@
                     "transaction_date",
                     "reference",
                     "document_id",
+                    "journal_id",
                     "cleared",
                     "cleared_on",
                     "cleared_by"
@@ -18273,11 +18302,17 @@
                                 "maxLength": 32
                             },
                             "control_role": {
-                                "type": "string",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
                                 "maxLength": 32
                             },
                             "party_field": {
-                                "type": "string",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
                                 "maxLength": 64
                             },
                             "document_number_field": {
@@ -18295,6 +18330,13 @@
                                 "maxLength": 64
                             },
                             "cash_account_field": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 64
+                            },
+                            "counterpart_cash_account_field": {
                                 "type": [
                                     "string",
                                     "null"

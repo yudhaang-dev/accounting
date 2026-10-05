@@ -24,7 +24,7 @@ return [
     'rate_invalid' => 'Kurs harus berupa bilangan desimal positif dengan paling banyak 12 desimal.',
     'rate_required' => 'Baris dalam :currency memerlukan exchange_rate atau rate_type_key.',
     'converted_zero' => 'Nilai ini menjadi nol setelah dikonversi ke mata uang fungsional.',
-    'adjustment_not_allowed' => 'Penyesuaian nilai hanya untuk baris mata uang asing pada posting sistem.',
+    'adjustment_not_allowed' => 'Penyesuaian nilai hanya untuk baris mata uang asing pada posting sistem atau subledger.',
     'revaluation_rate_type_missing' => 'Kebijakan buku besar belum menetapkan jenis kurs untuk kurs penutup revaluasi.',
     'revaluation_line' => 'Revaluasi saldo :currency',
     'revaluation_description' => 'Revaluasi mata uang asing :period',

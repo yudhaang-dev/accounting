@@ -2516,6 +2516,10 @@ export interface components {
             document_id: string | null;
             amount: string;
             functional_amount: string;
+            credit_functional_amount: string;
+            realized_difference: string;
+            journal_id: string | null;
+            cancel_journal_id: string | null;
             allocation_date: string;
             status: string;
             created_by: number | null;
@@ -2593,6 +2597,7 @@ export interface components {
             transaction_date: string;
             reference: string | null;
             document_id: string | null;
+            journal_id: string | null;
             cleared: boolean;
             cleared_on: string | null;
             cleared_by: number | null;
@@ -3786,11 +3791,12 @@ export interface components {
             /** @description The document an entry of the version records in the subledger (TE-FR-10); how it fits the fields and rules is checked by the application layer. */
             subledger_route?: {
                 kind?: string;
-                control_role?: string;
-                party_field?: string;
+                control_role?: string | null;
+                party_field?: string | null;
                 document_number_field?: string | null;
                 due_date_field?: string | null;
                 cash_account_field?: string | null;
+                counterpart_cash_account_field?: string | null;
                 allocations_field?: string | null;
             };
         };

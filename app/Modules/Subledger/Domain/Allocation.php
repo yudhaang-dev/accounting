@@ -17,7 +17,11 @@ use Illuminate\Support\Carbon;
  * @property string $credit_item_id
  * @property string|null $document_id the document whose posting made it
  * @property BigDecimal $amount in the currency of the open items
- * @property BigDecimal $functional_amount
+ * @property BigDecimal $functional_amount the part of the debit side open item, in the functional currency
+ * @property BigDecimal $credit_functional_amount the part of the credit side open item
+ * @property BigDecimal $realized_difference credit part less debit part; a gain when positive (SL-FR-06)
+ * @property string|null $journal_id the journal that booked the difference of an allocation asked for afterwards
+ * @property string|null $cancel_journal_id the journal that undid it when the allocation was cancelled
  * @property Carbon $allocation_date
  * @property string $status `active` or `cancelled`
  * @property int|null $created_by
@@ -34,7 +38,7 @@ class Allocation extends CompanyScopedModel
     protected $attributes = ['status' => 'active'];
 
     protected $fillable = [
-        'debit_item_id', 'credit_item_id', 'document_id', 'amount', 'functional_amount', 'allocation_date', 'status',
+        'debit_item_id', 'credit_item_id', 'document_id', 'amount', 'functional_amount', 'credit_functional_amount', 'realized_difference', 'journal_id', 'cancel_journal_id', 'allocation_date', 'status',
         'created_by', 'cancelled_on', 'cancelled_by', 'cancel_reason',
     ];
 
@@ -43,6 +47,8 @@ class Allocation extends CompanyScopedModel
         return [
             'amount' => DecimalCast::class.':6',
             'functional_amount' => DecimalCast::class.':6',
+            'credit_functional_amount' => DecimalCast::class.':6',
+            'realized_difference' => DecimalCast::class.':6',
             'allocation_date' => 'date',
             'cancelled_on' => 'date',
         ];

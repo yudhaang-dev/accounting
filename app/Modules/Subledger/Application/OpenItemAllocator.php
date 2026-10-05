@@ -9,13 +9,12 @@ use App\Modules\Subledger\Domain\OpenItemStatus;
 use App\Platform\Audit\Audit;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Settles open items against each other (SL-FR-05): an amount of a debit side item against a credit side
- * one of the same party, control account and currency, in part or in full, in any combination. An
- * allocation makes no journal; the exchange difference of items recorded at different rates comes with
- * SL-FR-06, so until then both sides must carry the same functional value for the amount.
+ * one of the same party, control account and currency, in part or in full, in any combination. Items
+ * recorded at different rates settle at different functional values; the difference is the realized
+ * exchange difference of SL-FR-06, which the caller books.
  */
 final class OpenItemAllocator
 {
@@ -62,20 +61,18 @@ final class OpenItemAllocator
 
     /**
      * Settles `$amount` of both items and records the allocation. The items must be locked and pass
-     * `problems()`.
+     * `problems()`. Each side loses its own share of what it has left in the functional currency (the
+     * parts, which a caller that planned the journal gives, and else are worked out), and what they differ
+     * by is the realized exchange difference, booked by whoever calls (SL-FR-06).
      *
-     * @throws ValidationException when the two items carry different functional values for the amount
+     * @param  string|null  $journalId  the journal that booked the difference, when it is one of its own
      */
-    public function apply(OpenItem $one, OpenItem $other, BigDecimal $amount, string $date, ?string $documentId, ?int $userId): Allocation
+    public function apply(OpenItem $one, OpenItem $other, BigDecimal $amount, string $date, ?string $documentId, ?int $userId, ?BigDecimal $onePart = null, ?BigDecimal $otherPart = null, ?string $journalId = null): Allocation
     {
         [$debit, $credit] = $one->side === 'debit' ? [$one, $other] : [$other, $one];
 
-        $debitPart = $this->functionalPart($debit, $amount);
-        $creditPart = $this->functionalPart($credit, $amount);
-
-        if (! $debitPart->isEqualTo($creditPart)) {
-            throw ValidationException::withMessages(['allocations' => [__('documents.allocation_rates_differ', ['debit' => $debit->document_number, 'credit' => $credit->document_number])]]);
-        }
+        [$onePart, $otherPart] = [$onePart ?? $this->functionalPart($one, $amount), $otherPart ?? $this->functionalPart($other, $amount)];
+        [$debitPart, $creditPart] = $one->side === 'debit' ? [$onePart, $otherPart] : [$otherPart, $onePart];
 
         $this->settle($debit, $amount, $debitPart);
         $this->settle($credit, $amount, $creditPart);
@@ -84,8 +81,11 @@ final class OpenItemAllocator
             'debit_item_id' => $debit->id,
             'credit_item_id' => $credit->id,
             'document_id' => $documentId,
+            'journal_id' => $journalId,
             'amount' => $amount,
             'functional_amount' => $debitPart,
+            'credit_functional_amount' => $creditPart,
+            'realized_difference' => $creditPart->minus($debitPart),
             'allocation_date' => $date,
             'created_by' => $userId,
         ]);
@@ -94,7 +94,7 @@ final class OpenItemAllocator
             'allocation.created',
             "{$amount} {$debit->currency} of {$debit->document_number} settled against {$credit->document_number}.",
             $allocation,
-            after: ['debit_item_id' => $debit->id, 'credit_item_id' => $credit->id, 'amount' => (string) $amount, 'allocation_date' => $date],
+            after: ['debit_item_id' => $debit->id, 'credit_item_id' => $credit->id, 'amount' => (string) $amount, 'allocation_date' => $date, 'realized_difference' => (string) $allocation->realized_difference],
             companyId: $allocation->company_id,
         );
 
@@ -109,20 +109,24 @@ final class OpenItemAllocator
 
             $item->forceFill([
                 'remaining_amount' => $remaining,
-                'remaining_functional' => $item->remaining_functional->plus($allocation->functional_amount),
+                'remaining_functional' => $item->remaining_functional->plus($item->side === 'debit' ? $allocation->functional_amount : $allocation->credit_functional_amount),
                 'status' => OpenItemStatus::Open,
             ])->save();
         }
     }
 
-    /** The share of what remains of the item, in the functional currency, that `$amount` settles. */
-    private function functionalPart(OpenItem $item, BigDecimal $amount): BigDecimal
+    /**
+     * The share of what remains of the item, in the functional currency, that `$amount` settles.
+     *
+     * @param  int<0, max>  $scale
+     */
+    public function functionalPart(OpenItem $item, BigDecimal $amount, int $scale = 6, RoundingMode $mode = RoundingMode::HalfUp): BigDecimal
     {
         if ($amount->isEqualTo($item->remaining_amount)) {
             return $item->remaining_functional;
         }
 
-        return $item->remaining_functional->multipliedBy($amount)->dividedBy($item->remaining_amount, 6, RoundingMode::HalfUp);
+        return $item->remaining_functional->multipliedBy($amount)->dividedBy($item->remaining_amount, $scale, $mode);
     }
 
     private function settle(OpenItem $item, BigDecimal $amount, BigDecimal $functional): void

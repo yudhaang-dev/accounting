@@ -151,7 +151,7 @@ final class EloquentPostingValidator implements PostingValidator
                 $lineScale = $line->adjustment ? $scale : $config->scale;
             }
 
-            if ($line->adjustment && ($currency === $functionalCurrency || $command->source !== JournalSource::System)) {
+            if ($line->adjustment && ($currency === $functionalCurrency || ! in_array($command->source, [JournalSource::System, JournalSource::Subledger], true))) {
                 $errors["lines.{$index}.adjustment"][] = __('ledger.adjustment_not_allowed');
 
                 continue;
