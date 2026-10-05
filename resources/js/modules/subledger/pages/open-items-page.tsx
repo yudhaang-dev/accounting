@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { ReceiptTextIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -76,10 +77,13 @@ const statusLabel = (value: string) =>
 export function OpenItemsPage({
     companyId,
     canReadParties,
+    canReadAllocations,
 }: {
     companyId: string;
     /** Names and filters by party. */
     canReadParties: boolean;
+    /** Links each item to its allocations. */
+    canReadAllocations: boolean;
 }) {
     const { t, i18n } = useTranslation();
     const [partyId, setPartyId] = useState('');
@@ -249,6 +253,11 @@ export function OpenItemsPage({
                                     <TableHead>
                                         {t('openItems.statusLabel')}
                                     </TableHead>
+                                    {canReadAllocations && (
+                                        <TableHead>
+                                            {t('openItems.allocations')}
+                                        </TableHead>
+                                    )}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -304,6 +313,26 @@ export function OpenItemsPage({
                                                 {t(statusLabel(item.status))}
                                             </Badge>
                                         </TableCell>
+                                        {canReadAllocations && (
+                                            <TableCell>
+                                                <Link
+                                                    to="/w/$companyId/allocations"
+                                                    params={{ companyId }}
+                                                    search={{
+                                                        open_item: item.id,
+                                                    }}
+                                                    aria-label={t(
+                                                        'openItems.allocationsOf',
+                                                        {
+                                                            number: item.document_number,
+                                                        },
+                                                    )}
+                                                    className="text-sm underline underline-offset-2"
+                                                >
+                                                    {t('openItems.allocations')}
+                                                </Link>
+                                            </TableCell>
+                                        )}
                                     </TableRow>
                                 ))}
                             </TableBody>

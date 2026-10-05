@@ -59,6 +59,7 @@ import { ExchangeRatesPage } from '@/modules/master-data/pages/exchange-rates-pa
 import { RateTypesPage } from '@/modules/master-data/pages/rate-types-page';
 import { CashAccountsPage } from '@/modules/subledger/pages/cash-accounts-page';
 import { CashTransactionsPage } from '@/modules/subledger/pages/cash-transactions-page';
+import { AllocationsPage } from '@/modules/subledger/pages/allocations-page';
 import { DocumentsPage } from '@/modules/subledger/pages/documents-page';
 import { OpenItemsPage } from '@/modules/subledger/pages/open-items-page';
 import { PartiesPage } from '@/modules/subledger/pages/parties-page';
@@ -593,6 +594,41 @@ const openItemsRoute = createRoute({
             <OpenItemsPage
                 companyId={workspace.company_id}
                 canReadParties={can(workspace, 'parties.read')}
+                canReadAllocations={can(workspace, 'allocations.read')}
+            />
+        );
+    },
+});
+
+const allocationsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/allocations',
+    validateSearch: (
+        search: Record<string, unknown>,
+    ): { open_item?: string } =>
+        typeof search.open_item === 'string' && search.open_item !== ''
+            ? { open_item: search.open_item }
+            : {},
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navAllocations', href: at(m, '/allocations') },
+        ],
+    },
+    beforeLoad: requirePermission('allocations.read'),
+    component: function Allocations() {
+        const { workspace } = allocationsRoute.useRouteContext();
+        const { open_item } = allocationsRoute.useSearch();
+
+        return (
+            <AllocationsPage
+                companyId={workspace.company_id}
+                openItemId={open_item}
+                canManage={can(workspace, 'allocations.manage')}
+                access={{
+                    openItems: can(workspace, 'open-items.read'),
+                    parties: can(workspace, 'parties.read'),
+                    journals: can(workspace, 'journals.read'),
+                }}
             />
         );
     },
@@ -1283,6 +1319,7 @@ const routeTree = rootRoute.addChildren([
                 cashTransactionsRoute,
                 documentsRoute,
                 openItemsRoute,
+                allocationsRoute,
                 postingProfilesRoute,
                 entriesRoute,
                 approvalsRoute,

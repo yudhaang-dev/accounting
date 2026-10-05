@@ -21,6 +21,7 @@ import {
     RepeatIcon,
     ShapesIcon,
     ShieldCheckIcon,
+    SplitIcon,
     SigmaIcon,
     SlidersHorizontalIcon,
     TrendingUpIcon,
@@ -149,6 +150,12 @@ const NAV = [
         label: 'app.navOpenItems',
         icon: ReceiptTextIcon,
         permission: 'open-items.read',
+    },
+    {
+        to: '/w/$companyId/allocations',
+        label: 'app.navAllocations',
+        icon: SplitIcon,
+        permission: 'allocations.read',
     },
     {
         to: '/w/$companyId/entries',
