@@ -21,6 +21,7 @@ import {
     SlidersHorizontalIcon,
     TrendingUpIcon,
     UsersIcon,
+    UsersRoundIcon,
 } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -107,6 +108,12 @@ const NAV = [
         label: 'app.navRates',
         icon: TrendingUpIcon,
         permission: 'exchange-rates.read',
+    },
+    {
+        to: '/w/$companyId/parties',
+        label: 'app.navParties',
+        icon: UsersRoundIcon,
+        permission: 'parties.read',
     },
     {
         to: '/w/$companyId/entries',

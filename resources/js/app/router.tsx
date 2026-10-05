@@ -57,6 +57,7 @@ import { CurrenciesPage } from '@/modules/master-data/pages/currencies-page';
 import { DimensionsPage } from '@/modules/master-data/pages/dimensions-page';
 import { ExchangeRatesPage } from '@/modules/master-data/pages/exchange-rates-page';
 import { RateTypesPage } from '@/modules/master-data/pages/rate-types-page';
+import { PartiesPage } from '@/modules/subledger/pages/parties-page';
 import { ForgotPasswordPage } from '@/modules/identity-access/pages/forgot-password-page';
 import { LoginPage } from '@/modules/identity-access/pages/login-page';
 import { NotFoundPage } from '@/app/not-found-page';
@@ -494,6 +495,26 @@ const rateTypesRoute = createRoute({
             <RateTypesPage
                 companyId={workspace.company_id}
                 canManage={can(workspace, 'exchange-rates.manage')}
+            />
+        );
+    },
+});
+
+const partiesRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/parties',
+    staticData: {
+        crumbs: (m) => [{ labelKey: 'app.navParties', href: at(m, '/parties') }],
+    },
+    beforeLoad: requirePermission('parties.read'),
+    component: function Parties() {
+        const { workspace } = partiesRoute.useRouteContext();
+
+        return (
+            <PartiesPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'parties.manage')}
+                canReadProfiles={can(workspace, 'posting-profiles.read')}
             />
         );
     },
@@ -1132,6 +1153,7 @@ const routeTree = rootRoute.addChildren([
                 currenciesRoute,
                 exchangeRatesRoute,
                 rateTypesRoute,
+                partiesRoute,
                 entriesRoute,
                 approvalsRoute,
                 approvalPolicyRoute,
