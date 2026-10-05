@@ -573,6 +573,20 @@ const documentsRoute = createRoute({
                     journals: can(workspace, 'journals.read'),
                     entries: can(workspace, 'entries.read'),
                 }}
+                reverseAction={
+                    can(workspace, 'entries.reverse')
+                        ? (document) => (
+                              <div>
+                                  <ReverseJournalButton
+                                      companyId={workspace.company_id}
+                                      journalId={document.journal_id}
+                                      journalNumber={document.document_number}
+                                      subject="document"
+                                  />
+                              </div>
+                          )
+                        : undefined
+                }
             />
         );
     },

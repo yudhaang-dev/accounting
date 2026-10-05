@@ -1600,6 +1600,8 @@ export const id = {
     },
     reversal: {
         action: 'Balik jurnal',
+        documentAction: 'Balik dokumen',
+        documentTitle: 'Balik dokumen {{number}}',
         title: 'Balik jurnal {{number}}',
         description:
             'Pembalikan selalu penuh dan hanya sekali. Hasilnya berupa draf entri pembalikan yang masih perlu diajukan, disetujui, dan diposting.',

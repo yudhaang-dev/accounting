@@ -10,6 +10,8 @@ import {
     workspace,
 } from '@/test/harness';
 
+type Routes = Parameters<typeof mockApi>[0];
+
 const base = `/api/v1/companies/${workspace.company_id}`;
 const home = `/w/${workspace.company_id}`;
 
@@ -150,6 +152,136 @@ describe('documents (SL-FR-04)', () => {
         expect(
             within(dialog).getByRole('link', { name: 'Buka entri' }),
         ).toHaveAttribute('href', `${home}/entries/${entryId}`);
+    });
+
+    describe('reversal (SL-FR-12)', () => {
+        const reverse = `POST ${base}/journals/${journalId}/reverse`;
+        const routes = (overrides: Routes = {}): Routes => ({
+            ...withPermissions([...all, 'entries.reverse']),
+            [`GET ${base}/documents`]: () => list([document()]),
+            [`GET ${base}/parties`]: () => list([party]),
+            ...overrides,
+        });
+
+        const openReversal = async (
+            typist: ReturnType<typeof userEvent.setup>,
+        ) => {
+            await typist.click(
+                await screen.findByRole('button', {
+                    name: 'Buka dokumen INV-001',
+                }),
+            );
+            const detail = await screen.findByRole('dialog');
+
+            await typist.click(
+                within(detail).getByRole('button', { name: 'Balik dokumen' }),
+            );
+
+            const dialogs = await screen.findAllByRole('dialog');
+            const dialog = dialogs.at(-1) as HTMLElement;
+
+            await typist.type(within(dialog).getByLabelText('Alasan'), 'Salah');
+            await typist.click(
+                within(dialog).getByRole('button', {
+                    name: 'Buat draf pembalikan',
+                }),
+            );
+
+            return dialog;
+        };
+
+        it('asks for the reversal of the journal of the document', async () => {
+            const api = mockApi(
+                routes({
+                    [reverse]: () =>
+                        json({ data: { id: entryId, number: 'PB-1' } }, 201),
+                }),
+            );
+
+            renderApp(`${home}/documents`);
+            await openReversal(userEvent.setup());
+
+            await waitFor(() => expect(api.called(reverse)).toHaveLength(1));
+            expect(api.called(reverse)[0]?.body).toMatchObject({
+                reason: 'Salah',
+            });
+        });
+
+        it('says which active allocation stops the reversal', async () => {
+            mockApi(
+                routes({
+                    [reverse]: () =>
+                        json(
+                            {
+                                message: 'Tidak dapat dibalik.',
+                                code: 'INVALID_STATE_TRANSITION',
+                                errors: {
+                                    journal_id: [
+                                        'Dokumen INV-001 masih memiliki alokasi aktif; batalkan alokasinya sebelum membalik dokumen.',
+                                    ],
+                                },
+                            },
+                            409,
+                        ),
+                }),
+            );
+
+            renderApp(`${home}/documents`);
+            const dialog = await openReversal(userEvent.setup());
+
+            expect(
+                await within(dialog).findByText(/masih memiliki alokasi aktif/),
+            ).toBeInTheDocument();
+        });
+
+        it('offers no reversal without the permission', async () => {
+            mockApi({
+                ...withPermissions(all),
+                [`GET ${base}/documents`]: () => list([document()]),
+                [`GET ${base}/parties`]: () => list([party]),
+            });
+
+            renderApp(`${home}/documents`);
+
+            await userEvent.setup().click(
+                await screen.findByRole('button', {
+                    name: 'Buka dokumen INV-001',
+                }),
+            );
+            await screen.findByRole('dialog');
+
+            expect(
+                screen.queryByRole('button', { name: 'Balik dokumen' }),
+            ).toBeNull();
+        });
+
+        it('offers no reversal for a document that is reversed already', async () => {
+            mockApi(
+                routes({
+                    [`GET ${base}/documents`]: () =>
+                        list([
+                            document({
+                                reversal_journal_id:
+                                    '01JJOURNAL000000000000009',
+                                reversal_date: '2026-09-15',
+                            }),
+                        ]),
+                }),
+            );
+
+            renderApp(`${home}/documents`);
+
+            await userEvent.setup().click(
+                await screen.findByRole('button', {
+                    name: 'Buka dokumen INV-001',
+                }),
+            );
+            await screen.findByRole('dialog');
+
+            expect(
+                screen.queryByRole('button', { name: 'Balik dokumen' }),
+            ).toBeNull();
+        });
     });
 
     it('sends the filters to the API', async () => {

@@ -1609,6 +1609,8 @@ export const en: Widen<typeof id> = {
     },
     reversal: {
         action: 'Reverse journal',
+        documentAction: 'Reverse document',
+        documentTitle: 'Reverse document {{number}}',
         title: 'Reverse journal {{number}}',
         description:
             'A reversal is always in full and happens once. The result is a draft reversal entry that still has to be submitted, approved and posted.',

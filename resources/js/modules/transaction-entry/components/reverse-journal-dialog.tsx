@@ -172,12 +172,14 @@ export function ReverseJournalDialog({
     companyId,
     journalId,
     journalNumber,
+    subject = 'journal',
     open,
     onOpenChange,
 }: {
     companyId: string;
     journalId: string;
     journalNumber: string;
+    subject?: 'journal' | 'document';
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
@@ -187,7 +189,12 @@ export function ReverseJournalDialog({
         <FormDialog
             open={open}
             onOpenChange={onOpenChange}
-            title={t('reversal.title', { number: journalNumber })}
+            title={t(
+                subject === 'document'
+                    ? 'reversal.documentTitle'
+                    : 'reversal.title',
+                { number: journalNumber },
+            )}
             description={t('reversal.description')}
         >
             <p className="text-sm text-muted-foreground">

@@ -13,11 +13,14 @@ export function ReverseJournalButton({
     journalId,
     journalNumber,
     variant = 'outline',
+    subject = 'journal',
 }: {
     companyId: string;
     journalId: string;
     journalNumber: string;
     variant?: 'outline' | 'default';
+    /** What the number names: the reversal of a document is asked for through its journal. */
+    subject?: 'journal' | 'document';
 }) {
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
@@ -26,12 +29,17 @@ export function ReverseJournalButton({
         <>
             <Button variant={variant} onClick={() => setOpen(true)}>
                 <Undo2Icon data-icon="inline-start" />
-                {t('reversal.action')}
+                {t(
+                    subject === 'document'
+                        ? 'reversal.documentAction'
+                        : 'reversal.action',
+                )}
             </Button>
             <ReverseJournalDialog
                 companyId={companyId}
                 journalId={journalId}
                 journalNumber={journalNumber}
+                subject={subject}
                 open={open}
                 onOpenChange={setOpen}
             />

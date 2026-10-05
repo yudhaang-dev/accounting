@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { FileStackIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DatePicker } from '@/components/date-picker';
 import { FormAlert } from '@/components/form-alert';
@@ -81,12 +81,14 @@ function DocumentDetail({
     document,
     partyName,
     access,
+    reverseAction,
     onOpenChange,
 }: {
     companyId: string;
     document: SubledgerDocument | null;
     partyName: string | undefined;
     access: DocumentAccess;
+    reverseAction?: (document: SubledgerDocument) => ReactNode;
     onOpenChange: (open: boolean) => void;
 }) {
     const { t, i18n } = useTranslation();
@@ -191,6 +193,9 @@ function DocumentDetail({
                             </Link>
                         )}
                     </div>
+                    {reverseAction &&
+                        shown.reversal_journal_id === null &&
+                        reverseAction(shown)}
                 </div>
             )}
         </FormDialog>
@@ -205,9 +210,12 @@ function DocumentDetail({
 export function DocumentsPage({
     companyId,
     access,
+    reverseAction,
 }: {
     companyId: string;
     access: DocumentAccess;
+    /** Starts the reversal of a document that is not reversed yet; the reversal belongs to `TransactionEntry`, so the app supplies it. */
+    reverseAction?: (document: SubledgerDocument) => ReactNode;
 }) {
     const { t, i18n } = useTranslation();
     const [partyId, setPartyId] = useState('');
@@ -469,6 +477,7 @@ export function DocumentsPage({
                         : undefined
                 }
                 access={access}
+                reverseAction={reverseAction}
                 onOpenChange={(open) => {
                     if (!open) {
                         setSelected(null);
