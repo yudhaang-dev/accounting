@@ -129,7 +129,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
   - [x] **M6-12g** Pembalikan dokumen dari detail dokumen atau jurnal, dengan pesan alokasi aktif yang menghalangi — SL-FR-12, SL-AC-07
   - [x] **M6-12h** Revaluasi open item pada layar periode — SL-FR-07 — melengkapi M4-12d
   - [x] **M6-12i** Rekonsiliasi: jalankan per tanggal, daftar selisih beserta jurnal penyebab, waiver beralasan, tautan dari checklist tutup tahun — SL-FR-09, SL-AC-05
-  - [ ] **M6-12j** Aging: laporan per pihak dan dokumen dengan drill-down dan ekspor CSV, editor kebijakan bucket — SL-FR-08, SL-AC-04
+  - [x] **M6-12j** Aging: laporan per pihak dan dokumen dengan drill-down dan ekspor CSV, editor kebijakan bucket — SL-FR-08, SL-AC-04
   - [ ] **M6-12k** Wizard saldo konversi: `open_items` beserta pemetaan pihak sumber dan pencocokan total kontrol — SL-FR-10, SL-AC-01 — melengkapi M4-12e
 
 ## M7 — Anggaran & proyeksi

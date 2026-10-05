@@ -10,6 +10,7 @@ import {
     FileTextIcon,
     ReceiptTextIcon,
     ScaleIcon,
+    HourglassIcon,
     LayersIcon,
     ChevronsUpDownIcon,
     HouseIcon,
@@ -204,6 +205,12 @@ const NAV = [
         to: '/w/$companyId/reports/trial-balance',
         label: 'app.navTrialBalance',
         icon: SigmaIcon,
+        permission: 'reports.read',
+    },
+    {
+        to: '/w/$companyId/reports/aging',
+        label: 'app.navAging',
+        icon: HourglassIcon,
         permission: 'reports.read',
     },
     {

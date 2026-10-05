@@ -63,6 +63,7 @@ import { AllocationsPage } from '@/modules/subledger/pages/allocations-page';
 import { DocumentsPage } from '@/modules/subledger/pages/documents-page';
 import { OpenItemsPage } from '@/modules/subledger/pages/open-items-page';
 import { PartiesPage } from '@/modules/subledger/pages/parties-page';
+import { AgingPage } from '@/modules/subledger/pages/aging-page';
 import { ReconciliationsPage } from '@/modules/subledger/pages/reconciliations-page';
 import { PostingProfilesPage } from '@/modules/subledger/pages/posting-profiles-page';
 import { ForgotPasswordPage } from '@/modules/identity-access/pages/forgot-password-page';
@@ -1199,6 +1200,30 @@ const trialBalanceRoute = createRoute({
     },
 });
 
+const agingRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/aging',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'breadcrumb.reports' },
+            { labelKey: 'app.navAging', href: at(m, '/reports/aging') },
+        ],
+    },
+    beforeLoad: requirePermission('reports.read'),
+    component: function AgingScreen() {
+        const { workspace } = agingRoute.useRouteContext();
+
+        return (
+            <AgingPage
+                companyId={workspace.company_id}
+                canManagePolicy={can(workspace, 'aging-policy.manage')}
+                canReadParties={can(workspace, 'parties.read')}
+                canReadOpenItems={can(workspace, 'allocations.read')}
+            />
+        );
+    },
+});
+
 const journalRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/journals/$journalId',
@@ -1387,6 +1412,7 @@ const routeTree = rootRoute.addChildren([
                 journalsRoute,
                 journalRoute,
                 trialBalanceRoute,
+                agingRoute,
                 membersRoute,
                 rolesRoute,
                 securityPolicyRoute,
