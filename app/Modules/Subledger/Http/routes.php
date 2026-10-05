@@ -3,6 +3,8 @@
 use App\Modules\Subledger\Contracts\ControlRole;
 use App\Modules\Subledger\Http\CashAccountController;
 use App\Modules\Subledger\Http\CashTransactionController;
+use App\Modules\Subledger\Http\DocumentController;
+use App\Modules\Subledger\Http\OpenItemController;
 use App\Modules\Subledger\Http\PartyController;
 use App\Modules\Subledger\Http\PostingProfileController;
 use App\Platform\Api\ApiServiceProvider;
@@ -52,4 +54,12 @@ Route::companyScoped(function () {
         Route::post("cash-transactions/{id}/{$action}", [CashTransactionController::class, $action])
             ->middleware('permission:cash-transactions.clear')->where('id', ApiServiceProvider::ULID)->name("cash-transactions.{$action}");
     }
+
+    Route::get('documents', [DocumentController::class, 'index'])->middleware('permission:documents.read')->name('documents.index');
+    Route::get('documents/{id}', [DocumentController::class, 'show'])
+        ->middleware('permission:documents.read')->where('id', ApiServiceProvider::ULID)->name('documents.show');
+
+    Route::get('open-items', [OpenItemController::class, 'index'])->middleware('permission:open-items.read')->name('open-items.index');
+    Route::get('open-items/{id}', [OpenItemController::class, 'show'])
+        ->middleware('permission:open-items.read')->where('id', ApiServiceProvider::ULID)->name('open-items.show');
 });

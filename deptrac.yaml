@@ -101,8 +101,10 @@ deptrac:
       - Support
       - GeneralLedgerContracts
       - MasterDataContracts
+    # The posting contract hands the ledger's own command to the subledger, so its DTO names it.
     SubledgerContracts:
       - Support
+      - GeneralLedgerContracts
     GeneralLedger:
       - GeneralLedgerContracts
       - Platform

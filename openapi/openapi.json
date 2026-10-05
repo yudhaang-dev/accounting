@@ -3570,6 +3570,273 @@
                 }
             }
         },
+        "/companies/{companyId}/documents": {
+            "get": {
+                "operationId": "documents.index",
+                "summary": "Documents, newest first. Filters: `filter[party_id]`, `filter[kind]`, `filter[date_from]` and\n`filter[date_to]` on the date of the document. `per_page` defaults to 50, at most 200. Documents\nare recorded by entries that have a subledger route, not through this API",
+                "tags": [
+                    "Document"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[party_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
+                    },
+                    {
+                        "name": "filter[kind]",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/DocumentKind"
+                        }
+                    },
+                    {
+                        "name": "filter[date_from]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[date_to]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `DocumentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/DocumentResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/documents/{id}": {
+            "get": {
+                "operationId": "documents.show",
+                "tags": [
+                    "Document"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`DocumentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/DocumentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/entries": {
             "get": {
                 "operationId": "entries.index",
@@ -7706,6 +7973,279 @@
                 }
             }
         },
+        "/companies/{companyId}/open-items": {
+            "get": {
+                "operationId": "open-items.index",
+                "summary": "Open items, oldest due date first. Filters: `filter[party_id]`, `filter[control_role]`,\n`filter[kind]`, `filter[status]` and `filter[due_to]` (due on or before the date). `per_page`\ndefaults to 50, at most 200",
+                "tags": [
+                    "OpenItem"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[party_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
+                    },
+                    {
+                        "name": "filter[control_role]",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/ControlRole"
+                        }
+                    },
+                    {
+                        "name": "filter[kind]",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/DocumentKind"
+                        }
+                    },
+                    {
+                        "name": "filter[status]",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/OpenItemStatus"
+                        }
+                    },
+                    {
+                        "name": "filter[due_to]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `OpenItemResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/OpenItemResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/open-items/{id}": {
+            "get": {
+                "operationId": "open-items.show",
+                "tags": [
+                    "OpenItem"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`OpenItemResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/OpenItemResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/opening-balance-imports": {
             "get": {
                 "operationId": "opening-balance-imports.show",
@@ -11061,7 +11601,7 @@
         "/companies/{companyId}/transaction-type-templates/{key}": {
             "get": {
                 "operationId": "transaction-type-templates.show",
-                "summary": "Every type of a template with its mode, fields and posting rules, for review before the import is confirmed",
+                "summary": "Every type of a template with its mode, fields, posting rules and subledger route, for review before the import is confirmed",
                 "tags": [
                     "TransactionTypeTemplate"
                 ],
@@ -11130,6 +11670,18 @@
                                                                     "type": "object",
                                                                     "additionalProperties": {}
                                                                 }
+                                                            },
+                                                            "subledger_route": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "additionalProperties": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                }
                                                             }
                                                         },
                                                         "required": [
@@ -11137,7 +11689,8 @@
                                                             "label",
                                                             "mode",
                                                             "fields",
-                                                            "posting_rules"
+                                                            "posting_rules",
+                                                            "subledger_route"
                                                         ]
                                                     }
                                                 }
@@ -12426,6 +12979,15 @@
                 ],
                 "title": "CompanyResource"
             },
+            "ControlRole": {
+                "type": "string",
+                "description": "The control account roles of a posting profile (SL-FR-02). The keys are fixed by the product; which account plays a role is data per profile (P-01).\n",
+                "enum": [
+                    "receivables_control",
+                    "payables_control"
+                ],
+                "title": "ControlRole"
+            },
             "CreateAccountRequest": {
                 "type": "object",
                 "properties": {
@@ -12892,6 +13454,8 @@
                                 "cash-accounts.manage",
                                 "cash-transactions.read",
                                 "cash-transactions.clear",
+                                "documents.read",
+                                "open-items.read",
                                 "exchange-rates.read",
                                 "exchange-rates.manage",
                                 "periods.read",
@@ -13200,6 +13764,95 @@
                     "lock_version"
                 ],
                 "title": "DimensionValueResource"
+            },
+            "DocumentKind": {
+                "type": "string",
+                "description": "The kinds of document the subledger records (SL-FR-04). A mechanism of the system, not data a company defines: an invoice creates an open item; the others settle open items, and what they leave unsettled stays an open item of its own until it is allocated (SL-FR-05).\n",
+                "enum": [
+                    "invoice",
+                    "credit_note",
+                    "payment",
+                    "advance"
+                ],
+                "title": "DocumentKind"
+            },
+            "DocumentResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "control_role": {
+                        "type": "string"
+                    },
+                    "party_id": {
+                        "type": "string"
+                    },
+                    "cash_account_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "journal_id": {
+                        "type": "string"
+                    },
+                    "entry_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "document_number": {
+                        "type": "string"
+                    },
+                    "document_date": {
+                        "type": "string"
+                    },
+                    "due_date": {
+                        "type": "string"
+                    },
+                    "accounting_date": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "string"
+                    },
+                    "functional_amount": {
+                        "type": "string"
+                    },
+                    "exchange_rate": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "kind",
+                    "control_role",
+                    "party_id",
+                    "cash_account_id",
+                    "journal_id",
+                    "entry_id",
+                    "document_number",
+                    "document_date",
+                    "due_date",
+                    "accounting_date",
+                    "currency",
+                    "amount",
+                    "functional_amount",
+                    "exchange_rate",
+                    "description"
+                ],
+                "title": "DocumentResource"
             },
             "EntryRequest": {
                 "type": "object",
@@ -15060,6 +15713,86 @@
                 ],
                 "title": "NumberingRequest"
             },
+            "OpenItemResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "document_id": {
+                        "type": "string"
+                    },
+                    "party_id": {
+                        "type": "string"
+                    },
+                    "control_role": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "side": {
+                        "type": "string"
+                    },
+                    "document_number": {
+                        "type": "string"
+                    },
+                    "document_date": {
+                        "type": "string"
+                    },
+                    "due_date": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "original_amount": {
+                        "type": "string"
+                    },
+                    "remaining_amount": {
+                        "type": "string"
+                    },
+                    "original_functional": {
+                        "type": "string"
+                    },
+                    "remaining_functional": {
+                        "type": "string"
+                    },
+                    "exchange_rate": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "document_id",
+                    "party_id",
+                    "control_role",
+                    "kind",
+                    "side",
+                    "document_number",
+                    "document_date",
+                    "due_date",
+                    "currency",
+                    "original_amount",
+                    "remaining_amount",
+                    "original_functional",
+                    "remaining_functional",
+                    "exchange_rate",
+                    "status"
+                ],
+                "title": "OpenItemResource"
+            },
+            "OpenItemStatus": {
+                "type": "string",
+                "enum": [
+                    "open",
+                    "settled"
+                ],
+                "title": "OpenItemStatus"
+            },
             "OpeningBalanceBatchResource": {
                 "type": "object",
                 "properties": {
@@ -15794,6 +16527,9 @@
                                 },
                                 "allow_rate_input": {
                                     "type": "string"
+                                },
+                                "subledger_route": {
+                                    "type": "string"
                                 }
                             },
                             "required": [
@@ -15804,7 +16540,8 @@
                                 "posting_rules",
                                 "allowed_currencies",
                                 "rate_type_key",
-                                "allow_rate_input"
+                                "allow_rate_input",
+                                "subledger_route"
                             ]
                         }
                     },
@@ -16736,6 +17473,8 @@
                                 "cash-accounts.manage",
                                 "cash-transactions.read",
                                 "cash-transactions.clear",
+                                "documents.read",
+                                "open-items.read",
                                 "exchange-rates.read",
                                 "exchange-rates.manage",
                                 "periods.read",
@@ -16812,6 +17551,8 @@
                                 "cash-accounts.manage",
                                 "cash-transactions.read",
                                 "cash-transactions.clear",
+                                "documents.read",
+                                "open-items.read",
                                 "exchange-rates.read",
                                 "exchange-rates.manage",
                                 "periods.read",
@@ -16989,7 +17730,9 @@
                                             "type": "string",
                                             "enum": [
                                                 "fixed",
-                                                "field"
+                                                "field",
+                                                "control_account",
+                                                "cash_account"
                                             ]
                                         },
                                         "account_id": {
@@ -16998,6 +17741,10 @@
                                             "maxLength": 26
                                         },
                                         "field": {
+                                            "type": "string",
+                                            "maxLength": 64
+                                        },
+                                        "party_field": {
                                             "type": "string",
                                             "maxLength": 64
                                         }
@@ -17015,6 +17762,45 @@
                             ]
                         },
                         "maxItems": 50
+                    },
+                    "subledger_route": {
+                        "type": "object",
+                        "description": "The document an entry of the version records in the subledger (TE-FR-10); how it fits the fields and rules is checked by the application layer.",
+                        "properties": {
+                            "kind": {
+                                "type": "string",
+                                "maxLength": 32
+                            },
+                            "control_role": {
+                                "type": "string",
+                                "maxLength": 32
+                            },
+                            "party_field": {
+                                "type": "string",
+                                "maxLength": 64
+                            },
+                            "document_number_field": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 64
+                            },
+                            "due_date_field": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 64
+                            },
+                            "cash_account_field": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 64
+                            }
+                        }
                     }
                 },
                 "required": [

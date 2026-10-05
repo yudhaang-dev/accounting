@@ -7,7 +7,11 @@ namespace App\Modules\TransactionEntry\Domain;
  * `amount` rule posts the value of an amount field to one side of an account; the `fx_difference` rule
  * carries what is left to balance the journal in the functional currency to the exchange difference accounts.
  *
- * @phpstan-type AccountSource array{source: string, account_id?: string, field?: string}
+ * The account of an `amount` rule comes from a fixed account, from an `account` field, from the control
+ * account of the party in a `party` field (which needs the subledger route of the version), or from the
+ * ledger account of the cash account in a `cash_account` field (TE-FR-05).
+ *
+ * @phpstan-type AccountSource array{source: string, account_id?: string, field?: string, party_field?: string}
  * @phpstan-type RuleLine array{type: string, side?: string, amount_field?: string, account?: AccountSource, apply_dimensions: bool, reuses_field: bool}
  */
 final class PostingRules
@@ -19,6 +23,10 @@ final class PostingRules
     public const FIXED_ACCOUNT = 'fixed';
 
     public const ACCOUNT_FIELD = 'field';
+
+    public const CONTROL_ACCOUNT = 'control_account';
+
+    public const CASH_ACCOUNT = 'cash_account';
 
     /**
      * Indexes of the rules that use a field another rule also uses without saying so. A field shared by
@@ -66,9 +74,13 @@ final class PostingRules
 
         $fields = [$rule['amount_field'] ?? ''];
 
-        if (($rule['account']['source'] ?? null) === self::ACCOUNT_FIELD) {
-            $fields[] = $rule['account']['field'] ?? '';
-        }
+        $account = $rule['account'] ?? [];
+
+        $fields[] = match ($account['source'] ?? null) {
+            self::ACCOUNT_FIELD, self::CASH_ACCOUNT => $account['field'] ?? '',
+            self::CONTROL_ACCOUNT => $account['party_field'] ?? '',
+            default => '',
+        };
 
         return array_values(array_unique(array_filter($fields, fn (string $name): bool => $name !== '')));
     }

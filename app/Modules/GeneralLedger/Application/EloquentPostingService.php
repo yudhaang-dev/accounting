@@ -3,6 +3,7 @@
 namespace App\Modules\GeneralLedger\Application;
 
 use App\Modules\GeneralLedger\Contracts\PostedJournal;
+use App\Modules\GeneralLedger\Contracts\PostedJournalLine;
 use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\GeneralLedger\Contracts\ReverseJournal;
@@ -45,10 +46,24 @@ final class EloquentPostingService implements PostingService
                 // Serialises concurrent postings of the same entry; the unique index is the backstop.
                 DB::select('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))', ["{$command->companyId}:{$command->entryId}"]);
 
-                $existing = Journal::query()->where('entry_id', $command->entryId)->first();
+                $existing = Journal::query()->with('lines')->where('entry_id', $command->entryId)->first();
 
                 if ($existing !== null) {
-                    return new PostedJournal($existing->id, $existing->number, $existing->accounting_date->toDateString(), $existing->period_id, replayed: true);
+                    return new PostedJournal(
+                        $existing->id,
+                        $existing->number,
+                        $existing->accounting_date->toDateString(),
+                        $existing->period_id,
+                        replayed: true,
+                        lines: array_values($existing->lines->map(fn (JournalLine $line): PostedJournalLine => new PostedJournalLine(
+                            $line->account_id,
+                            (string) $line->debit,
+                            (string) $line->credit,
+                            $line->currency,
+                            (string) $line->transaction_amount,
+                            (string) $line->exchange_rate,
+                        ))->all()),
+                    );
                 }
             }
 
@@ -108,7 +123,20 @@ final class EloquentPostingService implements PostingService
             $this->balances->apply($command->companyId, $movements);
             $this->auditOverride($journal, $resolved);
 
-            return new PostedJournal($journal->id, $journal->number, $command->accountingDate, $resolved->periodId);
+            return new PostedJournal(
+                $journal->id,
+                $journal->number,
+                $command->accountingDate,
+                $resolved->periodId,
+                lines: array_map(fn (array $line): PostedJournalLine => new PostedJournalLine(
+                    $line['account_id'],
+                    (string) $line['debit'],
+                    (string) $line['credit'],
+                    $line['currency'],
+                    (string) $line['transaction_amount'],
+                    (string) $line['exchange_rate'],
+                ), $resolved->lines),
+            );
         }));
     }
 

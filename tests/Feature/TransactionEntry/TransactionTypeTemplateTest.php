@@ -31,7 +31,7 @@ function importTemplate(array $body, ?User $as = null)
 describe('transaction type templates (TE-FR-01, X-AC-03)', function () {
     it('lists the templates and shows the types of one for review without creating anything', function () {
         $this->actingAs($this->admin)->getJson("{$this->url}/transaction-type-templates")
-            ->assertOk()->assertJsonPath('data.0.key', 'general')->assertJsonPath('data.0.type_count', 3);
+            ->assertOk()->assertJsonPath('data.0.key', 'general')->assertJsonPath('data.0.type_count', 4);
 
         $this->actingAs($this->admin)->getJson("{$this->url}/transaction-type-templates/general")
             ->assertOk()
@@ -67,7 +67,7 @@ describe('transaction type templates (TE-FR-01, X-AC-03)', function () {
 
     it('refuses an unknown template or type, and is all-or-nothing when a key is already used', function () {
         importTemplate(['template' => 'nope', 'confirmed' => true, 'keys' => ['general_journal']])->assertUnprocessable()->assertJsonValidationErrors('template');
-        importTemplate(['template' => 'general', 'confirmed' => true, 'keys' => ['general_journal', 'credit_sale']])->assertUnprocessable()->assertJsonValidationErrors('keys.1');
+        importTemplate(['template' => 'general', 'confirmed' => true, 'keys' => ['general_journal', 'unknown_type']])->assertUnprocessable()->assertJsonValidationErrors('keys.1');
 
         $this->actingAs($this->admin)->postJson("{$this->url}/transaction-types", ['key' => 'adjustment', 'label' => 'Penyesuaian saya'])->assertCreated();
 

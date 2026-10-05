@@ -34,6 +34,7 @@ final class EntryWorkflow
         private readonly ApprovalPlanner $planner,
         private readonly EntryValidation $checks,
         private readonly EntryNumbers $numbers,
+        private readonly EntryDocuments $documents,
     ) {}
 
     /**
@@ -158,9 +159,14 @@ final class EntryWorkflow
         $this->checks->assertValid($entry);
         $this->refreshLines($entry);
 
-        $journal = $entry->reverses_journal_id === null
-            ? $this->posting->post($this->command($entry, $userId))
-            : $this->posting->reverse($this->reversal($entry, $userId));
+        $route = $this->documents->route($entry);
+
+        // An entry with a subledger route records its document and posts through the subledger (TE-FR-10).
+        $journal = match (true) {
+            $entry->reverses_journal_id !== null => $this->posting->reverse($this->reversal($entry, $userId)),
+            $route !== null => $this->documents->post($entry, $route, $this->command($entry, $userId, JournalSource::Subledger))->journal,
+            default => $this->posting->post($this->command($entry, $userId)),
+        };
 
         $entry->forceFill([
             'status' => EntryStatus::Posted,
@@ -218,14 +224,16 @@ final class EntryWorkflow
         $entry->forceFill(['lines' => $this->lines->of($entry)])->save();
     }
 
-    /** Checks what the ledger will check when it posts the entry (TE-FR-08). */
+    /** Checks what the ledger, and the subledger for an entry with a route, will check when it posts the entry (TE-FR-08). */
     private function validate(Entry $entry, ?int $userId): void
     {
-        if ($entry->reverses_journal_id === null) {
-            $this->validator->validate($this->command($entry, $userId));
-        } else {
-            $this->validator->validateReversal($this->reversal($entry, $userId));
-        }
+        $route = $this->documents->route($entry);
+
+        match (true) {
+            $entry->reverses_journal_id !== null => $this->validator->validateReversal($this->reversal($entry, $userId)),
+            $route !== null => $this->documents->validate($entry, $route, $this->command($entry, $userId, JournalSource::Subledger)),
+            default => $this->validator->validate($this->command($entry, $userId)),
+        };
     }
 
     private function reversal(Entry $entry, ?int $userId): ReverseJournal
@@ -241,13 +249,13 @@ final class EntryWorkflow
         );
     }
 
-    private function command(Entry $entry, ?int $userId): PostJournal
+    private function command(Entry $entry, ?int $userId, JournalSource $source = JournalSource::Entry): PostJournal
     {
         return new PostJournal(
             companyId: $entry->company_id,
             accountingDate: $entry->accounting_date->toDateString(),
             description: $entry->description,
-            source: JournalSource::Entry,
+            source: $source,
             lines: array_map(fn (array $line): PostJournalLine => new PostJournalLine(
                 accountId: $line['account_id'],
                 debit: $line['debit'],

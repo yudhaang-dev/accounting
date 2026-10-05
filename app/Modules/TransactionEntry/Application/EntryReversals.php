@@ -3,6 +3,7 @@
 namespace App\Modules\TransactionEntry\Application;
 
 use App\Modules\GeneralLedger\Contracts\JournalDirectory;
+use App\Modules\GeneralLedger\Contracts\JournalSource;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
 use App\Modules\GeneralLedger\Contracts\ReverseJournal;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
@@ -59,6 +60,11 @@ final class EntryReversals
 
         if ($journal->reversed) {
             throw new ApiException(ErrorCode::InvalidStateTransition, errors: ['journal_id' => [__('entries.journal_reversed', ['number' => $journal->number])]]);
+        }
+
+        // The reversal would leave the open item of the document standing (SL-FR-12); the subledger has to do it.
+        if ($journal->source === JournalSource::Subledger) {
+            throw new ApiException(ErrorCode::InvalidStateTransition, errors: ['journal_id' => [__('entries.journal_from_subledger', ['number' => $journal->number])]]);
         }
 
         $this->validator->validateReversal(new ReverseJournal($companyId, $journalId, $date, actorPermissions: $this->permissions->current()));

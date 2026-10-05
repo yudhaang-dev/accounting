@@ -8,7 +8,7 @@ namespace App\Modules\TransactionEntry\Application;
  *
  * @phpstan-import-type FieldDefinition from \App\Modules\TransactionEntry\Domain\FieldSchema
  *
- * @phpstan-type TemplateType array{key: string, label: string, mode: string, fields: list<FieldDefinition>, posting_rules: list<array<string, mixed>>}
+ * @phpstan-type TemplateType array{key: string, label: string, mode: string, fields: list<FieldDefinition>, posting_rules: list<array<string, mixed>>, subledger_route?: array<string, mixed>|null}
  * @phpstan-type Template array{key: string, name: string, version: int, types: list<TemplateType>}
  */
 final class TransactionTypeTemplates

@@ -5,8 +5,11 @@ namespace App\Modules\TransactionEntry\Application;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
 use App\Modules\MasterData\Contracts\DimensionSets;
+use App\Modules\Subledger\Contracts\ControlRole;
+use App\Modules\Subledger\Contracts\DocumentKind;
 use App\Modules\TransactionEntry\Domain\FieldType;
 use App\Modules\TransactionEntry\Domain\PostingRules;
+use App\Modules\TransactionEntry\Domain\SubledgerRoute;
 use App\Modules\TransactionEntry\Domain\TransactionType;
 use App\Modules\TransactionEntry\Domain\TransactionTypeMode;
 use App\Modules\TransactionEntry\Domain\TransactionTypeVersion;
@@ -40,15 +43,17 @@ final class TransactionTypeVersions
      * @param  list<FieldDefinition>  $fields
      * @param  list<array<string, mixed>>  $rules
      * @param  array{allowed_currencies?: list<string>|null, rate_type_key?: string|null, allow_rate_input?: bool}  $currencyPolicy
+     * @param  array<string, mixed>|null  $route  the subledger route (TE-FR-10)
      *
      * @throws ValidationException
      */
-    public function createDraft(string $typeId, TransactionTypeMode $mode, array $fields, array $rules = [], array $currencyPolicy = []): TransactionTypeVersion
+    public function createDraft(string $typeId, TransactionTypeMode $mode, array $fields, array $rules = [], array $currencyPolicy = [], ?array $route = null): TransactionTypeVersion
     {
-        return DB::transaction(function () use ($typeId, $mode, $fields, $rules, $currencyPolicy): TransactionTypeVersion {
+        return DB::transaction(function () use ($typeId, $mode, $fields, $rules, $currencyPolicy, $route): TransactionTypeVersion {
             $type = TransactionType::query()->lockForUpdate()->findOrFail($typeId);
 
             $checked = $this->checkedFields($mode, $fields);
+            $checkedRules = $this->checkedRules($mode, $checked, $rules);
 
             $version = TransactionTypeVersion::create([
                 'transaction_type_id' => $type->id,
@@ -56,7 +61,8 @@ final class TransactionTypeVersions
                 'mode' => $mode,
                 'status' => VersionStatus::Draft,
                 'fields' => $checked,
-                'posting_rules' => $this->checkedRules($mode, $checked, $rules),
+                'posting_rules' => $checkedRules,
+                'subledger_route' => $this->checkedRoute($mode, $checked, $checkedRules, $route),
                 ...$this->checkedCurrencyPolicy($currencyPolicy),
             ])->refresh();
 
@@ -70,13 +76,14 @@ final class TransactionTypeVersions
      * @param  list<FieldDefinition>  $fields
      * @param  list<array<string, mixed>>  $rules
      * @param  array{allowed_currencies?: list<string>|null, rate_type_key?: string|null, allow_rate_input?: bool}  $currencyPolicy
+     * @param  array<string, mixed>|null  $route  the subledger route (TE-FR-10)
      *
      * @throws ApiException INVALID_STATE_TRANSITION when the version is not a draft
      * @throws ValidationException
      */
-    public function updateDraft(string $typeId, int $number, TransactionTypeMode $mode, array $fields, array $rules = [], array $currencyPolicy = []): TransactionTypeVersion
+    public function updateDraft(string $typeId, int $number, TransactionTypeMode $mode, array $fields, array $rules = [], array $currencyPolicy = [], ?array $route = null): TransactionTypeVersion
     {
-        return DB::transaction(function () use ($typeId, $number, $mode, $fields, $rules, $currencyPolicy): TransactionTypeVersion {
+        return DB::transaction(function () use ($typeId, $number, $mode, $fields, $rules, $currencyPolicy, $route): TransactionTypeVersion {
             $version = $this->lockedVersion($typeId, $number);
 
             if ($version->status !== VersionStatus::Draft) {
@@ -85,7 +92,15 @@ final class TransactionTypeVersions
 
             $checked = $this->checkedFields($mode, $fields);
 
-            $version->update(['mode' => $mode, 'fields' => $checked, 'posting_rules' => $this->checkedRules($mode, $checked, $rules), ...$this->checkedCurrencyPolicy($currencyPolicy)]);
+            $checkedRules = $this->checkedRules($mode, $checked, $rules);
+
+            $version->update([
+                'mode' => $mode,
+                'fields' => $checked,
+                'posting_rules' => $checkedRules,
+                'subledger_route' => $this->checkedRoute($mode, $checked, $checkedRules, $route),
+                ...$this->checkedCurrencyPolicy($currencyPolicy),
+            ]);
 
             return $version->refresh();
         });
@@ -270,6 +285,18 @@ final class TransactionTypeVersions
                 }
 
                 $storedAccount = ['source' => $source, 'field' => $account['field']];
+            } elseif ($source === PostingRules::CONTROL_ACCOUNT && is_string($account['party_field'] ?? null)) {
+                if (($typeOf[$account['party_field']] ?? null) !== FieldType::Party->value) {
+                    $errors["posting_rules.{$index}.account.party_field"] = [__('entries.rule_party_field_unknown')];
+                }
+
+                $storedAccount = ['source' => $source, 'party_field' => $account['party_field']];
+            } elseif ($source === PostingRules::CASH_ACCOUNT && is_string($account['field'] ?? null)) {
+                if (($typeOf[$account['field']] ?? null) !== FieldType::CashAccount->value) {
+                    $errors["posting_rules.{$index}.account.field"] = [__('entries.rule_cash_field_unknown')];
+                }
+
+                $storedAccount = ['source' => $source, 'field' => $account['field']];
             } else {
                 $errors["posting_rules.{$index}.account"] = [__('entries.rule_account_required')];
             }
@@ -289,6 +316,143 @@ final class TransactionTypeVersions
         }
 
         return $stored;
+    }
+
+    /**
+     * The route that sends an entry to the subledger (TE-FR-10), checked against the fields and the rules
+     * of the version, which must agree with it: the rules post to the control account of the party the route
+     * names, on the side its kind of document needs, and to the cash account only when the document moves cash.
+     * A rule that posts to a control or cash account makes no sense without a route.
+     *
+     * @param  list<FieldDefinition>|null  $fields
+     * @param  list<RuleLine>|null  $rules
+     * @param  array<string, mixed>|null  $route
+     * @return array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null}|null
+     *
+     * @throws ValidationException
+     */
+    private function checkedRoute(TransactionTypeMode $mode, ?array $fields, ?array $rules, ?array $route): ?array
+    {
+        $errors = [];
+
+        if ($mode === TransactionTypeMode::FreeLines && $route !== null) {
+            throw ValidationException::withMessages(['subledger_route' => [__('entries.route_not_allowed')]]);
+        }
+
+        if ($route === null) {
+            foreach ($rules ?? [] as $index => $rule) {
+                if (in_array($rule['account']['source'] ?? null, [PostingRules::CONTROL_ACCOUNT, PostingRules::CASH_ACCOUNT], true)) {
+                    $errors["posting_rules.{$index}.account"] = [__('entries.rule_route_required')];
+                }
+            }
+
+            if ($errors !== []) {
+                throw ValidationException::withMessages($errors);
+            }
+
+            return null;
+        }
+
+        $stored = SubledgerRoute::normalize($route);
+        $kind = DocumentKind::tryFrom($stored['kind']);
+        $role = ControlRole::tryFrom($stored['control_role']);
+        $typeOf = [];
+
+        foreach ($fields ?? [] as $field) {
+            $typeOf[$field['name']] = $field['type'];
+        }
+
+        if ($kind === null) {
+            $errors['subledger_route.kind'] = [__('entries.route_kind_unknown')];
+        }
+
+        if ($role === null) {
+            $errors['subledger_route.control_role'] = [__('entries.route_role_unknown')];
+        }
+
+        if ($stored['party_field'] === '') {
+            $errors['subledger_route.party_field'] = [__('entries.route_party_field_required')];
+        }
+
+        foreach (SubledgerRoute::fields($stored) as $used) {
+            if (($typeOf[$used['name']] ?? null) !== $used['type']->value) {
+                $errors["subledger_route.{$used['key']}"] = [__('entries.route_field_type', ['field' => $used['name'], 'type' => $used['type']->value])];
+            }
+        }
+
+        if ($kind !== null) {
+            if ($kind->movesCash() && $stored['cash_account_field'] === null) {
+                $errors['subledger_route.cash_account_field'] = [__('entries.route_cash_field_required', ['kind' => $kind->value])];
+            } elseif (! $kind->movesCash() && $stored['cash_account_field'] !== null) {
+                $errors['subledger_route.cash_account_field'] = [__('entries.route_cash_field_not_allowed', ['kind' => $kind->value])];
+            }
+        }
+
+        if ($errors === []) {
+            $errors = $this->ruleErrors($rules ?? [], $stored, $kind->controlSide($role), $kind->movesCash());
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $stored;
+    }
+
+    /**
+     * @param  list<RuleLine>  $rules
+     * @param  array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null}  $route
+     * @param  'debit'|'credit'  $controlSide
+     * @return array<string, list<string>>
+     */
+    private function ruleErrors(array $rules, array $route, string $controlSide, bool $movesCash): array
+    {
+        $cashSide = $controlSide === 'debit' ? 'credit' : 'debit';
+        $errors = [];
+        $control = 0;
+        $cash = 0;
+
+        foreach ($rules as $index => $rule) {
+            $source = $rule['account']['source'] ?? null;
+
+            if ($source === PostingRules::CONTROL_ACCOUNT) {
+                $control++;
+
+                if (($rule['account']['party_field'] ?? null) !== $route['party_field']) {
+                    $errors["posting_rules.{$index}.account.party_field"] = [__('entries.rule_party_field_route', ['field' => $route['party_field']])];
+                }
+
+                if (($rule['side'] ?? null) !== $controlSide) {
+                    $errors["posting_rules.{$index}.side"] = [__('entries.rule_control_side', ['kind' => $route['kind'], 'side' => $controlSide])];
+                }
+            } elseif ($source === PostingRules::CASH_ACCOUNT) {
+                $cash++;
+
+                if (! $movesCash) {
+                    $errors["posting_rules.{$index}.account"] = [__('entries.rule_cash_not_allowed', ['kind' => $route['kind']])];
+
+                    continue;
+                }
+
+                if (($rule['account']['field'] ?? null) !== $route['cash_account_field']) {
+                    $errors["posting_rules.{$index}.account.field"] = [__('entries.rule_cash_field_route', ['field' => (string) $route['cash_account_field']])];
+                }
+
+                if (($rule['side'] ?? null) !== $cashSide) {
+                    $errors["posting_rules.{$index}.side"] = [__('entries.rule_cash_side', ['kind' => $route['kind'], 'side' => $cashSide])];
+                }
+            }
+        }
+
+        if ($control === 0) {
+            $errors['subledger_route'][] = __('entries.route_control_rule_required');
+        }
+
+        if ($movesCash && $cash === 0) {
+            $errors['subledger_route'][] = __('entries.route_cash_rule_required', ['kind' => $route['kind']]);
+        }
+
+        return $errors;
     }
 
     private function lockedVersion(string $typeId, int $number): TransactionTypeVersion

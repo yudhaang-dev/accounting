@@ -18,7 +18,7 @@ class TransactionTypeVersionController
     /** Starts a draft with the next version number. */
     public function store(VersionRequest $request, string $companyId, string $id, TransactionTypeVersions $versions): JsonResponse
     {
-        $versions->createDraft($id, TransactionTypeMode::from($request->string('mode')->toString()), $this->fields($request), $this->rules($request), $this->currencyPolicy($request));
+        $versions->createDraft($id, TransactionTypeMode::from($request->string('mode')->toString()), $this->fields($request), $this->rules($request), $this->currencyPolicy($request), $this->route($request));
 
         return $this->type($id)->response()->setStatusCode(201);
     }
@@ -26,7 +26,7 @@ class TransactionTypeVersionController
     /** Replaces the content of a draft version. */
     public function update(VersionRequest $request, string $companyId, string $id, int $version, TransactionTypeVersions $versions): TransactionTypeResource
     {
-        $versions->updateDraft($id, $version, TransactionTypeMode::from($request->string('mode')->toString()), $this->fields($request), $this->rules($request), $this->currencyPolicy($request));
+        $versions->updateDraft($id, $version, TransactionTypeMode::from($request->string('mode')->toString()), $this->fields($request), $this->rules($request), $this->currencyPolicy($request), $this->route($request));
 
         return $this->type($id);
     }
@@ -64,6 +64,15 @@ class TransactionTypeVersionController
     {
         /** @var list<array<string, mixed>> */
         return $request->validated('posting_rules', []);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function route(VersionRequest $request): ?array
+    {
+        /** @var array<string, mixed>|null */
+        return $request->validated('subledger_route');
     }
 
     /**

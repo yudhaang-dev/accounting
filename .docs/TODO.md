@@ -96,7 +96,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M5-10** Jurnal berulang — TE-FR-14
 - [x] **M5-11** Penomoran entri per Jenis Transaksi — TE-FR-16 — pengaturan seri dan titik pemberian nomor lewat layar SPA di M5-14
 - [x] **M5-12** Lampiran entri (Platform Attachments) — X-FR-04 — `Attachments` siap dipakai dokumen subledger di M6-04; layar SPA di M5-14
-- [x] **M5-13** Template Jenis Transaksi yang wajib dikonfirmasi — TE-FR-01 — template `general` baru berisi jenis tanpa akun tetap; Penjualan Kredit menunggu rute subledger di M6-04; layar SPA di M5-14
+- [x] **M5-13** Template Jenis Transaksi yang wajib dikonfirmasi — TE-FR-01 — template `general` berisi jenis tanpa akun tetap; layar SPA di M5-14
 - [x] **M5-14** SPA: perancang Jenis Transaksi, form dinamis dari skema, kotak approval, kebijakan approval, jadwal berulang, alur pembalikan
   - [x] **M5-14a** Daftar Jenis Transaksi: buat jenis, impor template dengan tinjauan dan konfirmasi, seri nomor dan kebijakan titik penomoran — TE-FR-01, TE-FR-16
   - [x] **M5-14b** Perancang versi: editor field, aturan posting, kebijakan mata uang, terbitkan dan hentikan — TE-FR-02, TE-FR-04, TE-FR-05, TE-FR-06 — tipe field `party`, `cash_account`, dan `allocations` belum ditawarkan sampai lookup subledger ada (M6)
@@ -111,11 +111,11 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M6-01** Pihak dan referensi eksternal per `source_system` — SL-FR-01, SL-AC-08 — profil posting pada pihak menyusul di M6-02; layar SPA di M6-12
 - [x] **M6-02** Profil posting dan peran akun kontrol — SL-FR-02 — template COA belum membatasi akun kontrol ke sumber `subledger`, jadi perusahaan mengaturnya sebelum memetakan; layar SPA di M6-12
 - [x] **M6-03** Rekening kas/bank dan transaksi kas berstatus `cleared` — SL-FR-03, SL-FR-11 — transaksi kas dicatat oleh dokumen di M6-04 (kolom `document_id` belum punya FK); layar SPA di M6-12
-- [ ] **M6-04** Dokumen dan open item; rute subledger dari entri; sumber akun kontrol dan rekening pada aturan posting — SL-FR-04, TE-FR-05, TE-FR-10
-- [ ] **M6-05** Alokasi, uang muka, dan pembatalan alokasi — SL-FR-05, SL-AC-03
-- [ ] **M6-06** Selisih kurs terealisasi — SL-FR-06, SL-AC-02, TE-AC-10
+- [x] **M6-04** Dokumen dan open item; rute subledger dari entri; sumber akun kontrol dan rekening pada aturan posting — SL-FR-04, TE-FR-05, TE-FR-10 — dokumen `credit_note`, `payment`, dan `advance` menyisakan nilai penuhnya sebagai open item sisi kredit sampai dialokasikan (M6-05); layar SPA di M6-12, yang juga menawarkan tipe field `party`/`cash_account` dan mengedit rute (perancang kini hanya mempertahankan rute draf)
+- [ ] **M6-05** Alokasi, uang muka, dan pembatalan alokasi — SL-FR-05, SL-AC-03 — jenis `write_off` dan field `allocations` ikut di sini; sisa pembayaran yang tidak teralokasi menjadi `advance`
+- [ ] **M6-06** Selisih kurs terealisasi — SL-FR-06, SL-AC-02, TE-AC-10 — baris `cash_account` kini hanya untuk dokumen `payment`/`advance` dalam mata uang rekening; transfer antarrekening tanpa dokumen dan baris kas yang mata uangnya berbeda dari entri menyusul di sini
 - [ ] **M6-07** Revaluasi open item — SL-FR-07, SL-AC-06
-- [ ] **M6-08** Pembalikan dokumen — SL-FR-12, SL-AC-07, TE-AC-07
+- [ ] **M6-08** Pembalikan dokumen — SL-FR-12, SL-AC-07, TE-AC-07 — pembalikan jurnal sumber subledger kini ditolak di `EntryReversals` dan entri dengan rute menolak `auto_reverse_on`; keduanya dibuka di sini
 - [ ] **M6-09** Rekonsiliasi akun kontrol dan waiver; integrasi ke kesiapan tutup tahun — SL-FR-09, SL-AC-05, GL-AC-09
 - [ ] **M6-10** Impor open item awal dan pencocokan total kontrol dengan batch saldo konversi — SL-FR-10, SL-AC-01, GL-AC-07
 - [ ] **M6-11** Laporan aging dengan bucket kebijakan — SL-FR-08, SL-AC-04

@@ -40,11 +40,20 @@ class VersionRequest extends FormRequest
             'posting_rules.*.side' => ['sometimes', 'nullable', Rule::in(['debit', 'credit'])],
             'posting_rules.*.amount_field' => ['sometimes', 'nullable', 'string', 'max:64'],
             'posting_rules.*.account' => ['sometimes', 'nullable', 'array'],
-            'posting_rules.*.account.source' => ['required_with:posting_rules.*.account', Rule::in([PostingRules::FIXED_ACCOUNT, PostingRules::ACCOUNT_FIELD])],
+            'posting_rules.*.account.source' => ['required_with:posting_rules.*.account', Rule::in([PostingRules::FIXED_ACCOUNT, PostingRules::ACCOUNT_FIELD, PostingRules::CONTROL_ACCOUNT, PostingRules::CASH_ACCOUNT])],
             'posting_rules.*.account.account_id' => ['sometimes', 'string', 'size:26'],
             'posting_rules.*.account.field' => ['sometimes', 'string', 'max:64'],
+            'posting_rules.*.account.party_field' => ['sometimes', 'string', 'max:64'],
             'posting_rules.*.apply_dimensions' => ['sometimes', 'boolean'],
             'posting_rules.*.reuses_field' => ['sometimes', 'boolean'],
+            // The document an entry of the version records in the subledger (TE-FR-10); how it fits the fields and rules is checked by the application layer.
+            'subledger_route' => ['sometimes', 'nullable', 'array'],
+            'subledger_route.kind' => ['required_with:subledger_route', 'string', 'max:32'],
+            'subledger_route.control_role' => ['required_with:subledger_route', 'string', 'max:32'],
+            'subledger_route.party_field' => ['required_with:subledger_route', 'string', 'max:64'],
+            'subledger_route.document_number_field' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'subledger_route.due_date_field' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'subledger_route.cash_account_field' => ['sometimes', 'nullable', 'string', 'max:64'],
         ];
     }
 }

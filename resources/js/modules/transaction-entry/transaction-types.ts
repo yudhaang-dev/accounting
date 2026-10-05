@@ -11,6 +11,7 @@ export type PostingRule = NonNullable<
     Schemas['VersionRequest']['posting_rules']
 >[number];
 export type VersionInput = Schemas['VersionRequest'];
+export type SubledgerRoute = NonNullable<VersionInput['subledger_route']>;
 export type ResetPeriod = Schemas['ResetPeriod'];
 export type NumberPolicy = Schemas['NumberingRequest']['policy'];
 
@@ -27,6 +28,7 @@ export type TypeVersion = {
     allowed_currencies: string[] | null;
     rate_type_key: string | null;
     allow_rate_input: boolean;
+    subledger_route: SubledgerRoute | null;
 };
 
 export type Numbering = {

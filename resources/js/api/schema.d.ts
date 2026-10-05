@@ -707,6 +707,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Documents, newest first. Filters: `filter[party_id]`, `filter[kind]`, `filter[date_from]` and
+         *     `filter[date_to]` on the date of the document. `per_page` defaults to 50, at most 200. Documents
+         *     are recorded by entries that have a subledger route, not through this API
+         */
+        get: operations["documents.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["documents.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/entries": {
         parameters: {
             query?: never;
@@ -1544,6 +1581,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/open-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Open items, oldest due date first. Filters: `filter[party_id]`, `filter[control_role]`,
+         *     `filter[kind]`, `filter[status]` and `filter[due_to]` (due on or before the date). `per_page`
+         *     defaults to 50, at most 200
+         */
+        get: operations["open-items.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/open-items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["open-items.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/opening-balance-imports": {
         parameters: {
             query?: never;
@@ -2157,7 +2231,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Every type of a template with its mode, fields and posting rules, for review before the import is confirmed */
+        /** Every type of a template with its mode, fields, posting rules and subledger route, for review before the import is confirmed */
         get: operations["transaction-type-templates.show"];
         put?: never;
         post?: never;
@@ -2478,6 +2552,12 @@ export interface components {
             status: string;
             lock_version: number;
         };
+        /**
+         * ControlRole
+         * @description The control account roles of a posting profile (SL-FR-02). The keys are fixed by the product; which account plays a role is data per profile (P-01).
+         * @enum {string}
+         */
+        ControlRole: "receivables_control" | "payables_control";
         /** CreateAccountRequest */
         CreateAccountRequest: {
             allowed_sources?: components["schemas"]["JournalSource"][];
@@ -2600,7 +2680,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -2682,6 +2762,31 @@ export interface components {
             valid_to: string | null;
             status: string;
             lock_version: number;
+        };
+        /**
+         * DocumentKind
+         * @description The kinds of document the subledger records (SL-FR-04). A mechanism of the system, not data a company defines: an invoice creates an open item; the others settle open items, and what they leave unsettled stays an open item of its own until it is allocated (SL-FR-05).
+         * @enum {string}
+         */
+        DocumentKind: "invoice" | "credit_note" | "payment" | "advance";
+        /** DocumentResource */
+        DocumentResource: {
+            id: string;
+            kind: string;
+            control_role: string;
+            party_id: string;
+            cash_account_id: string | null;
+            journal_id: string;
+            entry_id: string | null;
+            document_number: string;
+            document_date: string;
+            due_date: string;
+            accounting_date: string;
+            currency: string;
+            amount: string;
+            functional_amount: string;
+            exchange_rate: string;
+            description: string;
         };
         /**
          * EntryRequest
@@ -3112,6 +3217,30 @@ export interface components {
             /** @enum {string} */
             policy: "on_create" | "on_submit";
         };
+        /** OpenItemResource */
+        OpenItemResource: {
+            id: string;
+            document_id: string;
+            party_id: string;
+            control_role: string;
+            kind: string;
+            side: string;
+            document_number: string;
+            document_date: string;
+            due_date: string;
+            currency: string;
+            original_amount: string;
+            remaining_amount: string;
+            original_functional: string;
+            remaining_functional: string;
+            exchange_rate: string;
+            status: string;
+        };
+        /**
+         * OpenItemStatus
+         * @enum {string}
+         */
+        OpenItemStatus: "open" | "settled";
         /** OpeningBalanceBatchResource */
         OpeningBalanceBatchResource: {
             id: string;
@@ -3319,6 +3448,7 @@ export interface components {
                 allowed_currencies: string;
                 rate_type_key: string;
                 allow_rate_input: string;
+                subledger_route: string;
             }[];
             lock_version: number;
         };
@@ -3522,13 +3652,13 @@ export interface components {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "documents.read" | "open-items.read" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -3560,13 +3690,23 @@ export interface components {
                 amount_field?: string | null;
                 account?: {
                     /** @enum {string} */
-                    source?: "fixed" | "field";
+                    source?: "fixed" | "field" | "control_account" | "cash_account";
                     account_id?: string;
                     field?: string;
+                    party_field?: string;
                 } | null;
                 apply_dimensions?: boolean;
                 reuses_field?: boolean;
             }[];
+            /** @description The document an entry of the version records in the subledger (TE-FR-10); how it fits the fields and rules is checked by the application layer. */
+            subledger_route?: {
+                kind?: string;
+                control_role?: string;
+                party_field?: string;
+                document_number_field?: string | null;
+                due_date_field?: string | null;
+                cash_account_field?: string | null;
+            };
         };
         /** WorkspaceResource */
         WorkspaceResource: {
@@ -5188,6 +5328,91 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "documents.index": {
+        parameters: {
+            query?: {
+                "filter[party_id]"?: string;
+                "filter[kind]"?: components["schemas"]["DocumentKind"];
+                "filter[date_from]"?: string;
+                "filter[date_to]"?: string;
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `DocumentResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DocumentResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "documents.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `DocumentResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DocumentResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "entries.index": {
@@ -6944,6 +7169,92 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "open-items.index": {
+        parameters: {
+            query?: {
+                "filter[party_id]"?: string;
+                "filter[control_role]"?: components["schemas"]["ControlRole"];
+                "filter[kind]"?: components["schemas"]["DocumentKind"];
+                "filter[status]"?: components["schemas"]["OpenItemStatus"];
+                "filter[due_to]"?: string;
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `OpenItemResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OpenItemResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "open-items.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `OpenItemResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OpenItemResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
     "opening-balance-imports.show": {
         parameters: {
             query?: never;
@@ -8408,6 +8719,9 @@ export interface operations {
                                 posting_rules: {
                                     [key: string]: unknown;
                                 }[];
+                                subledger_route: {
+                                    [key: string]: string | null;
+                                } | null;
                             }[];
                         };
                     };

@@ -1,0 +1,77 @@
+<?php
+
+namespace App\Modules\TransactionEntry\Domain;
+
+use App\Modules\Subledger\Contracts\ControlRole;
+use App\Modules\Subledger\Contracts\DocumentKind;
+
+/**
+ * The subledger route of a `structured` version: an entry of the version records a document of one kind
+ * for the party named by a field, and posts to the control account of that party's profile and, when the
+ * document moves cash, to the account of the cash account named by another field (TE-FR-10, SL-FR-04).
+ * The optional fields give the number and the due date of the document.
+ *
+ * @phpstan-type Route array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null}
+ */
+final class SubledgerRoute
+{
+    /**
+     * The shape that is stored, with every key present.
+     *
+     * @param  array<string, mixed>  $input
+     * @return Route
+     */
+    public static function normalize(array $input): array
+    {
+        return [
+            'kind' => (string) ($input['kind'] ?? ''),
+            'control_role' => (string) ($input['control_role'] ?? ''),
+            'party_field' => (string) ($input['party_field'] ?? ''),
+            'document_number_field' => self::optional($input['document_number_field'] ?? null),
+            'due_date_field' => self::optional($input['due_date_field'] ?? null),
+            'cash_account_field' => self::optional($input['cash_account_field'] ?? null),
+        ];
+    }
+
+    /** @param  Route  $route */
+    public static function kind(array $route): DocumentKind
+    {
+        return DocumentKind::from($route['kind']);
+    }
+
+    /** @param  Route  $route */
+    public static function role(array $route): ControlRole
+    {
+        return ControlRole::from($route['control_role']);
+    }
+
+    /**
+     * The fields the route uses, with the type each must have; a field the route does not name is left out.
+     *
+     * @param  Route  $route
+     * @return list<array{key: string, name: string, type: FieldType}>
+     */
+    public static function fields(array $route): array
+    {
+        $types = [
+            'party_field' => FieldType::Party,
+            'document_number_field' => FieldType::Reference,
+            'due_date_field' => FieldType::Date,
+            'cash_account_field' => FieldType::CashAccount,
+        ];
+        $used = [];
+
+        foreach ($types as $key => $type) {
+            if (($route[$key] ?? '') !== '') {
+                $used[] = ['key' => $key, 'name' => (string) $route[$key], 'type' => $type];
+            }
+        }
+
+        return $used;
+    }
+
+    private static function optional(mixed $value): ?string
+    {
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+}

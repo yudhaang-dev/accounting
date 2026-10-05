@@ -25,9 +25,9 @@ class TransactionTypeTemplateController
     }
 
     /**
-     * Every type of a template with its mode, fields and posting rules, for review before the import is confirmed.
+     * Every type of a template with its mode, fields, posting rules and subledger route, for review before the import is confirmed.
      *
-     * @response array{data: array{key: string, name: string, version: int, types: list<array{key: string, label: string, mode: string, fields: list<array<string, mixed>>, posting_rules: list<array<string, mixed>>}>}}
+     * @response array{data: array{key: string, name: string, version: int, types: list<array{key: string, label: string, mode: string, fields: list<array<string, mixed>>, posting_rules: list<array<string, mixed>>, subledger_route: array<string, string|null>|null}>}}
      */
     public function show(TransactionTypeTemplates $templates, string $companyId, string $key): JsonResponse
     {
@@ -37,7 +37,7 @@ class TransactionTypeTemplateController
             'key' => $template['key'],
             'name' => $template['name'],
             'version' => $template['version'],
-            'types' => $template['types'],
+            'types' => array_map(fn (array $type): array => $type + ['subledger_route' => null], $template['types']),
         ]]);
     }
 

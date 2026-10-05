@@ -56,7 +56,7 @@ final class ImportTransactionTypeTemplate
                 $row = $byKey[$key];
                 $type = TransactionType::create(['key' => $row['key'], 'label' => $row['label']])->refresh();
 
-                $this->versions->createDraft($type->id, TransactionTypeMode::from($row['mode']), $row['fields'], $row['posting_rules']);
+                $this->versions->createDraft($type->id, TransactionTypeMode::from($row['mode']), $row['fields'], $row['posting_rules'], route: $row['subledger_route'] ?? null);
                 $this->versions->publish($type->id, 1);
 
                 $this->audit->record('transaction_type.created', "Transaction type {$type->key} created from template {$template['key']}.", $type, after: ['key' => $type->key, 'label' => $type->label, 'version' => 1], companyId: $type->company_id);

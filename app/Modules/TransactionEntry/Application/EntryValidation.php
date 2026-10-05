@@ -3,6 +3,8 @@
 namespace App\Modules\TransactionEntry\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
+use App\Modules\Subledger\Contracts\CashAccountDirectory;
+use App\Modules\Subledger\Contracts\PartyDirectory;
 use App\Modules\TransactionEntry\Domain\Entry;
 use App\Modules\TransactionEntry\Domain\FieldType;
 use App\Modules\TransactionEntry\Domain\FieldValues;
@@ -16,7 +18,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * What the entry module checks of an entry when it is submitted and again when it is posted (TE-FR-08):
  * that its version still takes entries, that the values fit the field schema and the scale of the
- * currency, that the accounts they name are in the company, and that the currency is still one the
+ * currency, that the accounts, parties and cash accounts they name are in the company, and that the currency is still one the
  * version and the company accept. Period, account rules, dimensions, rates and balance belong to the
  * ledger, which checks them next. All the problems found here come back together, per field.
  */
@@ -26,6 +28,8 @@ final class EntryValidation
         private readonly CompanyContext $company,
         private readonly AccountDirectory $accounts,
         private readonly EntryRates $rates,
+        private readonly PartyDirectory $parties,
+        private readonly CashAccountDirectory $cashAccounts,
     ) {}
 
     /**
@@ -61,6 +65,10 @@ final class EntryValidation
                     $errors[$key] = [__('entries.value_scale', ['field' => $field['label'], 'scale' => $scale])];
                 } elseif ($field['type'] === FieldType::Account->value && $this->accounts->find($companyId, $value) === null) {
                     $errors[$key] = [__('entries.field_account_unknown', ['id' => $value])];
+                } elseif ($field['type'] === FieldType::Party->value && $this->parties->find($companyId, $value) === null) {
+                    $errors[$key] = [__('entries.field_party_unknown')];
+                } elseif ($field['type'] === FieldType::CashAccount->value && $this->cashAccounts->find($companyId, $value) === null) {
+                    $errors[$key] = [__('entries.field_cash_account_unknown')];
                 }
             }
 

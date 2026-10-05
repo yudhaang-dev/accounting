@@ -4,14 +4,19 @@ namespace App\Modules\TransactionEntry\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountRole;
 use App\Modules\GeneralLedger\Contracts\AccountRoles;
+use App\Modules\Subledger\Contracts\CashAccountDirectory;
+use App\Modules\Subledger\Contracts\ControlAccounts;
+use App\Modules\Subledger\Contracts\PartyDirectory;
 use App\Modules\TransactionEntry\Domain\Entry;
 use App\Modules\TransactionEntry\Domain\FieldValues;
 use App\Modules\TransactionEntry\Domain\PostingRules;
+use App\Modules\TransactionEntry\Domain\SubledgerRoute;
 use App\Modules\TransactionEntry\Domain\TransactionTypeVersion;
 use App\Platform\Api\ApiException;
 use App\Support\Company\CompanyContext;
 use Brick\Math\BigDecimal;
 use Illuminate\Validation\ValidationException;
+use LogicException;
 
 /**
  * Turns the field values of a `structured` entry into journal lines by the posting rules of its version
@@ -32,6 +37,9 @@ final class EntryLines
         private readonly AccountRoles $roles,
         private readonly CompanyContext $company,
         private readonly EntryRates $rates,
+        private readonly ControlAccounts $controlAccounts,
+        private readonly PartyDirectory $parties,
+        private readonly CashAccountDirectory $cashAccounts,
     ) {}
 
     /**
@@ -71,7 +79,7 @@ final class EntryLines
             $functional = $applied === null ? $amount : $this->rates->toFunctional($amount, $applied['rate']);
             $balance = $debit ? $balance->plus($functional) : $balance->minus($functional);
 
-            $lines[$index] = $this->line($this->accountOf($rule, $values), $amount, $debit, $dimensionsOf)
+            $lines[$index] = $this->line($this->accountOf($rule, $values, $version, $accountingDate), $amount, $debit, $dimensionsOf)
                 + ($foreign === null ? [] : ['currency' => $foreign, 'exchange_rate' => $inputRate, 'applied_rate' => $applied['rate'] ?? null, 'rate_type_key' => $applied['rate_type_key'] ?? null]);
         }
 
@@ -129,13 +137,22 @@ final class EntryLines
      * @param  array<string, mixed>  $values
      *
      * @throws ValidationException
+     * @throws ApiException MAPPING_REQUIRED when the control account of the party is not mapped
      */
-    private function accountOf(array $rule, array $values): string
+    private function accountOf(array $rule, array $values, TransactionTypeVersion $version, string $accountingDate): string
     {
         $source = $rule['account'] ?? [];
 
         if (($source['source'] ?? null) === PostingRules::FIXED_ACCOUNT) {
             return (string) ($source['account_id'] ?? '');
+        }
+
+        if (($source['source'] ?? null) === PostingRules::CONTROL_ACCOUNT) {
+            return $this->controlAccountOf($source['party_field'] ?? '', $values, $version, $accountingDate);
+        }
+
+        if (($source['source'] ?? null) === PostingRules::CASH_ACCOUNT) {
+            return $this->cashAccountOf($source['field'] ?? '', $values);
         }
 
         $field = $source['field'] ?? '';
@@ -146,6 +163,54 @@ final class EntryLines
         }
 
         return $accountId;
+    }
+
+    /**
+     * The control account of the party in the field, by the posting profile of the party as it stands on
+     * the accounting date (SL-FR-02). The role is the one of the subledger route of the version.
+     *
+     * @param  array<string, mixed>  $values
+     *
+     * @throws ValidationException
+     */
+    private function controlAccountOf(string $field, array $values, TransactionTypeVersion $version, string $accountingDate): string
+    {
+        $partyId = $values[$field] ?? null;
+        $companyId = $this->company->require();
+
+        if (! is_string($partyId) || $partyId === '') {
+            throw ValidationException::withMessages(["values.{$field}" => [__('entries.value_required', ['field' => $field])]]);
+        }
+
+        if ($this->parties->find($companyId, $partyId) === null) {
+            throw ValidationException::withMessages(["values.{$field}" => [__('entries.field_party_unknown')]]);
+        }
+
+        return $this->controlAccounts->require($companyId, SubledgerRoute::role($version->subledger_route ?? throw new LogicException('A control account rule needs the subledger route.')), $partyId, $accountingDate)->accountId;
+    }
+
+    /**
+     * The ledger account of the cash account in the field.
+     *
+     * @param  array<string, mixed>  $values
+     *
+     * @throws ValidationException
+     */
+    private function cashAccountOf(string $field, array $values): string
+    {
+        $cashAccountId = $values[$field] ?? null;
+
+        if (! is_string($cashAccountId) || $cashAccountId === '') {
+            throw ValidationException::withMessages(["values.{$field}" => [__('entries.value_required', ['field' => $field])]]);
+        }
+
+        $cash = $this->cashAccounts->find($this->company->require(), $cashAccountId);
+
+        if ($cash === null) {
+            throw ValidationException::withMessages(["values.{$field}" => [__('entries.field_cash_account_unknown')]]);
+        }
+
+        return $cash->accountId;
     }
 
     /**

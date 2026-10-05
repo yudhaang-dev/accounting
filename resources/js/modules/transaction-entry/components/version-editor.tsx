@@ -44,6 +44,8 @@ import {
     rateTypeOptionsQuery,
     updateVersion,
     type FieldType,
+    type PostingRule,
+    type SubledgerRoute,
     type TransactionType,
     type TypeVersion,
     type VersionInput,
@@ -63,9 +65,10 @@ type RuleRow = {
     type: 'amount' | 'fx_difference';
     side: 'debit' | 'credit';
     amount_field: string;
-    account_source: 'fixed' | 'field';
+    account_source: 'fixed' | 'field' | 'control_account' | 'cash_account';
     account_id: string;
     account_field: string;
+    party_field: string;
     apply_dimensions: boolean;
     reuses_field: boolean;
 };
@@ -77,6 +80,7 @@ type Values = {
     allowed_currencies: string[];
     rate_type_key: string;
     allow_rate_input: boolean;
+    subledger_route: SubledgerRoute | null;
 };
 
 /** Field types whose values come from the subledger (M6); a version cannot use them yet. */
@@ -100,6 +104,7 @@ const blankRule = (): RuleRow => ({
     account_source: 'field',
     account_id: '',
     account_field: '',
+    party_field: '',
     apply_dimensions: true,
     reuses_field: false,
 });
@@ -122,12 +127,14 @@ export function valuesOfVersion(version: TypeVersion): Values {
             account_source: rule.account?.source ?? 'field',
             account_id: rule.account?.account_id ?? '',
             account_field: rule.account?.field ?? '',
+            party_field: rule.account?.party_field ?? '',
             apply_dimensions: rule.apply_dimensions ?? false,
             reuses_field: rule.reuses_field ?? false,
         })),
         allowed_currencies: version.allowed_currencies ?? [],
         rate_type_key: version.rate_type_key ?? '',
         allow_rate_input: version.allow_rate_input,
+        subledger_route: version.subledger_route,
     };
 }
 
@@ -162,16 +169,7 @@ export function versionInputOf(values: Values): VersionInput {
                             type: 'amount' as const,
                             side: rule.side,
                             amount_field: rule.amount_field,
-                            account:
-                                rule.account_source === 'fixed'
-                                    ? {
-                                          source: 'fixed' as const,
-                                          account_id: rule.account_id,
-                                      }
-                                    : {
-                                          source: 'field' as const,
-                                          field: rule.account_field,
-                                      },
+                            account: accountOfRule(rule),
                             apply_dimensions: rule.apply_dimensions,
                             reuses_field: rule.reuses_field,
                         },
@@ -183,7 +181,25 @@ export function versionInputOf(values: Values): VersionInput {
                 : null,
         rate_type_key: values.rate_type_key || null,
         allow_rate_input: values.allow_rate_input,
+        // The screens do not edit the route yet; a draft keeps the one it has.
+        ...(structured && values.subledger_route !== null
+            ? { subledger_route: values.subledger_route }
+            : {}),
     };
+}
+
+/** The account of a rule as the API takes it; control and cash accounts are kept as the draft has them. */
+function accountOfRule(rule: RuleRow): NonNullable<PostingRule['account']> {
+    switch (rule.account_source) {
+        case 'fixed':
+            return { source: 'fixed', account_id: rule.account_id };
+        case 'control_account':
+            return { source: 'control_account', party_field: rule.party_field };
+        case 'cash_account':
+            return { source: 'cash_account', field: rule.account_field };
+        default:
+            return { source: 'field', field: rule.account_field };
+    }
 }
 
 /**
