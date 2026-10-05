@@ -2191,6 +2191,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/plan-versions/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publishes a draft that has lines: its lines can no longer change, and the user who publishes it
+         *     is recorded. With the policy that asks for it, whoever changed the version last cannot publish it
+         *     (403 `SEGREGATION_OF_DUTIES`). A version that is not a draft gives 409 `INVALID_STATE_TRANSITION`.
+         *     `lock_version` is required
+         */
+        post: operations["plan-versions.publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/planning-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The publisher rule and the default comparison version of each fiscal year. Without a policy the
+         *     rule is off, no year has a default and `lock_version` is 0
+         */
+        get: operations["planning-policy.show"];
+        /**
+         * Sets whether the publisher must differ from whoever changed the version last, and the default
+         *     comparison versions: only a published version of a plan of the same fiscal year qualifies (PL-FR-04).
+         *     `lock_version` is required, 0 for a company that has no policy yet
+         */
+        put: operations["planning-policy.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/posting-profiles": {
         parameters: {
             query?: never;
@@ -3147,7 +3194,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -3836,6 +3883,10 @@ export interface components {
          * @enum {string}
          */
         PlanVersionStatus: "draft" | "published" | "archived";
+        /** PublishPlanVersionRequest */
+        PublishPlanVersionRequest: {
+            lock_version: number;
+        };
         /** RateTypeResource */
         RateTypeResource: {
             id: string;
@@ -4205,6 +4256,18 @@ export interface components {
             lock_version: number;
             name: string;
         };
+        /** UpdatePlanningPolicyRequest */
+        UpdatePlanningPolicyRequest: {
+            lock_version: number;
+            /** @description Whoever changed a version last cannot publish it. */
+            require_distinct_publisher: boolean;
+            /** @description Fiscal years to set or clear; years not listed keep their default. */
+            default_versions?: {
+                fiscal_year_id: string;
+                /** @description A published version of a plan of that fiscal year, or null to clear the default. */
+                plan_version_id: string | null;
+            }[];
+        };
         /** UpdatePostingProfileRequest */
         UpdatePostingProfileRequest: {
             lock_version: number;
@@ -4251,13 +4314,13 @@ export interface components {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -9150,6 +9213,104 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["PlanVersionResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "plan-versions.publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishPlanVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description `PlanVersionResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlanVersionResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "planning-policy.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            require_distinct_publisher: boolean;
+                            default_versions: {
+                                fiscal_year_id: string;
+                                plan_version_id: string;
+                            }[];
+                            lock_version: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "planning-policy.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePlanningPolicyRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            require_distinct_publisher: boolean;
+                            default_versions: {
+                                fiscal_year_id: string;
+                                plan_version_id: string;
+                            }[];
+                            lock_version: number;
+                        };
                     };
                 };
             };

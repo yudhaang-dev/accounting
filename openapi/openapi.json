@@ -11558,6 +11558,226 @@
                 }
             }
         },
+        "/companies/{companyId}/plan-versions/{id}/publish": {
+            "post": {
+                "operationId": "plan-versions.publish",
+                "summary": "Publishes a draft that has lines: its lines can no longer change, and the user who publishes it\nis recorded. With the policy that asks for it, whoever changed the version last cannot publish it\n(403 `SEGREGATION_OF_DUTIES`). A version that is not a draft gives 409 `INVALID_STATE_TRANSITION`.\n`lock_version` is required",
+                "tags": [
+                    "PlanVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PublishPlanVersionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`PlanVersionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PlanVersionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/planning-policy": {
+            "get": {
+                "operationId": "planning-policy.show",
+                "summary": "The publisher rule and the default comparison version of each fiscal year. Without a policy the\nrule is off, no year has a default and `lock_version` is 0",
+                "tags": [
+                    "PlanningPolicy"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "require_distinct_publisher": {
+                                                    "type": "boolean"
+                                                },
+                                                "default_versions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "fiscal_year_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "plan_version_id": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "fiscal_year_id",
+                                                            "plan_version_id"
+                                                        ]
+                                                    }
+                                                },
+                                                "lock_version": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "require_distinct_publisher",
+                                                "default_versions",
+                                                "lock_version"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "planning-policy.update",
+                "summary": "Sets whether the publisher must differ from whoever changed the version last, and the default\ncomparison versions: only a published version of a plan of the same fiscal year qualifies (PL-FR-04).\n`lock_version` is required, 0 for a company that has no policy yet",
+                "tags": [
+                    "PlanningPolicy"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePlanningPolicyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "require_distinct_publisher": {
+                                                    "type": "boolean"
+                                                },
+                                                "default_versions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "fiscal_year_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "plan_version_id": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "fiscal_year_id",
+                                                            "plan_version_id"
+                                                        ]
+                                                    }
+                                                },
+                                                "lock_version": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "require_distinct_publisher",
+                                                "default_versions",
+                                                "lock_version"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/posting-profiles": {
             "get": {
                 "operationId": "posting-profiles.index",
@@ -16293,6 +16513,8 @@
                                 "cash-transactions.clear",
                                 "plans.read",
                                 "plans.manage",
+                                "plans.publish",
+                                "planning-policy.manage",
                                 "documents.read",
                                 "open-items.read",
                                 "allocations.read",
@@ -19122,6 +19344,19 @@
                 ],
                 "title": "PlanVersionStatus"
             },
+            "PublishPlanVersionRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                },
+                "required": [
+                    "lock_version"
+                ],
+                "title": "PublishPlanVersionRequest"
+            },
             "RateTypeResource": {
                 "type": "object",
                 "properties": {
@@ -20612,6 +20847,52 @@
                 ],
                 "title": "UpdatePlanVersionRequest"
             },
+            "UpdatePlanningPolicyRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "require_distinct_publisher": {
+                        "type": "boolean",
+                        "description": "Whoever changed a version last cannot publish it."
+                    },
+                    "default_versions": {
+                        "type": "array",
+                        "description": "Fiscal years to set or clear; years not listed keep their default.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "fiscal_year_id": {
+                                    "type": "string",
+                                    "minLength": 26,
+                                    "maxLength": 26
+                                },
+                                "plan_version_id": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "description": "A published version of a plan of that fiscal year, or null to clear the default.",
+                                    "minLength": 26,
+                                    "maxLength": 26
+                                }
+                            },
+                            "required": [
+                                "fiscal_year_id",
+                                "plan_version_id"
+                            ]
+                        },
+                        "maxItems": 50
+                    }
+                },
+                "required": [
+                    "lock_version",
+                    "require_distinct_publisher"
+                ],
+                "title": "UpdatePlanningPolicyRequest"
+            },
             "UpdatePostingProfileRequest": {
                 "type": "object",
                 "properties": {
@@ -20852,6 +21133,8 @@
                                 "cash-transactions.clear",
                                 "plans.read",
                                 "plans.manage",
+                                "plans.publish",
+                                "planning-policy.manage",
                                 "documents.read",
                                 "open-items.read",
                                 "allocations.read",
@@ -20938,6 +21221,8 @@
                                 "cash-transactions.clear",
                                 "plans.read",
                                 "plans.manage",
+                                "plans.publish",
+                                "planning-policy.manage",
                                 "documents.read",
                                 "open-items.read",
                                 "allocations.read",

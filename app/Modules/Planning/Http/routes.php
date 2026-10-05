@@ -2,6 +2,7 @@
 
 use App\Modules\Planning\Http\PlanController;
 use App\Modules\Planning\Http\PlanLineController;
+use App\Modules\Planning\Http\PlanningPolicyController;
 use App\Modules\Planning\Http\PlanVersionController;
 use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,12 @@ Route::companyScoped(function () {
         ->middleware('permission:plans.manage')->where('id', ApiServiceProvider::ULID)->name('plan-versions.update');
     Route::post('plan-versions/{id}/revise', [PlanVersionController::class, 'revise'])
         ->middleware('permission:plans.manage')->where('id', ApiServiceProvider::ULID)->name('plan-versions.revise');
+
+    Route::post('plan-versions/{id}/publish', [PlanVersionController::class, 'publish'])
+        ->middleware('permission:plans.publish')->where('id', ApiServiceProvider::ULID)->name('plan-versions.publish');
+
+    Route::get('planning-policy', [PlanningPolicyController::class, 'show'])->middleware('permission:plans.read')->name('planning-policy.show');
+    Route::put('planning-policy', [PlanningPolicyController::class, 'update'])->middleware('permission:planning-policy.manage')->name('planning-policy.update');
 
     Route::get('plan-versions/{id}/lines', [PlanLineController::class, 'index'])
         ->middleware('permission:plans.read')->where('id', ApiServiceProvider::ULID)->name('plan-versions.lines.index');

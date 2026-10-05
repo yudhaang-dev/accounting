@@ -29,4 +29,11 @@ return [
     'csv_account_unknown' => 'No account has the code ":value".',
     'csv_dimension_unknown' => 'No value with the code ":value" exists for the dimension type.',
 
+    'publisher_must_differ' => 'The version was last changed by you; another user must publish it.',
+    'publish_empty' => 'A version without lines cannot be published.',
+    'version_unknown' => 'The version does not exist in this company.',
+    'default_not_published' => 'Only a published version can be the default comparison.',
+    'default_other_year' => 'The version belongs to a plan of another fiscal year.',
+    'default_year_repeated' => 'The fiscal year appears more than once.',
+
 ];

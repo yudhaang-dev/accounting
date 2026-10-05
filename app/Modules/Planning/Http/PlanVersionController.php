@@ -4,6 +4,7 @@ namespace App\Modules\Planning\Http;
 
 use App\Models\User;
 use App\Modules\Planning\Application\ManagePlanVersions;
+use App\Modules\Planning\Application\PublishPlanVersion;
 use App\Modules\Planning\Domain\PlanVersion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -56,6 +57,20 @@ class PlanVersionController
         $data = $request->validated();
 
         return new PlanVersionResource($versions->rename($id, $data['name'], (int) $data['lock_version'], $user->id));
+    }
+
+    /**
+     * Publishes a draft that has lines: its lines can no longer change, and the user who publishes it
+     * is recorded. With the policy that asks for it, whoever changed the version last cannot publish it
+     * (403 `SEGREGATION_OF_DUTIES`). A version that is not a draft gives 409 `INVALID_STATE_TRANSITION`.
+     * `lock_version` is required.
+     */
+    public function publish(PublishPlanVersionRequest $request, PublishPlanVersion $publish, string $companyId, string $id): PlanVersionResource
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return new PlanVersionResource($publish($id, (int) $request->validated('lock_version'), $user->id));
     }
 
     /**

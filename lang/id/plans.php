@@ -29,4 +29,11 @@ return [
     'csv_account_unknown' => 'Tidak ada akun dengan kode ":value".',
     'csv_dimension_unknown' => 'Tidak ada nilai dengan kode ":value" untuk tipe dimensi ini.',
 
+    'publisher_must_differ' => 'Versi terakhir diubah oleh Anda; pengguna lain harus menerbitkannya.',
+    'publish_empty' => 'Versi tanpa baris tidak dapat diterbitkan.',
+    'version_unknown' => 'Versi tidak ada di perusahaan ini.',
+    'default_not_published' => 'Hanya versi terbit yang dapat menjadi pembanding default.',
+    'default_other_year' => 'Versi milik rencana tahun buku lain.',
+    'default_year_repeated' => 'Tahun buku muncul lebih dari satu kali.',
+
 ];
