@@ -15,6 +15,7 @@ final readonly class FiscalYearReadinessData
      * @param  bool  $retainedEarningsMapped  the `retained_earnings` role is mapped
      * @param  bool  $lastPeriodAccepts  the last period takes the closing journal
      * @param  int  $unfinishedEntries  entries dated up to the end of the year that are not posted or cancelled
+     * @param  int  $reconciliationDifferences  control and cash accounts that differ from their subledger at the end of the year, with no waiver (SL-FR-09)
      */
     public function __construct(
         public ?ClosingRunData $closing,
@@ -24,5 +25,6 @@ final readonly class FiscalYearReadinessData
         public ?string $lastPeriodName,
         public ?string $lastPeriodStatus,
         public int $unfinishedEntries,
+        public int $reconciliationDifferences = 0,
     ) {}
 }

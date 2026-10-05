@@ -7,7 +7,7 @@
 | workspace so that the first user can set the company up and work in it.
 */
 
-$read = ['company.read', 'accounts.read', 'dimensions.read', 'currencies.read', 'exchange-rates.read', 'parties.read', 'posting-profiles.read', 'cash-accounts.read', 'cash-transactions.read', 'documents.read', 'open-items.read', 'allocations.read', 'periods.read', 'entries.read', 'journals.read', 'financial-events.read', 'recurring-schedules.read', 'reports.read'];
+$read = ['company.read', 'accounts.read', 'dimensions.read', 'currencies.read', 'exchange-rates.read', 'parties.read', 'posting-profiles.read', 'cash-accounts.read', 'cash-transactions.read', 'documents.read', 'open-items.read', 'allocations.read', 'reconciliations.read', 'periods.read', 'entries.read', 'journals.read', 'financial-events.read', 'recurring-schedules.read', 'reports.read'];
 
 return [
 
@@ -19,7 +19,7 @@ return [
             'permissions' => [
                 ...$read,
                 'company.update', 'company.activate', 'company.deactivate',
-                'accounts.manage', 'dimensions.manage', 'currencies.manage', 'exchange-rates.manage', 'parties.manage', 'posting-profiles.manage', 'cash-accounts.manage', 'cash-transactions.clear', 'allocations.manage',
+                'accounts.manage', 'dimensions.manage', 'currencies.manage', 'exchange-rates.manage', 'parties.manage', 'posting-profiles.manage', 'cash-accounts.manage', 'cash-transactions.clear', 'allocations.manage', 'reconciliations.run', 'reconciliations.waive',
                 'periods.manage', 'periods.close', 'periods.reopen', 'periods.revalue', 'journals.post-soft-closed', 'opening-balances.import', 'fiscal-years.close', 'fiscal-years.reopen',
                 'memberships.read', 'memberships.manage',
                 'roles.read', 'roles.manage',

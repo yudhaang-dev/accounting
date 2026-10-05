@@ -48,5 +48,5 @@ return [
     'reversal_revalued' => 'Dokumen :number membawa revaluasi yang tidak dibalik otomatis, sehingga tidak dapat dibalik.',
     'reversal_cash_description' => 'Pembalikan :number',
     'allocation_item_reversed' => 'Open item :number milik dokumen yang sudah dibalik.',
-
+    'reconciliation_not_waivable' => 'Rekonsiliasi berstatus :status, sehingga tidak ada selisih yang dapat di-waiver.',
 ];

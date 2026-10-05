@@ -10829,6 +10829,389 @@
                 }
             }
         },
+        "/companies/{companyId}/reconciliations": {
+            "get": {
+                "operationId": "reconciliations.index",
+                "summary": "Reconciliations kept, newest date first. Filters: `filter[as_of]`, `filter[account_id]` and\n`filter[status]` (`balanced`, `difference`, `waived`). `per_page` defaults to 50, at most 200",
+                "tags": [
+                    "Reconciliation"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[as_of]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[account_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
+                    },
+                    {
+                        "name": "filter[status]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "balanced",
+                                "difference",
+                                "waived"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `ReconciliationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ReconciliationResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "reconciliations.store",
+                "summary": "Compares the ledger balance of every control and cash account with the total of its subledger on a\ndate, and keeps the result. A difference lists the journals the subledger did not post to the account",
+                "tags": [
+                    "Reconciliation"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RunReconciliationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Array of `ReconciliationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ReconciliationResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/reconciliations/{id}": {
+            "get": {
+                "operationId": "reconciliations.show",
+                "tags": [
+                    "Reconciliation"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ReconciliationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ReconciliationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/reconciliations/{id}/waive": {
+            "post": {
+                "operationId": "reconciliations.waive",
+                "summary": "Waives the difference of a reconciliation with a reason, so that it no longer blocks the closing of the year",
+                "tags": [
+                    "Reconciliation"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WaiveReconciliationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ReconciliationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ReconciliationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/recurring-schedules": {
             "get": {
                 "operationId": "recurring-schedules.index",
@@ -14093,6 +14476,9 @@
                                 "open-items.read",
                                 "allocations.read",
                                 "allocations.manage",
+                                "reconciliations.read",
+                                "reconciliations.run",
+                                "reconciliations.waive",
                                 "exchange-rates.read",
                                 "exchange-rates.manage",
                                 "periods.read",
@@ -15304,12 +15690,29 @@
                                     "ok",
                                     "count"
                                 ]
+                            },
+                            "reconciliation": {
+                                "type": "object",
+                                "description": "Control and cash accounts that differ from their subledger and are not waived (SL-FR-09).",
+                                "properties": {
+                                    "ok": {
+                                        "type": "boolean"
+                                    },
+                                    "count": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "required": [
+                                    "ok",
+                                    "count"
+                                ]
                             }
                         },
                         "required": [
                             "retained_earnings",
                             "last_period",
-                            "unfinished_entries"
+                            "unfinished_entries",
+                            "reconciliation"
                         ]
                     }
                 },
@@ -16667,6 +17070,131 @@
                 },
                 "title": "ReasonRequest"
             },
+            "ReconciliationResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "account_id": {
+                        "type": "string"
+                    },
+                    "account_code": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "as_of": {
+                        "type": "string"
+                    },
+                    "ledger_balance": {
+                        "type": "string"
+                    },
+                    "detail_total": {
+                        "type": "string"
+                    },
+                    "difference": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "causes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "journal_id": {
+                                    "type": "string"
+                                },
+                                "number": {
+                                    "type": "string"
+                                },
+                                "accounting_date": {
+                                    "type": "string"
+                                },
+                                "source": {
+                                    "type": "string"
+                                },
+                                "debit": {
+                                    "type": "string"
+                                },
+                                "credit": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "journal_id",
+                                "number",
+                                "accounting_date",
+                                "source",
+                                "debit",
+                                "credit",
+                                "description"
+                            ]
+                        }
+                    },
+                    "waiver_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "waived_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "waived_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "run_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "kind",
+                    "account_id",
+                    "account_code",
+                    "currency",
+                    "as_of",
+                    "ledger_balance",
+                    "detail_total",
+                    "difference",
+                    "status",
+                    "causes",
+                    "waiver_reason",
+                    "waived_by",
+                    "waived_at",
+                    "run_by",
+                    "created_at"
+                ],
+                "title": "ReconciliationResource"
+            },
             "RecordExchangeRateRequest": {
                 "type": "object",
                 "properties": {
@@ -17055,6 +17583,19 @@
                     "lock_version"
                 ],
                 "title": "RoleResource"
+            },
+            "RunReconciliationRequest": {
+                "type": "object",
+                "properties": {
+                    "as_of": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                },
+                "required": [
+                    "as_of"
+                ],
+                "title": "RunReconciliationRequest"
             },
             "SecurityPolicyResource": {
                 "type": "object",
@@ -18124,6 +18665,9 @@
                                 "open-items.read",
                                 "allocations.read",
                                 "allocations.manage",
+                                "reconciliations.read",
+                                "reconciliations.run",
+                                "reconciliations.waive",
                                 "exchange-rates.read",
                                 "exchange-rates.manage",
                                 "periods.read",
@@ -18204,6 +18748,9 @@
                                 "open-items.read",
                                 "allocations.read",
                                 "allocations.manage",
+                                "reconciliations.read",
+                                "reconciliations.run",
+                                "reconciliations.waive",
                                 "exchange-rates.read",
                                 "exchange-rates.manage",
                                 "periods.read",
@@ -18479,6 +19026,19 @@
                     "fields"
                 ],
                 "title": "VersionRequest"
+            },
+            "WaiveReconciliationRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 500
+                    }
+                },
+                "required": [
+                    "reason"
+                ],
+                "title": "WaiveReconciliationRequest"
             },
             "WorkspaceResource": {
                 "type": "object",

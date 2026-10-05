@@ -9,6 +9,7 @@ use App\Modules\Subledger\Http\OpenItemController;
 use App\Modules\Subledger\Http\OpenItemRevaluationController;
 use App\Modules\Subledger\Http\PartyController;
 use App\Modules\Subledger\Http\PostingProfileController;
+use App\Modules\Subledger\Http\ReconciliationController;
 use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
 
@@ -72,6 +73,13 @@ Route::companyScoped(function () {
     Route::post('allocations', [AllocationController::class, 'store'])->middleware('permission:allocations.manage')->name('allocations.store');
     Route::get('allocations/{id}', [AllocationController::class, 'show'])
         ->middleware('permission:allocations.read')->where('id', ApiServiceProvider::ULID)->name('allocations.show');
+    Route::get('reconciliations', [ReconciliationController::class, 'index'])->middleware('permission:reconciliations.read')->name('reconciliations.index');
+    Route::post('reconciliations', [ReconciliationController::class, 'store'])->middleware('permission:reconciliations.run')->name('reconciliations.store');
+    Route::get('reconciliations/{id}', [ReconciliationController::class, 'show'])
+        ->middleware('permission:reconciliations.read')->where('id', ApiServiceProvider::ULID)->name('reconciliations.show');
+    Route::post('reconciliations/{id}/waive', [ReconciliationController::class, 'waive'])
+        ->middleware('permission:reconciliations.waive')->where('id', ApiServiceProvider::ULID)->name('reconciliations.waive');
+
     Route::post('allocations/{id}/cancel', [AllocationController::class, 'cancel'])
         ->middleware('permission:allocations.manage')->where('id', ApiServiceProvider::ULID)->name('allocations.cancel');
 });

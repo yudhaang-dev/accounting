@@ -7,6 +7,7 @@ use App\Modules\GeneralLedger\Contracts\AccountRoles;
 use App\Modules\GeneralLedger\Contracts\FiscalYearClosing;
 use App\Modules\GeneralLedger\Contracts\LedgerPolicies;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
+use App\Modules\Subledger\Contracts\ReconciliationStatus;
 use App\Modules\TransactionEntry\Contracts\UnfinishedEntries;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
@@ -24,6 +25,7 @@ final class FiscalYearReadiness
         private readonly AccountRoles $roles,
         private readonly LedgerPolicies $policies,
         private readonly UnfinishedEntries $entries,
+        private readonly ReconciliationStatus $reconciliation,
     ) {}
 
     /**
@@ -38,15 +40,17 @@ final class FiscalYearReadiness
         // A soft-closed last period takes the closing journal only when the ledger policy names its key (GL-FR-04).
         $accepts = $last !== null && ($last->isOpen() || ($last->isSoftClosed() && in_array('system.closing', $this->policies->current($companyId)->softClosedTransactionTypeKeys, true)));
         $unfinished = $this->entries->countThrough($companyId, $year->endDate);
+        $differences = count($this->reconciliation->unresolved($companyId, $year->endDate));
 
         return new FiscalYearReadinessData(
             closing: $this->closing->current($companyId, $year->id),
-            ready: $retained && $accepts && $unfinished === 0,
+            ready: $retained && $accepts && $unfinished === 0 && $differences === 0,
             retainedEarningsMapped: $retained,
             lastPeriodAccepts: $accepts,
             lastPeriodName: $last?->name,
             lastPeriodStatus: $last?->status,
             unfinishedEntries: $unfinished,
+            reconciliationDifferences: $differences,
         );
     }
 }

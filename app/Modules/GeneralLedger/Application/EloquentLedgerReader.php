@@ -3,7 +3,9 @@
 namespace App\Modules\GeneralLedger\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountClass;
+use App\Modules\GeneralLedger\Contracts\AccountLineRow;
 use App\Modules\GeneralLedger\Contracts\CurrencyBalanceRow;
+use App\Modules\GeneralLedger\Contracts\JournalSource;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
 use App\Modules\MasterData\Contracts\Currencies;
@@ -121,5 +123,25 @@ final class EloquentLedgerReader implements LedgerReader
     private function amount(BigDecimal $value, int $scale): string
     {
         return (string) $value->toScale($scale, RoundingMode::HalfUp);
+    }
+
+    public function linesNotFromSource(string $companyId, string $accountId, string $asOf, JournalSource $source): array
+    {
+        $rows = DB::table('gl_journal_lines as l')
+            ->join('gl_journals as j', fn ($join) => $join->on('j.company_id', '=', 'l.company_id')->on('j.id', '=', 'l.journal_id'))
+            ->where('l.company_id', $companyId)
+            ->where('l.account_id', $accountId)
+            ->where('l.accounting_date', '<=', $asOf)
+            ->where('j.source', '<>', $source->value)
+            ->orderBy('l.accounting_date')->orderBy('j.number')->orderBy('l.line_number')
+            ->get(['j.id as journal_id', 'j.number', 'l.accounting_date', 'j.source', 'l.debit', 'l.credit', 'l.description']);
+
+        $lines = [];
+
+        foreach ($rows as $row) {
+            $lines[] = new AccountLineRow($row->journal_id, $row->number, substr($row->accounting_date, 0, 10), JournalSource::from($row->source), (string) $row->debit, (string) $row->credit, $row->description);
+        }
+
+        return $lines;
     }
 }

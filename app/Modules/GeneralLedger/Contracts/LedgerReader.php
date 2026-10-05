@@ -28,4 +28,14 @@ interface LedgerReader
      * @return list<CurrencyBalanceRow>
      */
     public function currencyBalances(string $companyId, string $asOf, ?string $accountId = null, ?array $dimensionSetIds = null): array;
+
+    /**
+     * The lines of an account up to and including a date that did not come from the source given, oldest
+     * first. They are what makes the ledger differ from a subledger that is the only source of the account
+     * (SL-FR-09).
+     *
+     * @param  string  $asOf  `YYYY-MM-DD`
+     * @return list<AccountLineRow>
+     */
+    public function linesNotFromSource(string $companyId, string $accountId, string $asOf, JournalSource $source): array;
 }

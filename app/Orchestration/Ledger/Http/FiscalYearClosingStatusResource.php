@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class FiscalYearClosingStatusResource extends JsonResource
 {
     /**
-     * @return array{closed: bool, closing: array<string, mixed>|null, ready: bool, checks: array{retained_earnings: array{ok: bool}, last_period: array{ok: bool, name: string|null, status: string|null}, unfinished_entries: array{ok: bool, count: int}}}
+     * @return array{closed: bool, closing: array<string, mixed>|null, ready: bool, checks: array{retained_earnings: array{ok: bool}, last_period: array{ok: bool, name: string|null, status: string|null}, unfinished_entries: array{ok: bool, count: int}, reconciliation: array{ok: bool, count: int}}}
      */
     public function toArray(Request $request): array
     {
@@ -28,6 +28,8 @@ class FiscalYearClosingStatusResource extends JsonResource
                 'retained_earnings' => ['ok' => $this->resource->retainedEarningsMapped],
                 'last_period' => ['ok' => $this->resource->lastPeriodAccepts, 'name' => $this->resource->lastPeriodName, 'status' => $this->resource->lastPeriodStatus],
                 'unfinished_entries' => ['ok' => $this->resource->unfinishedEntries === 0, 'count' => $this->resource->unfinishedEntries],
+                // Control and cash accounts that differ from their subledger and are not waived (SL-FR-09).
+                'reconciliation' => ['ok' => $this->resource->reconciliationDifferences === 0, 'count' => $this->resource->reconciliationDifferences],
             ],
         ];
     }

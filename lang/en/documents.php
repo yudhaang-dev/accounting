@@ -48,5 +48,5 @@ return [
     'reversal_revalued' => 'Document :number carries a revaluation that is not reversed automatically, so it cannot be reversed.',
     'reversal_cash_description' => 'Reversal of :number',
     'allocation_item_reversed' => 'The open item :number belongs to a reversed document.',
-
+    'reconciliation_not_waivable' => 'The reconciliation is :status, so it has no difference to waive.',
 ];

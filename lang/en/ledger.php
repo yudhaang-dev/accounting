@@ -60,6 +60,7 @@ return [
     'closing_description' => 'Closing of fiscal year :year',
     'closing_line' => 'Closing of the year',
     'closing_unbalanced' => 'The ledger does not balance up to the end of the year: debit :debit, credit :credit.',
+    'closing_reconciliation_unresolved' => 'The fiscal year cannot close: :count accounts (:accounts) differ from their subledger on :date and have no waiver.',
     'closing_entries_unfinished' => 'The fiscal year cannot close: :count entries dated up to :date are not finished (draft, submitted, approved or rejected).',
     'fiscal_year_not_closed' => 'Fiscal year :year is not closed.',
     'reopen_description' => 'Reopening of fiscal year :year',
