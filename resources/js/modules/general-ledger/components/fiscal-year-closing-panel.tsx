@@ -157,6 +157,7 @@ export function FiscalYearClosingPanel({
     canReopen,
     canReadJournals,
     canReadEntries,
+    canReadReconciliations,
 }: {
     companyId: string;
     year: Year;
@@ -164,6 +165,7 @@ export function FiscalYearClosingPanel({
     canReopen: boolean;
     canReadJournals: boolean;
     canReadEntries: boolean;
+    canReadReconciliations: boolean;
 }) {
     const { t, i18n } = useTranslation();
     const queryClient = useQueryClient();
@@ -302,7 +304,18 @@ export function FiscalYearClosingPanel({
                                 : t("closing.reconciliationPending", {
                                       count: checks.reconciliation.count,
                                       date: year.end_date,
-                                  })}
+                                  })}{" "}
+                            {!checks.reconciliation.ok &&
+                                canReadReconciliations && (
+                                    <Link
+                                        to="/w/$companyId/reconciliations"
+                                        params={{ companyId }}
+                                        search={{ as_of: year.end_date }}
+                                        className="underline underline-offset-4"
+                                    >
+                                        {t("closing.toReconciliations")}
+                                    </Link>
+                                )}
                         </Check>
                     </ul>
                     {canClose && (

@@ -9,6 +9,7 @@ import {
     FileStackIcon,
     FileTextIcon,
     ReceiptTextIcon,
+    ScaleIcon,
     LayersIcon,
     ChevronsUpDownIcon,
     HouseIcon,
@@ -156,6 +157,12 @@ const NAV = [
         label: 'app.navAllocations',
         icon: SplitIcon,
         permission: 'allocations.read',
+    },
+    {
+        to: '/w/$companyId/reconciliations',
+        label: 'app.navReconciliations',
+        icon: ScaleIcon,
+        permission: 'reconciliations.read',
     },
     {
         to: '/w/$companyId/entries',

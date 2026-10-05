@@ -124,6 +124,7 @@ export const en: Widen<typeof id> = {
         navDocuments: 'Documents',
         navOpenItems: 'Open items',
         navAllocations: 'Allocations',
+        navReconciliations: 'Reconciliation',
         navEntries: 'Entries',
         navSchedules: 'Recurring journals',
         navApprovalPolicy: 'Approval policy',
@@ -368,6 +369,56 @@ export const en: Widen<typeof id> = {
         openReversal: 'View reversal journal',
         mappingHint: 'Set the rate type and account roles in Ledger settings.',
     },
+    reconciliations: {
+        pageTitle: 'Reconciliation',
+        title: 'Reconciliation',
+        description:
+            'Compares the ledger balance of every control account and cash/bank account with the total of its subledger as of a date. A difference blocks the closing of the year until it is resolved or waived with a reason.',
+        runDate: 'As of',
+        run: 'Run reconciliation',
+        running: 'Running…',
+        ran_one: 'Reconciled {{count}} account, {{differences}} with a difference.',
+        ran_other:
+            'Reconciled {{count}} accounts, {{differences}} with a difference.',
+        empty: 'No reconciliation yet',
+        emptyDescription:
+            'Run a reconciliation as of a date to compare the ledger with the subledger.',
+        statusLabel: 'Status',
+        allStatuses: 'All statuses',
+        status: {
+            balanced: 'Balanced',
+            difference: 'Difference',
+            waived: 'Waived',
+        },
+        forDate: 'As of {{date}}',
+        showAll: 'Show all',
+        asOf: 'As of',
+        account: 'Account',
+        kindControl: 'Control account',
+        kindCash: 'Cash/bank account',
+        currency: 'Currency',
+        ledger: 'Ledger',
+        detail: 'Subledger',
+        difference: 'Difference',
+        actions: 'Actions',
+        viewCauses: 'View causes',
+        waiveAction: 'Waive difference',
+        causesTitle: 'Causes of the difference on {{account}}',
+        causesDescription:
+            'Journals that moved the account without going through the subledger.',
+        noCauses: 'No journal explains this difference.',
+        journal: 'Journal',
+        date: 'Date',
+        source: 'Source',
+        debit: 'Debit',
+        credit: 'Credit',
+        waiveTitle: 'Waive the difference on {{account}}',
+        waiveDescription:
+            'The difference no longer blocks the closing of the year. The reason is recorded and audited.',
+        reason: 'Reason',
+        waiveSubmit: 'Waive difference',
+        waived: 'Difference waived.',
+    },
     openItemRevaluation: {
         title: 'Revalue open items of {{name}}',
         description:
@@ -507,6 +558,7 @@ export const en: Widen<typeof id> = {
         entriesPending_other:
             '{{count}} entries dated up to {{date}} are unfinished (draft, submitted, approved or rejected).',
         toEntries: 'View entries',
+        toReconciliations: 'Review differences',
         reconciliationOk:
             'Every control and cash account agrees with its subledger, or its difference is waived.',
         reconciliationPending_one:

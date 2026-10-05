@@ -122,6 +122,7 @@ export const id = {
         navDocuments: 'Dokumen',
         navOpenItems: 'Open item',
         navAllocations: 'Alokasi',
+        navReconciliations: 'Rekonsiliasi',
         navEntries: 'Entri',
         navSchedules: 'Jurnal berulang',
         navApprovalPolicy: 'Kebijakan persetujuan',
@@ -365,6 +366,55 @@ export const id = {
         openReversal: 'Lihat jurnal pembalik',
         mappingHint: 'Atur jenis kurs dan peran akun di Pengaturan buku besar.',
     },
+    reconciliations: {
+        pageTitle: 'Rekonsiliasi',
+        title: 'Rekonsiliasi',
+        description:
+            'Membandingkan saldo buku besar setiap akun kontrol dan akun kas/bank dengan total subledgernya per tanggal. Selisih memblokir tutup tahun sampai diselesaikan atau di-waiver dengan alasan.',
+        runDate: 'Per tanggal',
+        run: 'Jalankan rekonsiliasi',
+        running: 'Menjalankan…',
+        ran_one: '{{count}} akun direkonsiliasi, {{differences}} berselisih.',
+        ran_other: '{{count}} akun direkonsiliasi, {{differences}} berselisih.',
+        empty: 'Belum ada rekonsiliasi',
+        emptyDescription:
+            'Jalankan rekonsiliasi per tanggal untuk membandingkan buku besar dengan subledger.',
+        statusLabel: 'Status',
+        allStatuses: 'Semua status',
+        status: {
+            balanced: 'Sesuai',
+            difference: 'Selisih',
+            waived: 'Di-waiver',
+        },
+        forDate: 'Per {{date}}',
+        showAll: 'Tampilkan semua',
+        asOf: 'Per tanggal',
+        account: 'Akun',
+        kindControl: 'Akun kontrol',
+        kindCash: 'Akun kas/bank',
+        currency: 'Mata uang',
+        ledger: 'Buku besar',
+        detail: 'Subledger',
+        difference: 'Selisih',
+        actions: 'Aksi',
+        viewCauses: 'Lihat penyebab',
+        waiveAction: 'Waiver selisih',
+        causesTitle: 'Penyebab selisih pada {{account}}',
+        causesDescription:
+            'Jurnal yang menggerakkan akun tanpa melalui subledger.',
+        noCauses: 'Tidak ada jurnal yang menjelaskan selisih ini.',
+        journal: 'Jurnal',
+        date: 'Tanggal',
+        source: 'Sumber',
+        debit: 'Debit',
+        credit: 'Kredit',
+        waiveTitle: 'Waiver selisih pada {{account}}',
+        waiveDescription:
+            'Selisih tidak lagi memblokir tutup tahun. Alasan dicatat dan diaudit.',
+        reason: 'Alasan',
+        waiveSubmit: 'Waiver selisih',
+        waived: 'Selisih di-waiver.',
+    },
     openItemRevaluation: {
         title: 'Revaluasi open item {{name}}',
         description:
@@ -504,6 +554,7 @@ export const id = {
         entriesPending_other:
             '{{count}} entri bertanggal sampai {{date}} belum selesai (draf, diajukan, disetujui, atau ditolak).',
         toEntries: 'Lihat entri',
+        toReconciliations: 'Tinjau selisih',
         reconciliationOk:
             'Setiap akun kontrol dan kas/bank sesuai dengan subledgernya, atau selisihnya sudah di-waiver.',
         reconciliationPending_one:

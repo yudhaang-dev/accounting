@@ -94,7 +94,12 @@ export function PeriodsPage({
     canRevalue: boolean;
     revaluationAccess: RevaluationAccess & OpenItemRevaluationAccess;
     /** What the user may do about closing a fiscal year, and see on the way. */
-    yearClosing: { close: boolean; reopen: boolean; entries: boolean };
+    yearClosing: {
+        close: boolean;
+        reopen: boolean;
+        entries: boolean;
+        reconciliations: boolean;
+    };
 }) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
@@ -261,6 +266,7 @@ export function PeriodsPage({
                             canReopen={yearClosing.reopen}
                             canReadJournals={revaluationAccess.journals}
                             canReadEntries={yearClosing.entries}
+                            canReadReconciliations={yearClosing.reconciliations}
                         />
                     )}
 

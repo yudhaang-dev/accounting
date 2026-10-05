@@ -1257,6 +1257,30 @@ describe("fiscal periods", () => {
         const close = `POST ${base}/fiscal-years/${year.id}/close`;
         const reopen = `POST ${base}/fiscal-years/${year.id}/reopen`;
 
+        it("links an unresolved reconciliation to its differences on the closing date", async () => {
+            mockApi(
+                periodRoutes(
+                    ["periods.read", "reconciliations.read"],
+                    closingState({
+                        ready: false,
+                        checks: {
+                            ...closingState().checks,
+                            reconciliation: { ok: false, count: 2 },
+                        },
+                    }),
+                ),
+            );
+
+            renderApp(periodsPath);
+
+            expect(
+                await screen.findByRole("link", { name: "Tinjau selisih" }),
+            ).toHaveAttribute(
+                "href",
+                `/w/${workspace.company_id}/reconciliations?as_of=${year.end_date}`,
+            );
+        });
+
         it("shows what keeps the year from closing and offers no closing meanwhile", async () => {
             mockApi(
                 periodRoutes(

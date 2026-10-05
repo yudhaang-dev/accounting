@@ -63,6 +63,7 @@ import { AllocationsPage } from '@/modules/subledger/pages/allocations-page';
 import { DocumentsPage } from '@/modules/subledger/pages/documents-page';
 import { OpenItemsPage } from '@/modules/subledger/pages/open-items-page';
 import { PartiesPage } from '@/modules/subledger/pages/parties-page';
+import { ReconciliationsPage } from '@/modules/subledger/pages/reconciliations-page';
 import { PostingProfilesPage } from '@/modules/subledger/pages/posting-profiles-page';
 import { ForgotPasswordPage } from '@/modules/identity-access/pages/forgot-password-page';
 import { LoginPage } from '@/modules/identity-access/pages/login-page';
@@ -360,6 +361,7 @@ const periodsRoute = createRoute({
                     close: can(workspace, 'fiscal-years.close'),
                     reopen: can(workspace, 'fiscal-years.reopen'),
                     entries: can(workspace, 'entries.read'),
+                    reconciliations: can(workspace, 'reconciliations.read'),
                 }}
                 revaluationAccess={{
                     accounts: can(workspace, 'accounts.read'),
@@ -644,6 +646,40 @@ const allocationsRoute = createRoute({
                     parties: can(workspace, 'parties.read'),
                     journals: can(workspace, 'journals.read'),
                 }}
+            />
+        );
+    },
+});
+
+const reconciliationsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reconciliations',
+    validateSearch: (
+        search: Record<string, unknown>,
+    ): { as_of?: string } =>
+        typeof search.as_of === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(search.as_of)
+            ? { as_of: search.as_of }
+            : {},
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navReconciliations',
+                href: at(m, '/reconciliations'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('reconciliations.read'),
+    component: function Reconciliations() {
+        const { workspace } = reconciliationsRoute.useRouteContext();
+        const { as_of } = reconciliationsRoute.useSearch();
+
+        return (
+            <ReconciliationsPage
+                companyId={workspace.company_id}
+                initialAsOf={as_of}
+                canRun={can(workspace, 'reconciliations.run')}
+                canWaive={can(workspace, 'reconciliations.waive')}
+                canReadJournals={can(workspace, 'journals.read')}
             />
         );
     },
@@ -1335,6 +1371,7 @@ const routeTree = rootRoute.addChildren([
                 documentsRoute,
                 openItemsRoute,
                 allocationsRoute,
+                reconciliationsRoute,
                 postingProfilesRoute,
                 entriesRoute,
                 approvalsRoute,
