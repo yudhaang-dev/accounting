@@ -129,6 +129,34 @@ const currencies = () =>
         meta: { current_page: 1, last_page: 1, total: 2 },
     });
 
+const customer = {
+    id: '01JPARTY000000000000000001',
+    name: 'Toko Budi',
+    is_customer: true,
+    is_supplier: false,
+    tax_id: null,
+    posting_profile_id: null,
+    status: 'active',
+    external_refs: [],
+    lock_version: 1,
+};
+
+const page = (data: unknown[]) =>
+    json({
+        data,
+        links: {},
+        meta: { current_page: 1, last_page: 1, total: data.length },
+    });
+
+const pickPayer = async (typist: ReturnType<typeof userEvent.setup>) => {
+    await typist.click(
+        screen.getByRole('combobox', { name: 'Pihak pembayar' }),
+    );
+    await typist.click(
+        await screen.findByRole('option', { name: 'Toko Budi' }),
+    );
+};
+
 const entry = (overrides: Record<string, unknown> = {}) => ({
     id: '01JENTRY00000000000000009',
     number: 'PAY/2026/0001',
@@ -144,6 +172,7 @@ const entry = (overrides: Record<string, unknown> = {}) => ({
         payroll_date: '2026-10-01',
         gross_salary: '15000000',
         expense_account: expense,
+        payer: customer.id,
     },
     currency: null,
     exchange_rate: null,
@@ -163,6 +192,7 @@ const form = (types: unknown[], overrides: Routes = {}): Routes => ({
         json({ data: schema }),
     [`GET ${base}/accounts`]: accountList,
     [`GET ${base}/currencies`]: currencies,
+    [`GET ${base}/parties`]: () => page([customer]),
     ...overrides,
 });
 
@@ -198,6 +228,7 @@ describe('structured entry form', () => {
         await typist.click(
             await screen.findByRole('option', { name: '5100 · Beban Gaji' }),
         );
+        await pickPayer(typist);
 
         // The journal lines are not typed here: the posting rules make them.
         expect(screen.queryByText('Tambah baris')).not.toBeInTheDocument();
@@ -212,6 +243,7 @@ describe('structured entry form', () => {
             values: {
                 gross_salary: '15000000',
                 expense_account: expense,
+                payer: customer.id,
                 note: 'Termin 1',
             },
             currency: null,
@@ -239,15 +271,166 @@ describe('structured entry form', () => {
         expect(api.called(create)).toHaveLength(0);
     });
 
-    it('leaves out a field the subledger must supply and says so', async () => {
+    it('picks the party of a field from the subledger', async () => {
         mockApi(form([payroll()]));
 
         renderApp(`${entriesPath}/new`);
+        const typist = userEvent.setup();
 
         expect(await screen.findByText('Pihak pembayar')).toBeInTheDocument();
+
+        await typist.click(
+            screen.getByRole('combobox', { name: 'Pihak pembayar' }),
+        );
+
         expect(
-            screen.getByText(/bergantung pada modul subledger/),
+            await screen.findByRole('option', { name: 'Toko Budi' }),
         ).toBeInTheDocument();
+    });
+
+    it('records a payment with its cash account and the open items it settles', async () => {
+        const create = `POST ${base}/entries`;
+        const payment = payroll({
+            id: '01JTYPE000000000000000003',
+            key: 'customer_payment',
+            label: 'Pembayaran Pelanggan',
+            versions: [
+                version({
+                    subledger_route: {
+                        kind: 'payment',
+                        control_role: 'receivables_control',
+                        party_field: 'customer',
+                        document_number_field: null,
+                        due_date_field: null,
+                        cash_account_field: 'bank',
+                        counterpart_cash_account_field: null,
+                        allocations_field: 'settles',
+                    },
+                }),
+            ],
+        });
+        const openItem = {
+            id: '01JOPENITEM00000000000001',
+            document_id: '01JDOCUMENT0000000000001',
+            party_id: customer.id,
+            control_role: 'receivables_control',
+            kind: 'invoice',
+            side: 'debit',
+            document_number: 'INV-001',
+            document_date: '2026-09-01',
+            due_date: '2026-09-30',
+            currency: 'IDR',
+            original_amount: '1000000',
+            remaining_amount: '1000000',
+            original_functional: '1000000',
+            remaining_functional: '1000000',
+            exchange_rate: '1',
+            status: 'open',
+        };
+        const api = mockApi(
+            form([payment], {
+                [`GET ${base}/transaction-types/${payment.id}/versions/1/schema`]:
+                    () =>
+                        json({
+                            data: {
+                                type: 'object',
+                                properties: {
+                                    customer: {
+                                        title: 'Pelanggan',
+                                        type: 'string',
+                                        'x-reference': 'party',
+                                    },
+                                    bank: {
+                                        title: 'Rekening bank',
+                                        type: 'string',
+                                        'x-reference': 'cash_account',
+                                    },
+                                    amount: {
+                                        title: 'Nominal diterima',
+                                        type: 'string',
+                                        'x-scale': 'currency',
+                                    },
+                                    settles: {
+                                        title: 'Pelunasan',
+                                        type: 'array',
+                                        items: { type: 'object' },
+                                    },
+                                },
+                                required: ['customer', 'bank', 'amount'],
+                            },
+                        }),
+                [`GET ${base}/cash-accounts`]: () =>
+                    page([
+                        {
+                            id: '01JCASH0000000000000000001',
+                            name: 'Bank BCA',
+                            kind: 'bank',
+                            bank_name: 'BCA',
+                            account_number: null,
+                            currency: 'IDR',
+                            account_id: '01JACCOUNT0000000000000001',
+                            status: 'active',
+                            lock_version: 1,
+                        },
+                    ]),
+                [`GET ${base}/open-items`]: () => page([openItem]),
+                [create]: () => json({ data: entry() }, 201),
+                [`GET ${base}/entries/${entry().id}`]: () =>
+                    json({ data: entry() }),
+            }),
+        );
+
+        renderApp(`${entriesPath}/new`);
+        const typist = userEvent.setup();
+
+        await typist.type(
+            await screen.findByLabelText('Keterangan'),
+            'Pelunasan INV-001',
+        );
+        await typist.type(
+            await screen.findByLabelText('Nominal diterima'),
+            '500000',
+        );
+
+        // Nothing can be settled before the party is known.
+        expect(
+            screen.getByRole('button', { name: 'Tambah alokasi' }),
+        ).toBeDisabled();
+
+        await typist.click(screen.getByRole('combobox', { name: 'Pelanggan' }));
+        await typist.click(
+            await screen.findByRole('option', { name: 'Toko Budi' }),
+        );
+        await typist.click(
+            screen.getByRole('combobox', { name: 'Rekening bank' }),
+        );
+        await typist.click(
+            await screen.findByRole('option', { name: 'Bank BCA · IDR' }),
+        );
+        await typist.click(
+            await screen.findByRole('button', { name: 'Tambah alokasi' }),
+        );
+        await typist.click(
+            screen.getByRole('combobox', { name: 'Open item alokasi 1' }),
+        );
+        await typist.click(
+            await screen.findByRole('option', {
+                name: 'INV-001 · sisa 1.000.000 IDR',
+            }),
+        );
+        await typist.type(screen.getByLabelText('Nominal alokasi 1'), '500000');
+        await typist.click(screen.getByRole('button', { name: 'Simpan draf' }));
+
+        await waitFor(() => expect(api.called(create)).toHaveLength(1));
+        expect(api.called(create)[0]?.body).toMatchObject({
+            transaction_type_key: 'customer_payment',
+            values: {
+                customer: customer.id,
+                bank: '01JCASH0000000000000000001',
+                amount: '500000',
+                settles: [{ open_item_id: openItem.id, amount: '500000' }],
+            },
+        });
     });
 
     it('puts the refusal of a field next to the field', async () => {
@@ -279,6 +462,7 @@ describe('structured entry form', () => {
         await typist.click(
             await screen.findByRole('option', { name: '5100 · Beban Gaji' }),
         );
+        await pickPayer(typist);
         await typist.click(screen.getByRole('button', { name: 'Simpan draf' }));
 
         expect(
@@ -322,6 +506,7 @@ describe('structured entry form', () => {
         await typist.click(
             await screen.findByRole('option', { name: '5100 · Beban Gaji' }),
         );
+        await pickPayer(typist);
 
         // The functional currency needs no rate.
         expect(screen.queryByLabelText(/^Kurs/)).not.toBeInTheDocument();
@@ -379,7 +564,11 @@ describe('structured entry form', () => {
         await waitFor(() => expect(api.called(update)).toHaveLength(1));
         expect(api.called(update)[0]?.body).toMatchObject({
             lock_version: 1,
-            values: { gross_salary: '15000000', expense_account: expense },
+            values: {
+                gross_salary: '15000000',
+                expense_account: expense,
+                payer: customer.id,
+            },
         });
     });
 });
@@ -395,6 +584,7 @@ describe('structured entry detail', () => {
             [`GET ${base}/transaction-types/${payroll().id}/versions/1/schema`]:
                 () => json({ data: schema }),
             [`GET ${base}/accounts`]: accountList,
+            [`GET ${base}/parties`]: () => page([customer]),
         });
 
         renderApp(`${entriesPath}/${entry().id}`);
@@ -408,5 +598,6 @@ describe('structured entry detail', () => {
         expect(
             await within(card).findByText('5100 · Beban Gaji'),
         ).toBeVisible();
+        expect(await within(card).findByText('Toko Budi')).toBeVisible();
     });
 });

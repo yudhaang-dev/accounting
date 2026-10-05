@@ -26,8 +26,16 @@ export function postingRuleText(
             ? t('transactionTypes.rule.accountFromField', {
                   field: label(account.field),
               })
-            : (accountName?.(account?.account_id ?? '') ??
-              t('transactionTypes.rule.fixedAccount'));
+            : account?.source === 'control_account'
+              ? t('transactionTypes.rule.controlAccount', {
+                    field: label(account.party_field),
+                })
+              : account?.source === 'cash_account'
+                ? t('transactionTypes.rule.cashAccount', {
+                      field: label(account.field),
+                  })
+                : (accountName?.(account?.account_id ?? '') ??
+                  t('transactionTypes.rule.fixedAccount'));
 
     return t('transactionTypes.rule.amount', {
         side: t(`transactionTypes.side.${rule.side ?? 'debit'}`),

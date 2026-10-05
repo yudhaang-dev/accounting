@@ -19,6 +19,12 @@ import {
 import { Input } from '@/components/ui/input';
 import type { Values } from '@/modules/transaction-entry/components/entry-values';
 import { OptionSelect } from '@/modules/transaction-entry/components/option-select';
+import {
+    AllocationsInput,
+    CashAccountInput,
+    PartyInput,
+    messagesOf,
+} from '@/modules/transaction-entry/components/subledger-inputs';
 import type {
     LineAccount,
     LineDimensionType,
@@ -33,11 +39,15 @@ import {
 const RATE_DECIMALS = 12;
 
 function FieldInput({
+    companyId,
+    version,
     field,
     form,
     accounts,
     dimensionTypes,
 }: {
+    companyId: string;
+    version: TypeVersion;
     field: SchemaField;
     form: UseFormReturn<Values>;
     accounts: LineAccount[];
@@ -56,13 +66,29 @@ function FieldInput({
             t('common.required'),
     };
 
-    if (field.kind === 'unsupported') {
+    if (field.kind === 'allocations') {
         return (
-            <Field className="sm:col-span-2">
-                <FieldLabel>{field.label}</FieldLabel>
-                <FieldDescription>
-                    {t('entries.form.unsupportedField')}
-                </FieldDescription>
+            <Field
+                className="sm:col-span-2"
+                data-invalid={error ? true : undefined}
+            >
+                <FieldLabel id={`${id}-label`} htmlFor={id}>
+                    {field.label}
+                    {!field.required && (
+                        <span className="font-normal text-muted-foreground">
+                            {' '}
+                            ({t('entries.form.optional')})
+                        </span>
+                    )}
+                </FieldLabel>
+                <AllocationsInput
+                    companyId={companyId}
+                    id={id}
+                    name={field.name}
+                    form={form}
+                    partyField={version.subledger_route?.party_field ?? null}
+                    messages={messagesOf(error)}
+                />
             </Field>
         );
     }
@@ -176,6 +202,30 @@ function FieldInput({
                             aria-invalid={error ? true : undefined}
                         />
                     )}
+                />
+            )}
+
+            {field.kind === 'party' && (
+                <PartyInput
+                    companyId={companyId}
+                    id={id}
+                    name={name}
+                    form={form}
+                    required={field.required}
+                    rules={rules}
+                    invalid={Boolean(error)}
+                />
+            )}
+
+            {field.kind === 'cash_account' && (
+                <CashAccountInput
+                    companyId={companyId}
+                    id={id}
+                    name={name}
+                    form={form}
+                    required={field.required}
+                    rules={rules}
+                    invalid={Boolean(error)}
                 />
             )}
 
@@ -329,6 +379,8 @@ export function StructuredSection({
                 {fields.map((field) => (
                     <FieldInput
                         key={field.name}
+                        companyId={companyId}
+                        version={version}
                         field={field}
                         form={form}
                         accounts={accounts}

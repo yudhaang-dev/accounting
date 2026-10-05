@@ -2,6 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDecimal } from '@/lib/decimal';
+import { openItemNamesQuery } from '@/modules/subledger/allocations';
+import { cashAccountsQuery } from '@/modules/subledger/cash';
+import { partyOptionsQuery } from '@/modules/subledger/documents';
 import {
     accountNamesQuery,
     dimensionNamesQuery,
@@ -42,12 +45,41 @@ export function EntryValuesCard({
         enabled: canReadDimensions,
     });
     const values = (entry.values ?? {}) as Record<string, unknown>;
+    // The subledger is asked only for what the version's fields hold, and a failed lookup shows the id.
+    const has = (kind: string) =>
+        (schema.data ?? []).some((field) => field.kind === kind);
+    const parties = useQuery({
+        ...partyOptionsQuery(companyId),
+        enabled: has('party'),
+    });
+    const cashAccounts = useQuery({
+        ...cashAccountsQuery(companyId),
+        enabled: has('cash_account'),
+    });
+    const openItems = useQuery({
+        ...openItemNamesQuery(companyId),
+        enabled: has('allocations'),
+    });
 
     if (!entry.values) {
         return null;
     }
 
     const show = (kind: string, value: string): string => {
+        if (kind === 'party') {
+            return (
+                parties.data?.find((party) => party.id === value)?.name ?? value
+            );
+        }
+
+        if (kind === 'cash_account') {
+            const cash = cashAccounts.data?.find(
+                (account) => account.id === value,
+            );
+
+            return cash ? `${cash.name} · ${cash.currency}` : value;
+        }
+
         if (kind === 'amount') {
             return formatDecimal(value, i18n.language);
         }
@@ -70,6 +102,10 @@ export function EntryValuesCard({
     const rows = (schema.data ?? []).filter(
         (field) => typeof values[field.name] === 'string',
     );
+    const allocations = (schema.data ?? []).filter(
+        (field) =>
+            field.kind === 'allocations' && Array.isArray(values[field.name]),
+    );
 
     return (
         <Card>
@@ -85,6 +121,40 @@ export function EntryValuesCard({
                             </dt>
                             <dd className="font-medium">
                                 {show(field.kind, values[field.name] as string)}
+                            </dd>
+                        </div>
+                    ))}
+                    {allocations.map((field) => (
+                        <div
+                            key={field.name}
+                            className="flex flex-col gap-0.5 sm:col-span-2"
+                        >
+                            <dt className="text-muted-foreground">
+                                {field.label}
+                            </dt>
+                            <dd>
+                                <ul className="flex flex-col gap-0.5 font-medium">
+                                    {(
+                                        values[field.name] as {
+                                            open_item_id: string;
+                                            amount: string;
+                                        }[]
+                                    ).map((row) => (
+                                        <li key={row.open_item_id}>
+                                            {openItems.data?.find(
+                                                (item) =>
+                                                    item.id ===
+                                                    row.open_item_id,
+                                            )?.document_number ??
+                                                row.open_item_id}
+                                            {' · '}
+                                            {formatDecimal(
+                                                row.amount,
+                                                i18n.language,
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
                             </dd>
                         </div>
                     ))}

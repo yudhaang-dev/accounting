@@ -44,6 +44,7 @@ import {
     type LineDimensionType,
 } from '@/modules/transaction-entry/entries';
 import {
+    allocationValues,
     valuesBody,
     versionSchemaQuery,
 } from '@/modules/transaction-entry/field-schema';
@@ -119,6 +120,7 @@ const valuesOf = (typeKey: string, schedule?: Schedule): ScheduleValues => {
                 (pair): pair is [string, string] => typeof pair[1] === 'string',
             ),
         ),
+        allocations: allocationValues(template.values),
         currency: template.currency ?? '',
         exchange_rate: template.exchange_rate ?? '',
         auto_reverse_on: '',
@@ -192,6 +194,7 @@ function ScheduleFields({
                       values: valuesBody(
                           schema.data ?? [],
                           values.values,
+                          values.allocations,
                       ) as unknown as string[],
                   }
                 : {

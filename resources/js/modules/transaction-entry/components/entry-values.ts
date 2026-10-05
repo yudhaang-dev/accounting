@@ -1,6 +1,10 @@
 import { todayIso } from '@/lib/date';
 import { isPositive } from '@/lib/decimal';
 import type { Entry } from '@/modules/transaction-entry/entries';
+import {
+    allocationValues,
+    type AllocationRow,
+} from '@/modules/transaction-entry/field-schema';
 
 export type Line = {
     account_id: string;
@@ -20,6 +24,8 @@ export type Values = {
     lines: Line[];
     /** Field name to value, for a structured type. */
     values: Record<string, string>;
+    /** Field name to the open items an `allocations` field settles, for a structured type. */
+    allocations: Record<string, AllocationRow[]>;
     /** Empty means the functional currency. */
     currency: string;
     exchange_rate: string;
@@ -62,6 +68,9 @@ export const valuesOf = (entry: Entry | undefined, typeKey: string): Values =>
                         dimensions: { ...line.dimensions },
                     })),
               values: textValues(entry.values),
+              allocations: allocationValues(
+                  entry.values as Record<string, unknown> | null,
+              ),
               currency: entry.currency ?? '',
               exchange_rate: entry.exchange_rate ?? '',
               auto_reverse_on: entry.auto_reverse_on ?? '',
@@ -73,6 +82,7 @@ export const valuesOf = (entry: Entry | undefined, typeKey: string): Values =>
               description: '',
               lines: [blankLine(), blankLine()],
               values: {},
+              allocations: {},
               currency: '',
               exchange_rate: '',
               auto_reverse_on: '',

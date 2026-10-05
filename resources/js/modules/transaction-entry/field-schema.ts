@@ -13,14 +13,19 @@ export type SchemaField = {
         | 'reference'
         | 'account'
         | 'dimension'
-        /** Party, cash account and allocations come from the subledger, which the form cannot pick from yet. */
-        | 'unsupported';
+        /** The three below are chosen from the subledger: a party, a cash/bank account, the open items a document settles. */
+        | 'party'
+        | 'cash_account'
+        | 'allocations';
     /** For an account field: the accounts it is limited to; none means every account. */
     accountIds?: string[];
     /** For a dimension field: the key of the dimension type whose values are offered. */
     dimensionType?: string;
     maxLength?: number;
 };
+
+/** One open item an entry settles, and how much of it (SL-FR-05). */
+export type AllocationRow = { open_item_id: string; amount: string };
 
 type JsonSchema = {
     properties?: Record<string, Record<string, unknown>>;
@@ -47,10 +52,12 @@ export function parseSchema(schema: JsonSchema | null): SchemaField[] {
             kind: 'text',
         };
 
-        if (property.type === 'array' || reference === 'party') {
-            field.kind = 'unsupported';
+        if (property.type === 'array') {
+            field.kind = 'allocations';
+        } else if (reference === 'party') {
+            field.kind = 'party';
         } else if (reference === 'cash_account') {
-            field.kind = 'unsupported';
+            field.kind = 'cash_account';
         } else if (reference === 'account') {
             field.kind = 'account';
             field.accountIds = Array.isArray(property.enum)
@@ -110,15 +117,53 @@ export const versionSchemaQuery = (
             ),
     });
 
-/** The values as the API takes them: a field left empty is left out, so "required" is the server's call. */
+/** The allocation rows a saved entry or template holds, by field name; any other value is not one. */
+export function allocationValues(
+    values: Record<string, unknown> | null | undefined,
+): Record<string, AllocationRow[]> {
+    return Object.fromEntries(
+        Object.entries(values ?? {})
+            .filter(([, value]) => Array.isArray(value))
+            .map(([name, rows]) => [
+                name,
+                (rows as Partial<AllocationRow>[]).map((row) => ({
+                    open_item_id: row.open_item_id ?? '',
+                    amount: row.amount ?? '',
+                })),
+            ]),
+    );
+}
+
+/**
+ * The values as the API takes them: a field left empty is left out, so "required" is the server's call.
+ * A row of allocations that is not filled in is left out too.
+ */
 export function valuesBody(
     fields: SchemaField[],
     values: Record<string, string>,
-): Record<string, string> {
-    return Object.fromEntries(
-        fields
-            .filter((field) => field.kind !== 'unsupported')
-            .map((field) => [field.name, (values[field.name] ?? '').trim()])
-            .filter(([, value]) => value !== ''),
-    );
+    allocations: Record<string, AllocationRow[]> = {},
+): Record<string, string | AllocationRow[]> {
+    const body: Record<string, string | AllocationRow[]> = {};
+
+    for (const field of fields) {
+        if (field.kind === 'allocations') {
+            const rows = (allocations[field.name] ?? []).filter(
+                (row) => row.open_item_id !== '' && row.amount.trim() !== '',
+            );
+
+            if (rows.length > 0) {
+                body[field.name] = rows;
+            }
+
+            continue;
+        }
+
+        const value = (values[field.name] ?? '').trim();
+
+        if (value !== '') {
+            body[field.name] = value;
+        }
+    }
+
+    return body;
 }

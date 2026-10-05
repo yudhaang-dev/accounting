@@ -41,6 +41,28 @@ export const partyOptionsQuery = (companyId: string) =>
             ),
     });
 
+/** The open items of one party that can still be settled, for the allocations of an entry (SL-FR-05). */
+export const partyOpenItemsQuery = (companyId: string, partyId: string) =>
+    queryOptions({
+        queryKey: ['companies', companyId, 'open-items', 'party', partyId],
+        queryFn: async () =>
+            fetchAll((page) =>
+                unwrap(
+                    api.GET('/companies/{companyId}/open-items', {
+                        params: {
+                            path: { companyId },
+                            query: {
+                                'filter[party_id]': partyId,
+                                'filter[status]': 'open',
+                                per_page: 200,
+                                page,
+                            },
+                        },
+                    }),
+                ),
+            ),
+    });
+
 export type DocumentFilters = {
     partyId?: string;
     kind?: DocumentKind;

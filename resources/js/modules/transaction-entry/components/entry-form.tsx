@@ -127,6 +127,7 @@ function EntryFields({
                     values: valuesBody(
                         schema.data ?? [],
                         values.values,
+                        values.allocations,
                     ) as unknown as string[],
                     currency: values.currency || null,
                     exchange_rate: values.exchange_rate || null,

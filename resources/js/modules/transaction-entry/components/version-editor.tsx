@@ -73,6 +73,18 @@ type RuleRow = {
     reuses_field: boolean;
 };
 
+/** The route as the screen holds it: a field the route does not use is empty text. */
+type RouteRow = {
+    kind: string;
+    control_role: string;
+    party_field: string;
+    document_number_field: string;
+    due_date_field: string;
+    cash_account_field: string;
+    counterpart_cash_account_field: string;
+    allocations_field: string;
+};
+
 type Values = {
     mode: VersionMode;
     fields: FieldRow[];
@@ -80,11 +92,35 @@ type Values = {
     allowed_currencies: string[];
     rate_type_key: string;
     allow_rate_input: boolean;
-    subledger_route: SubledgerRoute | null;
+    subledger_route: RouteRow | null;
 };
 
-/** Field types whose values come from the subledger (M6); a version cannot use them yet. */
-const SUBLEDGER_TYPES: FieldType[] = ['party', 'cash_account', 'allocations'];
+/** The kinds a route can record; `transfer` moves cash between two cash accounts and is no document (TE-FR-10). */
+export const ROUTE_KINDS = [
+    'invoice',
+    'credit_note',
+    'payment',
+    'advance',
+    'write_off',
+    'transfer',
+] as const;
+
+const ROUTE_ROLES = ['receivables_control', 'payables_control'] as const;
+
+/** What a kind of document does, which decides the fields of the route it can use (SL-FR-04, SL-FR-11). */
+const MOVES_CASH = ['payment', 'advance'];
+const ALLOCATES = ['credit_note', 'payment', 'write_off'];
+
+const blankRoute = (): RouteRow => ({
+    kind: 'invoice',
+    control_role: 'receivables_control',
+    party_field: '',
+    document_number_field: '',
+    due_date_field: '',
+    cash_account_field: '',
+    counterpart_cash_account_field: '',
+    allocations_field: '',
+});
 
 const NAME_PATTERN = /^[a-z][a-z0-9_]*$/;
 
@@ -134,7 +170,53 @@ export function valuesOfVersion(version: TypeVersion): Values {
         allowed_currencies: version.allowed_currencies ?? [],
         rate_type_key: version.rate_type_key ?? '',
         allow_rate_input: version.allow_rate_input,
-        subledger_route: version.subledger_route,
+        subledger_route: version.subledger_route
+            ? {
+                  kind: version.subledger_route.kind ?? 'invoice',
+                  control_role: version.subledger_route.control_role ?? '',
+                  party_field: version.subledger_route.party_field ?? '',
+                  document_number_field:
+                      version.subledger_route.document_number_field ?? '',
+                  due_date_field: version.subledger_route.due_date_field ?? '',
+                  cash_account_field:
+                      version.subledger_route.cash_account_field ?? '',
+                  counterpart_cash_account_field:
+                      version.subledger_route.counterpart_cash_account_field ??
+                      '',
+                  allocations_field:
+                      version.subledger_route.allocations_field ?? '',
+              }
+            : null,
+    };
+}
+
+/**
+ * The route as the API takes it. A field the kind cannot use is left out, so changing the kind never
+ * leaves behind a field the server would refuse.
+ */
+function routeInputOf(route: RouteRow): SubledgerRoute {
+    const transfer = route.kind === 'transfer';
+    const optional = (value: string, used: boolean) =>
+        used && value !== '' ? value : null;
+
+    return {
+        kind: route.kind,
+        control_role: transfer ? null : route.control_role,
+        party_field: transfer ? null : route.party_field,
+        document_number_field: optional(route.document_number_field, !transfer),
+        due_date_field: optional(route.due_date_field, !transfer),
+        cash_account_field: optional(
+            route.cash_account_field,
+            transfer || MOVES_CASH.includes(route.kind),
+        ),
+        counterpart_cash_account_field: optional(
+            route.counterpart_cash_account_field,
+            transfer,
+        ),
+        allocations_field: optional(
+            route.allocations_field,
+            ALLOCATES.includes(route.kind),
+        ),
     };
 }
 
@@ -181,14 +263,20 @@ export function versionInputOf(values: Values): VersionInput {
                 : null,
         rate_type_key: values.rate_type_key || null,
         allow_rate_input: values.allow_rate_input,
-        // The screens do not edit the route yet; a draft keeps the one it has.
-        ...(structured && values.subledger_route !== null
-            ? { subledger_route: values.subledger_route }
+        // A free-lines version has no route; for a structured one, null takes the route off the draft.
+        ...(structured
+            ? {
+                  // The API takes null here (nullable); the generated type leaves it out.
+                  subledger_route:
+                      values.subledger_route === null
+                          ? (null as unknown as SubledgerRoute)
+                          : routeInputOf(values.subledger_route),
+              }
             : {}),
     };
 }
 
-/** The account of a rule as the API takes it; control and cash accounts are kept as the draft has them. */
+/** The account of a rule as the API takes it. */
 function accountOfRule(rule: RuleRow): NonNullable<PostingRule['account']> {
     switch (rule.account_source) {
         case 'fixed':
@@ -224,13 +312,15 @@ export function applyVersionErrors(
             ? `rules.${rule[1]}.${
                   rule[2] === 'account.field'
                       ? 'account_field'
-                      : rule[2]?.startsWith('account')
-                        ? 'account_id'
-                        : rule[2]
+                      : rule[2] === 'account.party_field'
+                        ? 'party_field'
+                        : rule[2]?.startsWith('account')
+                          ? 'account_id'
+                          : rule[2]
               }`
             : key.startsWith('allowed_currencies')
               ? 'allowed_currencies'
-              : /^fields\.\d+\./.test(key)
+              : /^fields\.\d+\./.test(key) || key.startsWith('subledger_route')
                 ? key
                 : null;
 
@@ -320,11 +410,7 @@ function FieldRows({
     const typeItems = FIELD_TYPES.map((value) => ({
         value,
         label: t(`transactionTypes.fieldTypes.${value}`),
-    })).filter(
-        (item) =>
-            !SUBLEDGER_TYPES.includes(item.value) ||
-            types.some((row) => row.type === item.value),
-    );
+    }));
 
     return (
         <FieldSet>
@@ -541,10 +627,202 @@ function FieldRows({
     );
 }
 
+/**
+ * The subledger route of a structured version (TE-FR-10): the entry records a document of one kind for
+ * the party in one of its fields, and the posting rules may then use the control account of that party
+ * and the account of a cash account field. A `transfer` moves cash between two cash account fields.
+ */
+function RouteEditor() {
+    const { t } = useTranslation();
+    const {
+        control,
+        setValue,
+        formState: { errors },
+    } = useFormContext<Values>();
+    const route = useWatch({ control, name: 'subledger_route' });
+    const defined = useWatch({ control, name: 'fields' });
+    const routeErrors = errors.subledger_route;
+    const fieldsOfType = (type: FieldType) =>
+        defined
+            .filter((field) => field.type === type && field.name !== '')
+            .map((field) => ({
+                value: field.name,
+                label: field.label || field.name,
+            }));
+    const kindItems = ROUTE_KINDS.map((value) => ({
+        value,
+        label: t(`transactionTypes.designer.route.kinds.${value}`),
+    }));
+    const roleItems = ROUTE_ROLES.map((value) => ({
+        value,
+        label: t(`transactionTypes.designer.route.roles.${value}`),
+    }));
+    const transfer = route?.kind === 'transfer';
+    const picker = (
+        key: Exclude<keyof RouteRow, 'kind' | 'control_role'>,
+        type: FieldType,
+        required: boolean,
+    ) => (
+        <Controller
+            control={control}
+            name={`subledger_route.${key}`}
+            rules={
+                required
+                    ? {
+                          validate: (value) =>
+                              (value ?? '') !== '' || t('common.required'),
+                      }
+                    : undefined
+            }
+            render={({ field }) => (
+                <Field data-invalid={routeErrors?.[key] ? true : undefined}>
+                    <FieldLabel className="text-xs text-muted-foreground">
+                        {t(`transactionTypes.designer.route.fields.${key}`)}
+                    </FieldLabel>
+                    <OptionSelect
+                        value={field.value ?? ''}
+                        items={[
+                            ...(required
+                                ? []
+                                : [
+                                      {
+                                          value: '__none',
+                                          label: t(
+                                              'transactionTypes.designer.route.none',
+                                          ),
+                                      },
+                                  ]),
+                            ...fieldsOfType(type),
+                        ]}
+                        placeholder={t(
+                            'transactionTypes.designer.route.chooseField',
+                        )}
+                        onValueChange={(next) =>
+                            field.onChange(next === '__none' ? '' : next)
+                        }
+                        aria-label={t(
+                            `transactionTypes.designer.route.fields.${key}`,
+                        )}
+                        aria-invalid={routeErrors?.[key] ? true : undefined}
+                    />
+                    {routeErrors?.[key]?.message && (
+                        <FieldError>{routeErrors[key]?.message}</FieldError>
+                    )}
+                </Field>
+            )}
+        />
+    );
+
+    return (
+        <FieldSet>
+            <FieldLegend variant="label">
+                {t('transactionTypes.designer.route.title')}
+            </FieldLegend>
+            <FieldDescription>
+                {t('transactionTypes.designer.route.hint')}
+            </FieldDescription>
+            <Field orientation="horizontal">
+                <Checkbox
+                    id="version-route"
+                    checked={route !== null}
+                    onCheckedChange={(next) =>
+                        setValue(
+                            'subledger_route',
+                            next === true ? blankRoute() : null,
+                        )
+                    }
+                />
+                <FieldLabel htmlFor="version-route" className="font-normal">
+                    {t('transactionTypes.designer.route.enable')}
+                </FieldLabel>
+            </Field>
+            {route !== null && (
+                <div className="flex flex-col gap-3 rounded-lg border p-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <Controller
+                            control={control}
+                            name="subledger_route.kind"
+                            render={({ field }) => (
+                                <Field>
+                                    <FieldLabel className="text-xs text-muted-foreground">
+                                        {t(
+                                            'transactionTypes.designer.route.kind',
+                                        )}
+                                    </FieldLabel>
+                                    <OptionSelect
+                                        value={field.value ?? 'invoice'}
+                                        items={kindItems}
+                                        onValueChange={field.onChange}
+                                        aria-label={t(
+                                            'transactionTypes.designer.route.kind',
+                                        )}
+                                    />
+                                </Field>
+                            )}
+                        />
+                        {!transfer && (
+                            <Controller
+                                control={control}
+                                name="subledger_route.control_role"
+                                render={({ field }) => (
+                                    <Field>
+                                        <FieldLabel className="text-xs text-muted-foreground">
+                                            {t(
+                                                'transactionTypes.designer.route.role',
+                                            )}
+                                        </FieldLabel>
+                                        <OptionSelect
+                                            value={field.value ?? ''}
+                                            items={roleItems}
+                                            onValueChange={field.onChange}
+                                            aria-label={t(
+                                                'transactionTypes.designer.route.role',
+                                            )}
+                                        />
+                                    </Field>
+                                )}
+                            />
+                        )}
+                        {!transfer && picker('party_field', 'party', true)}
+                        {!transfer &&
+                            picker('document_number_field', 'reference', false)}
+                        {!transfer && picker('due_date_field', 'date', false)}
+                        {(transfer || MOVES_CASH.includes(route.kind)) &&
+                            picker('cash_account_field', 'cash_account', true)}
+                        {transfer &&
+                            picker(
+                                'counterpart_cash_account_field',
+                                'cash_account',
+                                true,
+                            )}
+                        {ALLOCATES.includes(route.kind) &&
+                            picker(
+                                'allocations_field',
+                                'allocations',
+                                route.kind === 'write_off',
+                            )}
+                    </div>
+                    {transfer && (
+                        <p className="text-sm text-muted-foreground">
+                            {t('transactionTypes.designer.route.transferHint')}
+                        </p>
+                    )}
+                    {routeErrors?.message && (
+                        <ul role="alert" className="text-sm text-destructive">
+                            <li>{routeErrors.message}</li>
+                        </ul>
+                    )}
+                </div>
+            )}
+        </FieldSet>
+    );
+}
+
 function RuleRows({ accounts }: { accounts: OptionSelectItem[] }) {
     const { t } = useTranslation();
     const {
         control,
+        setValue,
         formState: { errors },
     } = useFormContext<Values>();
     const { fields, append, remove } = useFieldArray({
@@ -559,12 +837,17 @@ function RuleRows({ accounts }: { accounts: OptionSelectItem[] }) {
             value: field.name,
             label: field.label || field.name,
         }));
-    const accountFields = defined
-        .filter((field) => field.type === 'account' && field.name !== '')
-        .map((field) => ({
-            value: field.name,
-            label: field.label || field.name,
-        }));
+    const fieldsOfType = (type: FieldType) =>
+        defined
+            .filter((field) => field.type === type && field.name !== '')
+            .map((field) => ({
+                value: field.name,
+                label: field.label || field.name,
+            }));
+    const accountFields = fieldsOfType('account');
+    const cashFields = fieldsOfType('cash_account');
+    const partyFields = fieldsOfType('party');
+    const hasRoute = useWatch({ control, name: 'subledger_route' }) !== null;
     const sideItems = (['debit', 'credit'] as const).map((value) => ({
         value,
         label: t(`transactionTypes.side.${value}`),
@@ -573,7 +856,12 @@ function RuleRows({ accounts }: { accounts: OptionSelectItem[] }) {
         value,
         label: t(`transactionTypes.designer.ruleTypes.${value}`),
     }));
-    const sourceItems = (['field', 'fixed'] as const).map((value) => ({
+    // The control and cash accounts are those of the subledger document, so they need the route.
+    const sourceItems = (
+        hasRoute
+            ? (['field', 'fixed', 'control_account', 'cash_account'] as const)
+            : (['field', 'fixed'] as const)
+    ).map((value) => ({
         value,
         label: t(`transactionTypes.designer.accountSources.${value}`),
     }));
@@ -595,6 +883,7 @@ function RuleRows({ accounts }: { accounts: OptionSelectItem[] }) {
                         rowErrors?.amount_field?.message,
                         rowErrors?.account_id?.message,
                         rowErrors?.account_field?.message,
+                        rowErrors?.party_field?.message,
                         rowErrors?.reuses_field?.message,
                         rowErrors?.type?.message,
                         rowErrors?.side?.message,
@@ -687,9 +976,18 @@ function RuleRows({ accounts }: { accounts: OptionSelectItem[] }) {
                                                 <OptionSelect
                                                     value={field.value}
                                                     items={sourceItems}
-                                                    onValueChange={
-                                                        field.onChange
-                                                    }
+                                                    onValueChange={(next) => {
+                                                        field.onChange(next);
+                                                        // The field of one source is no choice of another.
+                                                        setValue(
+                                                            `rules.${index}.account_field`,
+                                                            '',
+                                                        );
+                                                        setValue(
+                                                            `rules.${index}.party_field`,
+                                                            '',
+                                                        );
+                                                    }}
                                                     aria-label={`${t('transactionTypes.designer.accountSource')} ${t('transactionTypes.designer.rule', { n })}`}
                                                 />
                                             )}
@@ -725,6 +1023,36 @@ function RuleRows({ accounts }: { accounts: OptionSelectItem[] }) {
                                             />
                                         )}
                                     />
+                                ) : rule?.account_source ===
+                                  'control_account' ? (
+                                    <Controller
+                                        control={control}
+                                        name={`rules.${index}.party_field`}
+                                        rules={{
+                                            validate: (value) =>
+                                                value !== '' ||
+                                                t(
+                                                    'transactionTypes.designer.partyFieldRequired',
+                                                ),
+                                        }}
+                                        render={({ field }) => (
+                                            <OptionSelect
+                                                value={field.value}
+                                                items={partyFields}
+                                                placeholder={t(
+                                                    'transactionTypes.designer.choosePartyField',
+                                                )}
+                                                onValueChange={field.onChange}
+                                                className="w-full sm:w-80"
+                                                aria-label={`${t('transactionTypes.designer.partyField')} ${t('transactionTypes.designer.rule', { n })}`}
+                                                aria-invalid={
+                                                    rowErrors?.party_field
+                                                        ? true
+                                                        : undefined
+                                                }
+                                            />
+                                        )}
+                                    />
                                 ) : (
                                     <Controller
                                         control={control}
@@ -733,15 +1061,26 @@ function RuleRows({ accounts }: { accounts: OptionSelectItem[] }) {
                                             validate: (value) =>
                                                 value !== '' ||
                                                 t(
-                                                    'transactionTypes.designer.accountFieldRequired',
+                                                    rule?.account_source ===
+                                                        'cash_account'
+                                                        ? 'transactionTypes.designer.cashFieldRequired'
+                                                        : 'transactionTypes.designer.accountFieldRequired',
                                                 ),
                                         }}
                                         render={({ field }) => (
                                             <OptionSelect
                                                 value={field.value}
-                                                items={accountFields}
+                                                items={
+                                                    rule?.account_source ===
+                                                    'cash_account'
+                                                        ? cashFields
+                                                        : accountFields
+                                                }
                                                 placeholder={t(
-                                                    'transactionTypes.designer.chooseAccountField',
+                                                    rule?.account_source ===
+                                                        'cash_account'
+                                                        ? 'transactionTypes.designer.chooseCashField'
+                                                        : 'transactionTypes.designer.chooseAccountField',
                                                 )}
                                                 onValueChange={field.onChange}
                                                 className="w-full sm:w-80"
@@ -1098,6 +1437,7 @@ export function VersionEditor({
                                     }),
                                 )}
                             />
+                            <RouteEditor />
                             <RuleRows accounts={accountItems} />
                         </>
                     )}

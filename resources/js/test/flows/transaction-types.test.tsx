@@ -512,6 +512,221 @@ describe('version designer', () => {
             allowed_currencies: null,
             rate_type_key: null,
             allow_rate_input: false,
+            subledger_route: null,
+        });
+    });
+
+    describe('subledger route', () => {
+        const route = {
+            kind: 'invoice',
+            control_role: 'receivables_control',
+            party_field: 'customer',
+            document_number_field: null,
+            due_date_field: null,
+            cash_account_field: null,
+            counterpart_cash_account_field: null,
+            allocations_field: null,
+        };
+        const sales = typeRow({
+            id: '01JTYPE000000000000000004',
+            key: 'sales_invoice',
+            label: 'Faktur Penjualan',
+            versions: [
+                version({
+                    version: 1,
+                    status: 'draft',
+                    mode: 'structured',
+                    fields: [
+                        {
+                            name: 'customer',
+                            type: 'party',
+                            label: 'Pelanggan',
+                            required: true,
+                        },
+                        {
+                            name: 'bank',
+                            type: 'cash_account',
+                            label: 'Rekening bank',
+                            required: false,
+                        },
+                        {
+                            name: 'total',
+                            type: 'amount',
+                            label: 'Total',
+                            required: true,
+                        },
+                    ],
+                    posting_rules: [
+                        {
+                            type: 'amount',
+                            side: 'debit',
+                            amount_field: 'total',
+                            account: {
+                                source: 'control_account',
+                                party_field: 'customer',
+                            },
+                            apply_dimensions: false,
+                            reuses_field: true,
+                        },
+                    ],
+                    subledger_route: route,
+                }),
+            ],
+        });
+        const save = `PUT ${base}/transaction-types/${sales.id}/versions/1`;
+        const open = (overrides: Routes = {}) =>
+            mockApi({
+                ...withPermissions(manage),
+                ...lookups,
+                [`GET ${base}/transaction-types/${sales.id}`]: () =>
+                    json({ data: sales }),
+                [save]: () => json({ data: sales }),
+                ...overrides,
+            });
+
+        it('offers the subledger field types and shows the route of the draft', async () => {
+            open();
+
+            renderApp(designer(sales.id));
+
+            expect(
+                await screen.findByRole('combobox', { name: 'Jenis dokumen' }),
+            ).toHaveTextContent('Faktur');
+            expect(
+                screen.getByRole('combobox', { name: 'Field pihak' }),
+            ).toHaveTextContent('Pelanggan');
+            expect(
+                screen.getByRole('combobox', {
+                    name: 'Tipe field 2',
+                }),
+            ).toHaveTextContent('Rekening kas/bank');
+            // An invoice moves no cash and settles nothing, so it has neither field.
+            expect(
+                screen.queryByRole('combobox', {
+                    name: 'Field rekening kas/bank',
+                }),
+            ).not.toBeInTheDocument();
+        });
+
+        it('saves the route of the kind, leaving out what the kind cannot use', async () => {
+            const api = open();
+
+            renderApp(designer(sales.id));
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('combobox', { name: 'Jenis dokumen' }),
+            );
+            await typist.click(
+                await screen.findByRole('option', { name: 'Pembayaran' }),
+            );
+            await typist.click(
+                await screen.findByRole('combobox', {
+                    name: 'Field rekening kas/bank',
+                }),
+            );
+            await typist.click(
+                await screen.findByRole('option', { name: 'Rekening bank' }),
+            );
+            await typist.click(
+                screen.getByRole('button', { name: 'Simpan draf' }),
+            );
+
+            await waitFor(() => expect(api.called(save)).toHaveLength(1));
+            expect(api.called(save)[0]?.body).toMatchObject({
+                posting_rules: [
+                    {
+                        account: {
+                            source: 'control_account',
+                            party_field: 'customer',
+                        },
+                    },
+                ],
+                subledger_route: {
+                    kind: 'payment',
+                    control_role: 'receivables_control',
+                    party_field: 'customer',
+                    cash_account_field: 'bank',
+                    allocations_field: null,
+                    counterpart_cash_account_field: null,
+                },
+            });
+        });
+
+        it('takes the route off the draft when it is switched off', async () => {
+            const api = open();
+
+            renderApp(designer(sales.id));
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('checkbox', {
+                    name: 'Catat entri sebagai dokumen subledger',
+                }),
+            );
+
+            expect(
+                screen.queryByRole('combobox', { name: 'Jenis dokumen' }),
+            ).not.toBeInTheDocument();
+
+            await typist.click(
+                screen.getByRole('button', { name: 'Simpan draf' }),
+            );
+
+            await waitFor(() => expect(api.called(save)).toHaveLength(1));
+            expect(api.called(save)[0]?.body).toMatchObject({
+                subledger_route: null,
+            });
+        });
+
+        it('offers the control and cash accounts to a rule only while there is a route', async () => {
+            open();
+
+            renderApp(designer(sales.id));
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('combobox', {
+                    name: 'Sumber akun Aturan 1',
+                }),
+            );
+
+            expect(
+                await screen.findByRole('option', {
+                    name: 'Akun kontrol pihak',
+                }),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole('option', { name: 'Akun rekening kas/bank' }),
+            ).toBeInTheDocument();
+        });
+
+        it('puts a refused route next to the field it names', async () => {
+            open({
+                [save]: () =>
+                    json(
+                        {
+                            message: 'Data tidak valid.',
+                            errors: {
+                                'subledger_route.party_field': [
+                                    'Field Pelanggan harus bertipe party.',
+                                ],
+                            },
+                        },
+                        422,
+                    ),
+            });
+
+            renderApp(designer(sales.id));
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('button', { name: 'Simpan draf' }),
+            );
+
+            expect(
+                await screen.findByText('Field Pelanggan harus bertipe party.'),
+            ).toBeInTheDocument();
         });
     });
 

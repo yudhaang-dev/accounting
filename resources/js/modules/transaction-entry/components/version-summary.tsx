@@ -12,6 +12,9 @@ import {
 import { postingRuleText } from '@/modules/transaction-entry/components/posting-rule-text';
 import { accountNamesQuery } from '@/modules/transaction-entry/entries';
 import type { TypeVersion } from '@/modules/transaction-entry/transaction-types';
+import type { ROUTE_KINDS } from '@/modules/transaction-entry/components/version-editor';
+
+type RouteKind = (typeof ROUTE_KINDS)[number];
 
 /** A published or retired version as the package it is (TE-FR-02): immutable, so only read here. */
 export function VersionSummary({
@@ -54,6 +57,18 @@ export function VersionSummary({
                             ` · ${t('transactionTypes.designer.allowRateInput')}`}
                     </dd>
                 </div>
+                {version.subledger_route && (
+                    <div className="flex flex-col gap-0.5">
+                        <dt className="text-muted-foreground">
+                            {t('transactionTypes.designer.route.title')}
+                        </dt>
+                        <dd className="font-medium">
+                            {t(
+                                `transactionTypes.designer.route.kinds.${version.subledger_route.kind as RouteKind}`,
+                            )}
+                        </dd>
+                    </div>
+                )}
             </dl>
 
             {version.mode === 'structured' ? (
