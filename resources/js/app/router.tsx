@@ -364,6 +364,7 @@ const periodsRoute = createRoute({
                 revaluationAccess={{
                     accounts: can(workspace, 'accounts.read'),
                     journals: can(workspace, 'journals.read'),
+                    openItems: can(workspace, 'open-items.read'),
                 }}
             />
         );

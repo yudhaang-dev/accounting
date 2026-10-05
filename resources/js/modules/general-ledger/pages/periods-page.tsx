@@ -48,6 +48,10 @@ import {
     type RevaluationAccess,
 } from '@/modules/general-ledger/components/revaluation-dialog';
 import {
+    OpenItemRevaluationDialog,
+    type OpenItemRevaluationAccess,
+} from '@/modules/subledger/components/open-item-revaluation-dialog';
+import {
     closePeriod,
     periodsQuery,
     softClosePeriod,
@@ -88,7 +92,7 @@ export function PeriodsPage({
     canClose: boolean;
     canReopen: boolean;
     canRevalue: boolean;
-    revaluationAccess: RevaluationAccess;
+    revaluationAccess: RevaluationAccess & OpenItemRevaluationAccess;
     /** What the user may do about closing a fiscal year, and see on the way. */
     yearClosing: { close: boolean; reopen: boolean; entries: boolean };
 }) {
@@ -99,6 +103,7 @@ export function PeriodsPage({
     const [closing, setClosing] = useState<Period | null>(null);
     const asking = useLastDefined(closing);
     const [revaluing, setRevaluing] = useState<Period | null>(null);
+    const [revaluingItems, setRevaluingItems] = useState<Period | null>(null);
     const [softClosing, setSoftClosing] = useState<Period | null>(null);
     const askingSoft = useLastDefined(softClosing);
 
@@ -353,6 +358,29 @@ export function PeriodsPage({
                                                                 )}
                                                             </Button>
                                                         )}
+                                                    {period.status !==
+                                                        'closed' &&
+                                                        canRevalue && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                aria-label={t(
+                                                                    'periods.revalueItems',
+                                                                    {
+                                                                        name: period.name,
+                                                                    },
+                                                                )}
+                                                                onClick={() =>
+                                                                    setRevaluingItems(
+                                                                        period,
+                                                                    )
+                                                                }
+                                                            >
+                                                                {t(
+                                                                    'periods.revalueItemsAction',
+                                                                )}
+                                                            </Button>
+                                                        )}
                                                     {period.status === 'open' &&
                                                         canClose && (
                                                             <Button
@@ -468,6 +496,12 @@ export function PeriodsPage({
                 period={revaluing}
                 access={revaluationAccess}
                 onClose={() => setRevaluing(null)}
+            />
+            <OpenItemRevaluationDialog
+                companyId={companyId}
+                period={revaluingItems}
+                access={revaluationAccess}
+                onClose={() => setRevaluingItems(null)}
             />
             <ReopenPeriodDialog
                 companyId={companyId}

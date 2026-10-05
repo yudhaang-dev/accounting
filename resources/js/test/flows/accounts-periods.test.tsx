@@ -1074,9 +1074,181 @@ describe("fiscal periods", () => {
             await screen.findByText("2026-02");
             expect(
                 screen.getAllByRole("button", { name: /^Revaluasi/ }),
-            ).toHaveLength(1);
+            ).toHaveLength(2);
             expect(
                 screen.queryByRole("button", { name: "Revaluasi 2026-01" }),
+            ).not.toBeInTheDocument();
+            expect(
+                screen.queryByRole("button", {
+                    name: "Revaluasi open item 2026-01",
+                }),
+            ).not.toBeInTheDocument();
+        });
+    });
+
+    describe("open item revaluation (SL-FR-07)", () => {
+        const item = "01JOPENITEM000000000000001";
+        const run = `POST ${base}/periods/${period(2, "open").id}/open-item-revaluation`;
+        const revalueRoutes = (permissions: string[]) => ({
+            ...periodRoutes(["periods.read", ...permissions]),
+            [`GET ${base}/open-items`]: () =>
+                list([{ id: item, document_number: "INV-001" }]),
+        });
+        const open = async (typist: ReturnType<typeof userEvent.setup>) => {
+            await typist.click(
+                await screen.findByRole("button", {
+                    name: "Revaluasi open item 2026-02",
+                }),
+            );
+            const dialog = await screen.findByRole("dialog");
+
+            await typist.click(
+                within(dialog).getByRole("button", {
+                    name: "Jalankan revaluasi open item",
+                }),
+            );
+
+            return dialog;
+        };
+
+        it("shows what was adjusted per document and links to the journals", async () => {
+            const api = mockApi({
+                ...revalueRoutes([
+                    "periods.revalue",
+                    "journals.read",
+                    "open-items.read",
+                ]),
+                [run]: () =>
+                    json(
+                        {
+                            data: {
+                                id: "01JRUN",
+                                period_id: period(2, "open").id,
+                                journal_id: "01JJOURNAL000000000000001",
+                                reversal_journal_id:
+                                    "01JJOURNAL000000000000002",
+                                adjustments: [
+                                    {
+                                        open_item_id: item,
+                                        currency: "USD",
+                                        remaining_amount: "1000.00",
+                                        carried: "15000000.00",
+                                        revalued: "15200000.00",
+                                        adjustment: "200000.00",
+                                    },
+                                ],
+                            },
+                        },
+                        201,
+                    ),
+            });
+
+            renderApp(periodsPath);
+            const dialog = await open(userEvent.setup());
+
+            expect(
+                await within(dialog).findByText("INV-001"),
+            ).toBeInTheDocument();
+            expect(within(dialog).getByText("+200.000,00")).toBeInTheDocument();
+            expect(
+                within(dialog).getByRole("link", {
+                    name: "Lihat jurnal revaluasi",
+                }),
+            ).toHaveAttribute(
+                "href",
+                `/w/${workspace.company_id}/journals/01JJOURNAL000000000000001`,
+            );
+            expect(
+                within(dialog).getByRole("link", {
+                    name: "Lihat jurnal pembalik",
+                }),
+            ).toBeInTheDocument();
+            expect(api.called(run)).toHaveLength(1);
+        });
+
+        it("says so when nothing needed adjusting", async () => {
+            mockApi({
+                ...revalueRoutes(["periods.revalue"]),
+                [run]: () =>
+                    json({
+                        data: {
+                            id: null,
+                            period_id: period(2, "open").id,
+                            journal_id: null,
+                            reversal_journal_id: null,
+                            adjustments: [],
+                        },
+                    }),
+            });
+
+            renderApp(periodsPath);
+            const dialog = await open(userEvent.setup());
+
+            expect(
+                await within(dialog).findByText(
+                    /Tidak ada selisih yang perlu disesuaikan/,
+                ),
+            ).toBeInTheDocument();
+        });
+
+        it("points to the settings when the policy has no rate type", async () => {
+            mockApi({
+                ...revalueRoutes(["periods.revalue"]),
+                [run]: () =>
+                    json(
+                        {
+                            message: "Kebijakan belum menetapkan jenis kurs.",
+                            code: "MAPPING_REQUIRED",
+                        },
+                        422,
+                    ),
+            });
+
+            renderApp(periodsPath);
+            const dialog = await open(userEvent.setup());
+
+            expect(
+                await within(dialog).findByText(
+                    /jenis kurs\. Atur jenis kurs dan peran akun di Pengaturan buku besar/,
+                ),
+            ).toBeInTheDocument();
+        });
+
+        it("tells the user about an allocation dated after the period", async () => {
+            mockApi({
+                ...revalueRoutes(["periods.revalue"]),
+                [run]: () =>
+                    json(
+                        {
+                            message: "Ada alokasi bertanggal sesudah periode.",
+                            errors: {
+                                period_id: [
+                                    "Ada alokasi bertanggal sesudah periode.",
+                                ],
+                            },
+                        },
+                        422,
+                    ),
+            });
+
+            renderApp(periodsPath);
+            const dialog = await open(userEvent.setup());
+
+            expect(
+                await within(dialog).findByText(
+                    /alokasi bertanggal sesudah periode/,
+                ),
+            ).toBeInTheDocument();
+        });
+
+        it("offers no open item revaluation without the permission", async () => {
+            mockApi(revalueRoutes(["periods.close"]));
+
+            renderApp(periodsPath);
+
+            await screen.findByText("2026-02");
+            expect(
+                screen.queryByRole("button", { name: /^Revaluasi open item/ }),
             ).not.toBeInTheDocument();
         });
     });
