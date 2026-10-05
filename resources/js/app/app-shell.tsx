@@ -22,6 +22,7 @@ import {
     TrendingUpIcon,
     UsersIcon,
     UsersRoundIcon,
+    WorkflowIcon,
 } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -114,6 +115,12 @@ const NAV = [
         label: 'app.navParties',
         icon: UsersRoundIcon,
         permission: 'parties.read',
+    },
+    {
+        to: '/w/$companyId/posting-profiles',
+        label: 'app.navPostingProfiles',
+        icon: WorkflowIcon,
+        permission: 'posting-profiles.read',
     },
     {
         to: '/w/$companyId/entries',

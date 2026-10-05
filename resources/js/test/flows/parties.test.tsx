@@ -58,11 +58,7 @@ const profiles = () =>
         ],
     });
 
-const manager = [
-    'parties.read',
-    'parties.manage',
-    'posting-profiles.read',
-];
+const manager = ['parties.read', 'parties.manage', 'posting-profiles.read'];
 
 describe('parties', () => {
     it('lists parties with roles, references, and the profile', async () => {
@@ -129,12 +125,19 @@ describe('parties', () => {
         const typist = userEvent.setup();
 
         await typist.click(
-            (await screen.findAllByRole('button', { name: 'Tambah pihak' }))[0]!,
+            (
+                await screen.findAllByRole('button', { name: 'Tambah pihak' })
+            )[0]!,
         );
         const dialog = await screen.findByRole('dialog');
 
-        await typist.type(within(dialog).getByLabelText('Nama'), 'PT Maju Jaya');
-        await typist.click(within(dialog).getByRole('checkbox', { name: 'Pemasok' }));
+        await typist.type(
+            within(dialog).getByLabelText('Nama'),
+            'PT Maju Jaya',
+        );
+        await typist.click(
+            within(dialog).getByRole('checkbox', { name: 'Pemasok' }),
+        );
         await typist.click(
             within(dialog).getByRole('button', { name: 'Tambah referensi' }),
         );
@@ -142,7 +145,10 @@ describe('parties', () => {
             within(dialog).getByLabelText(/^Sistem sumber/),
             'erp',
         );
-        await typist.type(within(dialog).getByLabelText(/^Referensi, /), 'C-100');
+        await typist.type(
+            within(dialog).getByLabelText(/^Referensi, /),
+            'C-100',
+        );
         await typist.click(
             within(dialog).getByRole('button', { name: 'Simpan' }),
         );
@@ -171,12 +177,19 @@ describe('parties', () => {
         const typist = userEvent.setup();
 
         await typist.click(
-            (await screen.findAllByRole('button', { name: 'Tambah pihak' }))[0]!,
+            (
+                await screen.findAllByRole('button', { name: 'Tambah pihak' })
+            )[0]!,
         );
         const dialog = await screen.findByRole('dialog');
 
-        await typist.type(within(dialog).getByLabelText('Nama'), 'PT Maju Jaya');
-        await typist.click(within(dialog).getByRole('checkbox', { name: 'Pelanggan' }));
+        await typist.type(
+            within(dialog).getByLabelText('Nama'),
+            'PT Maju Jaya',
+        );
+        await typist.click(
+            within(dialog).getByRole('checkbox', { name: 'Pelanggan' }),
+        );
 
         expect(
             await within(dialog).findByText('Pilih sedikitnya satu peran.'),
@@ -213,11 +226,16 @@ describe('parties', () => {
         const typist = userEvent.setup();
 
         await typist.click(
-            (await screen.findAllByRole('button', { name: 'Tambah pihak' }))[0]!,
+            (
+                await screen.findAllByRole('button', { name: 'Tambah pihak' })
+            )[0]!,
         );
         const dialog = await screen.findByRole('dialog');
 
-        await typist.type(within(dialog).getByLabelText('Nama'), 'PT Maju Jaya');
+        await typist.type(
+            within(dialog).getByLabelText('Nama'),
+            'PT Maju Jaya',
+        );
         await typist.click(
             within(dialog).getByRole('button', { name: 'Tambah referensi' }),
         );
@@ -225,7 +243,10 @@ describe('parties', () => {
             within(dialog).getByLabelText(/^Sistem sumber/),
             'erp',
         );
-        await typist.type(within(dialog).getByLabelText(/^Referensi, /), 'C-100');
+        await typist.type(
+            within(dialog).getByLabelText(/^Referensi, /),
+            'C-100',
+        );
         await typist.click(
             within(dialog).getByRole('button', { name: 'Simpan' }),
         );

@@ -118,6 +118,7 @@ export const en: Widen<typeof id> = {
         navCurrencies: "Currencies",
         navRates: "Exchange rates",
         navParties: "Parties",
+        navPostingProfiles: "Posting profiles",
         navEntries: "Entries",
         navSchedules: "Recurring journals",
         navApprovalPolicy: "Approval policy",
@@ -789,6 +790,60 @@ export const en: Widen<typeof id> = {
             externalRefPlaceholder: "reference",
             externalRefInvalid: "Enter the reference (at most 128 characters).",
         },
+    },
+    postingProfiles: {
+        pageTitle: "Posting profiles",
+        title: "Posting profiles",
+        description:
+            "Each profile decides the receivables and payables control accounts of the parties that use it. The default profile serves parties without one. Every mapping is a new version, so earlier postings keep their account.",
+        add: "Add profile",
+        createTitle: "Add posting profile",
+        editTitle: "Edit profile {{name}}",
+        editAction: "Edit profile {{name}}",
+        edit: "Edit",
+        empty: "No posting profiles yet",
+        emptyDescription:
+            "Create the first profile, then map its receivables and payables control accounts. The first profile becomes the default.",
+        name: "Name",
+        isDefault: "Make this the default profile",
+        defaultHint:
+            "The default profile serves parties that choose none. Choosing it moves the default from another profile.",
+        defaultLocked:
+            "This profile is the default. To change it, make another profile the default.",
+        default: "Default",
+        created: "Profile {{name}} added.",
+        saved: "Profile {{name}} saved.",
+        conflict:
+            "The profile was changed elsewhere. The latest data has been loaded; review it and save again.",
+        role: "Control role",
+        account: "Account",
+        statusLabel: "Status",
+        effectiveDate: "Effective from",
+        actions: "Actions",
+        choose: "Choose an account",
+        roles: {
+            receivables_control: "Receivables control account",
+            payables_control: "Payables control account",
+        },
+        needs: {
+            asset: "An active asset leaf account that accepts the subledger source only.",
+            liability:
+                "An active liability leaf account that accepts the subledger source only.",
+        },
+        noEligible:
+            "No {{class}} account accepts the subledger source only yet.",
+        toAccounts: "Set one up in the chart",
+        status: {
+            unmapped: "Not mapped",
+            mapped: "Mapped",
+            invalid: "Account no longer valid",
+        },
+        invalidHint:
+            "The account was deactivated or no longer qualifies; choose another.",
+        mapped: "{{role}} of profile {{profile}} mapped.",
+        saveMapping: "Save {{role}}, {{profile}}",
+        mappingConflict:
+            "The mapping was changed elsewhere. The latest data has been loaded; review it and save again.",
     },
     periods: {
         pageTitle: "Periods",

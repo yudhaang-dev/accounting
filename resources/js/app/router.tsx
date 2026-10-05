@@ -58,6 +58,7 @@ import { DimensionsPage } from '@/modules/master-data/pages/dimensions-page';
 import { ExchangeRatesPage } from '@/modules/master-data/pages/exchange-rates-page';
 import { RateTypesPage } from '@/modules/master-data/pages/rate-types-page';
 import { PartiesPage } from '@/modules/subledger/pages/parties-page';
+import { PostingProfilesPage } from '@/modules/subledger/pages/posting-profiles-page';
 import { ForgotPasswordPage } from '@/modules/identity-access/pages/forgot-password-page';
 import { LoginPage } from '@/modules/identity-access/pages/login-page';
 import { NotFoundPage } from '@/app/not-found-page';
@@ -504,7 +505,9 @@ const partiesRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/parties',
     staticData: {
-        crumbs: (m) => [{ labelKey: 'app.navParties', href: at(m, '/parties') }],
+        crumbs: (m) => [
+            { labelKey: 'app.navParties', href: at(m, '/parties') },
+        ],
     },
     beforeLoad: requirePermission('parties.read'),
     component: function Parties() {
@@ -515,6 +518,31 @@ const partiesRoute = createRoute({
                 companyId={workspace.company_id}
                 canManage={can(workspace, 'parties.manage')}
                 canReadProfiles={can(workspace, 'posting-profiles.read')}
+            />
+        );
+    },
+});
+
+const postingProfilesRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/posting-profiles',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navPostingProfiles',
+                href: at(m, '/posting-profiles'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('posting-profiles.read'),
+    component: function PostingProfiles() {
+        const { workspace } = postingProfilesRoute.useRouteContext();
+
+        return (
+            <PostingProfilesPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'posting-profiles.manage')}
+                canManageAccounts={can(workspace, 'accounts.manage')}
             />
         );
     },
@@ -1154,6 +1182,7 @@ const routeTree = rootRoute.addChildren([
                 exchangeRatesRoute,
                 rateTypesRoute,
                 partiesRoute,
+                postingProfilesRoute,
                 entriesRoute,
                 approvalsRoute,
                 approvalPolicyRoute,

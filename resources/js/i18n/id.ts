@@ -116,6 +116,7 @@ export const id = {
         navCurrencies: "Mata uang",
         navRates: "Kurs",
         navParties: "Pihak",
+        navPostingProfiles: "Profil posting",
         navEntries: "Entri",
         navSchedules: "Jurnal berulang",
         navApprovalPolicy: "Kebijakan persetujuan",
@@ -785,6 +786,60 @@ export const id = {
             externalRefPlaceholder: "referensi",
             externalRefInvalid: "Isi referensi (maks. 128 karakter).",
         },
+    },
+    postingProfiles: {
+        pageTitle: "Profil posting",
+        title: "Profil posting",
+        description:
+            "Setiap profil menentukan akun kontrol piutang dan utang bagi pihak yang memakainya. Profil default melayani pihak tanpa profil. Setiap pemetaan menjadi versi baru, sehingga posting lama tetap pada akunnya.",
+        add: "Tambah profil",
+        createTitle: "Tambah profil posting",
+        editTitle: "Ubah profil {{name}}",
+        editAction: "Ubah profil {{name}}",
+        edit: "Ubah",
+        empty: "Belum ada profil posting",
+        emptyDescription:
+            "Buat profil pertama, lalu petakan akun kontrol piutang dan utangnya. Profil pertama menjadi default.",
+        name: "Nama",
+        isDefault: "Jadikan profil default",
+        defaultHint:
+            "Profil default dipakai pihak yang tidak memilih profil. Memilihnya memindahkan status default dari profil lain.",
+        defaultLocked:
+            "Profil ini default. Untuk mengganti, jadikan profil lain sebagai default.",
+        default: "Default",
+        created: "Profil {{name}} ditambahkan.",
+        saved: "Profil {{name}} disimpan.",
+        conflict:
+            "Profil sudah diubah di tempat lain. Data terbaru telah dimuat; periksa lalu simpan lagi.",
+        role: "Peran kontrol",
+        account: "Akun",
+        statusLabel: "Status",
+        effectiveDate: "Berlaku sejak",
+        actions: "Aksi",
+        choose: "Pilih akun",
+        roles: {
+            receivables_control: "Akun kontrol piutang",
+            payables_control: "Akun kontrol utang",
+        },
+        needs: {
+            asset: "Akun daun aktif berkelas aset, hanya menerima sumber subledger.",
+            liability:
+                "Akun daun aktif berkelas liabilitas, hanya menerima sumber subledger.",
+        },
+        noEligible:
+            "Belum ada akun {{class}} yang hanya menerima sumber subledger.",
+        toAccounts: "Atur di daftar akun",
+        status: {
+            unmapped: "Belum dipetakan",
+            mapped: "Dipetakan",
+            invalid: "Akun tidak lagi valid",
+        },
+        invalidHint:
+            "Akun dinonaktifkan atau tidak lagi memenuhi syarat; pilih akun lain.",
+        mapped: "{{role}} pada profil {{profile}} dipetakan.",
+        saveMapping: "Simpan {{role}}, {{profile}}",
+        mappingConflict:
+            "Pemetaan sudah diubah di tempat lain. Data terbaru telah dimuat; periksa lalu simpan lagi.",
     },
     periods: {
         pageTitle: "Periode",
