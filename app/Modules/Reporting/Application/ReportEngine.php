@@ -5,11 +5,14 @@ namespace App\Modules\Reporting\Application;
 use App\Modules\GeneralLedger\Contracts\AccountClass;
 use App\Modules\GeneralLedger\Contracts\AccountData;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
+use App\Modules\GeneralLedger\Contracts\PeriodData;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Contracts\SystemTransactionKeys;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
+use App\Modules\Planning\Contracts\PlanReader;
+use App\Modules\Planning\Contracts\PlanVersionData;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Support\Access\DataScope;
@@ -34,6 +37,7 @@ final class ReportEngine
         private readonly Currencies $currencies,
         private readonly PeriodDirectory $periods,
         private readonly CashEquivalents $cash,
+        private readonly PlanReader $plans,
     ) {}
 
     /**
@@ -63,6 +67,17 @@ final class ReportEngine
 
         foreach ($structure['columns'] as $column) {
             if ($column['kind'] === 'difference') {
+                continue;
+            }
+
+            if ($column['kind'] === 'plan') {
+                $plan = $this->planColumn($companyId, $column, $from, $to, $filter, $slice->dimensionSetIds());
+                $columns[$column['key']] = ['key' => $column['key'], 'label' => $column['label'], 'kind' => 'plan', 'from' => $plan['range'][0] ?? null, 'to' => $plan['range'][1] ?? null, 'available' => $plan['balances'] !== null, 'plan_version_id' => $plan['version']?->id];
+
+                if ($plan['balances'] !== null) {
+                    $values[$column['key']] = $this->evaluate($structure, $claims, $plan['balances'], $unmapped);
+                }
+
                 continue;
             }
 
@@ -109,7 +124,9 @@ final class ReportEngine
                 $cells[$column['key']] = $value === null ? null : $this->format($value, $scale);
             }
 
-            $rows[] = ['key' => $row['key'], 'label' => $row['label'], 'type' => $row['type'], 'values' => $cells];
+            $variances = $this->variances($structure['columns'], $row, $values);
+
+            $rows[] = ['key' => $row['key'], 'label' => $row['label'], 'type' => $row['type'], 'values' => $cells, ...($variances === [] ? [] : ['variances' => $variances])];
         }
 
         $accountsById = [];
@@ -127,7 +144,7 @@ final class ReportEngine
         usort($list, fn (array $a, array $b): int => strcmp($a['code'], $b['code']));
 
         return [
-            'parameters' => ['from' => $from, 'to' => $to, ...$filter->toArray()],
+            'parameters' => ['from' => $from, 'to' => $to, ...$filter->toArray(), ...(in_array('plan', array_column($structure['columns'], 'kind'), true) ? ['plan_version_id' => $filter->planVersionId] : [])],
             'functional_currency' => $company->functionalCurrency,
             'restricted' => $scope->isRestricted(),
             'columns' => array_map(fn (array $column): array => $columns[$column['key']], $structure['columns']),
@@ -141,6 +158,103 @@ final class ReportEngine
                 'reconciled' => $check['opening']->plus($check['movement'])->toScale($scale, RoundingMode::HalfUp)->isEqualTo($check['closing']->toScale($scale, RoundingMode::HalfUp)),
             ], $cashChecks)] : []),
         ];
+    }
+
+    /**
+     * What a `plan` column holds, shaped like ledger balances so that the rows add it up the same way:
+     * a plan has a movement only, in the debit-positive direction of the ledger. The version is the one
+     * the column names, else the one the report asks for, else the default of the fiscal year the report
+     * ends in (PL-FR-04); without any, or without periods inside the range, the column has no value at
+     * all, never zero (RP-FR-11).
+     *
+     * @param  array<string, mixed>  $column
+     * @param  list<string>|null  $dimensionSetIds
+     * @return array{range: array{0: string, 1: string}|null, version: PlanVersionData|null, balances: array<string, array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal, class: AccountClass}>|null}
+     */
+    private function planColumn(string $companyId, array $column, string $from, string $to, ReportFilter $filter, ?array $dimensionSetIds): array
+    {
+        $range = $this->range($companyId, ['kind' => $column['span'] ?? 'period', 'shift' => $column['shift'] ?? null], $from, $to);
+
+        if ($range === null) {
+            return ['range' => null, 'version' => null, 'balances' => null];
+        }
+
+        $versionId = $column['plan_version_id'] ?? $filter->planVersionId;
+
+        if ($versionId !== null) {
+            $version = $this->plans->version($companyId, $versionId);
+        } else {
+            $period = $this->periods->forDate($companyId, $range[1]);
+            $version = $period === null ? null : $this->plans->defaultVersion($companyId, $period->fiscalYearId);
+        }
+
+        $periodIds = array_map(fn (PeriodData $period): string => $period->id, $this->periods->within($companyId, $range[0], $range[1]));
+
+        if ($version === null || $periodIds === []) {
+            return ['range' => $range, 'version' => $version, 'balances' => null];
+        }
+
+        $byId = [];
+
+        foreach ($this->accounts->all($companyId) as $account) {
+            $byId[$account->id] = $account;
+        }
+
+        $balances = [];
+
+        foreach ($this->plans->amounts($companyId, $version->id, $periodIds, $filter->accountId, $dimensionSetIds) as $amount) {
+            $account = $byId[$amount->accountId] ?? null;
+
+            if ($account === null) {
+                continue;
+            }
+
+            $planned = BigDecimal::of($amount->amount);
+            $movement = $account->normalBalance === 'credit' ? $planned->negated() : $planned;
+            $balances[$account->id] = ['opening' => BigDecimal::zero(), 'movement' => $movement, 'closing' => $movement, 'class' => $account->class];
+        }
+
+        return ['range' => $range, 'version' => $version, 'balances' => $balances];
+    }
+
+    /**
+     * Percentage and direction of each difference column that subtracts a plan: realised minus planned,
+     * as a percentage of the absolute plan, `null` when the plan is zero; favorable follows the row
+     * (RP-FR-12). A difference of zero is neither.
+     *
+     * @param  list<array<string, mixed>>  $columns
+     * @param  array<string, mixed>  $row
+     * @param  array<string, array<string, BigDecimal|null>>  $values
+     * @return array<string, array{percentage: string|null, favorable: bool|null}>
+     */
+    private function variances(array $columns, array $row, array $values): array
+    {
+        $kinds = array_column($columns, 'kind', 'key');
+        $variances = [];
+
+        foreach ($columns as $column) {
+            if ($column['kind'] !== 'difference' || ($kinds[$column['subtrahend']] ?? null) !== 'plan') {
+                continue;
+            }
+
+            $difference = $values[$column['key']][$row['key']] ?? null;
+            $planned = $values[$column['subtrahend']][$row['key']] ?? null;
+
+            if ($difference === null || $planned === null) {
+                $variances[$column['key']] = ['percentage' => null, 'favorable' => null];
+
+                continue;
+            }
+
+            $direction = $row['type'] === 'unmapped' ? null : ReportStructure::favorable($row);
+
+            $variances[$column['key']] = [
+                'percentage' => $planned->isZero() ? null : (string) $difference->multipliedBy(100)->dividedBy($planned->abs(), 2, RoundingMode::HalfUp),
+                'favorable' => $direction === null || $difference->isZero() ? null : ($difference->isPositive() === ($direction === 'higher')),
+            ];
+        }
+
+        return $variances;
     }
 
     /**

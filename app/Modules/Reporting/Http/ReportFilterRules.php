@@ -23,6 +23,7 @@ final class ReportFilterRules
             'transaction_type_keys' => $rules['transaction_type_keys'],
             'transaction_type_keys.*' => $rules['transaction_type_keys.*'],
             'source' => ['nullable', Rule::enum(JournalSource::class)],
+            'plan_version_id' => ['nullable', 'string', 'size:26'],
         ];
     }
 }

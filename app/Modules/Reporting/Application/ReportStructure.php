@@ -27,7 +27,13 @@ final class ReportStructure
 
     public const ROW_TYPES = ['heading', 'accounts', 'subtotal', 'current_year_earnings', 'cash_equivalents'];
 
-    public const COLUMN_KINDS = ['period', 'ytd', 'as_of', 'difference'];
+    public const COLUMN_KINDS = ['period', 'ytd', 'as_of', 'plan', 'difference'];
+
+    /** Which side of a plan comparison is good news for a row (RP-FR-12). */
+    public const FAVORABLE = ['higher', 'lower'];
+
+    /** Ranges a `plan` column can add up. */
+    public const PLAN_SPANS = ['period', 'ytd'];
 
     /** Key of the row that holds the accounts no row claims (RP-FR-02). */
     public const UNMAPPED = 'unmapped';
@@ -106,6 +112,21 @@ final class ReportStructure
         }
 
         return $ids;
+    }
+
+    /**
+     * Whether a higher value than planned is good news for the row: the one it names, else the one
+     * its sign implies, since a credit row shows income and a debit row shows cost (RP-FR-12).
+     *
+     * @param  array<string, mixed>  $row
+     */
+    public static function favorable(array $row): ?string
+    {
+        if ($row['type'] === 'heading') {
+            return null;
+        }
+
+        return $row['favorable'] ?? (($row['sign'] ?? 'debit') === 'credit' ? 'higher' : 'lower');
     }
 
     /** @param  array<string, list<array<mixed>|string>>  $errors */
@@ -187,6 +208,14 @@ final class ReportStructure
                 }
 
                 $normalized['sign'] = $sign;
+
+                if (isset($row['favorable'])) {
+                    if (! in_array($row['favorable'], self::FAVORABLE, true)) {
+                        $errors["{$at}.favorable"][] = __('reports.favorable_invalid', ['allowed' => implode(', ', self::FAVORABLE)]);
+                    } else {
+                        $normalized['favorable'] = $row['favorable'];
+                    }
+                }
             }
 
             if ($type === 'cash_equivalents') {
@@ -366,6 +395,24 @@ final class ReportStructure
                 }
 
                 $normalized['shift'] = ['years' => $years, 'months' => $months];
+
+                if ($kind === 'plan') {
+                    $span = $column['span'] ?? 'period';
+                    $versionId = $column['plan_version_id'] ?? null;
+
+                    if (! in_array($span, self::PLAN_SPANS, true)) {
+                        $errors["{$at}.span"][] = __('reports.plan_span_invalid', ['allowed' => implode(', ', self::PLAN_SPANS)]);
+                        $span = 'period';
+                    }
+
+                    if ($versionId !== null && (! is_string($versionId) || strlen($versionId) !== 26)) {
+                        $errors["{$at}.plan_version_id"][] = __('reports.plan_version_invalid');
+                        $versionId = null;
+                    }
+
+                    $normalized['span'] = $span;
+                    $normalized['plan_version_id'] = $versionId;
+                }
             }
 
             if (is_string($key)) {

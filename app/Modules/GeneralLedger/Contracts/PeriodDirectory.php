@@ -19,6 +19,13 @@ interface PeriodDirectory
     public function fiscalYear(string $companyId, string $fiscalYearId): ?FiscalYearData;
 
     /**
+     * The periods that lie completely inside `$from`..`$to`, oldest first.
+     *
+     * @return list<PeriodData>
+     */
+    public function within(string $companyId, string $from, string $to): array;
+
+    /**
      * What keeps the fiscal calendar from being ready: `calendar_missing`, `no_fiscal_year` or
      * `no_open_period`. Empty when ready.
      *

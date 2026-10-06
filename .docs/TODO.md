@@ -149,7 +149,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M8-06** Arus kas metode langsung dan tidak langsung — RP-FR-09, RP-AC-02 — langsung: `GET /movement-classifications/{id}/cash-flow`; tidak langsung: definisi berjenis `cash_flow_indirect` dengan baris `cash_equivalents`; layar SPA di M8-13
 - [x] **M8-07** Perubahan ekuitas — RP-FR-10, RP-AC-09 — komponen ekuitas disimpan di struktur klasifikasi mutasi (`components`) dan dibaca lewat `GET /movement-classifications/{id}/equity-changes`; saldo awal laba tahun berjalan ikut akun pendapatan/beban yang belum ditutup; layar SPA di M8-13
 - [x] **M8-08** Laporan buku besar dan mode kertas kerja neraca saldo — RP-FR-05, RP-FR-06, RP-AC-11 — `GET /reports/general-ledger` (satu akun per permintaan, JSON dan CSV, tanpa paginasi); kertas kerja lewat `adjustment_keys[]` pada neraca saldo dan penyesuaiannya berupa selisih bersih per akun; `conversion_batch` menandai batch saldo konversi; layar SPA di M8-13
-- [ ] **M8-09** Proyeksi vs realisasi dan aturan selisih — RP-FR-11, RP-FR-12, RP-AC-04
+- [x] **M8-09** Proyeksi vs realisasi dan aturan selisih — RP-FR-11, RP-FR-12, RP-AC-04 — kolom `plan` pada definisi laporan membaca `PlanReader`, dan kolom selisih yang mengurangi kolom `plan` menambah `variances` pada tiap baris; basis kas tidak menjadi parameter, metrik kas adalah arus kas langsung periode yang sama; filter transaksi dan sumber tidak berlaku pada rencana; layar SPA di M8-13
 - [ ] **M8-10** Cakupan histori laporan — RP-FR-13, RP-AC-10
 - [ ] **M8-11** Snapshot laporan terbit dan hitung ulang — RP-FR-14, X-FR-03, RP-AC-08, X-AC-04
 - [ ] **M8-12** Template definisi laporan dari [CHART-OF-ACCOUNTS.md](CHART-OF-ACCOUNTS.md) — RP-FR-01

@@ -92,6 +92,15 @@ class ReportDefinitionController
      * claims are in the `unmapped` row, still counted. `cash_checks` reconciles opening cash, net
      * increase and closing cash per column.
      *
+     * A `plan` column (`span` `period` or `ytd`, optionally shifted) reads the plan version of its
+     * `plan_version_id`, else of the `plan_version_id` parameter, else the default of the fiscal year the
+     * range ends in (RP-FR-11); without a version, or without periods inside the range, it is not
+     * `available` and has no values. A `difference` column that subtracts a plan column adds
+     * `variances[<column key>]` to each row: `percentage` of the absolute plan (`null` when the plan is zero)
+     * and `favorable`, which follows the `favorable` (`higher` or `lower`) of the row, else its sign
+     * (credit: higher, debit: lower), and is `null` for a variance of zero (RP-FR-12). Cash is not a basis
+     * here: it is the direct cash flow of the same period.
+     *
      * @response array{data: array{definition: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array{key: string, label: string, kind: string, from: string|null, to: string|null, available: bool}>, rows: list<array{key: string, label: string, type: string, values: array<string, string|null>}>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}}
      */
     public function evaluate(EvaluateReportRequest $request, ReportEngine $engine, DataScopeContext $scope, string $companyId, string $id): JsonResponse

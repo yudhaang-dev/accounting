@@ -18,6 +18,16 @@ final class LedgerSlice
         private readonly ?array $dimensionSetIds,
     ) {}
 
+    /**
+     * The dimension sets that the filter and the data scope leave; null keeps every set.
+     *
+     * @return list<string>|null
+     */
+    public function dimensionSetIds(): ?array
+    {
+        return $this->dimensionSetIds;
+    }
+
     /** @return list<TypeMovementRow> */
     public function movementByTransactionType(string $from, string $to): array
     {
