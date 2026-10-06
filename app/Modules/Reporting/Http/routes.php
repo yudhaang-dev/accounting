@@ -32,6 +32,8 @@ Route::companyScoped(function () {
 
     Route::get('movement-classifications/{id}/cash-flow', [MovementClassificationController::class, 'cashFlow'])
         ->middleware('permission:reports.read')->where('id', ApiServiceProvider::ULID)->name('movement-classifications.cash-flow');
+    Route::get('movement-classifications/{id}/equity-changes', [MovementClassificationController::class, 'equityChanges'])
+        ->middleware('permission:reports.read')->where('id', ApiServiceProvider::ULID)->name('movement-classifications.equity-changes');
 
     Route::get('reporting/account-role-mappings', [AccountRoleMappingController::class, 'index'])->middleware('permission:reports.read')->name('reporting.account-role-mappings.index');
     Route::put('reporting/account-role-mappings/cash_equivalents', [AccountRoleMappingController::class, 'update'])->middleware('permission:report-definitions.manage')->name('reporting.account-role-mappings.update');

@@ -16,7 +16,12 @@ final class ClassificationStructure
     /** Key of the row for movement that no rule matches. */
     public const UNCLASSIFIED = 'unclassified';
 
+    /** Key of the component for equity and result accounts that no component claims. */
+    public const UNASSIGNED = 'unassigned';
+
     private const MAX_ROWS = 100;
+
+    private const MAX_COMPONENTS = 50;
 
     private const MAX_RULES = 500;
 
@@ -27,7 +32,7 @@ final class ClassificationStructure
     /**
      * @param  array<string, mixed>  $input
      * @param  list<AccountData>  $accounts  the chart of the company
-     * @return array{rows: list<array{key: string, label: string}>, rules: list<array{row: string, accounts: list<array<string, string>>, transaction_type_keys: list<string>}>}
+     * @return array{rows: list<array{key: string, label: string}>, rules: list<array{row: string, accounts: list<array<string, string>>, transaction_type_keys: list<string>}>, components?: list<array{key: string, label: string, accounts: list<array<string, string>>}>}
      *
      * @throws ValidationException
      */
@@ -36,12 +41,64 @@ final class ClassificationStructure
         $errors = [];
         $rows = self::rows($input['rows'] ?? null, $errors);
         $rules = self::rules($input['rules'] ?? null, $rows, $accounts, $errors);
+        $components = isset($input['components']) ? self::components($input['components'], $accounts, $errors) : null;
 
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
 
-        return ['rows' => $rows, 'rules' => $rules];
+        return ['rows' => $rows, 'rules' => $rules, ...($components === null ? [] : ['components' => $components])];
+    }
+
+    /**
+     * The equity components of a statement of changes in equity (RP-FR-10): each one is a set of
+     * accounts, which may be income and expense accounts for the result of the year.
+     *
+     * @param  list<AccountData>  $accounts
+     * @param  array<string, list<array<mixed>|string>>  $errors
+     * @return list<array{key: string, label: string, accounts: list<array<string, string>>}>
+     */
+    private static function components(mixed $input, array $accounts, array &$errors): array
+    {
+        if (! is_array($input) || $input === [] || count($input) > self::MAX_COMPONENTS) {
+            $errors['structure.components'][] = __('reports.classification_components_count', ['max' => self::MAX_COMPONENTS]);
+
+            return [];
+        }
+
+        $byId = [];
+
+        foreach ($accounts as $account) {
+            $byId[$account->id] = $account;
+        }
+
+        $components = [];
+        $seen = [];
+
+        foreach (array_values($input) as $index => $component) {
+            $at = "structure.components.{$index}";
+            $component = is_array($component) ? $component : [];
+            $key = $component['key'] ?? null;
+            $label = $component['label'] ?? null;
+
+            if (! is_string($key) || preg_match(self::ROW_KEY, $key) !== 1 || $key === self::UNASSIGNED) {
+                $errors["{$at}.key"][] = __('reports.classification_component_key_invalid');
+            } elseif (isset($seen[$key])) {
+                $errors["{$at}.key"][] = __('reports.row_key_repeated', ['key' => $key]);
+            }
+
+            if (! is_string($label) || $label === '' || mb_strlen($label) > 255) {
+                $errors["{$at}.label"][] = __('reports.row_label_invalid');
+            }
+
+            if (is_string($key)) {
+                $seen[$key] = true;
+            }
+
+            $components[] = ['key' => (string) $key, 'label' => (string) $label, 'accounts' => ReportStructure::selectors($component['accounts'] ?? null, $at, $byId, $errors)];
+        }
+
+        return $components;
     }
 
     /**

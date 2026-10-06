@@ -1800,6 +1800,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/movement-classifications/{id}/cash-flow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cash flow by the direct method (RP-FR-09): the counter lines of the journals that touch an
+         *     account of the `cash_equivalents` role are classified by this classification, so a payment is
+         *     sorted by what it paid for and a transfer between cash accounts is zero. `rows` have `inflow`,
+         *     `outflow` and `net`; `unclassified` lists what no rule matched, still counted. `cash` reconciles
+         *     `opening_balance` + `imported_opening_balance` + `net_increase` with `closing_balance` and says
+         *     so in `reconciled`; `mapping.problems` lists mapped accounts that no longer qualify. 422 when
+         *     the role is not mapped
+         */
+        get: operations["movement-classifications.cash-flow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/movement-classifications/{id}/equity-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Statement of changes in equity (RP-FR-10): the `components` of the classification (account sets;
+         *     income and expense accounts may be one of them for the result of the year) against its `rows`.
+         *     Each component has `opening_balance`, the classified `movement` of `from`..`to` and
+         *     `closing_balance`, and `reconciled` says that they add up. The opening balance import counts as
+         *     opening. Equity and result accounts that no component claims are in the `unassigned` component
+         *     and movement that no rule matches in the `unclassified` row. `equity` compares the closing total
+         *     with the equity of the ledger, which the balance sheet shows, and `balanced` says they agree.
+         *     Amounts are credit-positive. 422 when the classification has no components
+         */
+        get: operations["movement-classifications.equity-changes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/open-items": {
         parameters: {
             query?: never;
@@ -2664,6 +2715,24 @@ export interface paths {
          *     every column: `account_id`, `dimensions[<type key>]` with roll-up, `transaction_type_keys[]` and
          *     `source`; without them every line counts, those without dimensions included (RP-FR-04). For a user limited to some dimension
          *     values only the lines inside that scope are added up and `restricted` is true (IA-FR-03)
+         * @description A definition of kind `income_statement` is an income statement (RP-FR-07): only income and
+         *     expense accounts are added up, the closing journal of a closed year is left out of every
+         *     column, and the opening balance import is left out of `period` columns but kept in `ytd` ones.
+         *
+         *     A definition of kind `balance_sheet` is a balance sheet (RP-FR-08): use `as_of` columns with
+         *     `closing` rows and one `current_year_earnings` row, which holds the closing balance of the
+         *     income and expense accounts that no row claims, so the result of a year that is not closed yet
+         *     shows once and a closed year shows it in retained earnings only. `balance_checks` has, per
+         *     `as_of` column, assets against liabilities and equity, with `balanced` false when they differ.
+         *
+         *     A definition of kind `cash_flow_indirect` is a cash flow by the indirect method (RP-FR-09): it
+         *     is built from `movement` rows like any other (profit from income and expense, then each balance
+         *     sheet account group with the sign that turns its movement into cash: -1 for assets, +1 for
+         *     liabilities and equity) and a `cash_equivalents` row, which holds the accounts of that role
+         *     (422 when it is not mapped). Journals of the closing and of the opening balance import are left
+         *     out of movement; the import counts in the opening cash. Balance sheet accounts that no row
+         *     claims are in the `unmapped` row, still counted. `cash_checks` reconciles opening cash, net
+         *     increase and closing cash per column.
          */
         get: operations["report-definitions.result"];
         put?: never;
@@ -4264,6 +4333,7 @@ export interface components {
             structure: {
                 rows?: string[];
                 rules?: string[];
+                components?: string[];
             };
             lock_version?: number;
         };
@@ -4273,6 +4343,7 @@ export interface components {
             name: string;
             kind?: string;
             structure: {
+                basis?: string;
                 rows?: string[];
                 columns?: string[];
             };
@@ -8643,6 +8714,169 @@ export interface operations {
                                 name: string;
                                 transaction_type_key: string | null;
                             }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movement-classifications.cash-flow": {
+        parameters: {
+            query: {
+                from: string | null;
+                to: string | null;
+                version?: number | null;
+                account_id?: string | null;
+                "dimensions[]"?: (string | null)[] | null;
+                "transaction_type_keys[]"?: string[];
+                source?: components["schemas"]["JournalSource"] | null;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            classification: {
+                                id: string;
+                                key: string;
+                                version: number;
+                            };
+                            parameters: {
+                                from: string;
+                                to: string;
+                                account_id: string | null;
+                                dimensions: {
+                                    [key: string]: string;
+                                };
+                                transaction_type_keys: string[];
+                                source: string | null;
+                            };
+                            functional_currency: string;
+                            restricted: boolean;
+                            rows: {
+                                key: string;
+                                label: string;
+                                inflow: string;
+                                outflow: string;
+                                net: string;
+                            }[];
+                            unclassified: {
+                                account_id: string;
+                                code: string;
+                                name: string;
+                                transaction_type_key: string | null;
+                            }[];
+                            mapping: {
+                                version: number;
+                                account_ids: string[];
+                                problems: {
+                                    [key: string]: string[];
+                                };
+                            };
+                            cash: {
+                                opening_balance: string;
+                                imported_opening_balance: string;
+                                net_increase: string;
+                                closing_balance: string;
+                                difference: string;
+                                reconciled: boolean;
+                            };
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movement-classifications.equity-changes": {
+        parameters: {
+            query: {
+                from: string | null;
+                to: string | null;
+                version?: number | null;
+                account_id?: string | null;
+                "dimensions[]"?: (string | null)[] | null;
+                "transaction_type_keys[]"?: string[];
+                source?: components["schemas"]["JournalSource"] | null;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            classification: {
+                                id: string;
+                                key: string;
+                                version: number;
+                            };
+                            parameters: {
+                                from: string;
+                                to: string;
+                                account_id: string | null;
+                                dimensions: {
+                                    [key: string]: string;
+                                };
+                                transaction_type_keys: string[];
+                                source: string | null;
+                            };
+                            functional_currency: string;
+                            restricted: boolean;
+                            components: {
+                                key: string;
+                                label: string;
+                                opening_balance: string;
+                                movement: string;
+                                closing_balance: string;
+                                reconciled: boolean;
+                            }[];
+                            rows: {
+                                key: string;
+                                label: string;
+                                values: {
+                                    [key: string]: string;
+                                };
+                                total: string;
+                            }[];
+                            unclassified: {
+                                account_id: string;
+                                code: string;
+                                name: string;
+                                transaction_type_key: string | null;
+                            }[];
+                            equity: {
+                                components_total: string;
+                                ledger_total: string;
+                                difference: string;
+                                reconciled: boolean;
+                                balanced: boolean;
+                            };
                         };
                     };
                 };

@@ -12,6 +12,10 @@ return [
     'classification_rules_count' => 'A classification has between 1 and :max rules.',
     'classification_rule_row_unknown' => 'A rule refers to one of the rows of the classification.',
     'classification_type_keys_invalid' => 'The transaction type keys are a list of at most 50 keys in lowercase letters, digits, dots and underscores.',
+    'classification_components_count' => 'A statement of changes in equity has between 1 and :max components.',
+    'classification_component_key_invalid' => 'A component key starts with a lowercase letter and has only lowercase letters, digits and underscores; "unassigned" is reserved.',
+    'equity_components_missing' => 'Add components to the classification before running a statement of changes in equity.',
+    'unassigned_component' => 'Not assigned',
 
     'basis_invalid' => 'The basis must be one of: :allowed.',
     'rows_count' => 'A report has between 1 and :max rows.',

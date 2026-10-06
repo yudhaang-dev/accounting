@@ -3,6 +3,7 @@
 namespace App\Modules\Reporting\Http;
 
 use App\Modules\Reporting\Application\DirectCashFlow;
+use App\Modules\Reporting\Application\EquityChanges;
 use App\Modules\Reporting\Application\ManageMovementClassifications;
 use App\Modules\Reporting\Application\MovementClassifier;
 use App\Modules\Reporting\Application\ReportFilter;
@@ -109,6 +110,32 @@ class MovementClassificationController
         return new JsonResponse(['data' => [
             'classification' => ['id' => $classification->id, 'key' => $classification->key, 'version' => $version->version],
             ...$cashFlow($companyId, $version->structure, $params['from'], $params['to'], $scope->current(), ReportFilter::fromParameters($params)),
+        ]]);
+    }
+
+    /**
+     * Statement of changes in equity (RP-FR-10): the `components` of the classification (account sets;
+     * income and expense accounts may be one of them for the result of the year) against its `rows`.
+     * Each component has `opening_balance`, the classified `movement` of `from`..`to` and
+     * `closing_balance`, and `reconciled` says that they add up. The opening balance import counts as
+     * opening. Equity and result accounts that no component claims are in the `unassigned` component
+     * and movement that no rule matches in the `unclassified` row. `equity` compares the closing total
+     * with the equity of the ledger, which the balance sheet shows, and `balanced` says they agree.
+     * Amounts are credit-positive. 422 when the classification has no components.
+     *
+     * @response array{data: array{classification: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, components: list<array{key: string, label: string, opening_balance: string, movement: string, closing_balance: string, reconciled: bool}>, rows: list<array{key: string, label: string, values: array<string, string>, total: string}>, unclassified: list<array{account_id: string, code: string, name: string, transaction_type_key: string|null}>, equity: array{components_total: string, ledger_total: string, difference: string, reconciled: bool, balanced: bool}}}
+     */
+    public function equityChanges(EvaluateClassificationRequest $request, EquityChanges $equity, DataScopeContext $scope, string $companyId, string $id): JsonResponse
+    {
+        $classification = MovementClassification::query()->findOrFail($id);
+        $version = $this->version($classification, $request->integer('version') ?: null);
+
+        /** @var array<string, mixed>&array{from: string, to: string} $params */
+        $params = $request->validated();
+
+        return new JsonResponse(['data' => [
+            'classification' => ['id' => $classification->id, 'key' => $classification->key, 'version' => $version->version],
+            ...$equity($companyId, $version->structure, $params['from'], $params['to'], $scope->current(), ReportFilter::fromParameters($params)),
         ]]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Reporting\Application;
 
+use App\Modules\GeneralLedger\Contracts\AccountData;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
@@ -10,6 +11,7 @@ use App\Platform\Api\ErrorCode;
 use App\Support\Access\DataScope;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
+use Closure;
 
 /**
  * Sorts the movement of a date range into the rows of a classification (RP-FR-03). Each account and
@@ -41,11 +43,7 @@ final class MovementClassifier
         $filter ??= new ReportFilter;
 
         $chart = $this->accounts->all($companyId);
-        $matchers = [];
-
-        foreach ($structure['rules'] as $rule) {
-            $matchers[] = ['row' => $rule['row'], 'accounts' => array_flip(ReportStructure::resolve($rule['accounts'], $chart)), 'keys' => $rule['transaction_type_keys']];
-        }
+        $rowOf = $this->rowOf($structure, $chart);
 
         $totals = [];
         $unclassified = [];
@@ -54,15 +52,7 @@ final class MovementClassifier
         $lines = $cashAccountIds === null ? $slice->movementByTransactionType($from, $to) : $slice->cashCounterMovement($from, $to, $cashAccountIds);
 
         foreach ($lines as $line) {
-            $row = ClassificationStructure::UNCLASSIFIED;
-
-            foreach ($matchers as $matcher) {
-                if (isset($matcher['accounts'][$line->accountId]) && ($matcher['keys'] === [] || in_array($line->transactionTypeKey, $matcher['keys'], true))) {
-                    $row = $matcher['row'];
-
-                    break;
-                }
-            }
+            $row = $rowOf($line->accountId, $line->transactionTypeKey);
 
             $totals[$row]['debit'] = ($totals[$row]['debit'] ?? BigDecimal::zero())->plus($line->debit);
             $totals[$row]['credit'] = ($totals[$row]['credit'] ?? BigDecimal::zero())->plus($line->credit);
@@ -103,6 +93,33 @@ final class MovementClassifier
             'total' => $this->amounts($sum['debit'], $sum['credit'], $scale),
             'unclassified' => array_map(fn (array $line): array => ['account_id' => $line['account_id'], 'code' => $byId[$line['account_id']]->code ?? '', 'name' => $byId[$line['account_id']]->name ?? '', 'transaction_type_key' => $line['transaction_type_key']], $unclassified),
         ];
+    }
+
+    /**
+     * The row key that a line of an account and a transaction type key falls into: the first rule that
+     * matches wins, and a line that no rule matches is `unclassified`.
+     *
+     * @param  array{rules: list<array{row: string, accounts: list<array<string, string>>, transaction_type_keys: list<string>}>}  $structure
+     * @param  list<AccountData>  $chart
+     * @return Closure(string, string|null): string
+     */
+    public function rowOf(array $structure, array $chart): Closure
+    {
+        $matchers = [];
+
+        foreach ($structure['rules'] as $rule) {
+            $matchers[] = ['row' => $rule['row'], 'accounts' => array_flip(ReportStructure::resolve($rule['accounts'], $chart)), 'keys' => $rule['transaction_type_keys']];
+        }
+
+        return function (string $accountId, ?string $transactionTypeKey) use ($matchers): string {
+            foreach ($matchers as $matcher) {
+                if (isset($matcher['accounts'][$accountId]) && ($matcher['keys'] === [] || in_array($transactionTypeKey, $matcher['keys'], true))) {
+                    return $matcher['row'];
+                }
+            }
+
+            return ClassificationStructure::UNCLASSIFIED;
+        };
     }
 
     /**

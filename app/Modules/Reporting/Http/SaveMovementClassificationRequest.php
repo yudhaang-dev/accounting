@@ -22,6 +22,7 @@ class SaveMovementClassificationRequest extends FormRequest
             'structure' => [$creating ? 'required' : 'sometimes', 'array'],
             'structure.rows' => ['required_with:structure', 'array'],
             'structure.rules' => ['required_with:structure', 'array'],
+            'structure.components' => ['sometimes', 'array'],
             'lock_version' => [$creating ? 'prohibited' : 'required', 'integer', 'min:1'],
         ];
     }

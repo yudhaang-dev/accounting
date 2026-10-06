@@ -12,6 +12,10 @@ return [
     'classification_rules_count' => 'Klasifikasi memiliki 1 sampai :max aturan.',
     'classification_rule_row_unknown' => 'Aturan merujuk ke salah satu baris klasifikasi.',
     'classification_type_keys_invalid' => 'Key Jenis Transaksi adalah daftar paling banyak 50 key dengan huruf kecil, angka, titik, dan garis bawah.',
+    'classification_components_count' => 'Laporan perubahan ekuitas memiliki 1 sampai :max komponen.',
+    'classification_component_key_invalid' => 'Key komponen diawali huruf kecil dan hanya berisi huruf kecil, angka, dan garis bawah; "unassigned" dicadangkan.',
+    'equity_components_missing' => 'Tambahkan komponen pada klasifikasi sebelum menjalankan laporan perubahan ekuitas.',
+    'unassigned_component' => 'Belum ditetapkan',
 
     'basis_invalid' => 'Dasar nilai harus salah satu dari: :allowed.',
     'rows_count' => 'Laporan memiliki 1 sampai :max baris.',

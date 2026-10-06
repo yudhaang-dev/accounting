@@ -147,7 +147,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M8-04** Laba rugi — RP-FR-07, RP-AC-05 — definisi berjenis `income_statement` lewat `ReportEngine`; pembanding rencana di M8-09; bagian OCI hanya lewat baris definisi, belum ada pemisahan OCI di COA; layar SPA di M8-13
 - [x] **M8-05** Neraca dan `current_year_earnings` — RP-FR-08, RP-AC-01, RP-AC-06 — definisi berjenis `balance_sheet`; `current_year_earnings` memuat saldo pendapatan/beban yang tidak diklaim baris mana pun (termasuk tahun sebelumnya yang belum ditutup), `balance_checks` per kolom `as_of`; layar SPA di M8-13
 - [x] **M8-06** Arus kas metode langsung dan tidak langsung — RP-FR-09, RP-AC-02 — langsung: `GET /movement-classifications/{id}/cash-flow`; tidak langsung: definisi berjenis `cash_flow_indirect` dengan baris `cash_equivalents`; layar SPA di M8-13
-- [ ] **M8-07** Perubahan ekuitas — RP-FR-10, RP-AC-09
+- [x] **M8-07** Perubahan ekuitas — RP-FR-10, RP-AC-09 — komponen ekuitas disimpan di struktur klasifikasi mutasi (`components`) dan dibaca lewat `GET /movement-classifications/{id}/equity-changes`; saldo awal laba tahun berjalan ikut akun pendapatan/beban yang belum ditutup; layar SPA di M8-13
 - [ ] **M8-08** Laporan buku besar dan mode kertas kerja neraca saldo — RP-FR-05, RP-FR-06, RP-AC-11
 - [ ] **M8-09** Proyeksi vs realisasi dan aturan selisih — RP-FR-11, RP-FR-12, RP-AC-04
 - [ ] **M8-10** Cakupan histori laporan — RP-FR-13, RP-AC-10
