@@ -7014,6 +7014,311 @@
                 }
             }
         },
+        "/companies/{companyId}/reports/general-ledger": {
+            "get": {
+                "operationId": "reports.general-ledger",
+                "summary": "General ledger of the account `account_id` for `from`..`to` (RP-FR-06): `opening_balance`, the\n`lines` oldest first with the running `balance`, the amount in the transaction currency, and\nthe `journal_id`, `entry_id` and `source_references` to follow, then `totals` and\n`closing_balance`. Balances are debit minus credit, so a credit balance is negative. The\nfilters of the trial balance apply (`dimensions`, `transaction_type_keys`, `source`); for a user\nlimited to some dimension values only the lines inside that scope count (IA-FR-03). With\n`Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)",
+                "tags": [
+                    "GeneralLedger"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "account_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "dimensions[]",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "array",
+                                "null"
+                            ],
+                            "items": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "minLength": 26,
+                                "maxLength": 26
+                            }
+                        }
+                    },
+                    {
+                        "name": "transaction_type_keys[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "items": {
+                                "type": "string",
+                                "pattern": "^[a-z][a-z0-9_.]*$",
+                                "maxLength": 64
+                            }
+                        }
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/JournalSource"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "parameters": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "from": {
+                                                            "type": "string"
+                                                        },
+                                                        "to": {
+                                                            "type": "string"
+                                                        },
+                                                        "account_id": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "dimensions": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "transaction_type_keys": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "source": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "from",
+                                                        "to",
+                                                        "account_id",
+                                                        "dimensions",
+                                                        "transaction_type_keys",
+                                                        "source"
+                                                    ]
+                                                },
+                                                "functional_currency": {
+                                                    "type": "string"
+                                                },
+                                                "restricted": {
+                                                    "type": "boolean"
+                                                },
+                                                "account": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "code": {
+                                                            "type": "string"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "code",
+                                                        "name"
+                                                    ]
+                                                },
+                                                "opening_balance": {
+                                                    "type": "string"
+                                                },
+                                                "lines": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "journal_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "journal_number": {
+                                                                "type": "string"
+                                                            },
+                                                            "entry_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "accounting_date": {
+                                                                "type": "string"
+                                                            },
+                                                            "source": {
+                                                                "type": "string"
+                                                            },
+                                                            "transaction_type_key": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "source_references": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "additionalProperties": {}
+                                                            },
+                                                            "description": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "currency": {
+                                                                "type": "string"
+                                                            },
+                                                            "transaction_amount": {
+                                                                "type": "string"
+                                                            },
+                                                            "exchange_rate": {
+                                                                "type": "string"
+                                                            },
+                                                            "balance": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "journal_id",
+                                                            "journal_number",
+                                                            "entry_id",
+                                                            "accounting_date",
+                                                            "source",
+                                                            "transaction_type_key",
+                                                            "source_references",
+                                                            "description",
+                                                            "debit",
+                                                            "credit",
+                                                            "currency",
+                                                            "transaction_amount",
+                                                            "exchange_rate",
+                                                            "balance"
+                                                        ]
+                                                    }
+                                                },
+                                                "totals": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "debit": {
+                                                            "type": "string"
+                                                        },
+                                                        "credit": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "debit",
+                                                        "credit"
+                                                    ]
+                                                },
+                                                "closing_balance": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "parameters",
+                                                "functional_currency",
+                                                "restricted",
+                                                "account",
+                                                "opening_balance",
+                                                "lines",
+                                                "totals",
+                                                "closing_balance"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/history-imports": {
             "get": {
                 "operationId": "history-imports.show",
@@ -17167,7 +17472,7 @@
         "/companies/{companyId}/reports/trial-balance": {
             "get": {
                 "operationId": "reports.trial-balance",
-                "summary": "Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and\nclosing balance per account, totals and `balanced`. `account_id` narrows it to one account and `dimensions[<type key>]=<value id>` to the lines in that\nvalue or any value below it (roll-up). `transaction_type_keys[]` keeps the lines of journals with\nthose keys and `source` (`entry`, `subledger` or `system`) those from that source; the opening\nbalance is then the filtered ledger before `from`. Lines without dimensions stay in unless a\ndimension filter is given.\nDrill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.\nWith `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).\nFor a user limited to some dimension values only the lines inside that scope are added up and\n`restricted` is true (IA-FR-03); the download is limited the same way",
+                "summary": "Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and\nclosing balance per account, totals and `balanced`. `account_id` narrows it to one account and `dimensions[<type key>]=<value id>` to the lines in that\nvalue or any value below it (roll-up). `transaction_type_keys[]` keeps the lines of journals with\nthose keys and `source` (`entry`, `subledger` or `system`) those from that source; the opening\nbalance is then the filtered ledger before `from`. Lines without dimensions stay in unless a\ndimension filter is given.\nDrill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.\n`conversion_batch` names the opening balance batch the ledger started from (cutover date, ledger\nstart date, history granularity), or is null. With `adjustment_keys[]` the result also has a\n`workpaper` (RP-AC-11): per account the closing balance `before_*` the journals with those keys,\nthe `adjustment_*` they add as a net debit or credit, and the balance `after_*` them, which is the\nclosing balance, so before + adjustment = after for every account. The download is always the plain\ntrial balance.\nWith `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).\nFor a user limited to some dimension values only the lines inside that scope are added up and\n`restricted` is true (IA-FR-03); the download is limited the same way",
                 "tags": [
                     "TrialBalance"
                 ],
@@ -17258,6 +17563,19 @@
                                 }
                             ]
                         }
+                    },
+                    {
+                        "name": "adjustment_keys[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "items": {
+                                "type": "string",
+                                "pattern": "^[a-z][a-z0-9_.]*$",
+                                "maxLength": 64
+                            }
+                        }
                     }
                 ],
                 "responses": {
@@ -17322,6 +17640,89 @@
                                                 },
                                                 "balanced": {
                                                     "type": "boolean"
+                                                },
+                                                "conversion_batch": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "source_key": {
+                                                            "type": "string"
+                                                        },
+                                                        "source_system": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "cutover_date": {
+                                                            "type": "string"
+                                                        },
+                                                        "ledger_start_date": {
+                                                            "type": "string"
+                                                        },
+                                                        "history_granularity": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "journal_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "journal_number": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "source_key",
+                                                        "source_system",
+                                                        "cutover_date",
+                                                        "ledger_start_date",
+                                                        "history_granularity",
+                                                        "journal_id",
+                                                        "journal_number"
+                                                    ]
+                                                },
+                                                "workpaper": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "adjustment_keys": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "balanced": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "totals": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "rows": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "additionalProperties": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "adjustment_keys",
+                                                        "balanced",
+                                                        "totals",
+                                                        "rows"
+                                                    ]
                                                 },
                                                 "totals": {
                                                     "type": "object",
@@ -17410,6 +17811,7 @@
                                                 "functional_currency",
                                                 "restricted",
                                                 "balanced",
+                                                "conversion_batch",
                                                 "totals",
                                                 "rows"
                                             ]

@@ -81,4 +81,16 @@ interface LedgerReader
      * @return list<AccountLineRow>
      */
     public function linesNotFromSource(string $companyId, string $accountId, string $asOf, JournalSource $source): array;
+
+    /**
+     * The lines of `$from`..`$to`, oldest first (date, journal number, line number), for the general
+     * ledger report (RP-FR-06). The other parameters narrow the lines as in `trialBalance()`.
+     *
+     * @param  string  $from  `YYYY-MM-DD`
+     * @param  string  $to  `YYYY-MM-DD`
+     * @param  list<string>|null  $dimensionSetIds
+     * @param  list<string>|null  $transactionTypeKeys
+     * @return list<LedgerLineRow>
+     */
+    public function accountLines(string $companyId, string $from, string $to, string $accountId, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null): array;
 }

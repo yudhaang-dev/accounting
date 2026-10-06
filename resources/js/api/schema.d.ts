@@ -1362,6 +1362,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/reports/general-ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * General ledger of the account `account_id` for `from`..`to` (RP-FR-06): `opening_balance`, the
+         *     `lines` oldest first with the running `balance`, the amount in the transaction currency, and
+         *     the `journal_id`, `entry_id` and `source_references` to follow, then `totals` and
+         *     `closing_balance`. Balances are debit minus credit, so a credit balance is negative. The
+         *     filters of the trial balance apply (`dimensions`, `transaction_type_keys`, `source`); for a user
+         *     limited to some dimension values only the lines inside that scope count (IA-FR-03). With
+         *     `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)
+         */
+        get: operations["reports.general-ledger"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/history-imports": {
         parameters: {
             query?: never;
@@ -3073,6 +3098,12 @@ export interface paths {
          *     balance is then the filtered ledger before `from`. Lines without dimensions stay in unless a
          *     dimension filter is given.
          *     Drill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.
+         *     `conversion_batch` names the opening balance batch the ledger started from (cutover date, ledger
+         *     start date, history granularity), or is null. With `adjustment_keys[]` the result also has a
+         *     `workpaper` (RP-AC-11): per account the closing balance `before_*` the journals with those keys,
+         *     the `adjustment_*` they add as a net debit or credit, and the balance `after_*` them, which is the
+         *     closing balance, so before + adjustment = after for every account. The download is always the plain
+         *     trial balance.
          *     With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).
          *     For a user limited to some dimension values only the lines inside that scope are added up and
          *     `restricted` is true (IA-FR-03); the download is limited the same way
@@ -7712,6 +7743,80 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "reports.general-ledger": {
+        parameters: {
+            query: {
+                from: string | null;
+                to: string | null;
+                account_id: string | null;
+                "dimensions[]"?: (string | null)[] | null;
+                "transaction_type_keys[]"?: string[];
+                source?: components["schemas"]["JournalSource"] | null;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            parameters: {
+                                from: string;
+                                to: string;
+                                account_id: string | null;
+                                dimensions: {
+                                    [key: string]: string;
+                                };
+                                transaction_type_keys: string[];
+                                source: string | null;
+                            };
+                            functional_currency: string;
+                            restricted: boolean;
+                            account: {
+                                id: string;
+                                code: string;
+                                name: string;
+                            };
+                            opening_balance: string;
+                            lines: {
+                                journal_id: string;
+                                journal_number: string;
+                                entry_id: string | null;
+                                accounting_date: string;
+                                source: string;
+                                transaction_type_key: string | null;
+                                source_references: {
+                                    [key: string]: unknown;
+                                } | null;
+                                description: string | null;
+                                debit: string;
+                                credit: string;
+                                currency: string;
+                                transaction_amount: string;
+                                exchange_rate: string;
+                                balance: string;
+                            }[];
+                            totals: {
+                                debit: string;
+                                credit: string;
+                            };
+                            closing_balance: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "history-imports.show": {
         parameters: {
             query?: never;
@@ -11661,6 +11766,7 @@ export interface operations {
                 "dimensions[]"?: (string | null)[] | null;
                 "transaction_type_keys[]"?: string[];
                 source?: components["schemas"]["JournalSource"] | null;
+                "adjustment_keys[]"?: string[];
             };
             header?: never;
             path: {
@@ -11690,6 +11796,26 @@ export interface operations {
                             functional_currency: string;
                             restricted: boolean;
                             balanced: boolean;
+                            conversion_batch: {
+                                id: string;
+                                source_key: string;
+                                source_system: string | null;
+                                cutover_date: string;
+                                ledger_start_date: string;
+                                history_granularity: string | null;
+                                journal_id: string;
+                                journal_number: string;
+                            } | null;
+                            workpaper?: {
+                                adjustment_keys: string[];
+                                balanced: boolean;
+                                totals: {
+                                    [key: string]: string;
+                                };
+                                rows: {
+                                    [key: string]: string;
+                                }[];
+                            };
                             totals: {
                                 opening_debit: string;
                                 opening_credit: string;

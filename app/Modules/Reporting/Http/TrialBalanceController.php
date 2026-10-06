@@ -20,18 +20,24 @@ class TrialBalanceController
      * balance is then the filtered ledger before `from`. Lines without dimensions stay in unless a
      * dimension filter is given.
      * Drill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.
+     * `conversion_batch` names the opening balance batch the ledger started from (cutover date, ledger
+     * start date, history granularity), or is null. With `adjustment_keys[]` the result also has a
+     * `workpaper` (RP-AC-11): per account the closing balance `before_*` the journals with those keys,
+     * the `adjustment_*` they add as a net debit or credit, and the balance `after_*` them, which is the
+     * closing balance, so before + adjustment = after for every account. The download is always the plain
+     * trial balance.
      * With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).
      * For a user limited to some dimension values only the lines inside that scope are added up and
      * `restricted` is true (IA-FR-03); the download is limited the same way.
      *
-     * @response array{data: array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, balanced: bool, totals: array{opening_debit: string, opening_credit: string, debit: string, credit: string, closing_debit: string, closing_credit: string}, rows: list<array{account_id: string, code: string, name: string, class: string, opening_debit: string, opening_credit: string, debit: string, credit: string, closing_debit: string, closing_credit: string}>}}
+     * @response array{data: array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, balanced: bool, conversion_batch: array{id: string, source_key: string, source_system: string|null, cutover_date: string, ledger_start_date: string, history_granularity: string|null, journal_id: string, journal_number: string}|null, workpaper?: array{adjustment_keys: list<string>, balanced: bool, totals: array<string, string>, rows: list<array<string, string>>}, totals: array{opening_debit: string, opening_credit: string, debit: string, credit: string, closing_debit: string, closing_credit: string}, rows: list<array{account_id: string, code: string, name: string, class: string, opening_debit: string, opening_credit: string, debit: string, credit: string, closing_debit: string, closing_credit: string}>}}
      */
     public function show(TrialBalanceRequest $request, TrialBalance $report, DataScopeContext $scope, string $companyId): JsonResponse|Response
     {
-        /** @var array<string, mixed>&array{from: string, to: string} $params */
+        /** @var array<string, mixed>&array{from: string, to: string, adjustment_keys?: list<string>} $params */
         $params = $request->validated();
 
-        $result = $report($companyId, $params['from'], $params['to'], ReportFilter::fromParameters($params), $scope->current());
+        $result = $report($companyId, $params['from'], $params['to'], ReportFilter::fromParameters($params), $scope->current(), array_values(array_unique($params['adjustment_keys'] ?? [])));
 
         if (! $this->wantsCsv($request)) {
             return new JsonResponse(['data' => $result]);

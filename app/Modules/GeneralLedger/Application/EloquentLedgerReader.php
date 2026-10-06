@@ -7,6 +7,7 @@ use App\Modules\GeneralLedger\Contracts\AccountLineRow;
 use App\Modules\GeneralLedger\Contracts\AccountMovementRow;
 use App\Modules\GeneralLedger\Contracts\CurrencyBalanceRow;
 use App\Modules\GeneralLedger\Contracts\JournalSource;
+use App\Modules\GeneralLedger\Contracts\LedgerLineRow;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\SystemTransactionKeys;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
@@ -229,5 +230,38 @@ final class EloquentLedgerReader implements LedgerReader
         }
 
         return $lines;
+    }
+
+    public function accountLines(string $companyId, string $from, string $to, string $accountId, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null): array
+    {
+        $rows = DB::table('gl_journal_lines as l')
+            ->join('gl_journals as j', fn ($join) => $join->on('j.company_id', '=', 'l.company_id')->on('j.id', '=', 'l.journal_id'))
+            ->where('l.company_id', $companyId)
+            ->where('l.account_id', $accountId)
+            ->whereBetween('l.accounting_date', [$from, $to])
+            ->when($dimensionSetIds !== null, fn ($query) => $query->whereIn('l.dimension_set_id', $dimensionSetIds))
+            ->when($transactionTypeKeys !== null, fn ($query) => $query->whereIn('j.transaction_type_key', $transactionTypeKeys))
+            ->when($source !== null, fn ($query) => $query->where('j.source', $source->value))
+            ->orderBy('l.accounting_date')->orderBy('j.number')->orderBy('l.line_number')
+            ->get(['j.id as journal_id', 'j.number', 'j.entry_id', 'l.account_id', 'l.accounting_date', 'j.source', 'j.transaction_type_key', 'j.source_references', 'l.debit', 'l.credit', 'l.currency', 'l.transaction_amount', 'l.exchange_rate', 'l.description']);
+
+        $scale = $this->currencies->functionalScale($companyId);
+
+        return array_values($rows->map(fn ($row): LedgerLineRow => new LedgerLineRow(
+            $row->journal_id,
+            $row->number,
+            $row->entry_id,
+            $row->account_id,
+            substr($row->accounting_date, 0, 10),
+            JournalSource::from($row->source),
+            $row->transaction_type_key,
+            $row->source_references === null ? null : json_decode($row->source_references, true),
+            $this->amount(BigDecimal::of($row->debit), $scale),
+            $this->amount(BigDecimal::of($row->credit), $scale),
+            $row->currency,
+            (string) $row->transaction_amount,
+            (string) $row->exchange_rate,
+            $row->description,
+        ))->all());
     }
 }

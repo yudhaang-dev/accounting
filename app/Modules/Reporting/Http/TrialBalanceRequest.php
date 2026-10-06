@@ -18,6 +18,8 @@ class TrialBalanceRequest extends FormRequest
             'from' => ['required', ...$rules['from']],
             'to' => ['required', ...$rules['to']],
             ...ReportFilterRules::rules(),
+            'adjustment_keys' => ['nullable', 'array', 'max:50'],
+            'adjustment_keys.*' => ['string', 'regex:/^[a-z][a-z0-9_.]*$/', 'max:64'],
         ];
     }
 }

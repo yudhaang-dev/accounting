@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Reporting\Http\AccountRoleMappingController;
+use App\Modules\Reporting\Http\GeneralLedgerController;
 use App\Modules\Reporting\Http\MovementClassificationController;
 use App\Modules\Reporting\Http\ReportDefinitionController;
 use App\Modules\Reporting\Http\TrialBalanceController;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::companyScoped(function () {
     Route::get('reports/trial-balance', [TrialBalanceController::class, 'show'])->middleware('permission:reports.read')->name('reports.trial-balance');
+    Route::get('reports/general-ledger', [GeneralLedgerController::class, 'show'])->middleware('permission:reports.read')->name('reports.general-ledger');
 
     Route::get('report-definitions', [ReportDefinitionController::class, 'index'])->middleware('permission:reports.read')->name('report-definitions.index');
     Route::post('report-definitions', [ReportDefinitionController::class, 'store'])->middleware('permission:report-definitions.manage')->name('report-definitions.store');

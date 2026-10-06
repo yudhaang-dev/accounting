@@ -2,6 +2,7 @@
 
 namespace App\Modules\Reporting\Application;
 
+use App\Modules\GeneralLedger\Contracts\LedgerLineRow;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
 use App\Modules\GeneralLedger\Contracts\TypeMovementRow;
@@ -63,6 +64,20 @@ final class LedgerSlice
             $this->filter->transactionTypeKeys === [] ? null : $this->filter->transactionTypeKeys,
             $this->filter->source,
             $excludedTransactionTypeKeys,
+        );
+    }
+
+    /** @return list<LedgerLineRow> */
+    public function accountLines(string $from, string $to, string $accountId): array
+    {
+        return $this->ledger->accountLines(
+            $this->companyId,
+            $from,
+            $to,
+            $accountId,
+            $this->dimensionSetIds,
+            $this->filter->transactionTypeKeys === [] ? null : $this->filter->transactionTypeKeys,
+            $this->filter->source,
         );
     }
 }

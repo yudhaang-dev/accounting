@@ -2,6 +2,7 @@
 
 namespace App\Modules\Reporting\Application;
 
+use App\Modules\GeneralLedger\Contracts\OpeningBalances;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
@@ -23,6 +24,7 @@ final class TrialBalance
         private readonly ReportLedger $ledger,
         private readonly CompanyDirectory $companies,
         private readonly Currencies $currencies,
+        private readonly OpeningBalances $openingBalances,
     ) {}
 
     /**
@@ -31,15 +33,23 @@ final class TrialBalance
      * only the lines inside it, whatever the filter, and the result says so with `restricted`
      * (IA-FR-03): its totals cover those lines only.
      *
-     * @return array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, balanced: bool, totals: array<string, string>, rows: list<array<string, string>>}
+     * With `$adjustmentKeys` the result also has a `workpaper`: per account the closing balance before
+     * the adjustments (the journals with those keys left out), the adjustments (what those journals
+     * add to the closing balance, as a net debit or credit) and the closing balance after them, which is
+     * the closing balance of the report (RP-FR-05, RP-AC-11). `conversion_batch` says which opening
+     * balance batch the ledger started from, if any.
+     *
+     * @param  list<string>  $adjustmentKeys
+     * @return array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, balanced: bool, totals: array<string, string>, rows: list<array<string, string>>, conversion_batch: array<string, string|null>|null, workpaper?: array<string, mixed>}
      */
-    public function __invoke(string $companyId, string $from, string $to, ?ReportFilter $filter = null, ?DataScope $scope = null): array
+    public function __invoke(string $companyId, string $from, string $to, ?ReportFilter $filter = null, ?DataScope $scope = null, array $adjustmentKeys = []): array
     {
         $company = $this->companies->find($companyId) ?? throw new ApiException(ErrorCode::NotFound);
         $scope ??= DataScope::unrestricted();
         $filter ??= new ReportFilter;
 
-        $rows = array_map($this->row(...), $this->ledger->slice($companyId, $filter, $scope)->trialBalance($from, $to));
+        $slice = $this->ledger->slice($companyId, $filter, $scope);
+        $rows = array_map($this->row(...), $slice->trialBalance($from, $to));
 
         $scale = $this->currencies->functionalScale($companyId);
         $totals = array_fill_keys(self::COLUMNS, BigDecimal::zero());
@@ -64,6 +74,83 @@ final class TrialBalance
                 fn (string|BigDecimal $value): string => $value instanceof BigDecimal ? $this->format($value, $scale) : $value,
                 $row,
             ), $rows),
+            'conversion_batch' => $this->conversionBatch($companyId),
+            ...($adjustmentKeys === [] ? [] : ['workpaper' => $this->workpaper($slice->trialBalance($from, $to), $slice->trialBalance($from, $to, $adjustmentKeys), $adjustmentKeys, $scale)]),
+        ];
+    }
+
+    /** @return array<string, string|null>|null */
+    private function conversionBatch(string $companyId): ?array
+    {
+        $batch = $this->openingBalances->current($companyId);
+
+        return $batch === null ? null : [
+            'id' => $batch->id,
+            'source_key' => $batch->sourceKey,
+            'source_system' => $batch->sourceSystem,
+            'cutover_date' => $batch->cutoverDate,
+            'ledger_start_date' => $batch->ledgerStartDate,
+            'history_granularity' => $batch->historyGranularity,
+            'journal_id' => $batch->journalId,
+            'journal_number' => $batch->journalNumber,
+        ];
+    }
+
+    /**
+     * @param  list<TrialBalanceRow>  $after
+     * @param  list<TrialBalanceRow>  $before  the same range without the adjustment journals
+     * @param  list<string>  $adjustmentKeys
+     * @param  int<0, max>  $scale
+     * @return array{adjustment_keys: list<string>, balanced: bool, totals: array<string, string>, rows: list<array<string, string>>}
+     */
+    private function workpaper(array $after, array $before, array $adjustmentKeys, int $scale): array
+    {
+        $accounts = [];
+        $beforeNet = $afterNet = [];
+
+        foreach ($before as $row) {
+            $accounts[$row->accountId] = $row;
+            $beforeNet[$row->accountId] = BigDecimal::of($row->closingDebit)->minus($row->closingCredit);
+        }
+
+        foreach ($after as $row) {
+            $accounts[$row->accountId] = $row;
+            $afterNet[$row->accountId] = BigDecimal::of($row->closingDebit)->minus($row->closingCredit);
+        }
+
+        uasort($accounts, fn (TrialBalanceRow $a, TrialBalanceRow $b): int => strcmp($a->code, $b->code));
+
+        $totals = array_fill_keys(['before_debit', 'before_credit', 'adjustment_debit', 'adjustment_credit', 'after_debit', 'after_credit'], BigDecimal::zero());
+        $rows = [];
+
+        foreach ($accounts as $id => $account) {
+            $start = $beforeNet[$id] ?? BigDecimal::zero();
+            $end = $afterNet[$id] ?? BigDecimal::zero();
+            $adjustment = $end->minus($start);
+
+            $cells = [
+                'before_debit' => $start->isPositive() ? $start : BigDecimal::zero(),
+                'before_credit' => $start->isNegative() ? $start->negated() : BigDecimal::zero(),
+                'adjustment_debit' => $adjustment->isPositive() ? $adjustment : BigDecimal::zero(),
+                'adjustment_credit' => $adjustment->isNegative() ? $adjustment->negated() : BigDecimal::zero(),
+                'after_debit' => $end->isPositive() ? $end : BigDecimal::zero(),
+                'after_credit' => $end->isNegative() ? $end->negated() : BigDecimal::zero(),
+            ];
+
+            foreach ($cells as $column => $value) {
+                $totals[$column] = $totals[$column]->plus($value);
+            }
+
+            $rows[] = ['account_id' => $id, 'code' => $account->code, 'name' => $account->name, 'class' => $account->class->value, ...array_map(fn (BigDecimal $value): string => $this->format($value, $scale), $cells)];
+        }
+
+        return [
+            'adjustment_keys' => $adjustmentKeys,
+            'balanced' => $totals['before_debit']->isEqualTo($totals['before_credit'])
+                && $totals['adjustment_debit']->isEqualTo($totals['adjustment_credit'])
+                && $totals['after_debit']->isEqualTo($totals['after_credit']),
+            'totals' => array_map(fn (BigDecimal $total): string => $this->format($total, $scale), $totals),
+            'rows' => $rows,
         ];
     }
 
