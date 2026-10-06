@@ -27,10 +27,14 @@ final class MovementClassifier
     ) {}
 
     /**
+     * With `$cashAccountIds` the lines are the counter lines of the journals that touch those accounts
+     * instead of all movement (RP-FR-09): a payment is classified by what it paid for.
+     *
+     * @param  list<string>|null  $cashAccountIds
      * @param  array{rows: list<array{key: string, label: string}>, rules: list<array{row: string, accounts: list<array<string, string>>, transaction_type_keys: list<string>}>}  $structure
      * @return array{parameters: array<string, mixed>, functional_currency: string, restricted: bool, rows: list<array{key: string, label: string, debit: string, credit: string, net: string}>, total: array{debit: string, credit: string, net: string}, unclassified: list<array{account_id: string, code: string, name: string, transaction_type_key: string|null}>}
      */
-    public function __invoke(string $companyId, array $structure, string $from, string $to, ?DataScope $scope = null, ?ReportFilter $filter = null): array
+    public function __invoke(string $companyId, array $structure, string $from, string $to, ?DataScope $scope = null, ?ReportFilter $filter = null, ?array $cashAccountIds = null): array
     {
         $company = $this->companies->find($companyId) ?? throw new ApiException(ErrorCode::NotFound);
         $scope ??= DataScope::unrestricted();
@@ -46,7 +50,10 @@ final class MovementClassifier
         $totals = [];
         $unclassified = [];
 
-        foreach ($this->ledger->slice($companyId, $filter, $scope)->movementByTransactionType($from, $to) as $line) {
+        $slice = $this->ledger->slice($companyId, $filter, $scope);
+        $lines = $cashAccountIds === null ? $slice->movementByTransactionType($from, $to) : $slice->cashCounterMovement($from, $to, $cashAccountIds);
+
+        foreach ($lines as $line) {
             $row = ClassificationStructure::UNCLASSIFIED;
 
             foreach ($matchers as $matcher) {

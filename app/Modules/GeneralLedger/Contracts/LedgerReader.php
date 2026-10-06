@@ -35,6 +35,21 @@ interface LedgerReader
     public function movementByTransactionType(string $companyId, string $from, string $to, ?string $accountId = null, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null): array;
 
     /**
+     * Movement per account and transaction type key of the lines that are not on one of the given
+     * accounts, in journals that have at least one line on them: what a payment or receipt on a cash
+     * account was for (RP-FR-09). The opening balance import and the closing journal are left out; the
+     * other parameters narrow the counter lines as in `trialBalance()`.
+     *
+     * @param  string  $from  `YYYY-MM-DD`
+     * @param  string  $to  `YYYY-MM-DD`
+     * @param  list<string>  $accountIds  the accounts whose journals count
+     * @param  list<string>|null  $dimensionSetIds
+     * @param  list<string>|null  $transactionTypeKeys
+     * @return list<TypeMovementRow> ordered by account code, then key
+     */
+    public function counterMovement(string $companyId, string $from, string $to, array $accountIds, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null): array;
+
+    /**
      * Balance of each account per transaction currency up to and including a date, ordered by account
      * code and currency (GL-FR-08). Combinations without movement are left out; the functional
      * currency is one of the currencies like any other.

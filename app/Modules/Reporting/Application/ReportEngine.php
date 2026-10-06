@@ -16,6 +16,7 @@ use App\Support\Access\DataScope;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Evaluates a report definition version against the ledger (RP-FR-01, RP-FR-02). Rows pick accounts
@@ -32,6 +33,7 @@ final class ReportEngine
         private readonly CompanyDirectory $companies,
         private readonly Currencies $currencies,
         private readonly PeriodDirectory $periods,
+        private readonly CashEquivalents $cash,
     ) {}
 
     /**
@@ -50,12 +52,14 @@ final class ReportEngine
         $slice = $this->ledger->slice($companyId, $filter, $scope);
 
         $chart = $this->accounts->all($companyId);
-        $claims = $this->claims($structure['rows'], $chart);
+        $cashIds = $this->cashAccountIds($companyId, $structure['rows'], $to);
+        $claims = $this->claims($structure['rows'], $chart, $cashIds);
 
         $columns = [];
         $values = [];
         $unmapped = [];
         $checks = [];
+        $cashChecks = [];
 
         foreach ($structure['columns'] as $column) {
             if ($column['kind'] === 'difference') {
@@ -69,7 +73,14 @@ final class ReportEngine
                 continue;
             }
 
-            $balances = $this->balances($slice->trialBalance($range[0], $range[1], $this->excludedKeys($kind, $column['kind'])), $kind === ReportStructure::INCOME_STATEMENT);
+            $excluded = $this->excludedKeys($kind, $column['kind']);
+            $balances = $this->balances($slice->trialBalance($range[0], $range[1], $excluded), $kind === ReportStructure::INCOME_STATEMENT);
+
+            if ($kind === ReportStructure::CASH_FLOW_INDIRECT && $cashIds !== []) {
+                $balances = $this->withImportInOpeningCash($balances, $slice->trialBalance($range[0], $range[1]), $cashIds);
+                $cashChecks[$column['key']] = $this->cashCheck($balances, $cashIds);
+            }
+
             $values[$column['key']] = $this->evaluate($structure, $claims, $balances, $unmapped);
 
             if ($kind === ReportStructure::BALANCE_SHEET && $column['kind'] === 'as_of') {
@@ -123,7 +134,85 @@ final class ReportEngine
             'rows' => $rows,
             'unmapped_accounts' => $list,
             ...($kind === ReportStructure::BALANCE_SHEET ? ['balance_checks' => $this->formatChecks($checks, $scale)] : []),
+            ...($kind === ReportStructure::CASH_FLOW_INDIRECT ? ['cash_checks' => array_map(fn (array $check): array => [
+                'opening_balance' => $this->format($check['opening'], $scale),
+                'net_increase' => $this->format($check['movement'], $scale),
+                'closing_balance' => $this->format($check['closing'], $scale),
+                'reconciled' => $check['opening']->plus($check['movement'])->toScale($scale, RoundingMode::HalfUp)->isEqualTo($check['closing']->toScale($scale, RoundingMode::HalfUp)),
+            ], $cashChecks)] : []),
         ];
+    }
+
+    /**
+     * The accounts of the `cash_equivalents` role in force on `$to`, when a row asks for them.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<string>
+     *
+     * @throws ValidationException when a row needs the role and it is not mapped
+     */
+    private function cashAccountIds(string $companyId, array $rows, string $to): array
+    {
+        if (! in_array('cash_equivalents', array_column($rows, 'type'), true)) {
+            return [];
+        }
+
+        $mapping = $this->cash->current($companyId, $to);
+
+        if ($mapping === null || $mapping['account_ids'] === []) {
+            throw ValidationException::withMessages(['cash_equivalents' => [__('reports.cash_mapping_missing')]]);
+        }
+
+        return $mapping['account_ids'];
+    }
+
+    /**
+     * Cash accounts keep the opening balance import in their opening balance: it is where the cash
+     * of a company that starts mid-history comes from, not an increase of the period, while the
+     * other accounts leave it out of the movement (RP-FR-09).
+     *
+     * @param  array<string, array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal, class: AccountClass}>  $balances
+     * @param  list<TrialBalanceRow>  $full  the same range with nothing left out
+     * @param  list<string>  $cashIds
+     * @return array<string, array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal, class: AccountClass}>
+     */
+    private function withImportInOpeningCash(array $balances, array $full, array $cashIds): array
+    {
+        foreach ($full as $row) {
+            if (! in_array($row->accountId, $cashIds, true)) {
+                continue;
+            }
+
+            $movement = BigDecimal::of($row->debit)->minus($row->credit);
+            $kept = $balances[$row->accountId]['movement'] ?? BigDecimal::zero();
+
+            $balances[$row->accountId] = [
+                'opening' => BigDecimal::of($row->openingDebit)->minus($row->openingCredit)->plus($movement->minus($kept)),
+                'movement' => $kept,
+                'closing' => BigDecimal::of($row->closingDebit)->minus($row->closingCredit),
+                'class' => $row->class,
+            ];
+        }
+
+        return $balances;
+    }
+
+    /**
+     * @param  array<string, array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal, class: AccountClass}>  $balances
+     * @param  list<string>  $cashIds
+     * @return array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal}
+     */
+    private function cashCheck(array $balances, array $cashIds): array
+    {
+        $total = ['opening' => BigDecimal::zero(), 'movement' => BigDecimal::zero(), 'closing' => BigDecimal::zero()];
+
+        foreach ($cashIds as $id) {
+            foreach (['opening', 'movement', 'closing'] as $part) {
+                $total[$part] = $total[$part]->plus($balances[$id][$part] ?? BigDecimal::zero());
+            }
+        }
+
+        return $total;
     }
 
     /**
@@ -148,11 +237,20 @@ final class ReportEngine
      *
      * @param  list<array<string, mixed>>  $rows
      * @param  list<AccountData>  $chart
+     * @param  list<string>  $cashIds  claimed by the `cash_equivalents` row before any other row
      * @return array<string, string> account ID => row key
      */
-    private function claims(array $rows, array $chart): array
+    private function claims(array $rows, array $chart, array $cashIds = []): array
     {
         $claims = [];
+
+        foreach ($rows as $row) {
+            if ($row['type'] === 'cash_equivalents') {
+                foreach ($cashIds as $id) {
+                    $claims[$id] ??= $row['key'];
+                }
+            }
+        }
 
         foreach ($rows as $row) {
             if ($row['type'] !== 'accounts') {
@@ -201,7 +299,8 @@ final class ReportEngine
     }
 
     /**
-     * An income statement leaves the closing journal out of every column, so a closed year still shows
+     * A cash flow by the indirect method leaves out the same journals, so the profit it starts from
+     * is the profit of the income statement. An income statement leaves the closing journal out of every column, so a closed year still shows
      * its result, and the opening balance import out of period columns, so a month after a mid-year
      * cutover holds its own movement only; a year to date column starts at the fiscal year and keeps
      * the imported balances (RP-FR-07, RP-AC-05, RP-AC-06).
@@ -210,7 +309,7 @@ final class ReportEngine
      */
     private function excludedKeys(string $kind, string $columnKind): array
     {
-        if ($kind !== ReportStructure::INCOME_STATEMENT) {
+        if (! in_array($kind, [ReportStructure::INCOME_STATEMENT, ReportStructure::CASH_FLOW_INDIRECT], true)) {
             return [];
         }
 
@@ -278,6 +377,17 @@ final class ReportEngine
         $values = [ReportStructure::UNMAPPED => $unmappedValue];
         $perRow = [];
 
+        // Every cash row reads the same accounts, whatever its basis; the first of them holds the claim.
+        $cashRowKey = '';
+
+        foreach ($structure['rows'] as $row) {
+            if ($row['type'] === 'cash_equivalents') {
+                $cashRowKey = $row['key'];
+
+                break;
+            }
+        }
+
         foreach ($balances as $id => $balance) {
             if (isset($claims[$id])) {
                 $perRow[$claims[$id]][] = $balance;
@@ -289,6 +399,7 @@ final class ReportEngine
                 'heading' => null,
                 'accounts' => $this->signed($row['sign'], $this->sum($perRow[$row['key']] ?? [], $row['basis'])),
                 'current_year_earnings' => $this->signed($row['sign'], $earnings),
+                'cash_equivalents' => $this->signed($row['sign'], $this->sum($perRow[$cashRowKey] ?? [], $row['basis'])),
                 default => $this->subtotal($row, $values),
             };
         }

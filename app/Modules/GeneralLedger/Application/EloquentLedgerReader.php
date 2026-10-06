@@ -8,6 +8,7 @@ use App\Modules\GeneralLedger\Contracts\AccountMovementRow;
 use App\Modules\GeneralLedger\Contracts\CurrencyBalanceRow;
 use App\Modules\GeneralLedger\Contracts\JournalSource;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
+use App\Modules\GeneralLedger\Contracts\SystemTransactionKeys;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
 use App\Modules\GeneralLedger\Contracts\TypeMovementRow;
 use App\Modules\MasterData\Contracts\Currencies;
@@ -85,6 +86,36 @@ final class EloquentLedgerReader implements LedgerReader
             ->when($dimensionSetIds !== null, fn ($query) => $query->whereIn('l.dimension_set_id', $dimensionSetIds))
             ->when($transactionTypeKeys !== null, fn ($query) => $query->whereIn('j.transaction_type_key', $transactionTypeKeys))
             ->when($source !== null, fn ($query) => $query->where('j.source', $source->value))
+            ->groupBy('l.account_id', 'a.code', 'j.transaction_type_key')
+            ->havingRaw('sum(l.debit) <> 0 or sum(l.credit) <> 0')
+            ->orderBy('a.code')
+            ->orderBy('j.transaction_type_key')
+            ->selectRaw('l.account_id, j.transaction_type_key, sum(l.debit) as debit, sum(l.credit) as credit')
+            ->get();
+
+        $scale = $this->currencies->functionalScale($companyId);
+
+        return array_values($rows->map(fn ($row): TypeMovementRow => new TypeMovementRow($row->account_id, $row->transaction_type_key, $this->amount(BigDecimal::of($row->debit), $scale), $this->amount(BigDecimal::of($row->credit), $scale)))->all());
+    }
+
+    public function counterMovement(string $companyId, string $from, string $to, array $accountIds, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null): array
+    {
+        if ($accountIds === []) {
+            return [];
+        }
+
+        $rows = DB::table('gl_journal_lines as l')
+            ->join('gl_journals as j', fn ($join) => $join->on('j.company_id', '=', 'l.company_id')->on('j.id', '=', 'l.journal_id'))
+            ->where('l.company_id', $companyId)
+            ->whereBetween('l.accounting_date', [$from, $to])
+            ->whereNotIn('l.account_id', $accountIds)
+            ->whereExists(fn ($query) => $query->selectRaw('1')->from('gl_journal_lines as c')
+                ->whereColumn('c.company_id', 'l.company_id')->whereColumn('c.journal_id', 'l.journal_id')->whereIn('c.account_id', $accountIds))
+            ->where(fn ($keys) => $keys->whereNull('j.transaction_type_key')->orWhereNotIn('j.transaction_type_key', [SystemTransactionKeys::OPENING_BALANCE, SystemTransactionKeys::CLOSING]))
+            ->when($dimensionSetIds !== null, fn ($query) => $query->whereIn('l.dimension_set_id', $dimensionSetIds))
+            ->when($transactionTypeKeys !== null, fn ($query) => $query->whereIn('j.transaction_type_key', $transactionTypeKeys))
+            ->when($source !== null, fn ($query) => $query->where('j.source', $source->value))
+            ->join('gl_accounts as a', fn ($join) => $join->on('a.company_id', '=', 'l.company_id')->on('a.id', '=', 'l.account_id'))
             ->groupBy('l.account_id', 'a.code', 'j.transaction_type_key')
             ->havingRaw('sum(l.debit) <> 0 or sum(l.credit) <> 0')
             ->orderBy('a.code')

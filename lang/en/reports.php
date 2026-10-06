@@ -6,6 +6,7 @@ return [
     'key_taken' => 'A report definition with this key already exists.',
     'unmapped_row' => 'Not mapped to a row',
     'unclassified_row' => 'Not classified',
+    'cash_mapping_missing' => 'Map the cash_equivalents role to at least one account before running a cash flow.',
     'classification_rows_count' => 'A classification has between 1 and :max rows.',
     'classification_row_key_invalid' => 'A row key starts with a lowercase letter and has only lowercase letters, digits and underscores; "unclassified" is reserved.',
     'classification_rules_count' => 'A classification has between 1 and :max rules.',

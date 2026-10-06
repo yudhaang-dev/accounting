@@ -32,6 +32,23 @@ final class LedgerSlice
     }
 
     /**
+     * @param  list<string>  $cashAccountIds
+     * @return list<TypeMovementRow>
+     */
+    public function cashCounterMovement(string $from, string $to, array $cashAccountIds): array
+    {
+        return $this->ledger->counterMovement(
+            $this->companyId,
+            $from,
+            $to,
+            $cashAccountIds,
+            $this->dimensionSetIds,
+            $this->filter->transactionTypeKeys === [] ? null : $this->filter->transactionTypeKeys,
+            $this->filter->source,
+        );
+    }
+
+    /**
      * @param  list<string>  $excludedTransactionTypeKeys
      * @return list<TrialBalanceRow>
      */

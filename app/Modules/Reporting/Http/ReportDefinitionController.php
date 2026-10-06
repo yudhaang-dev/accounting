@@ -83,6 +83,15 @@ class ReportDefinitionController
      * shows once and a closed year shows it in retained earnings only. `balance_checks` has, per
      * `as_of` column, assets against liabilities and equity, with `balanced` false when they differ.
      *
+     * A definition of kind `cash_flow_indirect` is a cash flow by the indirect method (RP-FR-09): it
+     * is built from `movement` rows like any other (profit from income and expense, then each balance
+     * sheet account group with the sign that turns its movement into cash: -1 for assets, +1 for
+     * liabilities and equity) and a `cash_equivalents` row, which holds the accounts of that role
+     * (422 when it is not mapped). Journals of the closing and of the opening balance import are left
+     * out of movement; the import counts in the opening cash. Balance sheet accounts that no row
+     * claims are in the `unmapped` row, still counted. `cash_checks` reconciles opening cash, net
+     * increase and closing cash per column.
+     *
      * @response array{data: array{definition: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array{key: string, label: string, kind: string, from: string|null, to: string|null, available: bool}>, rows: list<array{key: string, label: string, type: string, values: array<string, string|null>}>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}}
      */
     public function evaluate(EvaluateReportRequest $request, ReportEngine $engine, DataScopeContext $scope, string $companyId, string $id): JsonResponse

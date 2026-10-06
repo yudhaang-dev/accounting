@@ -6,6 +6,7 @@ return [
     'key_taken' => 'Sudah ada definisi laporan dengan kunci ini.',
     'unmapped_row' => 'Belum dipetakan ke baris',
     'unclassified_row' => 'Belum diklasifikasikan',
+    'cash_mapping_missing' => 'Petakan peran cash_equivalents ke setidaknya satu akun sebelum menjalankan arus kas.',
     'classification_rows_count' => 'Klasifikasi memiliki 1 sampai :max baris.',
     'classification_row_key_invalid' => 'Kunci baris diawali huruf kecil dan hanya berisi huruf kecil, angka, dan garis bawah; "unclassified" dicadangkan.',
     'classification_rules_count' => 'Klasifikasi memiliki 1 sampai :max aturan.',

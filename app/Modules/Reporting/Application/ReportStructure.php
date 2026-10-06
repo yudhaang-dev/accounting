@@ -21,9 +21,11 @@ final class ReportStructure
 
     public const BALANCE_SHEET = 'balance_sheet';
 
+    public const CASH_FLOW_INDIRECT = 'cash_flow_indirect';
+
     public const BASES = ['balance', 'movement', 'opening', 'closing'];
 
-    public const ROW_TYPES = ['heading', 'accounts', 'subtotal', 'current_year_earnings'];
+    public const ROW_TYPES = ['heading', 'accounts', 'subtotal', 'current_year_earnings', 'cash_equivalents'];
 
     public const COLUMN_KINDS = ['period', 'ytd', 'as_of', 'difference'];
 
@@ -185,6 +187,10 @@ final class ReportStructure
                 }
 
                 $normalized['sign'] = $sign;
+            }
+
+            if ($type === 'cash_equivalents') {
+                $normalized['basis'] = isset($row['basis']) ? self::basis($row['basis'], "{$at}.basis", $errors) : $defaultBasis;
             }
 
             if ($type === 'accounts') {

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Reporting\Http;
 
+use App\Modules\Reporting\Application\DirectCashFlow;
 use App\Modules\Reporting\Application\ManageMovementClassifications;
 use App\Modules\Reporting\Application\MovementClassifier;
 use App\Modules\Reporting\Application\ReportFilter;
@@ -83,6 +84,31 @@ class MovementClassificationController
         return new JsonResponse(['data' => [
             'classification' => ['id' => $classification->id, 'key' => $classification->key, 'version' => $version->version],
             ...$classifier($companyId, $version->structure, $params['from'], $params['to'], $scope->current(), ReportFilter::fromParameters($params)),
+        ]]);
+    }
+
+    /**
+     * Cash flow by the direct method (RP-FR-09): the counter lines of the journals that touch an
+     * account of the `cash_equivalents` role are classified by this classification, so a payment is
+     * sorted by what it paid for and a transfer between cash accounts is zero. `rows` have `inflow`,
+     * `outflow` and `net`; `unclassified` lists what no rule matched, still counted. `cash` reconciles
+     * `opening_balance` + `imported_opening_balance` + `net_increase` with `closing_balance` and says
+     * so in `reconciled`; `mapping.problems` lists mapped accounts that no longer qualify. 422 when
+     * the role is not mapped.
+     *
+     * @response array{data: array{classification: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, rows: list<array{key: string, label: string, inflow: string, outflow: string, net: string}>, unclassified: list<array{account_id: string, code: string, name: string, transaction_type_key: string|null}>, mapping: array{version: int, account_ids: list<string>, problems: array<string, list<string>>}, cash: array{opening_balance: string, imported_opening_balance: string, net_increase: string, closing_balance: string, difference: string, reconciled: bool}}}
+     */
+    public function cashFlow(EvaluateClassificationRequest $request, DirectCashFlow $cashFlow, DataScopeContext $scope, string $companyId, string $id): JsonResponse
+    {
+        $classification = MovementClassification::query()->findOrFail($id);
+        $version = $this->version($classification, $request->integer('version') ?: null);
+
+        /** @var array<string, mixed>&array{from: string, to: string} $params */
+        $params = $request->validated();
+
+        return new JsonResponse(['data' => [
+            'classification' => ['id' => $classification->id, 'key' => $classification->key, 'version' => $version->version],
+            ...$cashFlow($companyId, $version->structure, $params['from'], $params['to'], $scope->current(), ReportFilter::fromParameters($params)),
         ]]);
     }
 
