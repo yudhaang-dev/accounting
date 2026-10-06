@@ -101,6 +101,16 @@ class ReportDefinitionController
      * (credit: higher, debit: lower), and is `null` for a variance of zero (RP-FR-12). Cash is not a basis
      * here: it is the direct cash flow of the same period.
      *
+     * The result says what part of the history it covers (RP-FR-13): `coverage_from`, `coverage_to`,
+     * `coverage_granularity` (`transactions`, or `period_summary` for a range inside an imported
+     * history) and `coverage_status` (`complete`, `partial` or `unavailable`), and every column has its
+     * own `coverage_status`. A column the ledger cannot answer for, such as a month before the ledger
+     * start date of a migrated company, is not `available` and has no values, never zero (RP-AC-10).
+     * `as_of` and `ytd` columns only need their end date inside the data, as the imported balances carry
+     * what came before. The trial balance, general ledger, direct cash flow and equity changes carry
+     * the same four fields; the direct cash flow also needs the transaction types, so before the cutover
+     * date it is only as complete as a history by transactions.
+     *
      * @response array{data: array{definition: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array{key: string, label: string, kind: string, from: string|null, to: string|null, available: bool}>, rows: list<array{key: string, label: string, type: string, values: array<string, string|null>}>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}}
      */
     public function evaluate(EvaluateReportRequest $request, ReportEngine $engine, DataScopeContext $scope, string $companyId, string $id): JsonResponse

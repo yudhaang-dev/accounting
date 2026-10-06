@@ -32,6 +32,7 @@ final class EquityChanges
         private readonly AccountDirectory $accounts,
         private readonly CompanyDirectory $companies,
         private readonly Currencies $currencies,
+        private readonly HistoryCoverage $coverage,
     ) {}
 
     /**
@@ -174,6 +175,7 @@ final class EquityChanges
             'parameters' => ['from' => $from, 'to' => $to, ...$filter->toArray()],
             'functional_currency' => $company->functionalCurrency,
             'restricted' => $scope->isRestricted(),
+            ...$this->coverage->assess($companyId, $from, $to),
             'components' => $outComponents,
             'rows' => $outRows,
             'unclassified' => array_values($unclassified),

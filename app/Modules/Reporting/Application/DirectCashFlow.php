@@ -24,6 +24,7 @@ final class DirectCashFlow
         private readonly CashEquivalents $cash,
         private readonly ReportLedger $ledger,
         private readonly Currencies $currencies,
+        private readonly HistoryCoverage $coverage,
     ) {}
 
     /**
@@ -64,6 +65,7 @@ final class DirectCashFlow
 
         return [
             ...$result,
+            ...$this->coverage->assess($companyId, $from, $to, classified: true),
             'mapping' => ['version' => $mapping['version'], 'account_ids' => $ids, 'problems' => $this->cash->problems($companyId, $ids)],
             'cash' => [
                 'opening_balance' => $this->format($all['opening'], $scale),

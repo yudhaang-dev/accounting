@@ -38,6 +38,7 @@ final class ReportEngine
         private readonly PeriodDirectory $periods,
         private readonly CashEquivalents $cash,
         private readonly PlanReader $plans,
+        private readonly HistoryCoverage $coverage,
     ) {}
 
     /**
@@ -64,6 +65,7 @@ final class ReportEngine
         $unmapped = [];
         $checks = [];
         $cashChecks = [];
+        $coverages = [];
 
         foreach ($structure['columns'] as $column) {
             if ($column['kind'] === 'difference') {
@@ -72,7 +74,7 @@ final class ReportEngine
 
             if ($column['kind'] === 'plan') {
                 $plan = $this->planColumn($companyId, $column, $from, $to, $filter, $slice->dimensionSetIds());
-                $columns[$column['key']] = ['key' => $column['key'], 'label' => $column['label'], 'kind' => 'plan', 'from' => $plan['range'][0] ?? null, 'to' => $plan['range'][1] ?? null, 'available' => $plan['balances'] !== null, 'plan_version_id' => $plan['version']?->id];
+                $columns[$column['key']] = ['key' => $column['key'], 'label' => $column['label'], 'kind' => 'plan', 'from' => $plan['range'][0] ?? null, 'to' => $plan['range'][1] ?? null, 'available' => $plan['balances'] !== null, 'coverage_status' => $plan['balances'] !== null ? HistoryCoverage::COMPLETE : HistoryCoverage::UNAVAILABLE, 'plan_version_id' => $plan['version']?->id];
 
                 if ($plan['balances'] !== null) {
                     $values[$column['key']] = $this->evaluate($structure, $claims, $plan['balances'], $unmapped);
@@ -82,9 +84,13 @@ final class ReportEngine
             }
 
             $range = $this->range($companyId, $column, $from, $to);
-            $columns[$column['key']] = ['key' => $column['key'], 'label' => $column['label'], 'kind' => $column['kind'], 'from' => $range[0] ?? null, 'to' => $range[1] ?? null, 'available' => $range !== null];
+            $covered = $range === null
+                ? ['coverage_from' => null, 'coverage_to' => null, 'coverage_granularity' => 'transactions', 'coverage_status' => HistoryCoverage::UNAVAILABLE]
+                : $this->coverage->assess($companyId, $range[0], $range[1], in_array($column['kind'], ['ytd', 'as_of'], true));
+            $coverages[] = $covered;
+            $columns[$column['key']] = ['key' => $column['key'], 'label' => $column['label'], 'kind' => $column['kind'], 'from' => $range[0] ?? null, 'to' => $range[1] ?? null, 'available' => $covered['coverage_status'] !== HistoryCoverage::UNAVAILABLE, 'coverage_status' => $covered['coverage_status']];
 
-            if ($range === null) {
+            if ($range === null || $covered['coverage_status'] === HistoryCoverage::UNAVAILABLE) {
                 continue;
             }
 
@@ -109,7 +115,8 @@ final class ReportEngine
             }
 
             $available = isset($values[$column['minuend']], $values[$column['subtrahend']]);
-            $columns[$column['key']] = ['key' => $column['key'], 'label' => $column['label'], 'kind' => 'difference', 'from' => null, 'to' => null, 'available' => $available];
+            $status = HistoryCoverage::combine($columns[$column['minuend']]['coverage_status'], $columns[$column['subtrahend']]['coverage_status']);
+            $columns[$column['key']] = ['key' => $column['key'], 'label' => $column['label'], 'kind' => 'difference', 'from' => null, 'to' => null, 'available' => $available, 'coverage_status' => $available ? $status : HistoryCoverage::UNAVAILABLE];
             $values[$column['key']] = $this->difference($structure['rows'], $values[$column['minuend']] ?? null, $values[$column['subtrahend']] ?? null, $unmapped !== []);
         }
 
@@ -150,6 +157,7 @@ final class ReportEngine
             'columns' => array_map(fn (array $column): array => $columns[$column['key']], $structure['columns']),
             'rows' => $rows,
             'unmapped_accounts' => $list,
+            ...HistoryCoverage::merge($coverages),
             ...($kind === ReportStructure::BALANCE_SHEET ? ['balance_checks' => $this->formatChecks($checks, $scale)] : []),
             ...($kind === ReportStructure::CASH_FLOW_INDIRECT ? ['cash_checks' => array_map(fn (array $check): array => [
                 'opening_balance' => $this->format($check['opening'], $scale),

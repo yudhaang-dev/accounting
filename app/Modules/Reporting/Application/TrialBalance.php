@@ -25,6 +25,7 @@ final class TrialBalance
         private readonly CompanyDirectory $companies,
         private readonly Currencies $currencies,
         private readonly OpeningBalances $openingBalances,
+        private readonly HistoryCoverage $coverage,
     ) {}
 
     /**
@@ -69,6 +70,7 @@ final class TrialBalance
             'functional_currency' => $company->functionalCurrency,
             'restricted' => $scope->isRestricted(),
             'balanced' => $balanced,
+            ...$this->coverage->assess($companyId, $from, $to),
             'totals' => array_map(fn (BigDecimal $total): string => $this->format($total, $scale), $totals),
             'rows' => array_map(fn (array $row): array => array_map(
                 fn (string|BigDecimal $value): string => $value instanceof BigDecimal ? $this->format($value, $scale) : $value,

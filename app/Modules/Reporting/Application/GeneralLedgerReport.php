@@ -24,6 +24,7 @@ final class GeneralLedgerReport
         private readonly AccountDirectory $accounts,
         private readonly CompanyDirectory $companies,
         private readonly Currencies $currencies,
+        private readonly HistoryCoverage $coverage,
     ) {}
 
     /** @return array<string, mixed> */
@@ -73,6 +74,7 @@ final class GeneralLedgerReport
             'parameters' => ['from' => $from, 'to' => $to, ...$filter->toArray()],
             'functional_currency' => $company->functionalCurrency,
             'restricted' => $scope->isRestricted(),
+            ...$this->coverage->assess($companyId, $from, $to),
             'account' => ['id' => $account->id, 'code' => $account->code, 'name' => $account->name],
             'opening_balance' => $this->format($opening, $scale),
             'lines' => $lines,
