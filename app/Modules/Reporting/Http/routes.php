@@ -1,5 +1,7 @@
 <?php
 
+use App\Modules\Reporting\Http\AccountRoleMappingController;
+use App\Modules\Reporting\Http\MovementClassificationController;
 use App\Modules\Reporting\Http\ReportDefinitionController;
 use App\Modules\Reporting\Http\TrialBalanceController;
 use App\Platform\Api\ApiServiceProvider;
@@ -18,4 +20,16 @@ Route::companyScoped(function () {
         ->middleware('permission:report-definitions.manage')->where('id', ApiServiceProvider::ULID)->name('report-definitions.update');
     Route::get('report-definitions/{id}/result', [ReportDefinitionController::class, 'evaluate'])
         ->middleware('permission:reports.read')->where('id', ApiServiceProvider::ULID)->name('report-definitions.result');
+
+    Route::get('movement-classifications', [MovementClassificationController::class, 'index'])->middleware('permission:reports.read')->name('movement-classifications.index');
+    Route::post('movement-classifications', [MovementClassificationController::class, 'store'])->middleware('permission:report-definitions.manage')->name('movement-classifications.store');
+    Route::get('movement-classifications/{id}', [MovementClassificationController::class, 'show'])
+        ->middleware('permission:reports.read')->where('id', ApiServiceProvider::ULID)->name('movement-classifications.show');
+    Route::put('movement-classifications/{id}', [MovementClassificationController::class, 'update'])
+        ->middleware('permission:report-definitions.manage')->where('id', ApiServiceProvider::ULID)->name('movement-classifications.update');
+    Route::get('movement-classifications/{id}/result', [MovementClassificationController::class, 'evaluate'])
+        ->middleware('permission:reports.read')->where('id', ApiServiceProvider::ULID)->name('movement-classifications.result');
+
+    Route::get('reporting/account-role-mappings', [AccountRoleMappingController::class, 'index'])->middleware('permission:reports.read')->name('reporting.account-role-mappings.index');
+    Route::put('reporting/account-role-mappings/cash_equivalents', [AccountRoleMappingController::class, 'update'])->middleware('permission:report-definitions.manage')->name('reporting.account-role-mappings.update');
 });

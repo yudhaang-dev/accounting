@@ -4,6 +4,7 @@ namespace App\Modules\Reporting\Application;
 
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
+use App\Modules\GeneralLedger\Contracts\TypeMovementRow;
 
 /** The part of the ledger that a filter and a data scope leave, readable for any date range. */
 final class LedgerSlice
@@ -15,6 +16,20 @@ final class LedgerSlice
         private readonly ReportFilter $filter,
         private readonly ?array $dimensionSetIds,
     ) {}
+
+    /** @return list<TypeMovementRow> */
+    public function movementByTransactionType(string $from, string $to): array
+    {
+        return $this->ledger->movementByTransactionType(
+            $this->companyId,
+            $from,
+            $to,
+            $this->filter->accountId,
+            $this->dimensionSetIds,
+            $this->filter->transactionTypeKeys === [] ? null : $this->filter->transactionTypeKeys,
+            $this->filter->source,
+        );
+    }
 
     /** @return list<TrialBalanceRow> */
     public function trialBalance(string $from, string $to): array

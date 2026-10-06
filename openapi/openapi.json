@@ -715,6 +715,165 @@
                 }
             }
         },
+        "/companies/{companyId}/reporting/account-role-mappings": {
+            "get": {
+                "operationId": "reporting.account-role-mappings.index",
+                "summary": "The roles that Reporting owns: `cash_equivalents`, one or more asset accounts that the cash flow\ncounts as cash (RP-FR-03). `account_ids` is empty when the role is not mapped, and `problems`\nsays, per account, why one of them no longer qualifies (inactive, for example), so an\nincomplete mapping is visible. `lock_version` is the version of the mapping (0 when none)",
+                "tags": [
+                    "AccountRoleMapping"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "account_ids": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "effective_date": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "problems": {
+                                                        "type": "object",
+                                                        "additionalProperties": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    },
+                                                    "lock_version": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "key",
+                                                    "account_ids",
+                                                    "effective_date",
+                                                    "problems",
+                                                    "lock_version"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/reporting/account-role-mappings/cash_equivalents": {
+            "put": {
+                "operationId": "reporting.account-role-mappings.update",
+                "summary": "Maps `cash_equivalents` to the given accounts as a new version; the change is audited. Every\naccount must be an active asset leaf of the company. `lock_version` is the one you read (0\nwhen the role is not mapped yet) and `effective_date` defaults to today, or to all dates for\nthe first mapping",
+                "tags": [
+                    "AccountRoleMapping"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateAccountRoleMappingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "key": {
+                                                    "type": "string"
+                                                },
+                                                "account_ids": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "effective_date": {
+                                                    "type": "string"
+                                                },
+                                                "lock_version": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "key",
+                                                "account_ids",
+                                                "effective_date",
+                                                "lock_version"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/account-templates": {
             "get": {
                 "operationId": "account-templates.index",
@@ -8779,6 +8938,661 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/movement-classifications": {
+            "get": {
+                "operationId": "movement-classifications.index",
+                "summary": "Movement classifications of the company, ordered by key. `per_page` defaults to 50, at most 200",
+                "tags": [
+                    "MovementClassification"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 50
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `MovementClassificationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MovementClassificationResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "movement-classifications.store",
+                "summary": "Adds a classification as version 1. The structure has `rows` (`key` and `label`) and `rules`.\nA rule sends movement to one of the rows when the account of the line is in its `accounts`\n(`{type: account|parent|class}` selectors, never a code range) and, when `transaction_type_keys`\nis not empty, the journal has one of those keys. The first matching rule wins; movement that\nno rule matches goes to the `unclassified` row when it is run (RP-FR-03)",
+                "tags": [
+                    "MovementClassification"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveMovementClassificationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`MovementClassificationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MovementClassificationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/movement-classifications/{id}": {
+            "get": {
+                "operationId": "movement-classifications.show",
+                "summary": "A classification with the rows and rules of its current version, or of `version` when given",
+                "tags": [
+                    "MovementClassification"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`MovementClassificationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MovementClassificationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "movement-classifications.update",
+                "summary": "Renames the classification and, when `structure` is given and differs, adds the next version;\nthe versions before stay as they were. `lock_version` is required",
+                "tags": [
+                    "MovementClassification"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveMovementClassificationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`MovementClassificationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MovementClassificationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/movement-classifications/{id}/result": {
+            "get": {
+                "operationId": "movement-classifications.result",
+                "summary": "Movement of `from`..`to` per row of the classification, in the functional currency, with debit,\ncredit and net (debit - credit). Movement without a matching rule is in the `unclassified` row\nand listed in `unclassified`, so `total` always equals the movement of the ledger. The filters of\nthe trial balance apply (`account_id`, `dimensions`, `transaction_type_keys`, `source`); for a\nuser limited to some dimension values only the lines inside that scope count (IA-FR-03)",
+                "tags": [
+                    "MovementClassification"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "account_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "dimensions[]",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "array",
+                                "null"
+                            ],
+                            "items": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "minLength": 26,
+                                "maxLength": 26
+                            }
+                        }
+                    },
+                    {
+                        "name": "transaction_type_keys[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "items": {
+                                "type": "string",
+                                "pattern": "^[a-z][a-z0-9_.]*$",
+                                "maxLength": 64
+                            }
+                        }
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/JournalSource"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "classification": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "key": {
+                                                            "type": "string"
+                                                        },
+                                                        "version": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "key",
+                                                        "version"
+                                                    ]
+                                                },
+                                                "parameters": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "from": {
+                                                            "type": "string"
+                                                        },
+                                                        "to": {
+                                                            "type": "string"
+                                                        },
+                                                        "account_id": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "dimensions": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "transaction_type_keys": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "source": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "from",
+                                                        "to",
+                                                        "account_id",
+                                                        "dimensions",
+                                                        "transaction_type_keys",
+                                                        "source"
+                                                    ]
+                                                },
+                                                "functional_currency": {
+                                                    "type": "string"
+                                                },
+                                                "restricted": {
+                                                    "type": "boolean"
+                                                },
+                                                "rows": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "net": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "label",
+                                                            "debit",
+                                                            "credit",
+                                                            "net"
+                                                        ]
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "debit": {
+                                                            "type": "string"
+                                                        },
+                                                        "credit": {
+                                                            "type": "string"
+                                                        },
+                                                        "net": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "debit",
+                                                        "credit",
+                                                        "net"
+                                                    ]
+                                                },
+                                                "unclassified": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "account_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "transaction_type_key": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "account_id",
+                                                            "code",
+                                                            "name",
+                                                            "transaction_type_key"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "classification",
+                                                "parameters",
+                                                "functional_currency",
+                                                "restricted",
+                                                "rows",
+                                                "total",
+                                                "unclassified"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -19645,6 +20459,97 @@
                 ],
                 "title": "MembershipResource"
             },
+            "MovementClassificationResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "current_version": {
+                        "type": "integer"
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    },
+                    "version": {
+                        "type": "integer"
+                    },
+                    "structure": {
+                        "type": "object",
+                        "properties": {
+                            "rows": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "label": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "key",
+                                        "label"
+                                    ]
+                                }
+                            },
+                            "rules": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "row": {
+                                            "type": "string"
+                                        },
+                                        "accounts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "transaction_type_keys": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "row",
+                                        "accounts",
+                                        "transaction_type_keys"
+                                    ]
+                                }
+                            }
+                        },
+                        "required": [
+                            "rows",
+                            "rules"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "key",
+                    "name",
+                    "current_version",
+                    "lock_version",
+                    "version",
+                    "structure"
+                ],
+                "title": "MovementClassificationResource"
+            },
             "NumberingRequest": {
                 "type": "object",
                 "properties": {
@@ -20716,6 +21621,46 @@
                 ],
                 "title": "RunReconciliationRequest"
             },
+            "SaveMovementClassificationRequest": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9_]{0,63}$"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "structure": {
+                        "type": "object",
+                        "properties": {
+                            "rows": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "rules": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                },
+                "required": [
+                    "key",
+                    "name",
+                    "structure"
+                ],
+                "title": "SaveMovementClassificationRequest"
+            },
             "SaveReportDefinitionRequest": {
                 "type": "object",
                 "properties": {
@@ -20976,6 +21921,35 @@
                     "lock_version"
                 ],
                 "title": "UpdateAccountRequest"
+            },
+            "UpdateAccountRoleMappingRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "account_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "minItems": 1,
+                        "maxItems": 50
+                    },
+                    "effective_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    }
+                },
+                "required": [
+                    "lock_version",
+                    "account_ids"
+                ],
+                "title": "UpdateAccountRoleMappingRequest"
             },
             "UpdateAccountRoleRequest": {
                 "type": "object",

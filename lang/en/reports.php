@@ -5,6 +5,12 @@ return [
 
     'key_taken' => 'A report definition with this key already exists.',
     'unmapped_row' => 'Not mapped to a row',
+    'unclassified_row' => 'Not classified',
+    'classification_rows_count' => 'A classification has between 1 and :max rows.',
+    'classification_row_key_invalid' => 'A row key starts with a lowercase letter and has only lowercase letters, digits and underscores; "unclassified" is reserved.',
+    'classification_rules_count' => 'A classification has between 1 and :max rules.',
+    'classification_rule_row_unknown' => 'A rule refers to one of the rows of the classification.',
+    'classification_type_keys_invalid' => 'The transaction type keys are a list of at most 50 keys in lowercase letters, digits, dots and underscores.',
 
     'basis_invalid' => 'The basis must be one of: :allowed.',
     'rows_count' => 'A report has between 1 and :max rows.',

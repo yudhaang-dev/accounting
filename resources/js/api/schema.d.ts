@@ -160,6 +160,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/reporting/account-role-mappings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The roles that Reporting owns: `cash_equivalents`, one or more asset accounts that the cash flow
+         *     counts as cash (RP-FR-03). `account_ids` is empty when the role is not mapped, and `problems`
+         *     says, per account, why one of them no longer qualifies (inactive, for example), so an
+         *     incomplete mapping is visible. `lock_version` is the version of the mapping (0 when none)
+         */
+        get: operations["reporting.account-role-mappings.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/reporting/account-role-mappings/cash_equivalents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Maps `cash_equivalents` to the given accounts as a new version; the change is audited. Every
+         *     account must be an active asset leaf of the company. `lock_version` is the one you read (0
+         *     when the role is not mapped yet) and `effective_date` defaults to today, or to all dates for
+         *     the first mapping
+         */
+        put: operations["reporting.account-role-mappings.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/account-templates": {
         parameters: {
             query?: never;
@@ -1682,6 +1726,74 @@ export interface paths {
          *     revoke your own membership
          */
         post: operations["memberships.revoke"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/movement-classifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Movement classifications of the company, ordered by key. `per_page` defaults to 50, at most 200 */
+        get: operations["movement-classifications.index"];
+        put?: never;
+        /**
+         * Adds a classification as version 1. The structure has `rows` (`key` and `label`) and `rules`.
+         *     A rule sends movement to one of the rows when the account of the line is in its `accounts`
+         *     (`{type: account|parent|class}` selectors, never a code range) and, when `transaction_type_keys`
+         *     is not empty, the journal has one of those keys. The first matching rule wins; movement that
+         *     no rule matches goes to the `unclassified` row when it is run (RP-FR-03)
+         */
+        post: operations["movement-classifications.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/movement-classifications/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A classification with the rows and rules of its current version, or of `version` when given */
+        get: operations["movement-classifications.show"];
+        /**
+         * Renames the classification and, when `structure` is given and differs, adds the next version;
+         *     the versions before stay as they were. `lock_version` is required
+         */
+        put: operations["movement-classifications.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/movement-classifications/{id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Movement of `from`..`to` per row of the classification, in the functional currency, with debit,
+         *     credit and net (debit - credit). Movement without a matching rule is in the `unclassified` row
+         *     and listed in `unclassified`, so `total` always equals the movement of the ledger. The filters of
+         *     the trial balance apply (`account_id`, `dimensions`, `transaction_type_keys`, `source`); for a
+         *     user limited to some dimension values only the lines inside that scope count (IA-FR-03)
+         */
+        get: operations["movement-classifications.result"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3837,6 +3949,28 @@ export interface components {
             data_scope: string;
             lock_version: number;
         };
+        /** MovementClassificationResource */
+        MovementClassificationResource: {
+            id: string;
+            key: string;
+            name: string;
+            current_version: number;
+            lock_version: number;
+            version: number;
+            structure: {
+                rows: {
+                    key: string;
+                    label: string;
+                }[];
+                rules: {
+                    row: string;
+                    accounts: {
+                        [key: string]: string;
+                    }[];
+                    transaction_type_keys: string[];
+                }[];
+            };
+        };
         /** NumberingRequest */
         NumberingRequest: {
             pattern: string;
@@ -4123,6 +4257,16 @@ export interface components {
             /** Format: date */
             as_of: string;
         };
+        /** SaveMovementClassificationRequest */
+        SaveMovementClassificationRequest: {
+            key: string;
+            name: string;
+            structure: {
+                rows?: string[];
+                rules?: string[];
+            };
+            lock_version?: number;
+        };
         /** SaveReportDefinitionRequest */
         SaveReportDefinitionRequest: {
             key: string;
@@ -4197,6 +4341,13 @@ export interface components {
             /** @enum {string} */
             normal_balance?: "debit" | "credit";
             parent_id?: string | null;
+        };
+        /** UpdateAccountRoleMappingRequest */
+        UpdateAccountRoleMappingRequest: {
+            lock_version: number;
+            account_ids: string[];
+            /** Format: date */
+            effective_date?: string | null;
         };
         /** UpdateAccountRoleRequest */
         UpdateAccountRoleRequest: {
@@ -4851,6 +5002,72 @@ export interface operations {
                         data: {
                             key: string;
                             account_id: string;
+                            effective_date: string;
+                            lock_version: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reporting.account-role-mappings.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            account_ids: string[];
+                            effective_date: string | null;
+                            problems: {
+                                [key: string]: string[];
+                            };
+                            lock_version: number;
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "reporting.account-role-mappings.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAccountRoleMappingRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            account_ids: string[];
                             effective_date: string;
                             lock_version: number;
                         };
@@ -8218,6 +8435,220 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movement-classifications.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `MovementClassificationResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MovementClassificationResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "movement-classifications.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveMovementClassificationRequest"];
+            };
+        };
+        responses: {
+            /** @description `MovementClassificationResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MovementClassificationResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movement-classifications.show": {
+        parameters: {
+            query?: {
+                version?: number | null;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `MovementClassificationResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MovementClassificationResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movement-classifications.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveMovementClassificationRequest"];
+            };
+        };
+        responses: {
+            /** @description `MovementClassificationResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MovementClassificationResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movement-classifications.result": {
+        parameters: {
+            query: {
+                from: string | null;
+                to: string | null;
+                version?: number | null;
+                account_id?: string | null;
+                "dimensions[]"?: (string | null)[] | null;
+                "transaction_type_keys[]"?: string[];
+                source?: components["schemas"]["JournalSource"] | null;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            classification: {
+                                id: string;
+                                key: string;
+                                version: number;
+                            };
+                            parameters: {
+                                from: string;
+                                to: string;
+                                account_id: string | null;
+                                dimensions: {
+                                    [key: string]: string;
+                                };
+                                transaction_type_keys: string[];
+                                source: string | null;
+                            };
+                            functional_currency: string;
+                            restricted: boolean;
+                            rows: {
+                                key: string;
+                                label: string;
+                                debit: string;
+                                credit: string;
+                                net: string;
+                            }[];
+                            total: {
+                                debit: string;
+                                credit: string;
+                                net: string;
+                            };
+                            unclassified: {
+                                account_id: string;
+                                code: string;
+                                name: string;
+                                transaction_type_key: string | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
     };

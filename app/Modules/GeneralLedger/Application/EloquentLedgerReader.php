@@ -9,6 +9,7 @@ use App\Modules\GeneralLedger\Contracts\CurrencyBalanceRow;
 use App\Modules\GeneralLedger\Contracts\JournalSource;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
+use App\Modules\GeneralLedger\Contracts\TypeMovementRow;
 use App\Modules\MasterData\Contracts\Currencies;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
@@ -70,6 +71,29 @@ final class EloquentLedgerReader implements LedgerReader
         }
 
         return $result;
+    }
+
+    public function movementByTransactionType(string $companyId, string $from, string $to, ?string $accountId = null, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null): array
+    {
+        $rows = DB::table('gl_journal_lines as l')
+            ->join('gl_journals as j', fn ($join) => $join->on('j.company_id', '=', 'l.company_id')->on('j.id', '=', 'l.journal_id'))
+            ->join('gl_accounts as a', fn ($join) => $join->on('a.company_id', '=', 'l.company_id')->on('a.id', '=', 'l.account_id'))
+            ->where('l.company_id', $companyId)
+            ->whereBetween('l.accounting_date', [$from, $to])
+            ->when($accountId !== null, fn ($query) => $query->where('l.account_id', $accountId))
+            ->when($dimensionSetIds !== null, fn ($query) => $query->whereIn('l.dimension_set_id', $dimensionSetIds))
+            ->when($transactionTypeKeys !== null, fn ($query) => $query->whereIn('j.transaction_type_key', $transactionTypeKeys))
+            ->when($source !== null, fn ($query) => $query->where('j.source', $source->value))
+            ->groupBy('l.account_id', 'a.code', 'j.transaction_type_key')
+            ->havingRaw('sum(l.debit) <> 0 or sum(l.credit) <> 0')
+            ->orderBy('a.code')
+            ->orderBy('j.transaction_type_key')
+            ->selectRaw('l.account_id, j.transaction_type_key, sum(l.debit) as debit, sum(l.credit) as credit')
+            ->get();
+
+        $scale = $this->currencies->functionalScale($companyId);
+
+        return array_values($rows->map(fn ($row): TypeMovementRow => new TypeMovementRow($row->account_id, $row->transaction_type_key, $this->amount(BigDecimal::of($row->debit), $scale), $this->amount(BigDecimal::of($row->credit), $scale)))->all());
     }
 
     public function currencyBalances(string $companyId, string $asOf, ?string $accountId = null, ?array $dimensionSetIds = null): array

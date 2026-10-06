@@ -209,7 +209,7 @@ final class ReportStructure
      * @param  array<string, list<array<mixed>|string>>  $errors
      * @return list<array<string, string>>
      */
-    private static function selectors(mixed $input, string $at, array $byId, array &$errors): array
+    public static function selectors(mixed $input, string $at, array $byId, array &$errors): array
     {
         if (! is_array($input) || $input === []) {
             $errors["{$at}.accounts"][] = __('reports.selectors_required');

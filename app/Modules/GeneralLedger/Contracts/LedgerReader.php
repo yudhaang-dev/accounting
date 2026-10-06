@@ -21,6 +21,19 @@ interface LedgerReader
     public function trialBalance(string $companyId, string $from, string $to, ?string $accountId = null, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null): array;
 
     /**
+     * Movement between two dates per account and transaction type key, the lines that classification
+     * rules are matched against (RP-FR-03). Combinations without movement are left out. The other
+     * parameters narrow the lines as in `trialBalance()`.
+     *
+     * @param  string  $from  `YYYY-MM-DD`
+     * @param  string  $to  `YYYY-MM-DD`
+     * @param  list<string>|null  $dimensionSetIds
+     * @param  list<string>|null  $transactionTypeKeys
+     * @return list<TypeMovementRow> ordered by account code, then key
+     */
+    public function movementByTransactionType(string $companyId, string $from, string $to, ?string $accountId = null, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null): array;
+
+    /**
      * Balance of each account per transaction currency up to and including a date, ordered by account
      * code and currency (GL-FR-08). Combinations without movement are left out; the functional
      * currency is one of the currencies like any other.
