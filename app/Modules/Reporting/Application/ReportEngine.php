@@ -47,7 +47,7 @@ final class ReportEngine
      * with `restricted` (IA-FR-03).
      *
      * @param  array{basis: string, rows: list<array<string, mixed>>, columns: list<array<string, mixed>>}  $structure
-     * @return array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}
+     * @return array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>, coverage_from: string|null, coverage_to: string|null, coverage_granularity: string, coverage_status: string}
      */
     public function __invoke(string $companyId, array $structure, string $from, string $to, ?DataScope $scope = null, ?ReportFilter $filter = null, string $kind = ReportStructure::CUSTOM): array
     {

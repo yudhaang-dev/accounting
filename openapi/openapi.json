@@ -7109,6 +7109,18 @@
                                 }
                             ]
                         }
+                    },
+                    {
+                        "name": "plan_version_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
                     }
                 ],
                 "responses": {
@@ -9712,6 +9724,18 @@
                                 }
                             ]
                         }
+                    },
+                    {
+                        "name": "plan_version_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
                     }
                 ],
                 "responses": {
@@ -10014,6 +10038,18 @@
                                     "type": "null"
                                 }
                             ]
+                        }
+                    },
+                    {
+                        "name": "plan_version_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "minLength": 26,
+                            "maxLength": 26
                         }
                     }
                 ],
@@ -10358,6 +10394,18 @@
                                     "type": "null"
                                 }
                             ]
+                        }
+                    },
+                    {
+                        "name": "plan_version_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "minLength": 26,
+                            "maxLength": 26
                         }
                     }
                 ],
@@ -15752,7 +15800,7 @@
         "/companies/{companyId}/report-definitions/{id}/result": {
             "get": {
                 "operationId": "report-definitions.result",
-                "description": "A definition of kind `income_statement` is an income statement (RP-FR-07): only income and\nexpense accounts are added up, the closing journal of a closed year is left out of every\ncolumn, and the opening balance import is left out of `period` columns but kept in `ytd` ones.\n\nA definition of kind `balance_sheet` is a balance sheet (RP-FR-08): use `as_of` columns with\n`closing` rows and one `current_year_earnings` row, which holds the closing balance of the\nincome and expense accounts that no row claims, so the result of a year that is not closed yet\nshows once and a closed year shows it in retained earnings only. `balance_checks` has, per\n`as_of` column, assets against liabilities and equity, with `balanced` false when they differ.\n\nA definition of kind `cash_flow_indirect` is a cash flow by the indirect method (RP-FR-09): it\nis built from `movement` rows like any other (profit from income and expense, then each balance\nsheet account group with the sign that turns its movement into cash: -1 for assets, +1 for\nliabilities and equity) and a `cash_equivalents` row, which holds the accounts of that role\n(422 when it is not mapped). Journals of the closing and of the opening balance import are left\nout of movement; the import counts in the opening cash. Balance sheet accounts that no row\nclaims are in the `unmapped` row, still counted. `cash_checks` reconciles opening cash, net\nincrease and closing cash per column.",
+                "description": "A definition of kind `income_statement` is an income statement (RP-FR-07): only income and\nexpense accounts are added up, the closing journal of a closed year is left out of every\ncolumn, and the opening balance import is left out of `period` columns but kept in `ytd` ones.\n\nA definition of kind `balance_sheet` is a balance sheet (RP-FR-08): use `as_of` columns with\n`closing` rows and one `current_year_earnings` row, which holds the closing balance of the\nincome and expense accounts that no row claims, so the result of a year that is not closed yet\nshows once and a closed year shows it in retained earnings only. `balance_checks` has, per\n`as_of` column, assets against liabilities and equity, with `balanced` false when they differ.\n\nA definition of kind `cash_flow_indirect` is a cash flow by the indirect method (RP-FR-09): it\nis built from `movement` rows like any other (profit from income and expense, then each balance\nsheet account group with the sign that turns its movement into cash: -1 for assets, +1 for\nliabilities and equity) and a `cash_equivalents` row, which holds the accounts of that role\n(422 when it is not mapped). Journals of the closing and of the opening balance import are left\nout of movement; the import counts in the opening cash. Balance sheet accounts that no row\nclaims are in the `unmapped` row, still counted. `cash_checks` reconciles opening cash, net\nincrease and closing cash per column.\n\nA `plan` column (`span` `period` or `ytd`, optionally shifted) reads the plan version of its\n`plan_version_id`, else of the `plan_version_id` parameter, else the default of the fiscal year the\nrange ends in (RP-FR-11); without a version, or without periods inside the range, it is not\n`available` and has no values. A `difference` column that subtracts a plan column adds\n`variances[<column key>]` to each row: `percentage` of the absolute plan (`null` when the plan is zero)\nand `favorable`, which follows the `favorable` (`higher` or `lower`) of the row, else its sign\n(credit: higher, debit: lower), and is `null` for a variance of zero (RP-FR-12). Cash is not a basis\nhere: it is the direct cash flow of the same period.\n\nThe result says what part of the history it covers (RP-FR-13): `coverage_from`, `coverage_to`,\n`coverage_granularity` (`transactions`, or `period_summary` for a range inside an imported\nhistory) and `coverage_status` (`complete`, `partial` or `unavailable`), and every column has its\nown `coverage_status`. A column the ledger cannot answer for, such as a month before the ledger\nstart date of a migrated company, is not `available` and has no values, never zero (RP-AC-10).\n`as_of` and `ytd` columns only need their end date inside the data, as the imported balances carry\nwhat came before. The trial balance, general ledger, direct cash flow and equity changes carry\nthe same four fields; the direct cash flow also needs the transaction types, so before the cutover\ndate it is only as complete as a history by transactions.",
                 "summary": "Runs the definition for `from`..`to` (or `as_of`): every row has one value per column in the\nfunctional currency, or `null` when the column is not available. Accounts that no row claims\nare in the `unmapped` row and `unmapped_accounts`. The filters of the trial balance apply to\nevery column: `account_id`, `dimensions[<type key>]` with roll-up, `transaction_type_keys[]` and\n`source`; without them every line counts, those without dimensions included (RP-FR-04). For a user limited to some dimension\nvalues only the lines inside that scope are added up and `restricted` is true (IA-FR-03)",
                 "tags": [
                     "ReportDefinition"
@@ -15871,6 +15919,18 @@
                                     "type": "null"
                                 }
                             ]
+                        }
+                    },
+                    {
+                        "name": "plan_version_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "minLength": 26,
+                            "maxLength": 26
                         }
                     }
                 ],
@@ -16057,6 +16117,667 @@
                                                 "rows",
                                                 "unmapped_accounts"
                                             ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/report-definition-templates": {
+            "get": {
+                "operationId": "report-definition-templates.index",
+                "summary": "Report definition templates the company can review. A template is only a suggestion",
+                "tags": [
+                    "ReportDefinitionTemplate"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "version": {
+                                                        "type": "integer"
+                                                    },
+                                                    "definition_count": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "key",
+                                                    "name",
+                                                    "version",
+                                                    "definition_count"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/report-definition-templates/{key}": {
+            "get": {
+                "operationId": "report-definition-templates.show",
+                "summary": "Every definition of a template with its kind and structure, for review before the import is\nconfirmed. Account selectors name a parent by its template `code` or a class; the import\nresolves the code against the chart of the company",
+                "tags": [
+                    "ReportDefinitionTemplate"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "key",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "key": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "version": {
+                                                    "type": "integer"
+                                                },
+                                                "definitions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "structure": {
+                                                                "type": "object",
+                                                                "additionalProperties": {}
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "name",
+                                                            "kind",
+                                                            "structure"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "key",
+                                                "name",
+                                                "version",
+                                                "definitions"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFoundHttpException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/report-definitions/import-template": {
+            "post": {
+                "operationId": "report-definitions.import-template",
+                "summary": "Creates the picked definitions of a template as version 1. `confirmed` must be true: the\ntemplate is only a suggestion until the company confirms it. Fails as a whole when a key is\nalready used in the company or the chart lacks an account the template names",
+                "tags": [
+                    "ReportDefinitionTemplate"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportReportTemplateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "template": {
+                                                    "type": "string"
+                                                },
+                                                "created": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                }
+                                            },
+                                            "required": [
+                                                "template",
+                                                "created"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/report-definitions/{id}/snapshots": {
+            "post": {
+                "operationId": "report-definitions.snapshots.publish",
+                "summary": "Publishes the definition as a snapshot (RP-FR-14): it runs for `from`..`to` (or `as_of`) with the\nfilters of the report, `version` of the definition (the current one by default), and the values\nare kept. `reason` is free text. 403 for a user limited to some dimension values",
+                "tags": [
+                    "ReportSnapshot"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PublishReportSnapshotRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`ReportSnapshotResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ReportSnapshotResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/report-snapshots": {
+            "get": {
+                "operationId": "report-snapshots.index",
+                "summary": "Snapshots of the company, newest first, without their values; `definition_id` narrows them to one\ndefinition. `per_page` defaults to 50, at most 200",
+                "tags": [
+                    "ReportSnapshot"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "definition_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 50
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `ReportSnapshotResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ReportSnapshotResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/report-snapshots/{id}": {
+            "get": {
+                "operationId": "report-snapshots.show",
+                "summary": "A snapshot with the values it was published with: the parameters, the version of the definition\nand of the account role mapping, the data it covered and the result as it was computed. It does\nnot change when the definition or the mapping does (RP-AC-08). 403 for a user limited to some\ndimension values, as a snapshot is the report of the whole company",
+                "tags": [
+                    "ReportSnapshot"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "definition_id": {
+                                                    "type": "string"
+                                                },
+                                                "definition_version": {
+                                                    "type": "integer"
+                                                },
+                                                "sequence": {
+                                                    "type": "integer"
+                                                },
+                                                "parameters": {
+                                                    "type": "object",
+                                                    "additionalProperties": {}
+                                                },
+                                                "mapping_versions": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "data_boundary": {
+                                                    "type": "object",
+                                                    "additionalProperties": {}
+                                                },
+                                                "reason": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "recomputed_from_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "published_by": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "published_at": {
+                                                    "type": "string"
+                                                },
+                                                "result": {
+                                                    "type": "object",
+                                                    "additionalProperties": {}
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "definition_id",
+                                                "definition_version",
+                                                "sequence",
+                                                "parameters",
+                                                "mapping_versions",
+                                                "data_boundary",
+                                                "reason",
+                                                "recomputed_from_id",
+                                                "published_by",
+                                                "published_at",
+                                                "result"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/report-snapshots/{id}/recompute": {
+            "post": {
+                "operationId": "report-snapshots.recompute",
+                "summary": "Recalculates a snapshot: the same parameters against the definition (its current version unless\n`version` is given) and the account role mapping in force now. The result is a new snapshot that\nnames this one in `recomputed_from_id`; this one stays as it was (X-FR-03, X-AC-04)",
+                "tags": [
+                    "ReportSnapshot"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RecomputeReportSnapshotRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`ReportSnapshotResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ReportSnapshotResource"
                                         }
                                     },
                                     "required": [
@@ -17562,6 +18283,18 @@
                                     "type": "null"
                                 }
                             ]
+                        }
+                    },
+                    {
+                        "name": "plan_version_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "minLength": 26,
+                            "maxLength": 26
                         }
                     },
                     {
@@ -19184,6 +19917,7 @@
                                 "fiscal-years.reopen",
                                 "reports.read",
                                 "reports.export",
+                                "reports.publish",
                                 "report-definitions.manage",
                                 "audit.read",
                                 "memberships.read",
@@ -20945,6 +21679,40 @@
                 ],
                 "title": "ImportOpeningBalancesRequest"
             },
+            "ImportReportTemplateRequest": {
+                "type": "object",
+                "properties": {
+                    "template": {
+                        "type": "string",
+                        "maxLength": 64
+                    },
+                    "confirmed": {
+                        "enum": [
+                            "yes",
+                            "on",
+                            "1",
+                            1,
+                            "true",
+                            true
+                        ]
+                    },
+                    "keys": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "template",
+                    "confirmed",
+                    "keys"
+                ],
+                "title": "ImportReportTemplateRequest"
+            },
             "ImportTemplateRequest": {
                 "type": "object",
                 "properties": {
@@ -22082,6 +22850,96 @@
                 ],
                 "title": "PublishPlanVersionRequest"
             },
+            "PublishReportSnapshotRequest": {
+                "type": "object",
+                "properties": {
+                    "from": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    },
+                    "to": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    },
+                    "as_of": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    },
+                    "version": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1
+                    },
+                    "account_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "dimensions": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
+                    },
+                    "transaction_type_keys": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "maxLength": 64
+                        }
+                    },
+                    "source": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/JournalSource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "plan_version_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 26,
+                        "maxLength": 26
+                    },
+                    "reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    }
+                },
+                "title": "PublishReportSnapshotRequest"
+            },
             "RateTypeResource": {
                 "type": "object",
                 "properties": {
@@ -22130,6 +22988,26 @@
                     }
                 },
                 "title": "ReasonRequest"
+            },
+            "RecomputeReportSnapshotRequest": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1
+                    },
+                    "reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    }
+                },
+                "title": "RecomputeReportSnapshotRequest"
             },
             "ReconciliationResource": {
                 "type": "object",
@@ -22621,6 +23499,131 @@
                     "structure"
                 ],
                 "title": "ReportDefinitionResource"
+            },
+            "ReportSnapshotResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {}
+                        ]
+                    },
+                    "definition_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {}
+                        ]
+                    },
+                    "definition_version": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {}
+                        ]
+                    },
+                    "sequence": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {}
+                        ]
+                    },
+                    "parameters": {
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": {}
+                            },
+                            {}
+                        ]
+                    },
+                    "mapping_versions": {
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            {}
+                        ]
+                    },
+                    "data_boundary": {
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": {}
+                            },
+                            {}
+                        ]
+                    },
+                    "reason": {
+                        "anyOf": [
+                            {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            {}
+                        ]
+                    },
+                    "recomputed_from_id": {
+                        "anyOf": [
+                            {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            {}
+                        ]
+                    },
+                    "published_by": {
+                        "anyOf": [
+                            {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            {}
+                        ]
+                    },
+                    "published_at": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {}
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "definition_id",
+                    "definition_version",
+                    "sequence",
+                    "parameters",
+                    "mapping_versions",
+                    "data_boundary",
+                    "reason",
+                    "recomputed_from_id",
+                    "published_by",
+                    "published_at"
+                ],
+                "additionalProperties": {},
+                "title": "ReportSnapshotResource"
             },
             "ResetPeriod": {
                 "type": "string",
@@ -24059,6 +25062,7 @@
                                 "fiscal-years.reopen",
                                 "reports.read",
                                 "reports.export",
+                                "reports.publish",
                                 "report-definitions.manage",
                                 "audit.read",
                                 "memberships.read",
@@ -24148,6 +25152,7 @@
                                 "fiscal-years.reopen",
                                 "reports.read",
                                 "reports.export",
+                                "reports.publish",
                                 "report-definitions.manage",
                                 "audit.read",
                                 "memberships.read",

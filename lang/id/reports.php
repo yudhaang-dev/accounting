@@ -3,7 +3,12 @@
 // Pesan definisi laporan (RP-FR-01, RP-FR-02).
 return [
 
+    'snapshot_scope_restricted' => 'Snapshot dibaca oleh semua yang boleh membaca laporan, sehingga user yang dibatasi pada nilai dimensi tertentu tidak dapat menerbitkannya.',
     'key_taken' => 'Sudah ada definisi laporan dengan kunci ini.',
+    'template_unknown' => 'Template definisi laporan ini tidak ada.',
+    'template_definition_unknown' => 'Template tidak memiliki definisi laporan :key.',
+    'definition_key_taken' => 'Perusahaan sudah memiliki definisi laporan dengan kunci :key.',
+    'template_account_missing' => 'Bagan akun tidak memiliki akun :code yang dipakai definisi template :key.',
     'unmapped_row' => 'Belum dipetakan ke baris',
     'unclassified_row' => 'Belum diklasifikasikan',
     'cash_mapping_missing' => 'Petakan peran cash_equivalents ke setidaknya satu akun sebelum menjalankan arus kas.',

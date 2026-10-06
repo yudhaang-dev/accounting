@@ -2758,10 +2758,172 @@ export interface paths {
          *     out of movement; the import counts in the opening cash. Balance sheet accounts that no row
          *     claims are in the `unmapped` row, still counted. `cash_checks` reconciles opening cash, net
          *     increase and closing cash per column.
+         *
+         *     A `plan` column (`span` `period` or `ytd`, optionally shifted) reads the plan version of its
+         *     `plan_version_id`, else of the `plan_version_id` parameter, else the default of the fiscal year the
+         *     range ends in (RP-FR-11); without a version, or without periods inside the range, it is not
+         *     `available` and has no values. A `difference` column that subtracts a plan column adds
+         *     `variances[<column key>]` to each row: `percentage` of the absolute plan (`null` when the plan is zero)
+         *     and `favorable`, which follows the `favorable` (`higher` or `lower`) of the row, else its sign
+         *     (credit: higher, debit: lower), and is `null` for a variance of zero (RP-FR-12). Cash is not a basis
+         *     here: it is the direct cash flow of the same period.
+         *
+         *     The result says what part of the history it covers (RP-FR-13): `coverage_from`, `coverage_to`,
+         *     `coverage_granularity` (`transactions`, or `period_summary` for a range inside an imported
+         *     history) and `coverage_status` (`complete`, `partial` or `unavailable`), and every column has its
+         *     own `coverage_status`. A column the ledger cannot answer for, such as a month before the ledger
+         *     start date of a migrated company, is not `available` and has no values, never zero (RP-AC-10).
+         *     `as_of` and `ytd` columns only need their end date inside the data, as the imported balances carry
+         *     what came before. The trial balance, general ledger, direct cash flow and equity changes carry
+         *     the same four fields; the direct cash flow also needs the transaction types, so before the cutover
+         *     date it is only as complete as a history by transactions.
          */
         get: operations["report-definitions.result"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/report-definition-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report definition templates the company can review. A template is only a suggestion */
+        get: operations["report-definition-templates.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/report-definition-templates/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every definition of a template with its kind and structure, for review before the import is
+         *     confirmed. Account selectors name a parent by its template `code` or a class; the import
+         *     resolves the code against the chart of the company
+         */
+        get: operations["report-definition-templates.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/report-definitions/import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Creates the picked definitions of a template as version 1. `confirmed` must be true: the
+         *     template is only a suggestion until the company confirms it. Fails as a whole when a key is
+         *     already used in the company or the chart lacks an account the template names
+         */
+        post: operations["report-definitions.import-template"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/report-definitions/{id}/snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publishes the definition as a snapshot (RP-FR-14): it runs for `from`..`to` (or `as_of`) with the
+         *     filters of the report, `version` of the definition (the current one by default), and the values
+         *     are kept. `reason` is free text. 403 for a user limited to some dimension values
+         */
+        post: operations["report-definitions.snapshots.publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/report-snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Snapshots of the company, newest first, without their values; `definition_id` narrows them to one
+         *     definition. `per_page` defaults to 50, at most 200
+         */
+        get: operations["report-snapshots.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/report-snapshots/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A snapshot with the values it was published with: the parameters, the version of the definition
+         *     and of the account role mapping, the data it covered and the result as it was computed. It does
+         *     not change when the definition or the mapping does (RP-AC-08). 403 for a user limited to some
+         *     dimension values, as a snapshot is the report of the whole company
+         */
+        get: operations["report-snapshots.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/report-snapshots/{id}/recompute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recalculates a snapshot: the same parameters against the definition (its current version unless
+         *     `version` is given) and the account role mapping in force now. The result is a new snapshot that
+         *     names this one in `recomputed_from_id`; this one stays as it was (X-FR-03, X-AC-04)
+         */
+        post: operations["report-snapshots.recompute"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3480,7 +3642,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -3897,6 +4059,13 @@ export interface components {
                 exchange_rate?: string | null;
             }[];
         };
+        /** ImportReportTemplateRequest */
+        ImportReportTemplateRequest: {
+            template: string;
+            /** @enum {unknown} */
+            confirmed: "yes" | "on" | "1" | 1 | "true" | true;
+            keys: string[];
+        };
         /** ImportTemplateRequest */
         ImportTemplateRequest: {
             template: string;
@@ -4195,6 +4364,22 @@ export interface components {
         PublishPlanVersionRequest: {
             lock_version: number;
         };
+        /** PublishReportSnapshotRequest */
+        PublishReportSnapshotRequest: {
+            /** Format: date */
+            from?: string | null;
+            /** Format: date */
+            to?: string | null;
+            /** Format: date */
+            as_of?: string | null;
+            version?: number | null;
+            account_id?: string | null;
+            dimensions?: (string | null)[] | null;
+            transaction_type_keys?: string[] | null;
+            source?: components["schemas"]["JournalSource"] | null;
+            plan_version_id?: string | null;
+            reason?: string | null;
+        };
         /** RateTypeResource */
         RateTypeResource: {
             id: string;
@@ -4209,6 +4394,11 @@ export interface components {
          * @description Reason of a rejection (required) or a cancellation (optional), TE-FR-07.
          */
         ReasonRequest: {
+            reason?: string | null;
+        };
+        /** RecomputeReportSnapshotRequest */
+        RecomputeReportSnapshotRequest: {
+            version?: number | null;
             reason?: string | null;
         };
         /** ReconciliationResource */
@@ -4326,6 +4516,28 @@ export interface components {
             structure: {
                 [key: string]: unknown;
             };
+        };
+        /** ReportSnapshotResource */
+        ReportSnapshotResource: {
+            id: string | unknown;
+            definition_id: string | unknown;
+            definition_version: number | unknown;
+            sequence: number | unknown;
+            parameters: {
+                [key: string]: unknown;
+            } | unknown;
+            mapping_versions: {
+                [key: string]: number | null;
+            } | unknown;
+            data_boundary: {
+                [key: string]: unknown;
+            } | unknown;
+            reason: (string | null) | unknown;
+            recomputed_from_id: (string | null) | unknown;
+            published_by: (number | null) | unknown;
+            published_at: string | unknown;
+        } & {
+            [key: string]: unknown;
         };
         /**
          * ResetPeriod
@@ -4665,13 +4877,13 @@ export interface components {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -7752,6 +7964,7 @@ export interface operations {
                 "dimensions[]"?: (string | null)[] | null;
                 "transaction_type_keys[]"?: string[];
                 source?: components["schemas"]["JournalSource"] | null;
+                plan_version_id?: string | null;
             };
             header?: never;
             path: {
@@ -8767,6 +8980,7 @@ export interface operations {
                 "dimensions[]"?: (string | null)[] | null;
                 "transaction_type_keys[]"?: string[];
                 source?: components["schemas"]["JournalSource"] | null;
+                plan_version_id?: string | null;
             };
             header?: never;
             path: {
@@ -8838,6 +9052,7 @@ export interface operations {
                 "dimensions[]"?: (string | null)[] | null;
                 "transaction_type_keys[]"?: string[];
                 source?: components["schemas"]["JournalSource"] | null;
+                plan_version_id?: string | null;
             };
             header?: never;
             path: {
@@ -8919,6 +9134,7 @@ export interface operations {
                 "dimensions[]"?: (string | null)[] | null;
                 "transaction_type_keys[]"?: string[];
                 source?: components["schemas"]["JournalSource"] | null;
+                plan_version_id?: string | null;
             };
             header?: never;
             path: {
@@ -11052,6 +11268,7 @@ export interface operations {
                 "dimensions[]"?: (string | null)[] | null;
                 "transaction_type_keys[]"?: string[];
                 source?: components["schemas"]["JournalSource"] | null;
+                plan_version_id?: string | null;
             };
             header?: never;
             path: {
@@ -11108,6 +11325,269 @@ export interface operations {
                                 name: string;
                             }[];
                         };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "report-definition-templates.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            name: string;
+                            version: number;
+                            definition_count: number;
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "report-definition-templates.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            name: string;
+                            version: number;
+                            definitions: {
+                                key: string;
+                                name: string;
+                                kind: string;
+                                structure: {
+                                    [key: string]: unknown;
+                                };
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["NotFoundHttpException"];
+        };
+    };
+    "report-definitions.import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportReportTemplateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            template: string;
+                            created: unknown[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "report-definitions.snapshots.publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PublishReportSnapshotRequest"];
+            };
+        };
+        responses: {
+            /** @description `ReportSnapshotResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReportSnapshotResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "report-snapshots.index": {
+        parameters: {
+            query?: {
+                definition_id?: string;
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ReportSnapshotResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReportSnapshotResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "report-snapshots.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            definition_id: string;
+                            definition_version: number;
+                            sequence: number;
+                            parameters: {
+                                [key: string]: unknown;
+                            };
+                            mapping_versions: {
+                                [key: string]: number | null;
+                            };
+                            data_boundary: {
+                                [key: string]: unknown;
+                            };
+                            reason: string | null;
+                            recomputed_from_id: string | null;
+                            published_by: number | null;
+                            published_at: string;
+                            result: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "report-snapshots.recompute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RecomputeReportSnapshotRequest"];
+            };
+        };
+        responses: {
+            /** @description `ReportSnapshotResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReportSnapshotResource"];
                     };
                 };
             };
@@ -11766,6 +12246,7 @@ export interface operations {
                 "dimensions[]"?: (string | null)[] | null;
                 "transaction_type_keys[]"?: string[];
                 source?: components["schemas"]["JournalSource"] | null;
+                plan_version_id?: string | null;
                 "adjustment_keys[]"?: string[];
             };
             header?: never;

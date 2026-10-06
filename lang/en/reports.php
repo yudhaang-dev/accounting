@@ -3,7 +3,12 @@
 // Messages of report definitions (RP-FR-01, RP-FR-02).
 return [
 
+    'snapshot_scope_restricted' => 'A snapshot is read by everyone who may read reports, so a user limited to some dimension values cannot publish one.',
     'key_taken' => 'A report definition with this key already exists.',
+    'template_unknown' => 'This report definition template does not exist.',
+    'template_definition_unknown' => 'The template has no report definition :key.',
+    'definition_key_taken' => 'The company already has a report definition with the key :key.',
+    'template_account_missing' => 'The chart of accounts has no account :code, which the template definition :key uses.',
     'unmapped_row' => 'Not mapped to a row',
     'unclassified_row' => 'Not classified',
     'cash_mapping_missing' => 'Map the cash_equivalents role to at least one account before running a cash flow.',

@@ -4,6 +4,8 @@ use App\Modules\Reporting\Http\AccountRoleMappingController;
 use App\Modules\Reporting\Http\GeneralLedgerController;
 use App\Modules\Reporting\Http\MovementClassificationController;
 use App\Modules\Reporting\Http\ReportDefinitionController;
+use App\Modules\Reporting\Http\ReportDefinitionTemplateController;
+use App\Modules\Reporting\Http\ReportSnapshotController;
 use App\Modules\Reporting\Http\TrialBalanceController;
 use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
@@ -16,12 +18,27 @@ Route::companyScoped(function () {
 
     Route::get('report-definitions', [ReportDefinitionController::class, 'index'])->middleware('permission:reports.read')->name('report-definitions.index');
     Route::post('report-definitions', [ReportDefinitionController::class, 'store'])->middleware('permission:report-definitions.manage')->name('report-definitions.store');
+    Route::get('report-definition-templates', [ReportDefinitionTemplateController::class, 'index'])
+        ->middleware('permission:report-definitions.manage')->name('report-definition-templates.index');
+    Route::get('report-definition-templates/{key}', [ReportDefinitionTemplateController::class, 'show'])
+        ->middleware('permission:report-definitions.manage')->where('key', '[a-z0-9-]+')->name('report-definition-templates.show');
+    Route::post('report-definitions/import-template', [ReportDefinitionTemplateController::class, 'import'])
+        ->middleware('permission:report-definitions.manage')->name('report-definitions.import-template');
+
     Route::get('report-definitions/{id}', [ReportDefinitionController::class, 'show'])
         ->middleware('permission:reports.read')->where('id', ApiServiceProvider::ULID)->name('report-definitions.show');
     Route::put('report-definitions/{id}', [ReportDefinitionController::class, 'update'])
         ->middleware('permission:report-definitions.manage')->where('id', ApiServiceProvider::ULID)->name('report-definitions.update');
     Route::get('report-definitions/{id}/result', [ReportDefinitionController::class, 'evaluate'])
         ->middleware('permission:reports.read')->where('id', ApiServiceProvider::ULID)->name('report-definitions.result');
+
+    Route::post('report-definitions/{id}/snapshots', [ReportSnapshotController::class, 'publish'])
+        ->middleware('permission:reports.publish')->where('id', ApiServiceProvider::ULID)->name('report-definitions.snapshots.publish');
+    Route::get('report-snapshots', [ReportSnapshotController::class, 'index'])->middleware('permission:reports.read')->name('report-snapshots.index');
+    Route::get('report-snapshots/{id}', [ReportSnapshotController::class, 'show'])
+        ->middleware('permission:reports.read')->where('id', ApiServiceProvider::ULID)->name('report-snapshots.show');
+    Route::post('report-snapshots/{id}/recompute', [ReportSnapshotController::class, 'recompute'])
+        ->middleware('permission:reports.publish')->where('id', ApiServiceProvider::ULID)->name('report-snapshots.recompute');
 
     Route::get('movement-classifications', [MovementClassificationController::class, 'index'])->middleware('permission:reports.read')->name('movement-classifications.index');
     Route::post('movement-classifications', [MovementClassificationController::class, 'store'])->middleware('permission:report-definitions.manage')->name('movement-classifications.store');

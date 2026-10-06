@@ -35,7 +35,7 @@ final class PermissionCatalog
         'journals' => ['read', 'post-soft-closed', 'override-source'],
         'opening-balances' => ['import'],
         'fiscal-years' => ['close', 'reopen'],
-        'reports' => ['read', 'export'],
+        'reports' => ['read', 'export', 'publish'],
         'report-definitions' => ['manage'],
         'audit' => ['read'],
         'memberships' => ['read', 'manage'],
