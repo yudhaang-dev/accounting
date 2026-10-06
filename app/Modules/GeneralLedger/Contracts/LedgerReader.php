@@ -16,9 +16,10 @@ interface LedgerReader
      * @param  list<string>|null  $dimensionSetIds  only lines in these dimension sets; null means all (MD-FR-05)
      * @param  list<string>|null  $transactionTypeKeys  only lines of journals with one of these keys; null means all (RP-FR-04)
      * @param  JournalSource|null  $source  only lines of journals from this source; null means all (RP-FR-04)
+     * @param  list<string>  $excludedTransactionTypeKeys  lines of journals with one of these keys are left out of the opening balance and the movement alike; see `SystemTransactionKeys` (RP-FR-07)
      * @return list<TrialBalanceRow>
      */
-    public function trialBalance(string $companyId, string $from, string $to, ?string $accountId = null, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null): array;
+    public function trialBalance(string $companyId, string $from, string $to, ?string $accountId = null, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null, array $excludedTransactionTypeKeys = []): array;
 
     /**
      * Movement between two dates per account and transaction type key, the lines that classification

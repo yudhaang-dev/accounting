@@ -73,6 +73,10 @@ class ReportDefinitionController
      * `source`; without them every line counts, those without dimensions included (RP-FR-04). For a user limited to some dimension
      * values only the lines inside that scope are added up and `restricted` is true (IA-FR-03).
      *
+     * A definition of kind `income_statement` is an income statement (RP-FR-07): only income and
+     * expense accounts are added up, the closing journal of a closed year is left out of every
+     * column, and the opening balance import is left out of `period` columns but kept in `ytd` ones.
+     *
      * @response array{data: array{definition: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array{key: string, label: string, kind: string, from: string|null, to: string|null, available: bool}>, rows: list<array{key: string, label: string, type: string, values: array<string, string|null>}>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}}
      */
     public function evaluate(EvaluateReportRequest $request, ReportEngine $engine, DataScopeContext $scope, string $companyId, string $id): JsonResponse
@@ -90,7 +94,7 @@ class ReportDefinitionController
 
         return new JsonResponse(['data' => [
             'definition' => ['id' => $definition->id, 'key' => $definition->key, 'version' => $version->version],
-            ...$engine($companyId, $structure, $from, $to, $scope->current(), ReportFilter::fromParameters($params)),
+            ...$engine($companyId, $structure, $from, $to, $scope->current(), ReportFilter::fromParameters($params), $definition->kind),
         ]]);
     }
 

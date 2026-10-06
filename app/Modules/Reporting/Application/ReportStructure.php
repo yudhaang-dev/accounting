@@ -14,6 +14,11 @@ use Illuminate\Validation\ValidationException;
  */
 final class ReportStructure
 {
+    /** Definition kinds the engine treats specially; any other kind is a plain report. */
+    public const CUSTOM = 'custom';
+
+    public const INCOME_STATEMENT = 'income_statement';
+
     public const BASES = ['balance', 'movement', 'opening', 'closing'];
 
     public const ROW_TYPES = ['heading', 'accounts', 'subtotal'];

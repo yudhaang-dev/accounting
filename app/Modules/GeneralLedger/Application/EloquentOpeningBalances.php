@@ -12,6 +12,7 @@ use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\GeneralLedger\Contracts\PostJournalLine;
+use App\Modules\GeneralLedger\Contracts\SystemTransactionKeys;
 use App\Modules\GeneralLedger\Domain\Account;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
@@ -34,7 +35,7 @@ use stdClass;
  */
 final class EloquentOpeningBalances implements OpeningBalances
 {
-    public const TRANSACTION_TYPE_KEY = 'system.opening_balance';
+    public const TRANSACTION_TYPE_KEY = SystemTransactionKeys::OPENING_BALANCE;
 
     public function __construct(
         private readonly PostingService $posting,

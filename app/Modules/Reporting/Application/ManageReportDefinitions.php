@@ -38,7 +38,7 @@ final class ManageReportDefinitions
             $definition = ReportDefinition::create([
                 'key' => $data['key'],
                 'name' => $data['name'],
-                'kind' => $data['kind'] ?? 'custom',
+                'kind' => $data['kind'] ?? ReportStructure::CUSTOM,
                 'current_version' => 1,
             ])->refresh();
 

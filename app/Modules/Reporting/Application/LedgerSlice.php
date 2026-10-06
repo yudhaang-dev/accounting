@@ -31,8 +31,11 @@ final class LedgerSlice
         );
     }
 
-    /** @return list<TrialBalanceRow> */
-    public function trialBalance(string $from, string $to): array
+    /**
+     * @param  list<string>  $excludedTransactionTypeKeys
+     * @return list<TrialBalanceRow>
+     */
+    public function trialBalance(string $from, string $to, array $excludedTransactionTypeKeys = []): array
     {
         return $this->ledger->trialBalance(
             $this->companyId,
@@ -42,6 +45,7 @@ final class LedgerSlice
             $this->dimensionSetIds,
             $this->filter->transactionTypeKeys === [] ? null : $this->filter->transactionTypeKeys,
             $this->filter->source,
+            $excludedTransactionTypeKeys,
         );
     }
 }

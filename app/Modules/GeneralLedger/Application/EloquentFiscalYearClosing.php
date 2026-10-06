@@ -14,6 +14,7 @@ use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\GeneralLedger\Contracts\PostJournalLine;
 use App\Modules\GeneralLedger\Contracts\ReverseJournal;
+use App\Modules\GeneralLedger\Contracts\SystemTransactionKeys;
 use App\Modules\MasterData\Contracts\Currencies;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
@@ -36,7 +37,7 @@ use stdClass;
  */
 final class EloquentFiscalYearClosing implements FiscalYearClosing
 {
-    public const TRANSACTION_TYPE_KEY = 'system.closing';
+    public const TRANSACTION_TYPE_KEY = SystemTransactionKeys::CLOSING;
 
     public function __construct(
         private readonly PostingService $posting,

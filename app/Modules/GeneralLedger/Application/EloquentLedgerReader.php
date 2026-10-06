@@ -23,13 +23,14 @@ final class EloquentLedgerReader implements LedgerReader
 {
     public function __construct(private readonly Currencies $currencies) {}
 
-    public function trialBalance(string $companyId, string $from, string $to, ?string $accountId = null, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null): array
+    public function trialBalance(string $companyId, string $from, string $to, ?string $accountId = null, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null, array $excludedTransactionTypeKeys = []): array
     {
         $rows = DB::table('gl_journal_lines as l')
             ->join('gl_accounts as a', fn ($join) => $join->on('a.company_id', '=', 'l.company_id')->on('a.id', '=', 'l.account_id'))
-            ->when($transactionTypeKeys !== null || $source !== null, fn ($query) => $query->join('gl_journals as j', fn ($join) => $join->on('j.company_id', '=', 'l.company_id')->on('j.id', '=', 'l.journal_id')))
+            ->when($transactionTypeKeys !== null || $source !== null || $excludedTransactionTypeKeys !== [], fn ($query) => $query->join('gl_journals as j', fn ($join) => $join->on('j.company_id', '=', 'l.company_id')->on('j.id', '=', 'l.journal_id')))
             ->where('l.company_id', $companyId)
             ->where('l.accounting_date', '<=', $to)
+            ->when($excludedTransactionTypeKeys !== [], fn ($query) => $query->where(fn ($keys) => $keys->whereNull('j.transaction_type_key')->orWhereNotIn('j.transaction_type_key', $excludedTransactionTypeKeys)))
             ->when($accountId !== null, fn ($query) => $query->where('l.account_id', $accountId))
             ->when($dimensionSetIds !== null, fn ($query) => $query->whereIn('l.dimension_set_id', $dimensionSetIds))
             ->when($transactionTypeKeys !== null, fn ($query) => $query->whereIn('j.transaction_type_key', $transactionTypeKeys))

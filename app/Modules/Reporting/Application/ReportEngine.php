@@ -2,9 +2,11 @@
 
 namespace App\Modules\Reporting\Application;
 
+use App\Modules\GeneralLedger\Contracts\AccountClass;
 use App\Modules\GeneralLedger\Contracts\AccountData;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
+use App\Modules\GeneralLedger\Contracts\SystemTransactionKeys;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
@@ -40,7 +42,7 @@ final class ReportEngine
      * @param  array{basis: string, rows: list<array<string, mixed>>, columns: list<array<string, mixed>>}  $structure
      * @return array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}
      */
-    public function __invoke(string $companyId, array $structure, string $from, string $to, ?DataScope $scope = null, ?ReportFilter $filter = null): array
+    public function __invoke(string $companyId, array $structure, string $from, string $to, ?DataScope $scope = null, ?ReportFilter $filter = null, string $kind = ReportStructure::CUSTOM): array
     {
         $company = $this->companies->find($companyId) ?? throw new ApiException(ErrorCode::NotFound);
         $scope ??= DataScope::unrestricted();
@@ -66,7 +68,7 @@ final class ReportEngine
                 continue;
             }
 
-            $balances = $this->balances($slice->trialBalance($range[0], $range[1]));
+            $balances = $this->balances($slice->trialBalance($range[0], $range[1], $this->excludedKeys($kind, $column['kind'])), $kind === ReportStructure::INCOME_STATEMENT);
             $values[$column['key']] = $this->evaluate($structure, $claims, $balances, $unmapped);
         }
 
@@ -178,14 +180,38 @@ final class ReportEngine
     }
 
     /**
+     * An income statement leaves the closing journal out of every column, so a closed year still shows
+     * its result, and the opening balance import out of period columns, so a month after a mid-year
+     * cutover holds its own movement only; a year to date column starts at the fiscal year and keeps
+     * the imported balances (RP-FR-07, RP-AC-05, RP-AC-06).
+     *
+     * @return list<string>
+     */
+    private function excludedKeys(string $kind, string $columnKind): array
+    {
+        if ($kind !== ReportStructure::INCOME_STATEMENT) {
+            return [];
+        }
+
+        return $columnKind === 'ytd'
+            ? [SystemTransactionKeys::CLOSING]
+            : [SystemTransactionKeys::CLOSING, SystemTransactionKeys::OPENING_BALANCE];
+    }
+
+    /**
      * @param  list<TrialBalanceRow>  $rows
+     * @param  bool  $resultAccountsOnly  keeps income and expense accounts, the only ones an income statement adds up
      * @return array<string, array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal}>
      */
-    private function balances(array $rows): array
+    private function balances(array $rows, bool $resultAccountsOnly = false): array
     {
         $balances = [];
 
         foreach ($rows as $row) {
+            if ($resultAccountsOnly && ! in_array($row->class, [AccountClass::Income, AccountClass::Expense], true)) {
+                continue;
+            }
+
             $balances[$row->accountId] = [
                 'opening' => BigDecimal::of($row->openingDebit)->minus($row->openingCredit),
                 'movement' => BigDecimal::of($row->debit)->minus($row->credit),
