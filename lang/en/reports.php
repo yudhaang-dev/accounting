@@ -18,6 +18,7 @@ return [
     'row_key_repeated' => 'The row key ":key" appears more than once.',
     'row_label_invalid' => 'A row needs a label of at most 255 characters.',
     'row_type_invalid' => 'The row type must be one of: :allowed.',
+    'earnings_row_repeated' => 'Current year earnings can be shown on one row only.',
     'sign_invalid' => 'The sign must be debit or credit.',
     'selectors_required' => 'An accounts row needs at least one account selector.',
     'selector_type_invalid' => 'A selector is an account, a parent or a class.',

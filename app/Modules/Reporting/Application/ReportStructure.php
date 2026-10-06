@@ -19,9 +19,11 @@ final class ReportStructure
 
     public const INCOME_STATEMENT = 'income_statement';
 
+    public const BALANCE_SHEET = 'balance_sheet';
+
     public const BASES = ['balance', 'movement', 'opening', 'closing'];
 
-    public const ROW_TYPES = ['heading', 'accounts', 'subtotal'];
+    public const ROW_TYPES = ['heading', 'accounts', 'subtotal', 'current_year_earnings'];
 
     public const COLUMN_KINDS = ['period', 'ytd', 'as_of', 'difference'];
 
@@ -138,6 +140,7 @@ final class ReportStructure
         $rows = [];
         $seen = [];
         $claimed = [];
+        $earningsSeen = false;
 
         foreach (array_values($input) as $index => $row) {
             $at = "structure.rows.{$index}";
@@ -164,6 +167,14 @@ final class ReportStructure
             }
 
             $normalized = ['key' => (string) $key, 'label' => (string) $label, 'type' => $type];
+
+            if ($type === 'current_year_earnings') {
+                if ($earningsSeen) {
+                    $errors["{$at}.type"][] = __('reports.earnings_row_repeated');
+                }
+
+                $earningsSeen = true;
+            }
 
             if ($type !== 'heading') {
                 $sign = $row['sign'] ?? 'debit';

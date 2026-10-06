@@ -55,6 +55,7 @@ final class ReportEngine
         $columns = [];
         $values = [];
         $unmapped = [];
+        $checks = [];
 
         foreach ($structure['columns'] as $column) {
             if ($column['kind'] === 'difference') {
@@ -70,6 +71,10 @@ final class ReportEngine
 
             $balances = $this->balances($slice->trialBalance($range[0], $range[1], $this->excludedKeys($kind, $column['kind'])), $kind === ReportStructure::INCOME_STATEMENT);
             $values[$column['key']] = $this->evaluate($structure, $claims, $balances, $unmapped);
+
+            if ($kind === ReportStructure::BALANCE_SHEET && $column['kind'] === 'as_of') {
+                $checks[$column['key']] = $this->balanceCheck($balances);
+            }
         }
 
         foreach ($structure['columns'] as $column) {
@@ -117,7 +122,23 @@ final class ReportEngine
             'columns' => array_map(fn (array $column): array => $columns[$column['key']], $structure['columns']),
             'rows' => $rows,
             'unmapped_accounts' => $list,
+            ...($kind === ReportStructure::BALANCE_SHEET ? ['balance_checks' => $this->formatChecks($checks, $scale)] : []),
         ];
+    }
+
+    /**
+     * @param  array<string, array{assets: BigDecimal, liabilities_and_equity: BigDecimal, difference: BigDecimal}>  $checks
+     * @param  int<0, max>  $scale
+     * @return array<string, array{assets: string, liabilities_and_equity: string, difference: string, balanced: bool}>
+     */
+    private function formatChecks(array $checks, int $scale): array
+    {
+        return array_map(fn (array $check): array => [
+            'assets' => $this->format($check['assets'], $scale),
+            'liabilities_and_equity' => $this->format($check['liabilities_and_equity'], $scale),
+            'difference' => $this->format($check['difference'], $scale),
+            'balanced' => $check['difference']->toScale($scale, RoundingMode::HalfUp)->isZero(),
+        ], $checks);
     }
 
     /**
@@ -201,7 +222,7 @@ final class ReportEngine
     /**
      * @param  list<TrialBalanceRow>  $rows
      * @param  bool  $resultAccountsOnly  keeps income and expense accounts, the only ones an income statement adds up
-     * @return array<string, array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal}>
+     * @return array<string, array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal, class: AccountClass}>
      */
     private function balances(array $rows, bool $resultAccountsOnly = false): array
     {
@@ -216,6 +237,7 @@ final class ReportEngine
                 'opening' => BigDecimal::of($row->openingDebit)->minus($row->openingCredit),
                 'movement' => BigDecimal::of($row->debit)->minus($row->credit),
                 'closing' => BigDecimal::of($row->closingDebit)->minus($row->closingCredit),
+                'class' => $row->class,
             ];
         }
 
@@ -227,19 +249,30 @@ final class ReportEngine
      *
      * @param  array{basis: string, rows: list<array<string, mixed>>, columns: list<array<string, mixed>>}  $structure
      * @param  array<string, string>  $claims
-     * @param  array<string, array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal}>  $balances
+     * @param  array<string, array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal, class: AccountClass}>  $balances
      * @param  array<string, true>  $unmapped  receives the accounts that no row claims
      * @return array<string, BigDecimal|null> row key => value
      */
     private function evaluate(array $structure, array $claims, array $balances, array &$unmapped): array
     {
         $unmappedValue = BigDecimal::zero();
+        $earnings = BigDecimal::zero();
+        $hasEarningsRow = in_array('current_year_earnings', array_column($structure['rows'], 'type'), true);
 
         foreach ($balances as $id => $balance) {
-            if (! isset($claims[$id])) {
-                $unmapped[$id] = true;
-                $unmappedValue = $unmappedValue->plus($this->pick($balance, $structure['basis']));
+            if (isset($claims[$id])) {
+                continue;
             }
+
+            // Income and expense that no row claims are the result of the year so far: a row of its own, once.
+            if ($hasEarningsRow && $this->isResultAccount($balance)) {
+                $earnings = $earnings->plus($balance['closing']);
+
+                continue;
+            }
+
+            $unmapped[$id] = true;
+            $unmappedValue = $unmappedValue->plus($this->pick($balance, $structure['basis']));
         }
 
         $values = [ReportStructure::UNMAPPED => $unmappedValue];
@@ -255,6 +288,7 @@ final class ReportEngine
             $values[$row['key']] = match ($row['type']) {
                 'heading' => null,
                 'accounts' => $this->signed($row['sign'], $this->sum($perRow[$row['key']] ?? [], $row['basis'])),
+                'current_year_earnings' => $this->signed($row['sign'], $earnings),
                 default => $this->subtotal($row, $values),
             };
         }
@@ -262,8 +296,39 @@ final class ReportEngine
         return $values;
     }
 
+    /** @param  array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal, class: AccountClass}  $balance */
+    private function isResultAccount(array $balance): bool
+    {
+        return in_array($balance['class'], [AccountClass::Income, AccountClass::Expense], true);
+    }
+
     /**
-     * @param  list<array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal}>  $balances
+     * Assets against liabilities, equity and the result of the year so far, from the ledger itself so
+     * that no row definition can hide a difference (RP-FR-08, RP-AC-01).
+     *
+     * @param  array<string, array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal, class: AccountClass}>  $balances
+     * @return array{assets: BigDecimal, liabilities_and_equity: BigDecimal, difference: BigDecimal}
+     */
+    private function balanceCheck(array $balances): array
+    {
+        $assets = BigDecimal::zero();
+        $rest = BigDecimal::zero();
+
+        foreach ($balances as $balance) {
+            if ($balance['class'] === AccountClass::Asset) {
+                $assets = $assets->plus($balance['closing']);
+            } else {
+                $rest = $rest->plus($balance['closing']);
+            }
+        }
+
+        $other = $rest->negated();
+
+        return ['assets' => $assets, 'liabilities_and_equity' => $other, 'difference' => $assets->minus($other)];
+    }
+
+    /**
+     * @param  list<array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal, class: AccountClass}>  $balances
      */
     private function sum(array $balances, string $basis): BigDecimal
     {
@@ -276,7 +341,7 @@ final class ReportEngine
         return $total;
     }
 
-    /** @param  array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal}  $balance */
+    /** @param  array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal, class: AccountClass}  $balance */
     private function pick(array $balance, string $basis): BigDecimal
     {
         return match ($basis) {

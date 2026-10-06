@@ -18,6 +18,7 @@ return [
     'row_key_repeated' => 'Kunci baris ":key" muncul lebih dari satu kali.',
     'row_label_invalid' => 'Baris memerlukan label paling banyak 255 karakter.',
     'row_type_invalid' => 'Jenis baris harus salah satu dari: :allowed.',
+    'earnings_row_repeated' => 'Laba tahun berjalan hanya boleh disajikan pada satu baris.',
     'sign_invalid' => 'Tanda harus debit atau kredit.',
     'selectors_required' => 'Baris akun memerlukan paling sedikit satu pemilih akun.',
     'selector_type_invalid' => 'Pemilih adalah akun, akun induk, atau kelas.',

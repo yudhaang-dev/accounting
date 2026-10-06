@@ -77,6 +77,12 @@ class ReportDefinitionController
      * expense accounts are added up, the closing journal of a closed year is left out of every
      * column, and the opening balance import is left out of `period` columns but kept in `ytd` ones.
      *
+     * A definition of kind `balance_sheet` is a balance sheet (RP-FR-08): use `as_of` columns with
+     * `closing` rows and one `current_year_earnings` row, which holds the closing balance of the
+     * income and expense accounts that no row claims, so the result of a year that is not closed yet
+     * shows once and a closed year shows it in retained earnings only. `balance_checks` has, per
+     * `as_of` column, assets against liabilities and equity, with `balanced` false when they differ.
+     *
      * @response array{data: array{definition: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array{key: string, label: string, kind: string, from: string|null, to: string|null, available: bool}>, rows: list<array{key: string, label: string, type: string, values: array<string, string|null>}>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}}
      */
     public function evaluate(EvaluateReportRequest $request, ReportEngine $engine, DataScopeContext $scope, string $companyId, string $id): JsonResponse
