@@ -1,0 +1,33 @@
+<?php
+
+// Pesan definisi laporan (RP-FR-01, RP-FR-02).
+return [
+
+    'key_taken' => 'Sudah ada definisi laporan dengan kunci ini.',
+    'unmapped_row' => 'Belum dipetakan ke baris',
+
+    'basis_invalid' => 'Dasar nilai harus salah satu dari: :allowed.',
+    'rows_count' => 'Laporan memiliki 1 sampai :max baris.',
+    'row_key_invalid' => 'Kunci baris diawali huruf kecil dan hanya berisi huruf kecil, angka, dan garis bawah; "unmapped" dicadangkan.',
+    'row_key_repeated' => 'Kunci baris ":key" muncul lebih dari satu kali.',
+    'row_label_invalid' => 'Baris memerlukan label paling banyak 255 karakter.',
+    'row_type_invalid' => 'Jenis baris harus salah satu dari: :allowed.',
+    'sign_invalid' => 'Tanda harus debit atau kredit.',
+    'selectors_required' => 'Baris akun memerlukan paling sedikit satu pemilih akun.',
+    'selector_type_invalid' => 'Pemilih adalah akun, akun induk, atau kelas.',
+    'account_unknown' => 'Akun tidak ada di perusahaan ini.',
+    'class_invalid' => 'Kelas harus asset, liability, equity, income, atau expense.',
+    'account_claimed' => 'Akun :code sudah ada di baris ":row".',
+    'terms_required' => 'Subtotal memerlukan paling sedikit satu suku.',
+    'term_row_unknown' => 'Suku merujuk baris di atasnya, atau "unmapped".',
+    'term_sign_invalid' => 'Tanda suku adalah 1 atau -1.',
+
+    'columns_count' => 'Laporan memiliki 1 sampai :max kolom.',
+    'column_key_invalid' => 'Kunci kolom diawali huruf kecil dan hanya berisi huruf kecil, angka, dan garis bawah.',
+    'column_key_repeated' => 'Kunci kolom ":key" muncul lebih dari satu kali.',
+    'column_label_invalid' => 'Kolom memerlukan label paling banyak 255 karakter.',
+    'column_kind_invalid' => 'Jenis kolom harus salah satu dari: :allowed.',
+    'column_ref_unknown' => 'Selisih merujuk kolom di atasnya.',
+    'shift_invalid' => 'Pergeseran adalah bilangan bulat tahun dan bulan, nol atau negatif.',
+
+];

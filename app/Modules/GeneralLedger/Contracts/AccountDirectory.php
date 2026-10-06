@@ -14,6 +14,14 @@ interface AccountDirectory
     public function findByCode(string $companyId, string $code): ?AccountData;
 
     /**
+     * Every account of the company, active or not, ordered by code. Reports resolve their account
+     * sets against it (RP-FR-02).
+     *
+     * @return list<AccountData>
+     */
+    public function all(string $companyId): array;
+
+    /**
      * Classes that have no active leaf account yet; empty when the chart can take postings of every kind.
      *
      * @return list<AccountClass>

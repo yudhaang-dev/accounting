@@ -1,0 +1,33 @@
+<?php
+
+// Messages of report definitions (RP-FR-01, RP-FR-02).
+return [
+
+    'key_taken' => 'A report definition with this key already exists.',
+    'unmapped_row' => 'Not mapped to a row',
+
+    'basis_invalid' => 'The basis must be one of: :allowed.',
+    'rows_count' => 'A report has between 1 and :max rows.',
+    'row_key_invalid' => 'A row key starts with a lowercase letter and has only lowercase letters, digits and underscores; "unmapped" is reserved.',
+    'row_key_repeated' => 'The row key ":key" appears more than once.',
+    'row_label_invalid' => 'A row needs a label of at most 255 characters.',
+    'row_type_invalid' => 'The row type must be one of: :allowed.',
+    'sign_invalid' => 'The sign must be debit or credit.',
+    'selectors_required' => 'An accounts row needs at least one account selector.',
+    'selector_type_invalid' => 'A selector is an account, a parent or a class.',
+    'account_unknown' => 'The account does not exist in this company.',
+    'class_invalid' => 'The class must be asset, liability, equity, income or expense.',
+    'account_claimed' => 'Account :code is already in row ":row".',
+    'terms_required' => 'A subtotal needs at least one term.',
+    'term_row_unknown' => 'A term refers to a row above it, or to "unmapped".',
+    'term_sign_invalid' => 'The sign of a term is 1 or -1.',
+
+    'columns_count' => 'A report has between 1 and :max columns.',
+    'column_key_invalid' => 'A column key starts with a lowercase letter and has only lowercase letters, digits and underscores.',
+    'column_key_repeated' => 'The column key ":key" appears more than once.',
+    'column_label_invalid' => 'A column needs a label of at most 255 characters.',
+    'column_kind_invalid' => 'The column kind must be one of: :allowed.',
+    'column_ref_unknown' => 'A difference refers to a column above it.',
+    'shift_invalid' => 'The shift is a whole number of years and months, zero or negative.',
+
+];

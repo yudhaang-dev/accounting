@@ -2491,6 +2491,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/report-definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report definitions of the company, ordered by key. `per_page` defaults to 50, at most 200 */
+        get: operations["report-definitions.index"];
+        put?: never;
+        /**
+         * Adds a definition as version 1. The structure has `basis` (`balance`, `movement`, `opening`
+         *     or `closing`; the default of the rows), `rows` and `columns`. A row is a `heading`, an
+         *     `accounts` row that picks accounts by `{type: account|parent|class}` selectors (never by code
+         *     range) or a `subtotal` that adds earlier rows with sign 1 or -1. A column is a `period`, `ytd`
+         *     or `as_of` column, optionally shifted back with `shift: {years, months}`, or a `difference` of
+         *     two earlier columns. An account that no row claims shows up in the `unmapped` row when the
+         *     report runs
+         */
+        post: operations["report-definitions.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/report-definitions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A definition with the structure of its current version, or of `version` when given */
+        get: operations["report-definitions.show"];
+        /**
+         * Renames the definition and, when `structure` is given and differs, adds the next version; the
+         *     versions before stay as they were. `lock_version` is required
+         */
+        put: operations["report-definitions.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/report-definitions/{id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Runs the definition for `from`..`to` (or `as_of`): every row has one value per column in the
+         *     functional currency, or `null` when the column is not available. Accounts that no row claims
+         *     are in the `unmapped` row and `unmapped_accounts`. For a user limited to some dimension
+         *     values only the lines inside that scope are added up and `restricted` is true (IA-FR-03)
+         */
+        get: operations["report-definitions.result"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/periods/{id}/revaluation": {
         parameters: {
             query?: never;
@@ -3194,7 +3263,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -4006,6 +4075,19 @@ export interface components {
         ReopenPeriodRequest: {
             reason: string;
         };
+        /** ReportDefinitionResource */
+        ReportDefinitionResource: {
+            id: string;
+            key: string;
+            name: string;
+            kind: string;
+            current_version: number;
+            lock_version: number;
+            version: number;
+            structure: {
+                [key: string]: unknown;
+            };
+        };
         /**
          * ResetPeriod
          * @enum {string}
@@ -4035,6 +4117,17 @@ export interface components {
         RunReconciliationRequest: {
             /** Format: date */
             as_of: string;
+        };
+        /** SaveReportDefinitionRequest */
+        SaveReportDefinitionRequest: {
+            key: string;
+            name: string;
+            kind?: string;
+            structure: {
+                rows?: string[];
+                columns?: string[];
+            };
+            lock_version?: number;
         };
         /** SecurityPolicyResource */
         SecurityPolicyResource: {
@@ -4314,13 +4407,13 @@ export interface components {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -10028,6 +10121,214 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "report-definitions.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ReportDefinitionResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReportDefinitionResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "report-definitions.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveReportDefinitionRequest"];
+            };
+        };
+        responses: {
+            /** @description `ReportDefinitionResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReportDefinitionResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "report-definitions.show": {
+        parameters: {
+            query?: {
+                version?: number | null;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ReportDefinitionResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReportDefinitionResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "report-definitions.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveReportDefinitionRequest"];
+            };
+        };
+        responses: {
+            /** @description `ReportDefinitionResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReportDefinitionResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "report-definitions.result": {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+                as_of?: string | null;
+                version?: number | null;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            definition: {
+                                id: string;
+                                key: string;
+                                version: number;
+                            };
+                            parameters: {
+                                from: string;
+                                to: string;
+                            };
+                            functional_currency: string;
+                            restricted: boolean;
+                            columns: {
+                                key: string;
+                                label: string;
+                                kind: string;
+                                from: string | null;
+                                to: string | null;
+                                available: boolean;
+                            }[];
+                            rows: {
+                                key: string;
+                                label: string;
+                                type: string;
+                                values: {
+                                    [key: string]: string | null;
+                                };
+                            }[];
+                            unmapped_accounts: {
+                                account_id: string;
+                                code: string;
+                                name: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "periods.revaluation": {

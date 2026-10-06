@@ -36,6 +36,7 @@ final class PermissionCatalog
         'opening-balances' => ['import'],
         'fiscal-years' => ['close', 'reopen'],
         'reports' => ['read', 'export'],
+        'report-definitions' => ['manage'],
         'audit' => ['read'],
         'memberships' => ['read', 'manage'],
         'roles' => ['read', 'manage'],

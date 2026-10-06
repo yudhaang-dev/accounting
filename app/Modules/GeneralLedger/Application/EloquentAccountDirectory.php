@@ -31,7 +31,16 @@ final class EloquentAccountDirectory implements AccountDirectory
         return $account === null ? null : $this->data($account);
     }
 
-    private function data(Account $account): AccountData
+    public function all(string $companyId): array
+    {
+        $parents = $this->forCompany($companyId)->whereNotNull('parent_id')->toBase()->distinct()->pluck('parent_id')->flip();
+
+        return array_values($this->forCompany($companyId)->orderBy('code')->get()
+            ->map(fn (Account $account): AccountData => $this->data($account, ! $parents->has($account->id)))
+            ->all());
+    }
+
+    private function data(Account $account, ?bool $isLeaf = null): AccountData
     {
         return new AccountData(
             $account->id,
@@ -41,7 +50,7 @@ final class EloquentAccountDirectory implements AccountDirectory
             $account->class,
             $account->normal_balance,
             $account->parent_id,
-            ! $account->children()->withoutGlobalScope(CompanyScope::class)->exists(),
+            $isLeaf ?? ! $account->children()->withoutGlobalScope(CompanyScope::class)->exists(),
             $account->isActive(),
             array_map(JournalSource::from(...), $account->allowed_sources),
             array_map(DimensionRequirement::from(...), $account->dimension_requirements),

@@ -25,7 +25,7 @@ return [
                 'roles.read', 'roles.manage',
                 'integration-clients.manage',
                 'policies.manage', 'recurring-schedules.manage',
-                'reports.export',
+                'reports.export', 'report-definitions.manage',
             ],
         ],
         [

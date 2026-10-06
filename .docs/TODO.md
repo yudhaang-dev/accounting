@@ -137,11 +137,11 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M7-01** Rencana dan versi (salin saat mengubah versi terbit) — PL-FR-01, PL-AC-01 — tabel `pl_plan_lines` sudah ada; status `published` baru dapat dicapai lewat M7-03, jadi `POST /plan-versions/{id}/revise` hanya teruji dengan versi yang diterbitkan langsung di DB; layar SPA di M7-04
 - [x] **M7-02** Baris rencana, impor/ekspor CSV, salin dari versi lain atau realisasi — PL-FR-02, PL-FR-03, PL-AC-02 — perubahan baris memperbarui `last_modified_by` (dasar syarat penerbit M7-03); kewajiban dimensi akun tidak ditegakkan pada baris rencana; `PlanReader` untuk M8-09 belum ada; layar SPA di M7-04
 - [x] **M7-03** Penerbitan, kebijakan penerbit, dan versi pembanding default — PL-FR-04, PL-AC-03 — `plans.publish` dan `planning-policy.manage` baru di katalog dan template admin; default pembanding tersimpan di `pl_default_versions` tetapi belum ada pembaca (`PlanReader`, M8-09) dan belum ada pengarsipan versi; layar SPA di M7-04
-- [x] **M7-04** SPA: editor grid rencana, impor, penerbitan — grid belum menerima nilai negatif (hanya lewat impor CSV); versi `archived` belum punya aksi karena API-nya belum ada
+- [x] **M7-04** SPA: editor grid rencana, impor, penerbitan — PL-FR-01, PL-FR-02, PL-FR-03, PL-FR-04
 
 ## M8 — Pelaporan
 
-- [ ] **M8-01** Engine definisi laporan: baris, kolom, dasar nilai, tanda, kumpulan akun, baris pengecualian, versi — RP-FR-01, RP-FR-02, RP-AC-07
+- [x] **M8-01** Engine definisi laporan: baris, kolom, dasar nilai, tanda, kumpulan akun, baris pengecualian, versi — RP-FR-01, RP-FR-02, RP-AC-07 — baru jenis baris `heading`/`accounts`/`subtotal` dan kolom `period`/`ytd`/`as_of`/`difference`; baris klasifikasi mutasi (M8-03), `current_year_earnings` (M8-05), dan kolom versi rencana (M8-09) menambah jenisnya sendiri; kolom di luar kalender fiskal tampil `available: false` sampai M8-10 menyatakan cakupan histori; layar SPA di M8-13
 - [ ] **M8-02** Filter dan agregasi: dimensi dengan hierarki, cakupan data, key Jenis Transaksi, sumber — RP-FR-04, RP-AC-03
 - [ ] **M8-03** Peran `cash_equivalents` dan klasifikasi mutasi — RP-FR-03
 - [ ] **M8-04** Laba rugi — RP-FR-07, RP-AC-05
