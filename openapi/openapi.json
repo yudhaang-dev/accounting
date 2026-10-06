@@ -13944,7 +13944,7 @@
         "/companies/{companyId}/report-definitions/{id}/result": {
             "get": {
                 "operationId": "report-definitions.result",
-                "summary": "Runs the definition for `from`..`to` (or `as_of`): every row has one value per column in the\nfunctional currency, or `null` when the column is not available. Accounts that no row claims\nare in the `unmapped` row and `unmapped_accounts`. For a user limited to some dimension\nvalues only the lines inside that scope are added up and `restricted` is true (IA-FR-03)",
+                "summary": "Runs the definition for `from`..`to` (or `as_of`): every row has one value per column in the\nfunctional currency, or `null` when the column is not available. Accounts that no row claims\nare in the `unmapped` row and `unmapped_accounts`. The filters of the trial balance apply to\nevery column: `account_id`, `dimensions[<type key>]` with roll-up, `transaction_type_keys[]` and\n`source`; without them every line counts, those without dimensions included (RP-FR-04). For a user limited to some dimension\nvalues only the lines inside that scope are added up and `restricted` is true (IA-FR-03)",
                 "tags": [
                     "ReportDefinition"
                 ],
@@ -14008,6 +14008,61 @@
                             ],
                             "minimum": 1
                         }
+                    },
+                    {
+                        "name": "account_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "dimensions[]",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "array",
+                                "null"
+                            ],
+                            "items": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "minLength": 26,
+                                "maxLength": 26
+                            }
+                        }
+                    },
+                    {
+                        "name": "transaction_type_keys[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "items": {
+                                "type": "string",
+                                "pattern": "^[a-z][a-z0-9_.]*$",
+                                "maxLength": 64
+                            }
+                        }
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/JournalSource"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        }
                     }
                 ],
                 "responses": {
@@ -14048,11 +14103,39 @@
                                                         },
                                                         "to": {
                                                             "type": "string"
+                                                        },
+                                                        "account_id": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "dimensions": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "transaction_type_keys": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "source": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         }
                                                     },
                                                     "required": [
                                                         "from",
-                                                        "to"
+                                                        "to",
+                                                        "account_id",
+                                                        "dimensions",
+                                                        "transaction_type_keys",
+                                                        "source"
                                                     ]
                                                 },
                                                 "functional_currency": {
@@ -15580,7 +15663,7 @@
         "/companies/{companyId}/reports/trial-balance": {
             "get": {
                 "operationId": "reports.trial-balance",
-                "summary": "Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and\nclosing balance per account, totals and `balanced`. `account_id` narrows it to one account and `dimensions[<type key>]=<value id>` to the lines in that\nvalue or any value below it (roll-up).\nDrill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.\nWith `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).\nFor a user limited to some dimension values only the lines inside that scope are added up and\n`restricted` is true (IA-FR-03); the download is limited the same way",
+                "summary": "Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and\nclosing balance per account, totals and `balanced`. `account_id` narrows it to one account and `dimensions[<type key>]=<value id>` to the lines in that\nvalue or any value below it (roll-up). `transaction_type_keys[]` keeps the lines of journals with\nthose keys and `source` (`entry`, `subledger` or `system`) those from that source; the opening\nbalance is then the filtered ledger before `from`. Lines without dimensions stay in unless a\ndimension filter is given.\nDrill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.\nWith `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).\nFor a user limited to some dimension values only the lines inside that scope are added up and\n`restricted` is true (IA-FR-03); the download is limited the same way",
                 "tags": [
                     "TrialBalance"
                 ],
@@ -15631,12 +15714,45 @@
                         "name": "dimensions[]",
                         "in": "query",
                         "schema": {
-                            "type": "array",
+                            "type": [
+                                "array",
+                                "null"
+                            ],
                             "items": {
-                                "type": "string",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
                                 "minLength": 26,
                                 "maxLength": 26
                             }
+                        }
+                    },
+                    {
+                        "name": "transaction_type_keys[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "items": {
+                                "type": "string",
+                                "pattern": "^[a-z][a-z0-9_.]*$",
+                                "maxLength": 64
+                            }
+                        }
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/JournalSource"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
                         }
                     }
                 ],
@@ -15671,13 +15787,27 @@
                                                             "additionalProperties": {
                                                                 "type": "string"
                                                             }
+                                                        },
+                                                        "transaction_type_keys": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "source": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         }
                                                     },
                                                     "required": [
                                                         "from",
                                                         "to",
                                                         "account_id",
-                                                        "dimensions"
+                                                        "dimensions",
+                                                        "transaction_type_keys",
+                                                        "source"
                                                     ]
                                                 },
                                                 "functional_currency": {

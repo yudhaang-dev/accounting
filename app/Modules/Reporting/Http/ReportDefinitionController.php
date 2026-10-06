@@ -4,6 +4,7 @@ namespace App\Modules\Reporting\Http;
 
 use App\Modules\Reporting\Application\ManageReportDefinitions;
 use App\Modules\Reporting\Application\ReportEngine;
+use App\Modules\Reporting\Application\ReportFilter;
 use App\Modules\Reporting\Domain\ReportDefinition;
 use App\Modules\Reporting\Domain\ReportDefinitionVersion;
 use App\Support\Access\DataScopeContext;
@@ -67,17 +68,19 @@ class ReportDefinitionController
     /**
      * Runs the definition for `from`..`to` (or `as_of`): every row has one value per column in the
      * functional currency, or `null` when the column is not available. Accounts that no row claims
-     * are in the `unmapped` row and `unmapped_accounts`. For a user limited to some dimension
+     * are in the `unmapped` row and `unmapped_accounts`. The filters of the trial balance apply to
+     * every column: `account_id`, `dimensions[<type key>]` with roll-up, `transaction_type_keys[]` and
+     * `source`; without them every line counts, those without dimensions included (RP-FR-04). For a user limited to some dimension
      * values only the lines inside that scope are added up and `restricted` is true (IA-FR-03).
      *
-     * @response array{data: array{definition: array{id: string, key: string, version: int}, parameters: array{from: string, to: string}, functional_currency: string, restricted: bool, columns: list<array{key: string, label: string, kind: string, from: string|null, to: string|null, available: bool}>, rows: list<array{key: string, label: string, type: string, values: array<string, string|null>}>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}}
+     * @response array{data: array{definition: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array{key: string, label: string, kind: string, from: string|null, to: string|null, available: bool}>, rows: list<array{key: string, label: string, type: string, values: array<string, string|null>}>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}}
      */
     public function evaluate(EvaluateReportRequest $request, ReportEngine $engine, DataScopeContext $scope, string $companyId, string $id): JsonResponse
     {
         $definition = ReportDefinition::query()->findOrFail($id);
         $version = $this->version($definition, $request->integer('version') ?: null);
 
-        /** @var array{from?: string, to?: string, as_of?: string} $params */
+        /** @var array<string, mixed>&array{from?: string, to?: string, as_of?: string} $params */
         $params = $request->validated();
         $from = $params['from'] ?? $params['as_of'] ?? '';
         $to = $params['to'] ?? $params['as_of'] ?? '';
@@ -87,7 +90,7 @@ class ReportDefinitionController
 
         return new JsonResponse(['data' => [
             'definition' => ['id' => $definition->id, 'key' => $definition->key, 'version' => $version->version],
-            ...$engine($companyId, $structure, $from, $to, $scope->current()),
+            ...$engine($companyId, $structure, $from, $to, $scope->current(), ReportFilter::fromParameters($params)),
         ]]);
     }
 

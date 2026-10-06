@@ -2,6 +2,7 @@
 
 namespace App\Modules\Reporting\Http;
 
+use App\Modules\Reporting\Application\ReportFilter;
 use App\Modules\Reporting\Application\TrialBalance;
 use App\Platform\Export\CsvExport;
 use App\Support\Access\DataScopeContext;
@@ -14,20 +15,23 @@ class TrialBalanceController
     /**
      * Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and
      * closing balance per account, totals and `balanced`. `account_id` narrows it to one account and `dimensions[<type key>]=<value id>` to the lines in that
-     * value or any value below it (roll-up).
+     * value or any value below it (roll-up). `transaction_type_keys[]` keeps the lines of journals with
+     * those keys and `source` (`entry`, `subledger` or `system`) those from that source; the opening
+     * balance is then the filtered ledger before `from`. Lines without dimensions stay in unless a
+     * dimension filter is given.
      * Drill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.
      * With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).
      * For a user limited to some dimension values only the lines inside that scope are added up and
      * `restricted` is true (IA-FR-03); the download is limited the same way.
      *
-     * @response array{data: array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>}, functional_currency: string, restricted: bool, balanced: bool, totals: array{opening_debit: string, opening_credit: string, debit: string, credit: string, closing_debit: string, closing_credit: string}, rows: list<array{account_id: string, code: string, name: string, class: string, opening_debit: string, opening_credit: string, debit: string, credit: string, closing_debit: string, closing_credit: string}>}}
+     * @response array{data: array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, balanced: bool, totals: array{opening_debit: string, opening_credit: string, debit: string, credit: string, closing_debit: string, closing_credit: string}, rows: list<array{account_id: string, code: string, name: string, class: string, opening_debit: string, opening_credit: string, debit: string, credit: string, closing_debit: string, closing_credit: string}>}}
      */
     public function show(TrialBalanceRequest $request, TrialBalance $report, DataScopeContext $scope, string $companyId): JsonResponse|Response
     {
-        /** @var array{from: string, to: string, account_id?: string|null, dimensions?: array<string, string>} $params */
+        /** @var array<string, mixed>&array{from: string, to: string} $params */
         $params = $request->validated();
 
-        $result = $report($companyId, $params['from'], $params['to'], $params['account_id'] ?? null, $params['dimensions'] ?? [], $scope->current());
+        $result = $report($companyId, $params['from'], $params['to'], ReportFilter::fromParameters($params), $scope->current());
 
         if (! $this->wantsCsv($request)) {
             return new JsonResponse(['data' => $result]);

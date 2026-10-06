@@ -4,12 +4,10 @@ namespace App\Modules\Reporting\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountData;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
-use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
-use App\Modules\MasterData\Contracts\DimensionSets;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Support\Access\DataScope;
@@ -27,10 +25,9 @@ use Illuminate\Support\Carbon;
 final class ReportEngine
 {
     public function __construct(
-        private readonly LedgerReader $ledger,
+        private readonly ReportLedger $ledger,
         private readonly AccountDirectory $accounts,
         private readonly CompanyDirectory $companies,
-        private readonly DimensionSets $dimensionSets,
         private readonly Currencies $currencies,
         private readonly PeriodDirectory $periods,
     ) {}
@@ -41,13 +38,14 @@ final class ReportEngine
      * with `restricted` (IA-FR-03).
      *
      * @param  array{basis: string, rows: list<array<string, mixed>>, columns: list<array<string, mixed>>}  $structure
-     * @return array{parameters: array{from: string, to: string}, functional_currency: string, restricted: bool, columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}
+     * @return array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}
      */
-    public function __invoke(string $companyId, array $structure, string $from, string $to, ?DataScope $scope = null): array
+    public function __invoke(string $companyId, array $structure, string $from, string $to, ?DataScope $scope = null, ?ReportFilter $filter = null): array
     {
         $company = $this->companies->find($companyId) ?? throw new ApiException(ErrorCode::NotFound);
         $scope ??= DataScope::unrestricted();
-        $setIds = $scope->isRestricted() ? $this->dimensionSets->setIdsWithin($companyId, $scope->allowed()) : null;
+        $filter ??= new ReportFilter;
+        $slice = $this->ledger->slice($companyId, $filter, $scope);
 
         $chart = $this->accounts->all($companyId);
         $claims = $this->claims($structure['rows'], $chart);
@@ -68,7 +66,7 @@ final class ReportEngine
                 continue;
             }
 
-            $balances = $this->balances($this->ledger->trialBalance($companyId, $range[0], $range[1], null, $setIds));
+            $balances = $this->balances($slice->trialBalance($range[0], $range[1]));
             $values[$column['key']] = $this->evaluate($structure, $claims, $balances, $unmapped);
         }
 
@@ -111,7 +109,7 @@ final class ReportEngine
         usort($list, fn (array $a, array $b): int => strcmp($a['code'], $b['code']));
 
         return [
-            'parameters' => ['from' => $from, 'to' => $to],
+            'parameters' => ['from' => $from, 'to' => $to, ...$filter->toArray()],
             'functional_currency' => $company->functionalCurrency,
             'restricted' => $scope->isRestricted(),
             'columns' => array_map(fn (array $column): array => $columns[$column['key']], $structure['columns']),

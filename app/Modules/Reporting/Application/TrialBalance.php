@@ -2,11 +2,9 @@
 
 namespace App\Modules\Reporting\Application;
 
-use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
-use App\Modules\MasterData\Contracts\DimensionSets;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Support\Access\DataScope;
@@ -22,32 +20,26 @@ final class TrialBalance
     private const COLUMNS = ['opening_debit', 'opening_credit', 'debit', 'credit', 'closing_debit', 'closing_credit'];
 
     public function __construct(
-        private readonly LedgerReader $ledger,
+        private readonly ReportLedger $ledger,
         private readonly CompanyDirectory $companies,
-        private readonly DimensionSets $dimensionSets,
         private readonly Currencies $currencies,
     ) {}
 
     /**
-     * `$dimensions` (type key => value ID) keeps only lines in that value or any value below it.
-     * A restricted `$scope` keeps only the lines inside it, whatever the filter, and the result says
-     * so with `restricted` (IA-FR-03): its totals cover those lines only.
+     * The filter keeps only the lines in a dimension value or any value below it, of journals with
+     * one of the transaction type keys and from the source (RP-FR-04). A restricted `$scope` keeps
+     * only the lines inside it, whatever the filter, and the result says so with `restricted`
+     * (IA-FR-03): its totals cover those lines only.
      *
-     * @param  array<string, string>  $dimensions
-     * @return array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>}, functional_currency: string, restricted: bool, balanced: bool, totals: array<string, string>, rows: list<array<string, string>>}
+     * @return array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, balanced: bool, totals: array<string, string>, rows: list<array<string, string>>}
      */
-    public function __invoke(string $companyId, string $from, string $to, ?string $accountId = null, array $dimensions = [], ?DataScope $scope = null): array
+    public function __invoke(string $companyId, string $from, string $to, ?ReportFilter $filter = null, ?DataScope $scope = null): array
     {
         $company = $this->companies->find($companyId) ?? throw new ApiException(ErrorCode::NotFound);
         $scope ??= DataScope::unrestricted();
-        $setIds = $dimensions === [] ? null : $this->dimensionSets->setIdsMatching($companyId, $dimensions);
+        $filter ??= new ReportFilter;
 
-        if ($scope->isRestricted()) {
-            $inScope = $this->dimensionSets->setIdsWithin($companyId, $scope->allowed());
-            $setIds = $setIds === null ? $inScope : array_values(array_intersect($setIds, $inScope));
-        }
-
-        $rows = array_map($this->row(...), $this->ledger->trialBalance($companyId, $from, $to, $accountId, $setIds));
+        $rows = array_map($this->row(...), $this->ledger->slice($companyId, $filter, $scope)->trialBalance($from, $to));
 
         $scale = $this->currencies->functionalScale($companyId);
         $totals = array_fill_keys(self::COLUMNS, BigDecimal::zero());
@@ -63,7 +55,7 @@ final class TrialBalance
             && $totals['closing_debit']->isEqualTo($totals['closing_credit']);
 
         return [
-            'parameters' => ['from' => $from, 'to' => $to, 'account_id' => $accountId, 'dimensions' => $dimensions],
+            'parameters' => ['from' => $from, 'to' => $to, ...$filter->toArray()],
             'functional_currency' => $company->functionalCurrency,
             'restricted' => $scope->isRestricted(),
             'balanced' => $balanced,

@@ -142,7 +142,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 ## M8 — Pelaporan
 
 - [x] **M8-01** Engine definisi laporan: baris, kolom, dasar nilai, tanda, kumpulan akun, baris pengecualian, versi — RP-FR-01, RP-FR-02, RP-AC-07 — baru jenis baris `heading`/`accounts`/`subtotal` dan kolom `period`/`ytd`/`as_of`/`difference`; baris klasifikasi mutasi (M8-03), `current_year_earnings` (M8-05), dan kolom versi rencana (M8-09) menambah jenisnya sendiri; kolom di luar kalender fiskal tampil `available: false` sampai M8-10 menyatakan cakupan histori; layar SPA di M8-13
-- [ ] **M8-02** Filter dan agregasi: dimensi dengan hierarki, cakupan data, key Jenis Transaksi, sumber — RP-FR-04, RP-AC-03
+- [x] **M8-02** Filter dan agregasi: dimensi dengan hierarki, cakupan data, key Jenis Transaksi, sumber — RP-FR-04, RP-AC-03 — baru neraca saldo dan hasil definisi laporan; filter versi rencana dan basis menyusul di M8-09; laporan lain memakai `ReportFilter`/`ReportLedger` yang sama
 - [ ] **M8-03** Peran `cash_equivalents` dan klasifikasi mutasi — RP-FR-03
 - [ ] **M8-04** Laba rugi — RP-FR-07, RP-AC-05
 - [ ] **M8-05** Neraca dan `current_year_earnings` — RP-FR-08, RP-AC-01, RP-AC-06

@@ -2548,7 +2548,9 @@ export interface paths {
         /**
          * Runs the definition for `from`..`to` (or `as_of`): every row has one value per column in the
          *     functional currency, or `null` when the column is not available. Accounts that no row claims
-         *     are in the `unmapped` row and `unmapped_accounts`. For a user limited to some dimension
+         *     are in the `unmapped` row and `unmapped_accounts`. The filters of the trial balance apply to
+         *     every column: `account_id`, `dimensions[<type key>]` with roll-up, `transaction_type_keys[]` and
+         *     `source`; without them every line counts, those without dimensions included (RP-FR-04). For a user limited to some dimension
          *     values only the lines inside that scope are added up and `restricted` is true (IA-FR-03)
          */
         get: operations["report-definitions.result"];
@@ -2885,7 +2887,10 @@ export interface paths {
         /**
          * Trial balance for `from`..`to`: opening balance (the ledger before `from`), movement and
          *     closing balance per account, totals and `balanced`. `account_id` narrows it to one account and `dimensions[<type key>]=<value id>` to the lines in that
-         *     value or any value below it (roll-up).
+         *     value or any value below it (roll-up). `transaction_type_keys[]` keeps the lines of journals with
+         *     those keys and `source` (`entry`, `subledger` or `system`) those from that source; the opening
+         *     balance is then the filtered ledger before `from`. Lines without dimensions stay in unless a
+         *     dimension filter is given.
          *     Drill down to the journals with `journals?filter[account_id]=&filter[from]=&filter[to]=`.
          *     With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).
          *     For a user limited to some dimension values only the lines inside that scope are added up and
@@ -10273,6 +10278,10 @@ export interface operations {
                 to?: string | null;
                 as_of?: string | null;
                 version?: number | null;
+                account_id?: string | null;
+                "dimensions[]"?: (string | null)[] | null;
+                "transaction_type_keys[]"?: string[];
+                source?: components["schemas"]["JournalSource"] | null;
             };
             header?: never;
             path: {
@@ -10298,6 +10307,12 @@ export interface operations {
                             parameters: {
                                 from: string;
                                 to: string;
+                                account_id: string | null;
+                                dimensions: {
+                                    [key: string]: string;
+                                };
+                                transaction_type_keys: string[];
+                                source: string | null;
                             };
                             functional_currency: string;
                             restricted: boolean;
@@ -10978,7 +10993,9 @@ export interface operations {
                 from: string | null;
                 to: string | null;
                 account_id?: string | null;
-                "dimensions[]"?: string[];
+                "dimensions[]"?: (string | null)[] | null;
+                "transaction_type_keys[]"?: string[];
+                source?: components["schemas"]["JournalSource"] | null;
             };
             header?: never;
             path: {
@@ -11002,6 +11019,8 @@ export interface operations {
                                 dimensions: {
                                     [key: string]: string;
                                 };
+                                transaction_type_keys: string[];
+                                source: string | null;
                             };
                             functional_currency: string;
                             restricted: boolean;

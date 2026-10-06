@@ -14,9 +14,11 @@ interface LedgerReader
      * @param  string  $from  `YYYY-MM-DD`
      * @param  string  $to  `YYYY-MM-DD`
      * @param  list<string>|null  $dimensionSetIds  only lines in these dimension sets; null means all (MD-FR-05)
+     * @param  list<string>|null  $transactionTypeKeys  only lines of journals with one of these keys; null means all (RP-FR-04)
+     * @param  JournalSource|null  $source  only lines of journals from this source; null means all (RP-FR-04)
      * @return list<TrialBalanceRow>
      */
-    public function trialBalance(string $companyId, string $from, string $to, ?string $accountId = null, ?array $dimensionSetIds = null): array;
+    public function trialBalance(string $companyId, string $from, string $to, ?string $accountId = null, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null): array;
 
     /**
      * Balance of each account per transaction currency up to and including a date, ordered by account

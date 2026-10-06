@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Modules\Reporting\Application;
+
+use App\Modules\GeneralLedger\Contracts\LedgerReader;
+use App\Modules\GeneralLedger\Contracts\TrialBalanceRow;
+
+/** The part of the ledger that a filter and a data scope leave, readable for any date range. */
+final class LedgerSlice
+{
+    /** @param  list<string>|null  $dimensionSetIds */
+    public function __construct(
+        private readonly LedgerReader $ledger,
+        private readonly string $companyId,
+        private readonly ReportFilter $filter,
+        private readonly ?array $dimensionSetIds,
+    ) {}
+
+    /** @return list<TrialBalanceRow> */
+    public function trialBalance(string $from, string $to): array
+    {
+        return $this->ledger->trialBalance(
+            $this->companyId,
+            $from,
+            $to,
+            $this->filter->accountId,
+            $this->dimensionSetIds,
+            $this->filter->transactionTypeKeys === [] ? null : $this->filter->transactionTypeKeys,
+            $this->filter->source,
+        );
+    }
+}
