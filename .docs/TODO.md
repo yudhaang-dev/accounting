@@ -154,6 +154,17 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M8-11** Snapshot laporan terbit dan hitung ulang — RP-FR-14, X-FR-03, RP-AC-08, X-AC-04 — hanya definisi laporan yang dapat diterbitkan (`reports.publish` baru di katalog dan template admin; perusahaan yang sudah ada perlu menambahkannya ke role); user dengan cakupan data ditolak menerbitkan dan membaca isi snapshot; versi pemetaan yang tercatat baru `cash_equivalents`; penerbitan otomatis saat tutup periode atau tahun belum ada; layar SPA di M8-13
 - [x] **M8-12** Template definisi laporan dari [CHART-OF-ACCOUNTS.md](CHART-OF-ACCOUNTS.md) — RP-FR-01 — laba rugi, neraca, dan arus kas tidak langsung; arus kas langsung dan perubahan ekuitas adalah klasifikasi sehingga tidak ada di template; bagian OCI belum ada karena `income_statement` hanya menjumlahkan akun pendapatan/beban; pembanding rencana tidak disertakan; layar SPA di M8-13
 - [ ] **M8-13** SPA: penampil laporan (filter, pembanding, drill-down, ekspor), editor definisi dan klasifikasi, penerbitan snapshot
+  - [ ] **M8-13a** Filter laporan bersama: rentang tanggal atau `as_of`, dimensi (nilai induk mencakup turunannya), key Jenis Transaksi, sumber, versi rencana; dipakai semua penampil di bawah — RP-FR-04, RP-AC-03
+  - [ ] **M8-13b** Penampil definisi laporan: daftar definisi, hasil per kolom (periode, YTD, per tanggal, pembanding, selisih), baris `unmapped`, `balance_checks` neraca dan `cash_checks` arus kas tidak langsung, penanda `restricted` dan cakupan histori (`available: false`) — RP-FR-01, RP-FR-07, RP-FR-08, RP-FR-13, RP-AC-01, RP-AC-05, RP-AC-06, RP-AC-10
+  - [ ] **M8-13c** Pembanding rencana: kolom `plan`, versi rencana, tampilan `variances` dan aturan favorable — RP-FR-11, RP-FR-12, RP-AC-04
+  - [ ] **M8-13d** Neraca saldo yang sudah ada diperluas: mode kertas kerja (`adjustment_keys[]`), penanda batch saldo konversi dan cakupan histori; buku besar per akun dengan saldo berjalan, tautan ke entri, dan ekspor CSV — RP-FR-05, RP-FR-06, RP-AC-11 — melengkapi M1-09f
+  - [ ] **M8-13e** Arus kas langsung dan perubahan ekuitas: penampil hasil klasifikasi, baris belum diklasifikasikan beserta rinciannya, rekonsiliasi kas, pesan pemetaan `cash_equivalents` belum lengkap — RP-FR-09, RP-FR-10, RP-AC-02, RP-AC-09
+  - [ ] **M8-13f** Pemetaan `cash_equivalents`: tampilan versi berlaku, ubah dengan `lock_version`, masalah kelayakan akun — RP-FR-03, RP-FR-09
+  - [ ] **M8-13g** Editor definisi laporan: baris (judul, kumpulan akun, subtotal, `current_year_earnings`, `cash_equivalents`), kolom, dasar nilai, versi baru saat struktur berubah, pesan validasi per baris — RP-FR-01, RP-FR-02, RP-AC-07
+  - [ ] **M8-13h** Editor klasifikasi mutasi: baris, aturan per akun dan key Jenis Transaksi, komponen ekuitas — RP-FR-03, RP-FR-10
+  - [ ] **M8-13i** Impor template definisi laporan: tinjau definisi, konfirmasi, pesan kode akun yang hilang dari bagan akun — RP-FR-01, X-AC-03 — melengkapi M8-12
+  - [ ] **M8-13j** Snapshot: terbitkan dari definisi (`reports.publish`), daftar dan isi snapshot, hitung ulang beralasan, penanda perlu dihitung ulang; pesan untuk user dengan cakupan data — RP-FR-14, RP-AC-08, X-AC-04 — melengkapi M8-11
+  - [ ] **M8-13k** Ekspor dan drill-down: ekspor CSV dari penampil definisi dan klasifikasi bila API menyediakannya, drill-down baris laporan ke neraca saldo, buku besar, dan jurnal — X-FR-02, API-AC-07
 
 ## Backlog
 
