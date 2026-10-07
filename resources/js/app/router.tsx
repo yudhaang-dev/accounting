@@ -33,6 +33,8 @@ import {
     JournalsPage,
     type JournalSearch,
 } from '@/modules/general-ledger/pages/journals-page';
+import { ClassificationEditorPage } from '@/modules/reporting/pages/classification-editor-page';
+import { classificationQuery } from '@/modules/reporting/classifications';
 import { DefinitionEditorPage } from '@/modules/reporting/pages/definition-editor-page';
 import { CashEquivalentsPage } from '@/modules/reporting/pages/cash-equivalents-page';
 import {
@@ -1267,6 +1269,62 @@ const editReportRoute = createRoute({
     },
 });
 
+const newClassificationRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/classifications/new',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navReports', href: at(m, '/reports') },
+            {
+                labelKey: 'classificationEditor.newTitle',
+                href: at(m, '/reports/classifications/new'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('report-definitions.manage'),
+    component: function NewClassificationScreen() {
+        const { workspace } = newClassificationRoute.useRouteContext();
+
+        return <ClassificationEditorPage companyId={workspace.company_id} />;
+    },
+});
+
+const editClassificationRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/classifications/$classificationId/edit',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navReports', href: at(m, '/reports') },
+            {
+                label: nameOf(m),
+                href: at(
+                    m,
+                    `/reports/classifications/${m.params.classificationId}/edit`,
+                ),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('report-definitions.manage'),
+    loader: ({ context, params }) =>
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                classificationQuery(params.companyId, params.classificationId),
+            ),
+        ),
+    notFoundComponent: RecordNotFound,
+    component: function EditClassificationScreen() {
+        const { workspace } = editClassificationRoute.useRouteContext();
+        const { classificationId } = editClassificationRoute.useParams();
+
+        return (
+            <ClassificationEditorPage
+                companyId={workspace.company_id}
+                classificationId={classificationId}
+            />
+        );
+    },
+});
+
 const reportRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/reports/$definitionId',
@@ -1722,6 +1780,8 @@ const routeTree = rootRoute.addChildren([
                 journalRoute,
                 reportsRoute,
                 newReportRoute,
+                newClassificationRoute,
+                editClassificationRoute,
                 reportRoute,
                 editReportRoute,
                 trialBalanceRoute,

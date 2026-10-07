@@ -2210,6 +2210,58 @@ export const id = {
         conflict:
             'Definisi diubah orang lain. Data dimuat ulang; periksa lalu simpan lagi.',
     },
+    classificationEditor: {
+        newTitle: 'Klasifikasi mutasi baru',
+        editTitle: 'Ubah klasifikasi mutasi',
+        newDescription:
+            'Klasifikasi menempatkan mutasi buku besar ke baris menurut akun dan Jenis Transaksi. Dari sini dibaca arus kas langsung dan perubahan ekuitas.',
+        editDescription:
+            'Versi saat ini: {{version}}. Mengubah baris atau aturan menyimpan versi baru; versi sebelumnya tetap terbaca.',
+        newButton: 'Klasifikasi baru',
+        edit: 'Ubah',
+        editNamed: 'Ubah klasifikasi {{name}}',
+        rows: 'Baris klasifikasi',
+        rowsHint:
+            'Baris adalah tujuan mutasi, seperti operasional atau investasi. Mutasi yang tidak cocok dengan aturan mana pun masuk ke baris belum diklasifikasikan.',
+        rules: 'Aturan',
+        rulesHint:
+            'Aturan diperiksa dari atas ke bawah dan aturan pertama yang cocok menang, jadi urutan menentukan hasil.',
+        ruleN: 'Aturan {{n}}',
+        moveRuleUp: 'Naikkan aturan {{n}}',
+        moveRuleDown: 'Turunkan aturan {{n}}',
+        removeRule: 'Hapus aturan {{n}}',
+        ruleRow: 'Baris tujuan aturan {{n}}',
+        pickRow: 'Pilih baris',
+        ruleKeys: 'Key Jenis Transaksi aturan {{n}}',
+        ruleKeysHint:
+            'Pisahkan dengan koma. Kosong berarti jurnal dengan key apa pun.',
+        ruleAccounts: 'Akun yang cocok',
+        selectorType: 'Jenis pilihan {{s}} aturan {{n}}',
+        selectorClass: 'Kelas pilihan {{s}} aturan {{n}}',
+        selectorAccount: 'Akun pilihan {{s}} aturan {{n}}',
+        removeSelector: 'Hapus pilihan {{s}} aturan {{n}}',
+        addSelector: 'Tambah pilihan akun pada aturan {{n}}',
+        addRule: 'Tambah aturan',
+        components: 'Komponen ekuitas',
+        useComponents: 'Klasifikasi ini dipakai untuk perubahan ekuitas',
+        componentsHint:
+            'Komponen adalah kumpulan akun ekuitas, dan boleh akun pendapatan serta beban untuk hasil tahun berjalan. Akun ekuitas yang tidak diklaim komponen mana pun masuk ke komponen belum ditetapkan.',
+        componentN: 'Komponen {{n}}',
+        componentKey: 'Kunci komponen {{n}}',
+        componentLabel: 'Label komponen {{n}}',
+        removeComponent: 'Hapus komponen {{n}}',
+        addComponent: 'Tambah komponen',
+        componentSelectorType: 'Jenis pilihan {{s}} komponen {{n}}',
+        componentSelectorClass: 'Kelas pilihan {{s}} komponen {{n}}',
+        componentSelectorAccount: 'Akun pilihan {{s}} komponen {{n}}',
+        removeComponentSelector: 'Hapus pilihan {{s}} komponen {{n}}',
+        addComponentSelector: 'Tambah pilihan akun pada komponen {{n}}',
+        create: 'Buat klasifikasi',
+        saved: 'Klasifikasi mutasi disimpan.',
+        invalid: 'Periksa pesan pada baris, aturan, dan komponen yang bermasalah.',
+        conflict:
+            'Klasifikasi diubah orang lain. Data dimuat ulang; periksa lalu simpan lagi.',
+    },
     generalLedger: {
         pageTitle: 'Buku besar',
         title: 'Buku besar',

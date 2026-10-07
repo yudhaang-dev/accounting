@@ -8,6 +8,7 @@ import {
     useForm,
     useWatch,
     type Control,
+    type FieldValues,
 } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -26,16 +27,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { actionErrorMessage, genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
-import {
-    ACCOUNT_CLASSES,
-    allAccountsQuery,
-} from '@/modules/general-ledger/accounts';
+import { allAccountsQuery } from '@/modules/general-ledger/accounts';
 import {
     BASES,
     COLUMN_KINDS,
     KINDS,
     ROW_TYPES,
-    SELECTOR_TYPES,
     UNMAPPED,
     blankColumn,
     blankDefinition,
@@ -50,6 +47,7 @@ import {
     reportDefinitionQuery,
     type ReportDefinition,
 } from '@/modules/reporting/report-definitions';
+import { SelectorList } from '@/modules/reporting/components/selector-list';
 import { OptionSelect } from '@/modules/transaction-entry/components/option-select';
 import { versionsQuery } from '@/modules/planning/plans';
 
@@ -385,10 +383,6 @@ function RowCard({
         .slice(0, index)
         .map((row) => row.key)
         .filter(Boolean);
-    const selectors = useFieldArray({
-        control,
-        name: `rows.${index}.accounts`,
-    });
     const terms = useFieldArray({ control, name: `rows.${index}.terms` });
     const err = (path: string) =>
         errors[`${at}.${path}`] ? (
@@ -576,34 +570,23 @@ function RowCard({
                     <div className="text-sm font-medium">
                         {t('definitionEditor.accountSet')}
                     </div>
-                    {selectors.fields.map((selector, s) => (
-                        <SelectorRow
-                            key={selector.id}
-                            rowIndex={index}
-                            index={s}
-                            control={control}
-                            accountItems={accountItems}
-                            errors={errors}
-                            onRemove={() => selectors.remove(s)}
-                        />
-                    ))}
-                    {err('accounts')}
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="self-start"
-                        onClick={() =>
-                            selectors.append({
-                                type: 'account',
-                                id: '',
-                                class: 'asset',
-                            })
-                        }
-                    >
-                        <PlusIcon data-icon="inline-start" />
-                        {t('definitionEditor.addSelector', { n })}
-                    </Button>
+                    <SelectorList
+                        control={control as unknown as Control<FieldValues>}
+                        name={`rows.${index}.accounts`}
+                        errors={errors}
+                        accountItems={accountItems}
+                        labels={{
+                            type: (s) =>
+                                t('definitionEditor.selectorType', { n, s }),
+                            class: (s) =>
+                                t('definitionEditor.selectorClass', { n, s }),
+                            account: (s) =>
+                                t('definitionEditor.selectorAccount', { n, s }),
+                            remove: (s) =>
+                                t('definitionEditor.removeSelector', { n, s }),
+                            add: t('definitionEditor.addSelector', { n }),
+                        }}
+                    />
                 </div>
             )}
 
@@ -703,110 +686,6 @@ function RowCard({
                 </div>
             )}
         </fieldset>
-    );
-}
-
-function SelectorRow({
-    rowIndex,
-    index,
-    control,
-    accountItems,
-    errors,
-    onRemove,
-}: {
-    rowIndex: number;
-    index: number;
-    control: Control<DefinitionForm>;
-    accountItems: { value: string; label: string }[];
-    errors: Errors;
-    onRemove: () => void;
-}) {
-    const { t } = useTranslation();
-    const n = rowIndex + 1;
-    const at = `rows.${rowIndex}.accounts.${index}`;
-    const type = useWatch({
-        control,
-        name: `rows.${rowIndex}.accounts.${index}.type`,
-    });
-    const message =
-        errors[`${at}.id`] ?? errors[`${at}.class`] ?? errors[`${at}.type`];
-
-    return (
-        <div className="flex flex-wrap items-start gap-2">
-            <Controller
-                control={control}
-                name={`rows.${rowIndex}.accounts.${index}.type`}
-                render={({ field }) => (
-                    <OptionSelect
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        className="w-44"
-                        aria-label={t('definitionEditor.selectorType', {
-                            n,
-                            s: index + 1,
-                        })}
-                        items={options(SELECTOR_TYPES, (value) =>
-                            t(`definitionEditor.selectorTypes.${value}`),
-                        )}
-                    />
-                )}
-            />
-            {type === 'class' ? (
-                <Controller
-                    control={control}
-                    name={`rows.${rowIndex}.accounts.${index}.class`}
-                    render={({ field }) => (
-                        <OptionSelect
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            className="w-56"
-                            aria-label={t('definitionEditor.selectorClass', {
-                                n,
-                                s: index + 1,
-                            })}
-                            items={options(ACCOUNT_CLASSES, (value) =>
-                                t(`accountClass.${value}`),
-                            )}
-                        />
-                    )}
-                />
-            ) : (
-                <Controller
-                    control={control}
-                    name={`rows.${rowIndex}.accounts.${index}.id`}
-                    render={({ field }) => (
-                        <SearchableSelect
-                            items={accountItems}
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            className="w-72"
-                            placeholder={t('definitionEditor.pickAccount')}
-                            emptyText={t('common.noMatch')}
-                            aria-label={t('definitionEditor.selectorAccount', {
-                                n,
-                                s: index + 1,
-                            })}
-                            aria-invalid={message ? true : undefined}
-                        />
-                    )}
-                />
-            )}
-            <Button
-                type="button"
-                size="icon-sm"
-                variant="ghost"
-                aria-label={t('definitionEditor.removeSelector', {
-                    n,
-                    s: index + 1,
-                })}
-                onClick={onRemove}
-            >
-                <Trash2Icon />
-            </Button>
-            {message && (
-                <FieldError className="basis-full">{message}</FieldError>
-            )}
-        </div>
     );
 }
 

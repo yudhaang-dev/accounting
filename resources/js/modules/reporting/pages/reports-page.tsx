@@ -143,7 +143,7 @@ export function ReportsPage({
             </p>
 
             {classifications.data !== undefined &&
-                classifications.data.length > 0 && (
+                (classifications.data.length > 0 || canManage) && (
                     <section className="flex flex-col gap-2">
                         <h2 className="text-base font-medium">
                             {t('classifications.listTitle')}
@@ -151,6 +151,15 @@ export function ReportsPage({
                         <p className="max-w-2xl text-sm text-muted-foreground">
                             {t('classifications.listDescription')}
                         </p>
+                        {canManage && (
+                            <Link
+                                to="/w/$companyId/reports/classifications/new"
+                                params={{ companyId }}
+                                className="self-start text-sm underline underline-offset-4"
+                            >
+                                {t('classificationEditor.newButton')}
+                            </Link>
+                        )}
                         <div className="overflow-x-auto rounded-lg border">
                             <Table>
                                 <TableHeader>
@@ -194,6 +203,25 @@ export function ReportsPage({
                                                         'classifications.equity.title',
                                                     )}
                                                 </Link>
+                                                {canManage && (
+                                                    <Link
+                                                        to="/w/$companyId/reports/classifications/$classificationId/edit"
+                                                        params={{
+                                                            companyId,
+                                                            classificationId:
+                                                                item.id,
+                                                        }}
+                                                        aria-label={t(
+                                                            'classificationEditor.editNamed',
+                                                            { name: item.name },
+                                                        )}
+                                                        className="underline-offset-4 hover:underline"
+                                                    >
+                                                        {t(
+                                                            'classificationEditor.edit',
+                                                        )}
+                                                    </Link>
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                     ))}
