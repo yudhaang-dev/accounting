@@ -22,12 +22,14 @@ import {
 } from '@/components/ui/table';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { genericErrorMessage } from '@/lib/errors';
+import { classificationsQuery } from '@/modules/reporting/classifications';
 import { reportDefinitionsQuery } from '@/modules/reporting/report-definitions';
 
 /** The report definitions of the company; each opens in the viewer (RP-FR-01). */
 export function ReportsPage({ companyId }: { companyId: string }) {
     const { t } = useTranslation();
     const definitions = useQuery(reportDefinitionsQuery(companyId));
+    const classifications = useQuery(classificationsQuery(companyId));
 
     useDocumentTitle(t('reports.pageTitle'));
 
@@ -111,6 +113,65 @@ export function ReportsPage({ companyId }: { companyId: string }) {
                     </Table>
                 </div>
             )}
+
+            {classifications.data !== undefined &&
+                classifications.data.length > 0 && (
+                    <section className="flex flex-col gap-2">
+                        <h2 className="text-base font-medium">
+                            {t('classifications.listTitle')}
+                        </h2>
+                        <p className="max-w-2xl text-sm text-muted-foreground">
+                            {t('classifications.listDescription')}
+                        </p>
+                        <div className="overflow-x-auto rounded-lg border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>{t('reports.name')}</TableHead>
+                                        <TableHead>
+                                            {t('classifications.reports')}
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {classifications.data.map((item) => (
+                                        <TableRow key={item.id}>
+                                            <TableCell>{item.name}</TableCell>
+                                            <TableCell className="flex flex-wrap gap-4">
+                                                <Link
+                                                    to="/w/$companyId/reports/classifications/$classificationId/cash-flow"
+                                                    params={{
+                                                        companyId,
+                                                        classificationId:
+                                                            item.id,
+                                                    }}
+                                                    className="underline-offset-4 hover:underline"
+                                                >
+                                                    {t(
+                                                        'classifications.cashFlow.title',
+                                                    )}
+                                                </Link>
+                                                <Link
+                                                    to="/w/$companyId/reports/classifications/$classificationId/equity-changes"
+                                                    params={{
+                                                        companyId,
+                                                        classificationId:
+                                                            item.id,
+                                                    }}
+                                                    className="underline-offset-4 hover:underline"
+                                                >
+                                                    {t(
+                                                        'classifications.equity.title',
+                                                    )}
+                                                </Link>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </section>
+                )}
         </>
     );
 }

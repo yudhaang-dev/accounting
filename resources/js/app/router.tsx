@@ -33,6 +33,10 @@ import {
     JournalsPage,
     type JournalSearch,
 } from '@/modules/general-ledger/pages/journals-page';
+import {
+    CashFlowPage,
+    EquityChangesPage,
+} from '@/modules/reporting/pages/classification-report-pages';
 import { GeneralLedgerPage } from '@/modules/reporting/pages/general-ledger-page';
 import { ReportViewerPage } from '@/modules/reporting/pages/report-viewer-page';
 import { ReportsPage } from '@/modules/reporting/pages/reports-page';
@@ -1303,6 +1307,65 @@ const generalLedgerRoute = createRoute({
     },
 });
 
+const cashFlowRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/classifications/$classificationId/cash-flow',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navReports', href: at(m, '/reports') },
+            {
+                labelKey: 'classifications.cashFlow.title',
+                href: at(
+                    m,
+                    `/reports/classifications/${m.params.classificationId}/cash-flow`,
+                ),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('reports.read'),
+    component: function CashFlowScreen() {
+        const { workspace } = cashFlowRoute.useRouteContext();
+        const { classificationId } = cashFlowRoute.useParams();
+
+        return (
+            <CashFlowPage
+                companyId={workspace.company_id}
+                classificationId={classificationId}
+                canReadAccounts={can(workspace, 'accounts.read')}
+            />
+        );
+    },
+});
+
+const equityChangesRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/classifications/$classificationId/equity-changes',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navReports', href: at(m, '/reports') },
+            {
+                labelKey: 'classifications.equity.title',
+                href: at(
+                    m,
+                    `/reports/classifications/${m.params.classificationId}/equity-changes`,
+                ),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('reports.read'),
+    component: function EquityChangesScreen() {
+        const { workspace } = equityChangesRoute.useRouteContext();
+        const { classificationId } = equityChangesRoute.useParams();
+
+        return (
+            <EquityChangesPage
+                companyId={workspace.company_id}
+                classificationId={classificationId}
+            />
+        );
+    },
+});
+
 const agingRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/reports/aging',
@@ -1574,6 +1637,8 @@ const routeTree = rootRoute.addChildren([
                 reportRoute,
                 trialBalanceRoute,
                 generalLedgerRoute,
+                cashFlowRoute,
+                equityChangesRoute,
                 agingRoute,
                 plansRoute,
                 planVersionRoute,

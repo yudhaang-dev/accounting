@@ -2048,6 +2048,47 @@ export const id = {
         },
     },
 
+    classifications: {
+        listTitle: 'Klasifikasi mutasi',
+        listDescription:
+            'Klasifikasi mengelompokkan mutasi per akun dan Jenis Transaksi. Dari sini dibaca arus kas metode langsung dan perubahan ekuitas.',
+        reports: 'Laporan',
+        of: '{{name}} · versi {{version}}',
+        noKey: 'tanpa key',
+        unclassifiedTitle: 'Mutasi yang belum diklasifikasikan',
+        unclassifiedDescription:
+            'Aturan klasifikasi belum menempatkan akun berikut ke baris mana pun. Tambahkan aturannya di klasifikasi mutasi agar hasil lengkap.',
+        mappingProblemsTitle: 'Pemetaan kas dan setara kas bermasalah',
+        cashFlow: {
+            title: 'Arus kas langsung',
+            description:
+                'Penerimaan dan pengeluaran kas per baris klasifikasi pada rentang tanggal, dicocokkan dengan saldo kas buku besar.',
+            inflow: 'Masuk',
+            outflow: 'Keluar',
+            net: 'Bersih',
+            opening: 'Kas awal',
+            netIncrease: 'Kenaikan bersih kas',
+            closing: 'Kas akhir',
+            reconciled: 'Kas awal ditambah kenaikan bersih sama dengan kas akhir',
+            unreconciledTitle: 'Arus kas tidak cocok dengan saldo kas',
+            unreconciled: 'Selisih {{difference}} antara arus kas dan saldo kas buku besar.',
+        },
+        equity: {
+            title: 'Perubahan ekuitas',
+            description:
+                'Saldo awal, mutasi, dan saldo akhir per komponen ekuitas, serta mutasi per baris klasifikasi.',
+            component: 'Komponen',
+            opening: 'Saldo awal',
+            movement: 'Mutasi',
+            closing: 'Saldo akhir',
+            total: 'Total',
+            notReconciled: 'Tidak cocok',
+            reconciled: 'Total komponen sama dengan ekuitas di buku besar',
+            unreconciledTitle: 'Perubahan ekuitas tidak cocok dengan buku besar',
+            unreconciled:
+                'Komponen {{components}}, buku besar {{ledger}}, selisih {{difference}}.',
+        },
+    },
     generalLedger: {
         pageTitle: 'Buku besar',
         title: 'Buku besar',

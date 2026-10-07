@@ -81,6 +81,12 @@ const routes = (
             links: {},
             meta: { current_page: 1, last_page: 1, total: 1 },
         }),
+    [`GET ${base}/movement-classifications`]: () =>
+        json({
+            data: [],
+            links: {},
+            meta: { current_page: 1, last_page: 1, total: 0 },
+        }),
     [`GET ${base}/report-definitions/${defId}`]: () =>
         json({ data: definition(def) }),
     [`GET ${base}/report-definitions/${defId}/result`]: () => json({ data }),

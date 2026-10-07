@@ -2055,6 +2055,47 @@ export const en: Widen<typeof id> = {
         },
     },
 
+    classifications: {
+        listTitle: 'Movement classifications',
+        listDescription:
+            'A classification groups movements by account and transaction type. The direct cash flow and the changes in equity are read from it.',
+        reports: 'Reports',
+        of: '{{name}} · version {{version}}',
+        noKey: 'no key',
+        unclassifiedTitle: 'Unclassified movements',
+        unclassifiedDescription:
+            'The classification rules do not place these accounts in any row. Add their rules to the movement classification so the result is complete.',
+        mappingProblemsTitle: 'The cash and cash equivalents mapping has problems',
+        cashFlow: {
+            title: 'Direct cash flow',
+            description:
+                'Cash receipts and payments per classification row over a date range, reconciled to the cash balance of the ledger.',
+            inflow: 'Inflow',
+            outflow: 'Outflow',
+            net: 'Net',
+            opening: 'Opening cash',
+            netIncrease: 'Net increase in cash',
+            closing: 'Closing cash',
+            reconciled: 'Opening cash plus net increase equals closing cash',
+            unreconciledTitle: 'The cash flow does not match the cash balance',
+            unreconciled: 'A difference of {{difference}} between the cash flow and the ledger cash balance.',
+        },
+        equity: {
+            title: 'Changes in equity',
+            description:
+                'Opening balance, movement and closing balance per equity component, and the movement per classification row.',
+            component: 'Component',
+            opening: 'Opening balance',
+            movement: 'Movement',
+            closing: 'Closing balance',
+            total: 'Total',
+            notReconciled: 'Does not match',
+            reconciled: 'The components add up to the equity in the ledger',
+            unreconciledTitle: 'The changes in equity do not match the ledger',
+            unreconciled:
+                'Components {{components}}, ledger {{ledger}}, difference {{difference}}.',
+        },
+    },
     generalLedger: {
         pageTitle: 'General ledger',
         title: 'General ledger',
