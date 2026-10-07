@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form-alert';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
@@ -22,6 +22,10 @@ import { formatDecimal } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
 import { CoverageNotice } from '@/modules/reporting/components/coverage-notice';
+import {
+    SnapshotDialog,
+    type SnapshotTarget,
+} from '@/modules/reporting/components/snapshot-dialogs';
 import { ReportFilterBar } from '@/modules/reporting/components/report-filter-bar';
 import {
     comparesWithPlan,
@@ -52,10 +56,12 @@ export function ReportViewerPage({
     companyId,
     definitionId,
     canManage,
+    canPublish,
 }: {
     companyId: string;
     definitionId: string;
     canManage: boolean;
+    canPublish: boolean;
 }) {
     const { t } = useTranslation();
     const definition = useQuery(reportDefinitionQuery(companyId, definitionId));
@@ -77,6 +83,7 @@ export function ReportViewerPage({
             companyId={companyId}
             definition={definition.data}
             canManage={canManage}
+            canPublish={canPublish}
         />
     );
 }
@@ -86,10 +93,12 @@ function Viewer({
     companyId,
     definition,
     canManage,
+    canPublish,
 }: {
     companyId: string;
     definition: ReportDefinition;
     canManage: boolean;
+    canPublish: boolean;
 }) {
     const { t, i18n } = useTranslation();
     const mode = dateModeOf(definition);
@@ -99,6 +108,7 @@ function Viewer({
     const result = useQuery(
         reportResultQuery(companyId, definition.id, filter, mode),
     );
+    const [snapshot, setSnapshot] = useState<SnapshotTarget | null>(null);
 
     return (
         <>
@@ -120,15 +130,40 @@ function Viewer({
                         })}
                     </p>
                 </div>
-                {canManage && (
+                <div className="flex flex-wrap gap-2">
                     <Link
-                        to="/w/$companyId/reports/$definitionId/edit"
+                        to="/w/$companyId/reports/$definitionId/snapshots"
                         params={{ companyId, definitionId: definition.id }}
                         className={buttonVariants({ variant: 'outline' })}
                     >
-                        {t('definitionEditor.edit')}
+                        {t('snapshots.link')}
                     </Link>
-                )}
+                    {canPublish && (
+                        <Button
+                            variant="outline"
+                            disabled={result.data === undefined}
+                            onClick={() =>
+                                setSnapshot({
+                                    kind: 'publish',
+                                    definitionId: definition.id,
+                                    filter,
+                                    mode,
+                                })
+                            }
+                        >
+                            {t('snapshots.publish.button')}
+                        </Button>
+                    )}
+                    {canManage && (
+                        <Link
+                            to="/w/$companyId/reports/$definitionId/edit"
+                            params={{ companyId, definitionId: definition.id }}
+                            className={buttonVariants({ variant: 'outline' })}
+                        >
+                            {t('definitionEditor.edit')}
+                        </Link>
+                    )}
+                </div>
             </div>
 
             <ReportFilterBar
@@ -152,11 +187,18 @@ function Viewer({
             ) : (
                 <ResultView result={result.data} locale={i18n.language} />
             )}
+
+            <SnapshotDialog
+                companyId={companyId}
+                target={snapshot}
+                onClose={() => setSnapshot(null)}
+            />
         </>
     );
 }
 
-function ResultView({
+/** The values of a report, as run now or as a snapshot kept them. */
+export function ResultView({
     result,
     locale,
 }: {
@@ -325,7 +367,8 @@ function Variance({
     locale,
 }: {
     variance:
-        { percentage: string | null; favorable: boolean | null } | undefined;
+        | { percentage: string | null; favorable: boolean | null }
+        | undefined;
     locale: string;
 }) {
     const { t } = useTranslation();

@@ -43,6 +43,10 @@ import {
 } from '@/modules/reporting/pages/classification-report-pages';
 import { GeneralLedgerPage } from '@/modules/reporting/pages/general-ledger-page';
 import { ReportViewerPage } from '@/modules/reporting/pages/report-viewer-page';
+import {
+    SnapshotDetailPage,
+    SnapshotsPage,
+} from '@/modules/reporting/pages/snapshot-pages';
 import { ReportsPage } from '@/modules/reporting/pages/reports-page';
 import { reportDefinitionQuery } from '@/modules/reporting/report-definitions';
 import { TrialBalancePage } from '@/modules/reporting/pages/trial-balance-page';
@@ -1355,6 +1359,84 @@ const reportRoute = createRoute({
                 companyId={workspace.company_id}
                 definitionId={definitionId}
                 canManage={can(workspace, 'report-definitions.manage')}
+                canPublish={can(workspace, 'reports.publish')}
+            />
+        );
+    },
+});
+
+const reportSnapshotsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/$definitionId/snapshots',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navReports', href: at(m, '/reports') },
+            {
+                label: nameOf(m),
+                href: at(m, `/reports/${m.params.definitionId}`),
+            },
+            {
+                labelKey: 'snapshots.crumb',
+                href: at(m, `/reports/${m.params.definitionId}/snapshots`),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('reports.read'),
+    loader: ({ context, params }) =>
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                reportDefinitionQuery(params.companyId, params.definitionId),
+            ),
+        ),
+    notFoundComponent: RecordNotFound,
+    component: function ReportSnapshotsScreen() {
+        const { workspace } = reportSnapshotsRoute.useRouteContext();
+        const { definitionId } = reportSnapshotsRoute.useParams();
+
+        return (
+            <SnapshotsPage
+                companyId={workspace.company_id}
+                definitionId={definitionId}
+                canPublish={can(workspace, 'reports.publish')}
+            />
+        );
+    },
+});
+
+const reportSnapshotRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/$definitionId/snapshots/$snapshotId',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navReports', href: at(m, '/reports') },
+            {
+                label: nameOf(m),
+                href: at(m, `/reports/${m.params.definitionId}`),
+            },
+            {
+                labelKey: 'snapshots.crumb',
+                href: at(m, `/reports/${m.params.definitionId}/snapshots`),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('reports.read'),
+    loader: ({ context, params }) =>
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                reportDefinitionQuery(params.companyId, params.definitionId),
+            ),
+        ),
+    notFoundComponent: RecordNotFound,
+    component: function ReportSnapshotScreen() {
+        const { workspace } = reportSnapshotRoute.useRouteContext();
+        const { definitionId, snapshotId } = reportSnapshotRoute.useParams();
+
+        return (
+            <SnapshotDetailPage
+                companyId={workspace.company_id}
+                definitionId={definitionId}
+                snapshotId={snapshotId}
+                canPublish={can(workspace, 'reports.publish')}
             />
         );
     },
@@ -1784,6 +1866,8 @@ const routeTree = rootRoute.addChildren([
                 newClassificationRoute,
                 editClassificationRoute,
                 reportRoute,
+                reportSnapshotsRoute,
+                reportSnapshotRoute,
                 editReportRoute,
                 trialBalanceRoute,
                 generalLedgerRoute,
