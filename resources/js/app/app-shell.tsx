@@ -203,6 +203,12 @@ const NAV = [
         permission: 'journals.read',
     },
     {
+        to: '/w/$companyId/reports',
+        label: 'app.navReports',
+        icon: FileTextIcon,
+        permission: 'reports.read',
+    },
+    {
         to: '/w/$companyId/reports/trial-balance',
         label: 'app.navTrialBalance',
         icon: SigmaIcon,

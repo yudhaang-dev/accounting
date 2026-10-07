@@ -33,6 +33,9 @@ import {
     JournalsPage,
     type JournalSearch,
 } from '@/modules/general-ledger/pages/journals-page';
+import { ReportViewerPage } from '@/modules/reporting/pages/report-viewer-page';
+import { ReportsPage } from '@/modules/reporting/pages/reports-page';
+import { reportDefinitionQuery } from '@/modules/reporting/report-definitions';
 import { TrialBalancePage } from '@/modules/reporting/pages/trial-balance-page';
 import { AccountsPage } from '@/modules/general-ledger/pages/accounts-page';
 import { LedgerSettingsPage } from '@/modules/general-ledger/pages/ledger-settings-page';
@@ -1182,6 +1185,55 @@ const journalsRoute = createRoute({
     },
 });
 
+const reportsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navReports', href: at(m, '/reports') },
+        ],
+    },
+    beforeLoad: requirePermission('reports.read'),
+    component: function ReportsScreen() {
+        const { workspace } = reportsRoute.useRouteContext();
+
+        return <ReportsPage companyId={workspace.company_id} />;
+    },
+});
+
+const reportRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/$definitionId',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navReports', href: at(m, '/reports') },
+            {
+                label: nameOf(m),
+                href: at(m, `/reports/${m.params.definitionId}`),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('reports.read'),
+    loader: ({ context, params }) =>
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                reportDefinitionQuery(params.companyId, params.definitionId),
+            ),
+        ),
+    notFoundComponent: RecordNotFound,
+    component: function ReportScreen() {
+        const { workspace } = reportRoute.useRouteContext();
+        const { definitionId } = reportRoute.useParams();
+
+        return (
+            <ReportViewerPage
+                companyId={workspace.company_id}
+                definitionId={definitionId}
+            />
+        );
+    },
+});
+
 const trialBalanceRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/reports/trial-balance',
@@ -1469,6 +1521,8 @@ const routeTree = rootRoute.addChildren([
                 transactionTypeRoute,
                 journalsRoute,
                 journalRoute,
+                reportsRoute,
+                reportRoute,
                 trialBalanceRoute,
                 agingRoute,
                 plansRoute,

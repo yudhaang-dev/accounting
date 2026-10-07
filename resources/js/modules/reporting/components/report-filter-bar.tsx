@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { DatePicker } from '@/components/date-picker';
 import { FormAlert } from '@/components/form-alert';
 import { SearchableSelect } from '@/components/searchable-select';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
     Collapsible,
@@ -120,7 +120,7 @@ export function ReportFilterBar({
 
             <Collapsible open={open} onOpenChange={setOpen}>
                 <CollapsibleTrigger
-                    render={<Button type="button" variant="ghost" size="sm" />}
+                    className={buttonVariants({ variant: 'ghost', size: 'sm' })}
                 >
                     <ChevronDownIcon
                         data-icon="inline-start"
@@ -176,13 +176,15 @@ export function ReportFilterBar({
                                     </FieldLabel>
                                     <SearchableSelect
                                         id="rf-source"
-                                        items={JOURNAL_SOURCES.map((source) => ({
-                                            value: source,
-                                            label: t(
-                                                `journals.sources.${source}`,
-                                                { defaultValue: source },
-                                            ),
-                                        }))}
+                                        items={JOURNAL_SOURCES.map(
+                                            (source) => ({
+                                                value: source,
+                                                label: t(
+                                                    `journals.sources.${source}`,
+                                                    { defaultValue: source },
+                                                ),
+                                            }),
+                                        )}
                                         value={draft.source}
                                         onValueChange={(source) =>
                                             setDraft({

@@ -133,6 +133,7 @@ export const en: Widen<typeof id> = {
         navApprovals: 'Approval inbox',
         navTransactionTypes: 'Transaction types',
         navJournals: 'Journals',
+        navReports: 'Reports',
         navTrialBalance: 'Trial balance',
         navMembers: 'Members',
         navRoles: 'Roles',
@@ -2053,6 +2054,52 @@ export const en: Widen<typeof id> = {
         },
     },
     reports: {
+        pageTitle: 'Reports',
+        title: 'Reports',
+        description:
+            'The report definitions of the company. Pick one to run it for a date range or a single date.',
+        empty: 'No report definitions yet',
+        emptyDescription:
+            'Import a report definition template or create your own so reports can be run.',
+        name: 'Name',
+        key: 'Key',
+        kind: 'Kind',
+        version: 'Version',
+        versionOf: 'Version {{version}}',
+        kinds: {
+            custom: 'Custom',
+            income_statement: 'Income statement',
+            balance_sheet: 'Balance sheet',
+            cash_flow_indirect: 'Cash flow (indirect)',
+        },
+        row: 'Row',
+        currency: 'In {{currency}}',
+        unavailable: 'Unavailable',
+        partial: 'Partial',
+        restrictedTitle: 'Limited to your data scope',
+        restricted:
+            'This report only adds up the journal lines inside your data scope, so totals can be lower than the company totals.',
+        coverage: {
+            partial: 'Partial history coverage',
+            unavailable: 'History unavailable',
+            range: 'Data is available from {{from}} to {{to}}. Columns outside it are left empty, not zero.',
+            none: 'The ledger cannot answer for this range yet.',
+        },
+        balanceChecks: {
+            balanced: 'Assets equal liabilities and equity',
+            unbalancedTitle: 'Balance sheet does not balance ({{column}})',
+            unbalanced:
+                'Assets {{assets}}, liabilities and equity {{other}}, difference {{difference}}.',
+        },
+        cashChecks: {
+            reconciled: 'Opening cash plus net increase equals closing cash',
+            unreconciledTitle: 'Cash flow does not match cash ({{column}})',
+            unreconciled:
+                'Opening cash {{opening}}, net increase {{increase}}, closing cash {{closing}}.',
+        },
+        unmappedTitle: 'Accounts not mapped',
+        unmappedDescription:
+            'No row claims these accounts. They are still counted in the exception row, so the totals match.',
         filter: {
             from: 'From date',
             to: 'To date',

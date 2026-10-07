@@ -131,6 +131,7 @@ export const id = {
         navApprovals: 'Kotak persetujuan',
         navTransactionTypes: 'Jenis transaksi',
         navJournals: 'Jurnal',
+        navReports: 'Laporan',
         navTrialBalance: 'Neraca saldo',
         navMembers: 'Anggota',
         navRoles: 'Role',
@@ -2046,6 +2047,53 @@ export const id = {
         },
     },
     reports: {
+        pageTitle: 'Laporan',
+        title: 'Laporan',
+        description:
+            'Definisi laporan perusahaan. Pilih satu untuk menjalankannya pada rentang tanggal atau per tanggal tertentu.',
+        empty: 'Belum ada definisi laporan',
+        emptyDescription:
+            'Impor template definisi laporan atau buat definisi sendiri agar laporan dapat dijalankan.',
+        name: 'Nama',
+        key: 'Kunci',
+        kind: 'Jenis',
+        version: 'Versi',
+        versionOf: 'Versi {{version}}',
+        kinds: {
+            custom: 'Kustom',
+            income_statement: 'Laba rugi',
+            balance_sheet: 'Neraca',
+            cash_flow_indirect: 'Arus kas tidak langsung',
+        },
+        row: 'Baris',
+        currency: 'Dalam {{currency}}',
+        unavailable: 'Tidak tersedia',
+        partial: 'Sebagian',
+        restrictedTitle: 'Dibatasi cakupan data Anda',
+        restricted:
+            'Laporan ini hanya menjumlahkan baris jurnal yang termasuk dalam cakupan data Anda, sehingga total bisa lebih kecil dari total perusahaan.',
+        coverage: {
+            partial: 'Cakupan histori sebagian',
+            unavailable: 'Histori tidak tersedia',
+            range: 'Data tersedia dari {{from}} sampai {{to}}. Kolom di luar cakupan ini tidak diisi, bukan nol.',
+            none: 'Buku besar belum dapat menjawab untuk rentang ini.',
+        },
+        balanceChecks: {
+            balanced: 'Aset sama dengan liabilitas dan ekuitas',
+            unbalancedTitle: 'Neraca tidak seimbang ({{column}})',
+            unbalanced:
+                'Aset {{assets}}, liabilitas dan ekuitas {{other}}, selisih {{difference}}.',
+        },
+        cashChecks: {
+            reconciled:
+                'Kas awal ditambah kenaikan bersih sama dengan kas akhir',
+            unreconciledTitle: 'Arus kas tidak cocok dengan kas ({{column}})',
+            unreconciled:
+                'Kas awal {{opening}}, kenaikan bersih {{increase}}, kas akhir {{closing}}.',
+        },
+        unmappedTitle: 'Akun yang belum dipetakan',
+        unmappedDescription:
+            'Akun berikut belum diklaim baris mana pun. Nilainya tetap dihitung di baris pengecualian sehingga total cocok.',
         filter: {
             from: 'Dari tanggal',
             to: 'Sampai tanggal',

@@ -68,6 +68,11 @@ export function isPositive(value: string | null | undefined): boolean {
  * `Intl` formats a decimal string exactly, so nothing is rounded through a `number`.
  */
 export function formatDecimal(value: string, locale: string): string {
+    // Report results can be negative (a net loss, a credit-side balance).
+    if (value.startsWith('-') && isDecimal(value.slice(1))) {
+        return `-${formatDecimal(value.slice(1), locale)}`;
+    }
+
     if (!isDecimal(value)) {
         return value;
     }
