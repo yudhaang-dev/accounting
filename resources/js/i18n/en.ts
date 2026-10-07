@@ -134,6 +134,7 @@ export const en: Widen<typeof id> = {
         navTransactionTypes: 'Transaction types',
         navJournals: 'Journals',
         navReports: 'Reports',
+        navGeneralLedger: 'General ledger',
         navTrialBalance: 'Trial balance',
         navMembers: 'Members',
         navRoles: 'Roles',
@@ -2053,6 +2054,31 @@ export const en: Widen<typeof id> = {
             open: 'Open journal {{number}}',
         },
     },
+
+    generalLedger: {
+        pageTitle: 'General ledger',
+        title: 'General ledger',
+        description:
+            'The journal lines of one account over a date range, with a running balance and links to the journal and the entry it came from.',
+        account: 'Account',
+        pickAccount: 'Pick an account',
+        noAccount: 'Pick an account',
+        noAccountDescription:
+            'The general ledger shows one account at a time. Pick an account above, or open it from an account code in the trial balance.',
+        currency: 'In {{currency}}',
+        export: 'Export CSV',
+        exporting: 'Downloading…',
+        exportFailed: 'The export failed. Try again.',
+        date: 'Date',
+        journal: 'Journal',
+        entry: 'View entry',
+        descriptionColumn: 'Description',
+        debit: 'Debit',
+        credit: 'Credit',
+        balance: 'Balance',
+        opening: 'Opening balance',
+        total: 'Total and closing balance',
+    },
     reports: {
         pageTitle: 'Reports',
         title: 'Reports',
@@ -2115,6 +2141,9 @@ export const en: Widen<typeof id> = {
             rangeInvalid: 'The start date cannot be after the end date.',
             more: 'More filters',
             active: 'active',
+            adjustmentKeys: 'Workpaper: adjustment keys',
+            adjustmentKeysHint:
+                'Pick the transaction types that count as adjustments. The trial balance then shows the balance before, the adjustments, and the balance after.',
             allValues: 'All values',
             allSources: 'All sources',
             source: 'Posting source',
@@ -2125,6 +2154,13 @@ export const en: Widen<typeof id> = {
         },
     },
     trialBalance: {
+        before: 'Before adjustments',
+        adjustments: 'Adjustments',
+        after: 'After adjustments',
+        ledger: 'View general ledger of account {{code}}',
+        conversionTitle: 'Includes conversion balances',
+        conversion:
+            'The opening balance of this report includes the conversion balances with cutover date {{date}}, from journal',
         pageTitle: 'Trial balance',
         title: 'Trial balance',
         description:

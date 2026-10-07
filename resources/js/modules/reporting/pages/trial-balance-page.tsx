@@ -27,10 +27,11 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useDocumentTitle } from '@/hooks/use-document-title';
-import { todayIso } from '@/lib/date';
+import { formatIsoDate, todayIso } from '@/lib/date';
 import { formatDecimal, isPositive } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
+import { CoverageNotice } from '@/modules/reporting/components/coverage-notice';
 import { ReportFilterBar } from '@/modules/reporting/components/report-filter-bar';
 import {
     emptyFilter,
@@ -47,14 +48,29 @@ const defaultFilter = (): ReportFilter => ({
     to: todayIso(),
 });
 
-const COLUMNS = [
-    'opening_debit',
-    'opening_credit',
-    'debit',
-    'credit',
-    'closing_debit',
-    'closing_credit',
-] as const;
+type Group = { label: string; keys: [string, string] };
+
+const STANDARD: Group[] = [
+    {
+        label: 'trialBalance.opening',
+        keys: ['opening_debit', 'opening_credit'],
+    },
+    { label: 'trialBalance.movement', keys: ['debit', 'credit'] },
+    {
+        label: 'trialBalance.closing',
+        keys: ['closing_debit', 'closing_credit'],
+    },
+];
+
+// The workpaper shows the balance before the adjustments, the adjustments, and the balance after (RP-FR-05).
+const WORKPAPER: Group[] = [
+    { label: 'trialBalance.before', keys: ['before_debit', 'before_credit'] },
+    {
+        label: 'trialBalance.adjustments',
+        keys: ['adjustment_debit', 'adjustment_credit'],
+    },
+    { label: 'trialBalance.after', keys: ['after_debit', 'after_credit'] },
+];
 
 /**
  * Trial balance of a date range (RP-FR-05, RP-AC-01): opening, movement and closing per account,
@@ -77,6 +93,15 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                     : t('trialBalance.exportFailed'),
             ),
     });
+
+    const workpaper = report.data?.workpaper;
+    const groups = workpaper ? WORKPAPER : STANDARD;
+    const columns = groups.flatMap((group) => group.keys);
+    const rows: Record<string, string>[] =
+        workpaper?.rows ?? report.data?.rows ?? [];
+    const totals: Record<string, string> =
+        workpaper?.totals ?? report.data?.totals ?? {};
+    const balanced = workpaper ? workpaper.balanced : report.data?.balanced;
 
     const money = (value: string) =>
         isPositive(value) ? formatDecimal(value, i18n.language) : '';
@@ -113,6 +138,7 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                 companyId={companyId}
                 value={filter}
                 onApply={setFilter}
+                withWorkpaper
             />
 
             {report.isError ? (
@@ -127,7 +153,7 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                 <Skeleton className="h-64 w-full" />
             ) : (
                 <div className="flex flex-col gap-3">
-                    {report.data.balanced ? (
+                    {balanced ? (
                         <div className="flex items-center gap-2 text-sm">
                             <Badge variant="secondary">
                                 <CheckIcon data-icon="inline-start" />
@@ -150,7 +176,41 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                         </Alert>
                     )}
 
-                    {report.data.rows.length === 0 ? (
+                    {report.data.conversion_batch && (
+                        <Alert role="status">
+                            <AlertTitle>
+                                {t('trialBalance.conversionTitle')}
+                            </AlertTitle>
+                            <AlertDescription>
+                                {t('trialBalance.conversion', {
+                                    date: formatIsoDate(
+                                        report.data.conversion_batch
+                                            .cutover_date,
+                                        i18n.language,
+                                    ),
+                                })}{' '}
+                                <Link
+                                    to="/w/$companyId/journals/$journalId"
+                                    params={{
+                                        companyId,
+                                        journalId:
+                                            report.data.conversion_batch
+                                                .journal_id,
+                                    }}
+                                    className="underline underline-offset-4"
+                                >
+                                    {
+                                        report.data.conversion_batch
+                                            .journal_number
+                                    }
+                                </Link>
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
+                    <CoverageNotice report={report.data} />
+
+                    {rows.length === 0 ? (
                         <Empty className="max-w-xl flex-none border py-10">
                             <EmptyHeader>
                                 <EmptyMedia variant="icon">
@@ -175,35 +235,28 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                                         <TableHead rowSpan={2}>
                                             {t('trialBalance.account')}
                                         </TableHead>
-                                        <TableHead
-                                            colSpan={2}
-                                            className="text-center"
-                                        >
-                                            {t('trialBalance.opening')}
-                                        </TableHead>
-                                        <TableHead
-                                            colSpan={2}
-                                            className="text-center"
-                                        >
-                                            {t('trialBalance.movement')}
-                                        </TableHead>
-                                        <TableHead
-                                            colSpan={2}
-                                            className="text-center"
-                                        >
-                                            {t('trialBalance.closing')}
-                                        </TableHead>
+                                        {groups.map((group) => (
+                                            <TableHead
+                                                key={group.label}
+                                                colSpan={2}
+                                                className="text-center"
+                                            >
+                                                {t(
+                                                    group.label as 'trialBalance.opening',
+                                                )}
+                                            </TableHead>
+                                        ))}
                                     </TableRow>
                                     <TableRow>
-                                        {[0, 1, 2].flatMap((group) => [
+                                        {groups.flatMap((group) => [
                                             <TableHead
-                                                key={`d${group}`}
+                                                key={`d${group.label}`}
                                                 className="text-end"
                                             >
                                                 {t('trialBalance.debit')}
                                             </TableHead>,
                                             <TableHead
-                                                key={`c${group}`}
+                                                key={`c${group.label}`}
                                                 className="text-end"
                                             >
                                                 {t('trialBalance.credit')}
@@ -212,10 +265,26 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {report.data.rows.map((row) => (
+                                    {rows.map((row) => (
                                         <TableRow key={row.account_id}>
                                             <TableCell className="font-mono text-xs">
-                                                {row.code}
+                                                <Link
+                                                    to="/w/$companyId/reports/general-ledger"
+                                                    params={{ companyId }}
+                                                    search={{
+                                                        account_id:
+                                                            row.account_id,
+                                                        from: filter.from,
+                                                        to: filter.to,
+                                                    }}
+                                                    aria-label={t(
+                                                        'trialBalance.ledger',
+                                                        { code: row.code },
+                                                    )}
+                                                    className="underline-offset-4 hover:underline"
+                                                >
+                                                    {row.code}
+                                                </Link>
                                             </TableCell>
                                             <TableCell>
                                                 <Link
@@ -236,12 +305,12 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                                                     {row.name}
                                                 </Link>
                                             </TableCell>
-                                            {COLUMNS.map((column) => (
+                                            {columns.map((column) => (
                                                 <TableCell
                                                     key={column}
                                                     className="text-end tabular-nums"
                                                 >
-                                                    {money(row[column])}
+                                                    {money(row[column] ?? '')}
                                                 </TableCell>
                                             ))}
                                         </TableRow>
@@ -255,13 +324,13 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                                         >
                                             {t('trialBalance.total')}
                                         </TableCell>
-                                        {COLUMNS.map((column) => (
+                                        {columns.map((column) => (
                                             <TableCell
                                                 key={column}
                                                 className="text-end font-medium tabular-nums"
                                             >
                                                 {formatDecimal(
-                                                    report.data.totals[column],
+                                                    totals[column] ?? '',
                                                     i18n.language,
                                                 )}
                                             </TableCell>

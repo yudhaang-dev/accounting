@@ -22,6 +22,8 @@ export type ReportFilter = {
     transaction_type_keys: string[];
     source: JournalSource | '';
     plan_version_id: string;
+    /** Trial balance workpaper: the Jenis Transaksi keys that count as adjustments. */
+    adjustment_keys: string[];
 };
 
 export const emptyFilter = (): ReportFilter => ({
@@ -32,6 +34,7 @@ export const emptyFilter = (): ReportFilter => ({
     transaction_type_keys: [],
     source: '',
     plan_version_id: '',
+    adjustment_keys: [],
 });
 
 /** Which of the date inputs a screen offers. */
@@ -110,6 +113,10 @@ export function filterParams(
 
     if (filter.plan_version_id) {
         params.set('plan_version_id', filter.plan_version_id);
+    }
+
+    for (const key of filter.adjustment_keys) {
+        params.append('adjustment_keys[]', key);
     }
 
     return params;

@@ -132,6 +132,7 @@ export const id = {
         navTransactionTypes: 'Jenis transaksi',
         navJournals: 'Jurnal',
         navReports: 'Laporan',
+        navGeneralLedger: 'Buku besar',
         navTrialBalance: 'Neraca saldo',
         navMembers: 'Anggota',
         navRoles: 'Role',
@@ -2046,6 +2047,31 @@ export const id = {
             open: 'Buka jurnal {{number}}',
         },
     },
+
+    generalLedger: {
+        pageTitle: 'Buku besar',
+        title: 'Buku besar',
+        description:
+            'Rincian baris jurnal satu akun pada rentang tanggal, dengan saldo berjalan dan tautan ke jurnal serta entri asalnya.',
+        account: 'Akun',
+        pickAccount: 'Pilih akun',
+        noAccount: 'Pilih akun',
+        noAccountDescription:
+            'Buku besar menampilkan satu akun dalam satu waktu. Pilih akun di atas, atau buka dari kode akun di neraca saldo.',
+        currency: 'Dalam {{currency}}',
+        export: 'Ekspor CSV',
+        exporting: 'Mengunduh…',
+        exportFailed: 'Ekspor gagal. Coba lagi.',
+        date: 'Tanggal',
+        journal: 'Jurnal',
+        entry: 'Lihat entri',
+        descriptionColumn: 'Keterangan',
+        debit: 'Debit',
+        credit: 'Kredit',
+        balance: 'Saldo',
+        opening: 'Saldo awal',
+        total: 'Total dan saldo akhir',
+    },
     reports: {
         pageTitle: 'Laporan',
         title: 'Laporan',
@@ -2109,6 +2135,9 @@ export const id = {
             rangeInvalid: 'Tanggal awal tidak boleh setelah tanggal akhir.',
             more: 'Filter lainnya',
             active: 'aktif',
+            adjustmentKeys: 'Kertas kerja: key penyesuaian',
+            adjustmentKeysHint:
+                'Pilih Jenis Transaksi yang dihitung sebagai penyesuaian. Neraca saldo lalu menampilkan saldo sebelum, penyesuaian, dan sesudahnya.',
             allValues: 'Semua nilai',
             allSources: 'Semua sumber',
             source: 'Sumber posting',
@@ -2119,6 +2148,13 @@ export const id = {
         },
     },
     trialBalance: {
+        before: 'Sebelum penyesuaian',
+        adjustments: 'Penyesuaian',
+        after: 'Sesudah penyesuaian',
+        ledger: 'Lihat buku besar akun {{code}}',
+        conversionTitle: 'Memuat saldo konversi',
+        conversion:
+            'Saldo awal laporan ini memuat saldo konversi dengan tanggal cutover {{date}}, dari jurnal',
         pageTitle: 'Neraca saldo',
         title: 'Neraca saldo',
         description:

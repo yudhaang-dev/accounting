@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -122,11 +122,15 @@ describe('report filter', () => {
         await typist.click(
             screen.getByRole('button', { name: /Filter lainnya/ }),
         );
+        const types = await screen.findByRole('group', {
+            name: 'Jenis Transaksi',
+        });
+
         await typist.click(
-            await screen.findByRole('checkbox', { name: 'Penjualan' }),
+            within(types).getByRole('checkbox', { name: 'Penjualan' }),
         );
         await typist.click(
-            screen.getByRole('checkbox', { name: 'Jurnal umum' }),
+            within(types).getByRole('checkbox', { name: 'Jurnal umum' }),
         );
         await typist.click(screen.getByLabelText('Cabang'));
         await typist.click(await screen.findByText('JKT · Jakarta'));

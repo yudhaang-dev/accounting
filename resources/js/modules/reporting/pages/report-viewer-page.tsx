@@ -19,6 +19,7 @@ import { formatIsoDate, todayIso } from '@/lib/date';
 import { formatDecimal } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
+import { CoverageNotice } from '@/modules/reporting/components/coverage-notice';
 import { ReportFilterBar } from '@/modules/reporting/components/report-filter-bar';
 import {
     comparesWithPlan,
@@ -162,24 +163,7 @@ function ResultView({
                 </Alert>
             )}
 
-            {result.coverage_status !== 'complete' && (
-                <Alert role="status">
-                    <AlertTitle>
-                        {t(`reports.coverage.${result.coverage_status}`)}
-                    </AlertTitle>
-                    <AlertDescription>
-                        {result.coverage_from && result.coverage_to
-                            ? t('reports.coverage.range', {
-                                  from: formatIsoDate(
-                                      result.coverage_from,
-                                      locale,
-                                  ),
-                                  to: formatIsoDate(result.coverage_to, locale),
-                              })
-                            : t('reports.coverage.none')}
-                    </AlertDescription>
-                </Alert>
-            )}
+            <CoverageNotice report={result} />
 
             {result.columns
                 .filter((column) => column.kind === 'plan' && !column.available)

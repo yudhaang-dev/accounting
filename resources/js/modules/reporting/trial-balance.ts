@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 import { api, unwrap } from '@/api/client';
 import type { operations } from '@/api/schema';
+import type { Coverage } from '@/modules/reporting/components/coverage-notice';
 import { downloadFile } from '@/lib/download';
 import {
     filterParams,
@@ -10,7 +11,8 @@ import {
 type Body =
     operations['reports.trial-balance']['responses'][200]['content']['application/json'];
 
-export type TrialBalance = Body['data'];
+/** The generated type leaves out the coverage fields of the report (RP-FR-13). */
+export type TrialBalance = Body['data'] & Coverage;
 export type TrialBalanceRow = TrialBalance['rows'][number];
 
 export const trialBalanceQuery = (companyId: string, filter: ReportFilter) =>
@@ -33,7 +35,7 @@ export const trialBalanceQuery = (companyId: string, filter: ReportFilter) =>
                             filterParams(filter, 'range').toString(),
                     }),
                 )
-            ).data,
+            ).data as TrialBalance,
     });
 
 /** The same report as CSV, under the same permission and filters (X-FR-02). */

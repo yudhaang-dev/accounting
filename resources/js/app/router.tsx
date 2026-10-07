@@ -33,6 +33,7 @@ import {
     JournalsPage,
     type JournalSearch,
 } from '@/modules/general-ledger/pages/journals-page';
+import { GeneralLedgerPage } from '@/modules/reporting/pages/general-ledger-page';
 import { ReportViewerPage } from '@/modules/reporting/pages/report-viewer-page';
 import { ReportsPage } from '@/modules/reporting/pages/reports-page';
 import { reportDefinitionQuery } from '@/modules/reporting/report-definitions';
@@ -1254,6 +1255,54 @@ const trialBalanceRoute = createRoute({
     },
 });
 
+const generalLedgerRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/general-ledger',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'breadcrumb.reports' },
+            {
+                labelKey: 'app.navGeneralLedger',
+                href: at(m, '/reports/general-ledger'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('reports.read'),
+    validateSearch: (
+        search: Record<string, unknown>,
+    ): { account_id?: string; from?: string; to?: string } => ({
+        account_id: stringSearch(search.account_id),
+        from: stringSearch(search.from),
+        to: stringSearch(search.to),
+    }),
+    component: function GeneralLedgerScreen() {
+        const { workspace } = generalLedgerRoute.useRouteContext();
+        const navigate = useNavigate();
+        const search = generalLedgerRoute.useSearch();
+
+        return (
+            <GeneralLedgerPage
+                companyId={workspace.company_id}
+                search={search}
+                canReadAccounts={can(workspace, 'accounts.read')}
+                canReadJournals={can(workspace, 'journals.read')}
+                canReadEntries={can(workspace, 'entries.read')}
+                onAccountChange={(accountId) =>
+                    void navigate({
+                        to: '/w/$companyId/reports/general-ledger',
+                        params: { companyId: workspace.company_id },
+                        search: {
+                            ...search,
+                            account_id: accountId || undefined,
+                        },
+                        replace: true,
+                    })
+                }
+            />
+        );
+    },
+});
+
 const agingRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/reports/aging',
@@ -1524,6 +1573,7 @@ const routeTree = rootRoute.addChildren([
                 reportsRoute,
                 reportRoute,
                 trialBalanceRoute,
+                generalLedgerRoute,
                 agingRoute,
                 plansRoute,
                 planVersionRoute,

@@ -4,6 +4,7 @@ import {
     ArrowRightLeftIcon,
     ClipboardListIcon,
     LandmarkIcon,
+    BookOpenIcon,
     BookTextIcon,
     CalendarRangeIcon,
     CoinsIcon,
@@ -212,6 +213,12 @@ const NAV = [
         to: '/w/$companyId/reports/trial-balance',
         label: 'app.navTrialBalance',
         icon: SigmaIcon,
+        permission: 'reports.read',
+    },
+    {
+        to: '/w/$companyId/reports/general-ledger',
+        label: 'app.navGeneralLedger',
+        icon: BookOpenIcon,
         permission: 'reports.read',
     },
     {

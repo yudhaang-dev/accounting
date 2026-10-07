@@ -32,6 +32,8 @@ type Props = {
     dateMode?: DateMode;
     /** The plan version picker, for reports that compare with a plan (RP-FR-11). */
     withPlanVersion?: boolean;
+    /** The workpaper picker: Jenis Transaksi keys counted as adjustments (RP-FR-05). */
+    withWorkpaper?: boolean;
     /** Extra controls placed after the apply button. */
     children?: ReactNode;
 };
@@ -48,12 +50,15 @@ export function ReportFilterBar({
     onApply,
     dateMode = 'range',
     withPlanVersion = false,
+    withWorkpaper = false,
     children,
 }: Props) {
     const { t } = useTranslation();
     const [draft, setDraft] = useState<ReportFilter>(value);
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [open, setOpen] = useState(hasNarrowing(value));
+    const [open, setOpen] = useState(
+        hasNarrowing(value) || value.adjustment_keys.length > 0,
+    );
     const options = useQuery(filterOptionsQuery(companyId, open));
     const narrowing = hasNarrowing(draft);
 
@@ -73,12 +78,16 @@ export function ReportFilterBar({
         }
     };
 
-    const toggleType = (key: string, checked: boolean) =>
+    const toggle = (
+        field: 'transaction_type_keys' | 'adjustment_keys',
+        key: string,
+        checked: boolean,
+    ) =>
         setDraft({
             ...draft,
-            transaction_type_keys: checked
-                ? [...draft.transaction_type_keys, key]
-                : draft.transaction_type_keys.filter((k) => k !== key),
+            [field]: checked
+                ? [...draft[field], key]
+                : draft[field].filter((k) => k !== key),
         });
 
     const dateField = (field: 'from' | 'to' | 'as_of') => (
@@ -231,51 +240,94 @@ export function ReportFilterBar({
 
                             {options.data &&
                                 options.data.transactionTypes.length > 0 && (
-                                    <fieldset className="flex flex-col gap-2">
-                                        <legend className="mb-1 text-sm font-medium">
-                                            {t(
-                                                'reports.filter.transactionTypes',
-                                            )}
-                                        </legend>
-                                        <div className="flex flex-wrap gap-x-5 gap-y-2">
-                                            {options.data.transactionTypes.map(
-                                                (type) => (
-                                                    <Field
-                                                        key={type.key}
-                                                        orientation="horizontal"
-                                                        className="w-auto"
-                                                    >
-                                                        <Checkbox
-                                                            id={`rf-tt-${type.key}`}
-                                                            checked={draft.transaction_type_keys.includes(
-                                                                type.key,
-                                                            )}
-                                                            onCheckedChange={(
-                                                                checked,
-                                                            ) =>
-                                                                toggleType(
-                                                                    type.key,
-                                                                    checked ===
-                                                                        true,
-                                                                )
-                                                            }
-                                                        />
-                                                        <FieldLabel
-                                                            htmlFor={`rf-tt-${type.key}`}
-                                                            className="font-normal"
-                                                        >
-                                                            {type.label}
-                                                        </FieldLabel>
-                                                    </Field>
-                                                ),
-                                            )}
-                                        </div>
-                                    </fieldset>
+                                    <KeyChecklist
+                                        legend={t(
+                                            'reports.filter.transactionTypes',
+                                        )}
+                                        idPrefix="rf-tt"
+                                        types={options.data.transactionTypes}
+                                        selected={draft.transaction_type_keys}
+                                        onToggle={(key, checked) =>
+                                            toggle(
+                                                'transaction_type_keys',
+                                                key,
+                                                checked,
+                                            )
+                                        }
+                                    />
+                                )}
+                            {withWorkpaper &&
+                                options.data &&
+                                options.data.transactionTypes.length > 0 && (
+                                    <KeyChecklist
+                                        legend={t(
+                                            'reports.filter.adjustmentKeys',
+                                        )}
+                                        hint={t(
+                                            'reports.filter.adjustmentKeysHint',
+                                        )}
+                                        idPrefix="rf-adj"
+                                        types={options.data.transactionTypes}
+                                        selected={draft.adjustment_keys}
+                                        onToggle={(key, checked) =>
+                                            toggle(
+                                                'adjustment_keys',
+                                                key,
+                                                checked,
+                                            )
+                                        }
+                                    />
                                 )}
                         </>
                     )}
                 </CollapsibleContent>
             </Collapsible>
         </form>
+    );
+}
+
+function KeyChecklist({
+    legend,
+    hint,
+    idPrefix,
+    types,
+    selected,
+    onToggle,
+}: {
+    legend: string;
+    hint?: string;
+    idPrefix: string;
+    types: { key: string; label: string }[];
+    selected: string[];
+    onToggle: (key: string, checked: boolean) => void;
+}) {
+    return (
+        <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-sm font-medium">{legend}</legend>
+            {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+                {types.map((type) => (
+                    <Field
+                        key={type.key}
+                        orientation="horizontal"
+                        className="w-auto"
+                    >
+                        <Checkbox
+                            id={`${idPrefix}-${type.key}`}
+                            checked={selected.includes(type.key)}
+                            onCheckedChange={(checked) =>
+                                onToggle(type.key, checked === true)
+                            }
+                        />
+                        <FieldLabel
+                            htmlFor={`${idPrefix}-${type.key}`}
+                            className="font-normal"
+                        >
+                            {type.label}
+                        </FieldLabel>
+                    </Field>
+                ))}
+            </div>
+        </fieldset>
     );
 }
