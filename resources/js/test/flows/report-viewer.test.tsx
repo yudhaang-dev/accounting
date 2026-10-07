@@ -202,6 +202,13 @@ describe('report viewer', () => {
         ).toBeInTheDocument();
         expect(screen.getByText('Akun Baru', { exact: false })).toBeVisible();
         expect(
+            screen
+                .getByRole('link', { name: 'Lihat buku besar akun 9999' })
+                .getAttribute('href'),
+        ).toMatch(
+            /\/reports\/general-ledger\?account_id=a1&from=2026-01-01&to=2026-10-07/,
+        );
+        expect(
             screen.getByText('Dibatasi cakupan data Anda'),
         ).toBeInTheDocument();
     });

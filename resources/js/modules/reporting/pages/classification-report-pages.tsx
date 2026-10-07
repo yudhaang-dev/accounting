@@ -104,7 +104,15 @@ function ErrorView({ error }: { error: unknown }) {
 }
 
 /** Accounts a rule does not place in any row, with the key that moved them (RP-FR-09, RP-FR-10). */
-function UnclassifiedNotice({ items }: { items: Unclassified[] }) {
+function UnclassifiedNotice({
+    companyId,
+    filter,
+    items,
+}: {
+    companyId: string;
+    filter: ReportFilter;
+    items: Unclassified[];
+}) {
     const { t } = useTranslation();
 
     if (items.length === 0) {
@@ -122,9 +130,21 @@ function UnclassifiedNotice({ items }: { items: Unclassified[] }) {
                         <li
                             key={`${item.account_id}-${item.transaction_type_key}`}
                         >
-                            <span className="font-mono text-xs">
+                            <Link
+                                to="/w/$companyId/reports/general-ledger"
+                                params={{ companyId }}
+                                search={{
+                                    account_id: item.account_id,
+                                    from: filter.from,
+                                    to: filter.to,
+                                }}
+                                aria-label={t('trialBalance.ledger', {
+                                    code: item.code,
+                                })}
+                                className="font-mono text-xs underline underline-offset-4"
+                            >
                                 {item.code}
-                            </span>{' '}
+                            </Link>{' '}
                             {item.name}
                             {' · '}
                             {item.transaction_type_key ??
@@ -330,7 +350,11 @@ function CashFlowResult({
                 </Table>
             </div>
 
-            <UnclassifiedNotice items={data.unclassified} />
+            <UnclassifiedNotice
+                companyId={companyId}
+                filter={filter}
+                items={data.unclassified}
+            />
 
             <dl className="grid max-w-md grid-cols-[1fr_auto] gap-x-6 gap-y-1 text-sm">
                 <dt>{t('classifications.cashFlow.opening')}</dt>
@@ -507,7 +531,11 @@ function EquityResult({
                 </Table>
             </div>
 
-            <UnclassifiedNotice items={data.unclassified} />
+            <UnclassifiedNotice
+                companyId={companyId}
+                filter={filter}
+                items={data.unclassified}
+            />
 
             <Reconciled
                 ok={data.equity.reconciled}

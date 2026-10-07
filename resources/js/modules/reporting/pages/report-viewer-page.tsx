@@ -185,7 +185,11 @@ function Viewer({
             ) : result.data === undefined ? (
                 <Skeleton className="h-64 w-full" />
             ) : (
-                <ResultView result={result.data} locale={i18n.language} />
+                <ResultView
+                    companyId={companyId}
+                    result={result.data}
+                    locale={i18n.language}
+                />
             )}
 
             <SnapshotDialog
@@ -197,11 +201,25 @@ function Viewer({
     );
 }
 
+/** The ledger of an account over the dates the report covered; a balance sheet reads from the start of its year. */
+function ledgerRange(result: ReportResult, accountId: string) {
+    const parameters = result.parameters as { from?: string; to?: string };
+    const to = parameters.to ?? '';
+    const from =
+        parameters.from && parameters.from !== to
+            ? parameters.from
+            : `${to.slice(0, 4)}-01-01`;
+
+    return { account_id: accountId, from, to };
+}
+
 /** The values of a report, as run now or as a snapshot kept them. */
 export function ResultView({
+    companyId,
     result,
     locale,
 }: {
+    companyId: string;
     result: ReportResult;
     locale: string;
 }) {
@@ -343,9 +361,20 @@ export function ResultView({
                         <ul className="mt-1 list-inside list-disc">
                             {result.unmapped_accounts.map((account) => (
                                 <li key={account.account_id}>
-                                    <span className="font-mono text-xs">
+                                    <Link
+                                        to="/w/$companyId/reports/general-ledger"
+                                        params={{ companyId }}
+                                        search={ledgerRange(
+                                            result,
+                                            account.account_id,
+                                        )}
+                                        aria-label={t('trialBalance.ledger', {
+                                            code: account.code,
+                                        })}
+                                        className="font-mono text-xs underline underline-offset-4"
+                                    >
                                         {account.code}
-                                    </span>{' '}
+                                    </Link>{' '}
                                     {account.name}
                                 </li>
                             ))}

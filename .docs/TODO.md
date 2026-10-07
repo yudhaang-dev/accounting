@@ -164,7 +164,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
   - [x] **M8-13h** Editor klasifikasi mutasi: baris, aturan per akun dan key Jenis Transaksi, komponen ekuitas — RP-FR-03, RP-FR-10
   - [x] **M8-13i** Impor template definisi laporan: tinjau definisi, konfirmasi, pesan kode akun yang hilang dari bagan akun — RP-FR-01, X-AC-03 — melengkapi M8-12
   - [x] **M8-13j** Snapshot: terbitkan dari definisi (`reports.publish`), daftar dan isi snapshot, hitung ulang beralasan, penanda perlu dihitung ulang; pesan untuk user dengan cakupan data — RP-FR-14, RP-AC-08, X-AC-04 — melengkapi M8-11
-  - [ ] **M8-13k** Ekspor dan drill-down: ekspor CSV dari penampil definisi dan klasifikasi bila API menyediakannya, drill-down baris laporan ke neraca saldo, buku besar, dan jurnal — X-FR-02, API-AC-07
+  - [x] **M8-13k** Ekspor dan drill-down: ekspor CSV dari penampil definisi dan klasifikasi bila API menyediakannya, drill-down baris laporan ke neraca saldo, buku besar, dan jurnal — X-FR-02, API-AC-07 — hasil definisi dan klasifikasi belum punya ekspor CSV di API (hanya neraca saldo dan buku besar), dan baris definisi belum memuat akun penyusunnya, jadi drill-down baru dari akun belum dipetakan dan mutasi belum diklasifikasikan ke buku besar
 
 ## Backlog
 

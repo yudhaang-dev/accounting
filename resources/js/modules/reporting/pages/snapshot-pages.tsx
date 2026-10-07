@@ -444,7 +444,11 @@ export function SnapshotDetailPage({
                 )}
             </dl>
 
-            <ResultView result={data.result} locale={i18n.language} />
+            <ResultView
+                companyId={companyId}
+                result={data.result}
+                locale={i18n.language}
+            />
 
             <SnapshotDialog
                 companyId={companyId}

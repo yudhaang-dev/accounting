@@ -149,6 +149,14 @@ describe('direct cash flow', () => {
             await screen.findByText('Mutasi yang belum diklasifikasikan'),
         ).toBeInTheDocument();
         expect(screen.getByText(/Beban Gaji/)).toHaveTextContent('payroll');
+        // The account opens its ledger over the dates of the report (X-FR-02 drill-down).
+        const link = screen.getByRole('link', {
+            name: 'Lihat buku besar akun 5100',
+        });
+
+        expect(link.getAttribute('href')).toMatch(
+            /\/reports\/general-ledger\?account_id=a1&from=\d{4}-01-01&to=/,
+        );
         expect(
             screen.getByText('Arus kas tidak cocok dengan saldo kas'),
         ).toBeInTheDocument();
