@@ -2268,6 +2268,31 @@ export const en: Widen<typeof id> = {
         conflict:
             'Someone else changed the classification. It was reloaded; check it and save again.',
     },
+    reportImport: {
+        button: 'Import template',
+        title: 'Import report definition template',
+        intro:
+            'A template is only a suggestion. Read each definition, pick the ones you want, and confirm before they are created.',
+        noChartAccess:
+            'You cannot read the chart of accounts, so the template account codes are not checked here. The server still refuses the import when a code is missing.',
+        template: 'Template',
+        count: '{{count}} definitions',
+        review: 'Review the definitions',
+        rows: 'Rows',
+        columns: 'Columns',
+        taken: 'Already exists',
+        missingBadge: '{{count}} accounts missing',
+        missingTitle: 'Template accounts missing from the chart of accounts',
+        missingDescription:
+            'These definitions name account codes that the chart of accounts of the company does not have, so their reports would miss accounts. Add the accounts or untick those definitions.',
+        missingItem: '{{definition}}: account {{code}}',
+        noTemplates: 'There are no report definition templates yet.',
+        confirm:
+            'I have read these definitions and want to create them for this company.',
+        action: 'Import {{count}} definitions',
+        working: 'Importing…',
+        done: 'The report definitions were imported.',
+    },
     generalLedger: {
         pageTitle: 'General ledger',
         title: 'General ledger',

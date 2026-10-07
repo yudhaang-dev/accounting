@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { FileTextIcon } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form-alert';
 import { Badge } from '@/components/ui/badge';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
     Empty,
     EmptyDescription,
@@ -23,6 +24,7 @@ import {
 } from '@/components/ui/table';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { genericErrorMessage } from '@/lib/errors';
+import { ReportTemplateImportDialog } from '@/modules/reporting/components/template-import-dialog';
 import { classificationsQuery } from '@/modules/reporting/classifications';
 import { reportDefinitionsQuery } from '@/modules/reporting/report-definitions';
 
@@ -30,13 +32,16 @@ import { reportDefinitionsQuery } from '@/modules/reporting/report-definitions';
 export function ReportsPage({
     companyId,
     canManage,
+    canReadAccounts,
 }: {
     companyId: string;
     canManage: boolean;
+    canReadAccounts: boolean;
 }) {
     const { t } = useTranslation();
     const definitions = useQuery(reportDefinitionsQuery(companyId));
     const classifications = useQuery(classificationsQuery(companyId));
+    const [importing, setImporting] = useState(false);
 
     useDocumentTitle(t('reports.pageTitle'));
 
@@ -52,13 +57,23 @@ export function ReportsPage({
                     </p>
                 </div>
                 {canManage && (
-                    <Link
-                        to="/w/$companyId/reports/new"
-                        params={{ companyId }}
-                        className={buttonVariants()}
-                    >
-                        {t('definitionEditor.newButton')}
-                    </Link>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setImporting(true)}
+                        >
+                            {t('reportImport.button')}
+                        </Button>
+                    {canManage && (
+                        <Link
+                            to="/w/$companyId/reports/new"
+                            params={{ companyId }}
+                            className={buttonVariants()}
+                        >
+                            {t('definitionEditor.newButton')}
+                        </Link>
+                    )}
+                    </div>
                 )}
             </div>
 
@@ -230,6 +245,17 @@ export function ReportsPage({
                         </div>
                     </section>
                 )}
+            {canManage && (
+                <ReportTemplateImportDialog
+                    companyId={companyId}
+                    existingKeys={(definitions.data ?? []).map(
+                        (definition) => definition.key,
+                    )}
+                    canReadAccounts={canReadAccounts}
+                    open={importing}
+                    onOpenChange={setImporting}
+                />
+            )}
         </>
     );
 }

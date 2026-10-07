@@ -2262,6 +2262,31 @@ export const id = {
         conflict:
             'Klasifikasi diubah orang lain. Data dimuat ulang; periksa lalu simpan lagi.',
     },
+    reportImport: {
+        button: 'Impor template',
+        title: 'Impor template definisi laporan',
+        intro:
+            'Template hanyalah saran. Baca setiap definisi, pilih yang Anda mau, lalu konfirmasi sebelum dibuat.',
+        noChartAccess:
+            'Anda tidak bisa membaca bagan akun, jadi kode akun template tidak diperiksa di sini. Server tetap menolak impor bila ada kode yang tidak ada.',
+        template: 'Template',
+        count: '{{count}} definisi',
+        review: 'Tinjau definisi',
+        rows: 'Baris',
+        columns: 'Kolom',
+        taken: 'Sudah ada',
+        missingBadge: '{{count}} akun tidak ada',
+        missingTitle: 'Akun template tidak ada di bagan akun',
+        missingDescription:
+            'Definisi berikut menyebut kode akun yang tidak ada di bagan akun perusahaan, sehingga laporannya akan kehilangan akun. Tambahkan akunnya atau lepas pilihan definisi itu.',
+        missingItem: '{{definition}}: akun {{code}}',
+        noTemplates: 'Belum ada template definisi laporan.',
+        confirm:
+            'Saya sudah membaca definisi ini dan ingin membuatnya untuk perusahaan ini.',
+        action: 'Impor {{count}} definisi',
+        working: 'Mengimpor…',
+        done: 'Definisi laporan diimpor.',
+    },
     generalLedger: {
         pageTitle: 'Buku besar',
         title: 'Buku besar',

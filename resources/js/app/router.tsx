@@ -1210,6 +1210,7 @@ const reportsRoute = createRoute({
             <ReportsPage
                 companyId={workspace.company_id}
                 canManage={can(workspace, 'report-definitions.manage')}
+                canReadAccounts={can(workspace, 'accounts.read')}
             />
         );
     },
