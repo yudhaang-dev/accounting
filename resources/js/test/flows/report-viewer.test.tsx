@@ -233,7 +233,9 @@ describe('report viewer', () => {
         ).toBeInTheDocument();
         expect(within(alert).getByText(/selisih 10,00/)).toBeInTheDocument();
 
-        const call = api.called(`GET ${base}/report-definitions/${defId}/result`)[0];
+        const call = api.called(
+            `GET ${base}/report-definitions/${defId}/result`,
+        )[0];
 
         expect(call?.query.as_of).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         expect(call?.query.from).toBeUndefined();
@@ -296,5 +298,111 @@ describe('report viewer', () => {
         expect(router.state.location.pathname).toBe(
             `/w/${workspace.company_id}`,
         );
+    });
+});
+
+describe('plan comparison', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    const withPlan = (rows: unknown[], planAvailable = true) =>
+        routes(
+            result({
+                columns: [
+                    column('actual', 'Realisasi'),
+                    column('plan', 'Rencana', {
+                        kind: 'plan',
+                        available: planAvailable,
+                        coverage_status: planAvailable
+                            ? 'complete'
+                            : 'unavailable',
+                    }),
+                    column('gap', 'Selisih', {
+                        kind: 'difference',
+                        from: null,
+                        to: null,
+                    }),
+                ],
+                rows,
+            }),
+            {
+                structure: {
+                    columns: [{ kind: 'period' }, { kind: 'plan' }],
+                },
+            },
+        );
+
+    it('shows the percentage and the favorable direction of each variance (RP-AC-04)', async () => {
+        mockApi(
+            withPlan([
+                {
+                    key: 'cost',
+                    label: 'Biaya',
+                    type: 'accounts',
+                    values: { actual: '80.00', plan: '100.00', gap: '-20.00' },
+                    variances: {
+                        gap: { percentage: '-20.00', favorable: true },
+                    },
+                },
+                {
+                    key: 'sales',
+                    label: 'Penjualan',
+                    type: 'accounts',
+                    values: { actual: '80.00', plan: '100.00', gap: '-20.00' },
+                    variances: {
+                        gap: { percentage: '-20.00', favorable: false },
+                    },
+                },
+                {
+                    key: 'new',
+                    label: 'Baru',
+                    type: 'accounts',
+                    values: { actual: '5.00', plan: '0.00', gap: '5.00' },
+                    variances: { gap: { percentage: null, favorable: null } },
+                },
+            ]),
+        );
+
+        renderApp(viewPath);
+
+        const cost = (await screen.findByText('Biaya')).closest(
+            'tr',
+        ) as HTMLElement;
+        const sales = screen.getByText('Penjualan').closest('tr');
+        const fresh = screen.getByText('Baru').closest('tr') as HTMLElement;
+
+        expect(within(cost).getByText('-20,00%')).toBeInTheDocument();
+        expect(within(cost).getByText('Menguntungkan')).toBeInTheDocument();
+        expect(
+            within(sales as HTMLElement).getByText('Tidak menguntungkan'),
+        ).toBeInTheDocument();
+        // A zero plan has no percentage and a zero difference no direction.
+        expect(within(fresh).getByText('—')).toBeInTheDocument();
+        expect(within(fresh).queryByText(/menguntungkan/i)).toBeNull();
+    });
+
+    it('explains a plan column without a version instead of showing zeros', async () => {
+        mockApi(
+            withPlan(
+                [
+                    {
+                        key: 'cost',
+                        label: 'Biaya',
+                        type: 'accounts',
+                        values: { actual: '80.00', plan: null, gap: null },
+                        variances: {
+                            gap: { percentage: null, favorable: null },
+                        },
+                    },
+                ],
+                false,
+            ),
+        );
+
+        renderApp(viewPath);
+
+        expect(
+            await screen.findByText('Rencana tidak tersedia (Rencana)'),
+        ).toBeInTheDocument();
+        expect(screen.queryByText('0,00')).not.toBeInTheDocument();
     });
 });

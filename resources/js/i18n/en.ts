@@ -2085,6 +2085,13 @@ export const en: Widen<typeof id> = {
             range: 'Data is available from {{from}} to {{to}}. Columns outside it are left empty, not zero.',
             none: 'The ledger cannot answer for this range yet.',
         },
+        variance: {
+            favorable: 'Favorable',
+            unfavorable: 'Unfavorable',
+            planUnavailableTitle: 'Plan unavailable ({{column}})',
+            planUnavailable:
+                'No published plan version covers this range. Pick a plan version under more filters or set the default version of the fiscal year.',
+        },
         balanceChecks: {
             balanced: 'Assets equal liabilities and equity',
             unbalancedTitle: 'Balance sheet does not balance ({{column}})',

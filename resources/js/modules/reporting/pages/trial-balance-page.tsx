@@ -32,7 +32,10 @@ import { formatDecimal, isPositive } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
 import { ReportFilterBar } from '@/modules/reporting/components/report-filter-bar';
-import { emptyFilter, type ReportFilter } from '@/modules/reporting/report-filter';
+import {
+    emptyFilter,
+    type ReportFilter,
+} from '@/modules/reporting/report-filter';
 import {
     exportTrialBalance,
     trialBalanceQuery,

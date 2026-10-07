@@ -2078,6 +2078,13 @@ export const id = {
             range: 'Data tersedia dari {{from}} sampai {{to}}. Kolom di luar cakupan ini tidak diisi, bukan nol.',
             none: 'Buku besar belum dapat menjawab untuk rentang ini.',
         },
+        variance: {
+            favorable: 'Menguntungkan',
+            unfavorable: 'Tidak menguntungkan',
+            planUnavailableTitle: 'Rencana tidak tersedia ({{column}})',
+            planUnavailable:
+                'Belum ada versi rencana yang terbit untuk rentang ini. Pilih versi rencana pada filter lainnya atau tetapkan versi bawaan tahun buku.',
+        },
         balanceChecks: {
             balanced: 'Aset sama dengan liabilitas dan ekuitas',
             unbalancedTitle: 'Neraca tidak seimbang ({{column}})',

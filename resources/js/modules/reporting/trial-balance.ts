@@ -2,7 +2,10 @@ import { queryOptions } from '@tanstack/react-query';
 import { api, unwrap } from '@/api/client';
 import type { operations } from '@/api/schema';
 import { downloadFile } from '@/lib/download';
-import { filterParams, type ReportFilter } from '@/modules/reporting/report-filter';
+import {
+    filterParams,
+    type ReportFilter,
+} from '@/modules/reporting/report-filter';
 
 type Body =
     operations['reports.trial-balance']['responses'][200]['content']['application/json'];

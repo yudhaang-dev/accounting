@@ -9,7 +9,11 @@ import {
     renderApp,
     workspace,
 } from '@/test/harness';
-import { filterParams, validateFilter, emptyFilter } from '@/modules/reporting/report-filter';
+import {
+    filterParams,
+    validateFilter,
+    emptyFilter,
+} from '@/modules/reporting/report-filter';
 
 const base = `/api/v1/companies/${workspace.company_id}`;
 const tbPath = `/w/${workspace.company_id}/reports/trial-balance`;
@@ -53,7 +57,12 @@ const routes = () => ({
     [`GET ${base}/dimension-types`]: () =>
         json(
             page([
-                { id: branch, key: 'branch', label: 'Cabang', status: 'active' },
+                {
+                    id: branch,
+                    key: 'branch',
+                    label: 'Cabang',
+                    status: 'active',
+                },
                 {
                     id: '01JDIMTYPE000000000000002A',
                     key: 'project',
@@ -113,8 +122,12 @@ describe('report filter', () => {
         await typist.click(
             screen.getByRole('button', { name: /Filter lainnya/ }),
         );
-        await typist.click(await screen.findByRole('checkbox', { name: 'Penjualan' }));
-        await typist.click(screen.getByRole('checkbox', { name: 'Jurnal umum' }));
+        await typist.click(
+            await screen.findByRole('checkbox', { name: 'Penjualan' }),
+        );
+        await typist.click(
+            screen.getByRole('checkbox', { name: 'Jurnal umum' }),
+        );
         await typist.click(screen.getByLabelText('Cabang'));
         await typist.click(await screen.findByText('JKT · Jakarta'));
         await typist.click(screen.getByLabelText('Sumber posting'));
@@ -164,7 +177,10 @@ describe('filter params', () => {
     });
 
     it('uses a single date in as-of mode', () => {
-        const params = filterParams({ ...filter, as_of: '2026-03-31' }, 'as_of');
+        const params = filterParams(
+            { ...filter, as_of: '2026-03-31' },
+            'as_of',
+        );
 
         expect(params.get('as_of')).toBe('2026-03-31');
         expect(params.has('from')).toBe(false);

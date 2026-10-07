@@ -5,7 +5,11 @@ import { fetchAll } from '@/lib/fetch-all';
 
 export type JournalSource = components['schemas']['JournalSource'];
 
-export const JOURNAL_SOURCES: JournalSource[] = ['entry', 'subledger', 'system'];
+export const JOURNAL_SOURCES: JournalSource[] = [
+    'entry',
+    'subledger',
+    'system',
+];
 
 /** The filters every report shares (RP-FR-04). Empty means "do not narrow". */
 export type ReportFilter = {
@@ -148,15 +152,12 @@ export const filterOptionsQuery = (companyId: string, enabled: boolean) =>
                     ),
                     fetchAll((page) =>
                         unwrap(
-                            api.GET(
-                                '/companies/{companyId}/dimension-values',
-                                {
-                                    params: {
-                                        path: { companyId },
-                                        query: { per_page: 200, page },
-                                    },
+                            api.GET('/companies/{companyId}/dimension-values', {
+                                params: {
+                                    path: { companyId },
+                                    query: { per_page: 200, page },
                                 },
-                            ),
+                            }),
                         ),
                     ),
                     unwrap(

@@ -1,21 +1,21 @@
-import { queryOptions } from "@tanstack/react-query";
-import { api, unwrap } from "@/api/client";
-import type { components, operations } from "@/api/schema";
-import { fetchAll } from "@/lib/fetch-all";
+import { queryOptions } from '@tanstack/react-query';
+import { api, unwrap } from '@/api/client';
+import type { components, operations } from '@/api/schema';
+import { fetchAll } from '@/lib/fetch-all';
 import {
     filterParams,
     type ReportFilter,
-} from "@/modules/reporting/report-filter";
+} from '@/modules/reporting/report-filter';
 
 export type ReportDefinition =
-    components["schemas"]["ReportDefinitionResource"];
+    components['schemas']['ReportDefinitionResource'];
 
 type Result =
-    operations["report-definitions.result"]["responses"][200]["content"]["application/json"]["data"];
+    operations['report-definitions.result']['responses'][200]['content']['application/json']['data'];
 
-export type CoverageStatus = "complete" | "partial" | "unavailable";
+export type CoverageStatus = 'complete' | 'partial' | 'unavailable';
 
-export type ReportColumn = Result["columns"][number] & {
+export type ReportColumn = Result['columns'][number] & {
     coverage_status: CoverageStatus;
     plan_version_id?: string | null;
 };
@@ -35,9 +35,9 @@ export type CashCheck = {
 };
 
 /** The result of a definition. The generated type leaves out the checks, variances and coverage. */
-export type ReportResult = Omit<Result, "columns" | "rows"> & {
+export type ReportResult = Omit<Result, 'columns' | 'rows'> & {
     columns: ReportColumn[];
-    rows: (Result["rows"][number] & {
+    rows: (Result['rows'][number] & {
         variances?: Record<
             string,
             { percentage: string | null; favorable: boolean | null }
@@ -45,7 +45,7 @@ export type ReportResult = Omit<Result, "columns" | "rows"> & {
     })[];
     coverage_from: string | null;
     coverage_to: string | null;
-    coverage_granularity: "transactions" | "period_summary";
+    coverage_granularity: 'transactions' | 'period_summary';
     coverage_status: CoverageStatus;
     balance_checks?: Record<string, BalanceCheck>;
     cash_checks?: Record<string, CashCheck>;
@@ -53,9 +53,9 @@ export type ReportResult = Omit<Result, "columns" | "rows"> & {
 
 /** A balance sheet reads one date; every other kind reads a range. */
 export const dateModeOf = (definition: ReportDefinition) =>
-    definition.kind === "balance_sheet"
-        ? ("as_of" as const)
-        : ("range" as const);
+    definition.kind === 'balance_sheet'
+        ? ('as_of' as const)
+        : ('range' as const);
 
 /** Whether the structure has a `plan` column, so the viewer offers a plan version. */
 export const comparesWithPlan = (definition: ReportDefinition): boolean => {
@@ -63,17 +63,17 @@ export const comparesWithPlan = (definition: ReportDefinition): boolean => {
 
     return (
         Array.isArray(columns) &&
-        columns.some((column) => (column as { kind?: string }).kind === "plan")
+        columns.some((column) => (column as { kind?: string }).kind === 'plan')
     );
 };
 
 export const reportDefinitionsQuery = (companyId: string) =>
     queryOptions({
-        queryKey: ["companies", companyId, "report-definitions", "list"],
+        queryKey: ['companies', companyId, 'report-definitions', 'list'],
         queryFn: async (): Promise<ReportDefinition[]> =>
             fetchAll((page) =>
                 unwrap(
-                    api.GET("/companies/{companyId}/report-definitions", {
+                    api.GET('/companies/{companyId}/report-definitions', {
                         params: {
                             path: { companyId },
                             query: { per_page: 200, page },
@@ -85,11 +85,11 @@ export const reportDefinitionsQuery = (companyId: string) =>
 
 export const reportDefinitionQuery = (companyId: string, id: string) =>
     queryOptions({
-        queryKey: ["companies", companyId, "report-definitions", id],
+        queryKey: ['companies', companyId, 'report-definitions', id],
         queryFn: async (): Promise<ReportDefinition> =>
             (
                 await unwrap(
-                    api.GET("/companies/{companyId}/report-definitions/{id}", {
+                    api.GET('/companies/{companyId}/report-definitions/{id}', {
                         params: { path: { companyId, id } },
                     }),
                 )
@@ -100,15 +100,15 @@ export const reportResultQuery = (
     companyId: string,
     id: string,
     filter: ReportFilter,
-    mode: "range" | "as_of",
+    mode: 'range' | 'as_of',
 ) =>
     queryOptions({
         queryKey: [
-            "companies",
+            'companies',
             companyId,
-            "report-definitions",
+            'report-definitions',
             id,
-            "result",
+            'result',
             mode,
             filter,
         ],
@@ -116,7 +116,7 @@ export const reportResultQuery = (
             (
                 (await unwrap(
                     api.GET(
-                        "/companies/{companyId}/report-definitions/{id}/result",
+                        '/companies/{companyId}/report-definitions/{id}/result',
                         {
                             params: { path: { companyId, id } },
                             // The generated query type cannot express `dimensions[<key>]`.

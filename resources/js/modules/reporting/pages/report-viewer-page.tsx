@@ -1,11 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { AlertTriangleIcon, CheckIcon } from "lucide-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { FormAlert } from "@/components/form-alert";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangleIcon, CheckIcon } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { FormAlert } from '@/components/form-alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -13,13 +13,13 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { useDocumentTitle } from "@/hooks/use-document-title";
-import { formatIsoDate, todayIso } from "@/lib/date";
-import { formatDecimal } from "@/lib/decimal";
-import { genericErrorMessage } from "@/lib/errors";
-import { isApiError } from "@/lib/http";
-import { ReportFilterBar } from "@/modules/reporting/components/report-filter-bar";
+} from '@/components/ui/table';
+import { useDocumentTitle } from '@/hooks/use-document-title';
+import { formatIsoDate, todayIso } from '@/lib/date';
+import { formatDecimal } from '@/lib/decimal';
+import { genericErrorMessage } from '@/lib/errors';
+import { isApiError } from '@/lib/http';
+import { ReportFilterBar } from '@/modules/reporting/components/report-filter-bar';
 import {
     comparesWithPlan,
     dateModeOf,
@@ -27,17 +27,17 @@ import {
     type ReportDefinition,
     reportResultQuery,
     type ReportResult,
-} from "@/modules/reporting/report-definitions";
+} from '@/modules/reporting/report-definitions';
 import {
     emptyFilter,
     type ReportFilter,
-} from "@/modules/reporting/report-filter";
+} from '@/modules/reporting/report-filter';
 
-const initialFilter = (mode: "range" | "as_of"): ReportFilter => ({
+const initialFilter = (mode: 'range' | 'as_of'): ReportFilter => ({
     ...emptyFilter(),
     from: `${new Date().getFullYear()}-01-01`,
     to: todayIso(),
-    as_of: mode === "as_of" ? todayIso() : "",
+    as_of: mode === 'as_of' ? todayIso() : '',
 });
 
 /**
@@ -55,7 +55,7 @@ export function ReportViewerPage({
     const { t } = useTranslation();
     const definition = useQuery(reportDefinitionQuery(companyId, definitionId));
 
-    useDocumentTitle(definition.data?.name ?? t("reports.pageTitle"));
+    useDocumentTitle(definition.data?.name ?? t('reports.pageTitle'));
 
     if (definition.isError) {
         return (
@@ -101,7 +101,7 @@ function Viewer({
                     </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                    {t("reports.versionOf", {
+                    {t('reports.versionOf', {
                         version: definition.current_version,
                     })}
                 </p>
@@ -142,44 +142,59 @@ function ResultView({
     const { t } = useTranslation();
     const money = (value: string | null | undefined) =>
         value === null || value === undefined
-            ? "—"
+            ? '—'
             : formatDecimal(value, locale);
 
     return (
         <div className="flex flex-col gap-3">
             <div className="text-sm text-muted-foreground">
-                {t("reports.currency", {
+                {t('reports.currency', {
                     currency: result.functional_currency,
                 })}
             </div>
 
             {result.restricted && (
                 <Alert role="status">
-                    <AlertTitle>{t("reports.restrictedTitle")}</AlertTitle>
+                    <AlertTitle>{t('reports.restrictedTitle')}</AlertTitle>
                     <AlertDescription>
-                        {t("reports.restricted")}
+                        {t('reports.restricted')}
                     </AlertDescription>
                 </Alert>
             )}
 
-            {result.coverage_status !== "complete" && (
+            {result.coverage_status !== 'complete' && (
                 <Alert role="status">
                     <AlertTitle>
                         {t(`reports.coverage.${result.coverage_status}`)}
                     </AlertTitle>
                     <AlertDescription>
                         {result.coverage_from && result.coverage_to
-                            ? t("reports.coverage.range", {
+                            ? t('reports.coverage.range', {
                                   from: formatIsoDate(
                                       result.coverage_from,
                                       locale,
                                   ),
                                   to: formatIsoDate(result.coverage_to, locale),
                               })
-                            : t("reports.coverage.none")}
+                            : t('reports.coverage.none')}
                     </AlertDescription>
                 </Alert>
             )}
+
+            {result.columns
+                .filter((column) => column.kind === 'plan' && !column.available)
+                .map((column) => (
+                    <Alert key={column.key} role="status">
+                        <AlertTitle>
+                            {t('reports.variance.planUnavailableTitle', {
+                                column: column.label,
+                            })}
+                        </AlertTitle>
+                        <AlertDescription>
+                            {t('reports.variance.planUnavailable')}
+                        </AlertDescription>
+                    </Alert>
+                ))}
 
             <Checks result={result} money={money} />
 
@@ -187,7 +202,7 @@ function ResultView({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>{t("reports.row")}</TableHead>
+                            <TableHead>{t('reports.row')}</TableHead>
                             {result.columns.map((column) => (
                                 <TableHead
                                     key={column.key}
@@ -207,14 +222,14 @@ function ResultView({
                                         ) : null
                                     ) : (
                                         <Badge variant="outline">
-                                            {t("reports.unavailable")}
+                                            {t('reports.unavailable')}
                                         </Badge>
                                     )}
                                     {column.available &&
                                         column.coverage_status ===
-                                            "partial" && (
+                                            'partial' && (
                                             <Badge variant="outline">
-                                                {t("reports.partial")}
+                                                {t('reports.partial')}
                                             </Badge>
                                         )}
                                 </TableHead>
@@ -227,16 +242,16 @@ function ResultView({
                                 key={row.key}
                                 data-row-type={row.type}
                                 className={
-                                    row.type === "unmapped"
-                                        ? "bg-muted/50"
+                                    row.type === 'unmapped'
+                                        ? 'bg-muted/50'
                                         : undefined
                                 }
                             >
                                 <TableCell
                                     className={
-                                        row.type === "heading" ||
-                                        row.type === "subtotal"
-                                            ? "font-semibold"
+                                        row.type === 'heading' ||
+                                        row.type === 'subtotal'
+                                            ? 'font-semibold'
                                             : undefined
                                     }
                                 >
@@ -245,11 +260,23 @@ function ResultView({
                                 {result.columns.map((column) => (
                                     <TableCell
                                         key={column.key}
-                                        className={`text-end tabular-nums ${row.type === "subtotal" ? "font-semibold" : ""}`}
+                                        className={`text-end tabular-nums ${row.type === 'subtotal' ? 'font-semibold' : ''}`}
                                     >
-                                        {row.type === "heading"
-                                            ? ""
-                                            : money(row.values[column.key])}
+                                        {row.type === 'heading' ? (
+                                            ''
+                                        ) : (
+                                            <>
+                                                {money(row.values[column.key])}
+                                                <Variance
+                                                    variance={
+                                                        row.variances?.[
+                                                            column.key
+                                                        ]
+                                                    }
+                                                    locale={locale}
+                                                />
+                                            </>
+                                        )}
                                     </TableCell>
                                 ))}
                             </TableRow>
@@ -261,21 +288,62 @@ function ResultView({
             {result.unmapped_accounts.length > 0 && (
                 <Alert role="status">
                     <AlertTriangleIcon />
-                    <AlertTitle>{t("reports.unmappedTitle")}</AlertTitle>
+                    <AlertTitle>{t('reports.unmappedTitle')}</AlertTitle>
                     <AlertDescription>
-                        <p>{t("reports.unmappedDescription")}</p>
+                        <p>{t('reports.unmappedDescription')}</p>
                         <ul className="mt-1 list-inside list-disc">
                             {result.unmapped_accounts.map((account) => (
                                 <li key={account.account_id}>
                                     <span className="font-mono text-xs">
                                         {account.code}
-                                    </span>{" "}
+                                    </span>{' '}
                                     {account.name}
                                 </li>
                             ))}
                         </ul>
                     </AlertDescription>
                 </Alert>
+            )}
+        </div>
+    );
+}
+
+/**
+ * How far a difference column is from its plan (RP-FR-12): the percentage of the absolute plan, and
+ * whether the direction is favorable for the row. A zero plan has no percentage, a zero difference no
+ * direction.
+ */
+function Variance({
+    variance,
+    locale,
+}: {
+    variance:
+        { percentage: string | null; favorable: boolean | null } | undefined;
+    locale: string;
+}) {
+    const { t } = useTranslation();
+
+    if (!variance) {
+        return null;
+    }
+
+    return (
+        <div className="flex items-center justify-end gap-1 text-xs font-normal text-muted-foreground">
+            <span>
+                {variance.percentage === null
+                    ? '—'
+                    : `${formatDecimal(variance.percentage, locale)}%`}
+            </span>
+            {variance.favorable !== null && (
+                <Badge
+                    variant={variance.favorable ? 'secondary' : 'destructive'}
+                >
+                    {t(
+                        variance.favorable
+                            ? 'reports.variance.favorable'
+                            : 'reports.variance.unfavorable',
+                    )}
+                </Badge>
             )}
         </div>
     );
@@ -300,7 +368,7 @@ function Checks({
                     <div key={key} className="flex items-center gap-2 text-sm">
                         <Badge variant="secondary">
                             <CheckIcon data-icon="inline-start" />
-                            {t("reports.balanceChecks.balanced")}
+                            {t('reports.balanceChecks.balanced')}
                         </Badge>
                         <span className="text-muted-foreground">
                             {label(key)}
@@ -309,12 +377,12 @@ function Checks({
                 ) : (
                     <Alert key={key} variant="destructive" role="alert">
                         <AlertTitle>
-                            {t("reports.balanceChecks.unbalancedTitle", {
+                            {t('reports.balanceChecks.unbalancedTitle', {
                                 column: label(key),
                             })}
                         </AlertTitle>
                         <AlertDescription>
-                            {t("reports.balanceChecks.unbalanced", {
+                            {t('reports.balanceChecks.unbalanced', {
                                 assets: money(check.assets),
                                 other: money(check.liabilities_and_equity),
                                 difference: money(check.difference),
@@ -328,7 +396,7 @@ function Checks({
                     <div key={key} className="flex items-center gap-2 text-sm">
                         <Badge variant="secondary">
                             <CheckIcon data-icon="inline-start" />
-                            {t("reports.cashChecks.reconciled")}
+                            {t('reports.cashChecks.reconciled')}
                         </Badge>
                         <span className="text-muted-foreground">
                             {label(key)}
@@ -337,12 +405,12 @@ function Checks({
                 ) : (
                     <Alert key={key} variant="destructive" role="alert">
                         <AlertTitle>
-                            {t("reports.cashChecks.unreconciledTitle", {
+                            {t('reports.cashChecks.unreconciledTitle', {
                                 column: label(key),
                             })}
                         </AlertTitle>
                         <AlertDescription>
-                            {t("reports.cashChecks.unreconciled", {
+                            {t('reports.cashChecks.unreconciled', {
                                 opening: money(check.opening_balance),
                                 increase: money(check.net_increase),
                                 closing: money(check.closing_balance),
