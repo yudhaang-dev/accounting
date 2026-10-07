@@ -136,11 +136,7 @@ function MappingForm({
             });
             // The cash flow answers differently once the mapping changed.
             await queryClient.invalidateQueries({
-                queryKey: [
-                    'companies',
-                    companyId,
-                    'movement-classifications',
-                ],
+                queryKey: ['companies', companyId, 'movement-classifications'],
             });
             toast.success(t('cashEquivalents.saved'));
         },
@@ -190,7 +186,9 @@ function MappingForm({
 
             {problems.length > 0 && (
                 <Alert variant="destructive" role="alert">
-                    <AlertTitle>{t('cashEquivalents.problemsTitle')}</AlertTitle>
+                    <AlertTitle>
+                        {t('cashEquivalents.problemsTitle')}
+                    </AlertTitle>
                     <AlertDescription>
                         <ul className="list-inside list-disc">
                             {problems.map(([id, messages]) => (
@@ -258,7 +256,10 @@ function MappingForm({
             {canManage && (
                 <>
                     <Field className="w-56">
-                        <FieldLabel id="ce-effective-label" htmlFor="ce-effective">
+                        <FieldLabel
+                            id="ce-effective-label"
+                            htmlFor="ce-effective"
+                        >
                             {t('cashEquivalents.effective')}
                         </FieldLabel>
                         <DatePicker

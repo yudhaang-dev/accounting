@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { AlertTriangleIcon, CheckIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form-alert';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
@@ -49,9 +51,11 @@ const initialFilter = (mode: 'range' | 'as_of'): ReportFilter => ({
 export function ReportViewerPage({
     companyId,
     definitionId,
+    canManage,
 }: {
     companyId: string;
     definitionId: string;
+    canManage: boolean;
 }) {
     const { t } = useTranslation();
     const definition = useQuery(reportDefinitionQuery(companyId, definitionId));
@@ -68,16 +72,24 @@ export function ReportViewerPage({
         return <Skeleton className="h-64 w-full" />;
     }
 
-    return <Viewer companyId={companyId} definition={definition.data} />;
+    return (
+        <Viewer
+            companyId={companyId}
+            definition={definition.data}
+            canManage={canManage}
+        />
+    );
 }
 
 // Mounted once the definition is known, so the filter starts in the date mode of its kind.
 function Viewer({
     companyId,
     definition,
+    canManage,
 }: {
     companyId: string;
     definition: ReportDefinition;
+    canManage: boolean;
 }) {
     const { t, i18n } = useTranslation();
     const mode = dateModeOf(definition);
@@ -90,22 +102,33 @@ function Viewer({
 
     return (
         <>
-            <div className="flex flex-col gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-xl font-semibold tracking-tight">
-                        {definition.name}
-                    </h1>
-                    <Badge variant="secondary">
-                        {t(`reports.kinds.${definition.kind}`, {
-                            defaultValue: definition.kind,
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <h1 className="text-xl font-semibold tracking-tight">
+                            {definition.name}
+                        </h1>
+                        <Badge variant="secondary">
+                            {t(`reports.kinds.${definition.kind}`, {
+                                defaultValue: definition.kind,
+                            })}
+                        </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                        {t('reports.versionOf', {
+                            version: definition.current_version,
                         })}
-                    </Badge>
+                    </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                    {t('reports.versionOf', {
-                        version: definition.current_version,
-                    })}
-                </p>
+                {canManage && (
+                    <Link
+                        to="/w/$companyId/reports/$definitionId/edit"
+                        params={{ companyId, definitionId: definition.id }}
+                        className={buttonVariants({ variant: 'outline' })}
+                    >
+                        {t('definitionEditor.edit')}
+                    </Link>
+                )}
             </div>
 
             <ReportFilterBar

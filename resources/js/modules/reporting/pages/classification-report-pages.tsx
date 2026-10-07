@@ -425,7 +425,9 @@ function EquityResult({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>{t('classifications.equity.component')}</TableHead>
+                            <TableHead>
+                                {t('classifications.equity.component')}
+                            </TableHead>
                             <TableHead className="text-end">
                                 {t('classifications.equity.opening')}
                             </TableHead>

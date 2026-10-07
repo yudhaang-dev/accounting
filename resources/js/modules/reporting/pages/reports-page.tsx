@@ -4,6 +4,7 @@ import { FileTextIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form-alert';
 import { Badge } from '@/components/ui/badge';
+import { buttonVariants } from '@/components/ui/button';
 import {
     Empty,
     EmptyDescription,
@@ -26,7 +27,13 @@ import { classificationsQuery } from '@/modules/reporting/classifications';
 import { reportDefinitionsQuery } from '@/modules/reporting/report-definitions';
 
 /** The report definitions of the company; each opens in the viewer (RP-FR-01). */
-export function ReportsPage({ companyId }: { companyId: string }) {
+export function ReportsPage({
+    companyId,
+    canManage,
+}: {
+    companyId: string;
+    canManage: boolean;
+}) {
     const { t } = useTranslation();
     const definitions = useQuery(reportDefinitionsQuery(companyId));
     const classifications = useQuery(classificationsQuery(companyId));
@@ -35,13 +42,24 @@ export function ReportsPage({ companyId }: { companyId: string }) {
 
     return (
         <>
-            <div className="flex flex-col gap-1">
-                <h1 className="text-xl font-semibold tracking-tight">
-                    {t('reports.title')}
-                </h1>
-                <p className="max-w-2xl text-sm text-muted-foreground">
-                    {t('reports.description')}
-                </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-xl font-semibold tracking-tight">
+                        {t('reports.title')}
+                    </h1>
+                    <p className="max-w-2xl text-sm text-muted-foreground">
+                        {t('reports.description')}
+                    </p>
+                </div>
+                {canManage && (
+                    <Link
+                        to="/w/$companyId/reports/new"
+                        params={{ companyId }}
+                        className={buttonVariants()}
+                    >
+                        {t('definitionEditor.newButton')}
+                    </Link>
+                )}
             </div>
 
             {definitions.isError ? (
@@ -137,7 +155,9 @@ export function ReportsPage({ companyId }: { companyId: string }) {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>{t('reports.name')}</TableHead>
+                                        <TableHead>
+                                            {t('reports.name')}
+                                        </TableHead>
                                         <TableHead>
                                             {t('classifications.reports')}
                                         </TableHead>

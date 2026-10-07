@@ -33,6 +33,7 @@ import {
     JournalsPage,
     type JournalSearch,
 } from '@/modules/general-ledger/pages/journals-page';
+import { DefinitionEditorPage } from '@/modules/reporting/pages/definition-editor-page';
 import { CashEquivalentsPage } from '@/modules/reporting/pages/cash-equivalents-page';
 import {
     CashFlowPage,
@@ -1203,7 +1204,66 @@ const reportsRoute = createRoute({
     component: function ReportsScreen() {
         const { workspace } = reportsRoute.useRouteContext();
 
-        return <ReportsPage companyId={workspace.company_id} />;
+        return (
+            <ReportsPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'report-definitions.manage')}
+            />
+        );
+    },
+});
+
+const newReportRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/new',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navReports', href: at(m, '/reports') },
+            { labelKey: 'breadcrumb.new', href: at(m, '/reports/new') },
+        ],
+    },
+    beforeLoad: requirePermission('report-definitions.manage'),
+    component: function NewReportScreen() {
+        const { workspace } = newReportRoute.useRouteContext();
+
+        return <DefinitionEditorPage companyId={workspace.company_id} />;
+    },
+});
+
+const editReportRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/$definitionId/edit',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navReports', href: at(m, '/reports') },
+            {
+                label: nameOf(m),
+                href: at(m, `/reports/${m.params.definitionId}`),
+            },
+            {
+                labelKey: 'breadcrumb.edit',
+                href: at(m, `/reports/${m.params.definitionId}/edit`),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('report-definitions.manage'),
+    loader: ({ context, params }) =>
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                reportDefinitionQuery(params.companyId, params.definitionId),
+            ),
+        ),
+    notFoundComponent: RecordNotFound,
+    component: function EditReportScreen() {
+        const { workspace } = editReportRoute.useRouteContext();
+        const { definitionId } = editReportRoute.useParams();
+
+        return (
+            <DefinitionEditorPage
+                companyId={workspace.company_id}
+                definitionId={definitionId}
+            />
+        );
     },
 });
 
@@ -1235,6 +1295,7 @@ const reportRoute = createRoute({
             <ReportViewerPage
                 companyId={workspace.company_id}
                 definitionId={definitionId}
+                canManage={can(workspace, 'report-definitions.manage')}
             />
         );
     },
@@ -1660,7 +1721,9 @@ const routeTree = rootRoute.addChildren([
                 journalsRoute,
                 journalRoute,
                 reportsRoute,
+                newReportRoute,
                 reportRoute,
+                editReportRoute,
                 trialBalanceRoute,
                 generalLedgerRoute,
                 cashEquivalentsRoute,
