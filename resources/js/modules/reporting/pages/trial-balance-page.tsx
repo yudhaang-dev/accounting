@@ -1,8 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { DatePicker } from '@/components/date-picker';
 import { Link } from '@tanstack/react-router';
 import { CheckIcon, DownloadIcon, FileSpreadsheetIcon } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { FormAlert } from '@/components/form-alert';
@@ -16,7 +15,6 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from '@/components/ui/empty';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import {
@@ -33,13 +31,15 @@ import { todayIso } from '@/lib/date';
 import { formatDecimal, isPositive } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
+import { ReportFilterBar } from '@/modules/reporting/components/report-filter-bar';
+import { emptyFilter, type ReportFilter } from '@/modules/reporting/report-filter';
 import {
     exportTrialBalance,
     trialBalanceQuery,
-    type Range,
 } from '@/modules/reporting/trial-balance';
 
-const defaultRange = (): Range => ({
+const defaultFilter = (): ReportFilter => ({
+    ...emptyFilter(),
     from: `${new Date().getFullYear()}-01-01`,
     to: todayIso(),
 });
@@ -59,16 +59,14 @@ const COLUMNS = [
  */
 export function TrialBalancePage({ companyId }: { companyId: string }) {
     const { t, i18n } = useTranslation();
-    const [draft, setDraft] = useState<Range>(defaultRange);
-    const [range, setRange] = useState<Range>(defaultRange);
-    const [rangeError, setRangeError] = useState<string | null>(null);
+    const [filter, setFilter] = useState<ReportFilter>(defaultFilter);
 
     useDocumentTitle(t('trialBalance.pageTitle'));
 
-    const report = useQuery(trialBalanceQuery(companyId, range));
+    const report = useQuery(trialBalanceQuery(companyId, filter));
 
     const download = useMutation({
-        mutationFn: () => exportTrialBalance(companyId, range),
+        mutationFn: () => exportTrialBalance(companyId, filter),
         onError: (error) =>
             toast.error(
                 isApiError(error) && error.status !== 0
@@ -76,25 +74,6 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                     : t('trialBalance.exportFailed'),
             ),
     });
-
-    const show = (event: FormEvent) => {
-        event.preventDefault();
-
-        if (!draft.from || !draft.to) {
-            setRangeError(t('common.required'));
-
-            return;
-        }
-
-        if (draft.from > draft.to) {
-            setRangeError(t('trialBalance.rangeInvalid'));
-
-            return;
-        }
-
-        setRangeError(null);
-        setRange(draft);
-    };
 
     const money = (value: string) =>
         isPositive(value) ? formatDecimal(value, i18n.language) : '';
@@ -127,48 +106,11 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                 </Button>
             </div>
 
-            <form
-                noValidate
-                onSubmit={show}
-                className="flex flex-wrap items-end gap-3"
-            >
-                <Field
-                    className="w-56"
-                    data-invalid={rangeError ? true : undefined}
-                >
-                    <FieldLabel id="tb-from-label" htmlFor="tb-from">
-                        {t('trialBalance.from')}
-                    </FieldLabel>
-                    <DatePicker
-                        id="tb-from"
-                        labelledBy="tb-from-label"
-                        value={draft.from}
-                        aria-invalid={rangeError ? true : undefined}
-                        onChange={(value) =>
-                            setDraft({ ...draft, from: value })
-                        }
-                    />
-                </Field>
-                <Field
-                    className="w-56"
-                    data-invalid={rangeError ? true : undefined}
-                >
-                    <FieldLabel id="tb-to-label" htmlFor="tb-to">
-                        {t('trialBalance.to')}
-                    </FieldLabel>
-                    <DatePicker
-                        id="tb-to"
-                        labelledBy="tb-to-label"
-                        value={draft.to}
-                        aria-invalid={rangeError ? true : undefined}
-                        onChange={(value) => setDraft({ ...draft, to: value })}
-                    />
-                </Field>
-                <Button type="submit">{t('trialBalance.show')}</Button>
-                {rangeError && (
-                    <FieldError className="basis-full">{rangeError}</FieldError>
-                )}
-            </form>
+            <ReportFilterBar
+                companyId={companyId}
+                value={filter}
+                onApply={setFilter}
+            />
 
             {report.isError ? (
                 <FormAlert>
@@ -279,8 +221,8 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                                                     search={{
                                                         account_id:
                                                             row.account_id,
-                                                        from: range.from,
-                                                        to: range.to,
+                                                        from: filter.from,
+                                                        to: filter.to,
                                                     }}
                                                     aria-label={t(
                                                         'trialBalance.drill',
