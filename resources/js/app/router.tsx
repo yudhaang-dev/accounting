@@ -33,6 +33,7 @@ import {
     JournalsPage,
     type JournalSearch,
 } from '@/modules/general-ledger/pages/journals-page';
+import { CashEquivalentsPage } from '@/modules/reporting/pages/cash-equivalents-page';
 import {
     CashFlowPage,
     EquityChangesPage,
@@ -1366,6 +1367,31 @@ const equityChangesRoute = createRoute({
     },
 });
 
+const cashEquivalentsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/cash-equivalents',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navReports', href: at(m, '/reports') },
+            {
+                labelKey: 'cashEquivalents.title',
+                href: at(m, '/reports/cash-equivalents'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('reports.read'),
+    component: function CashEquivalentsScreen() {
+        const { workspace } = cashEquivalentsRoute.useRouteContext();
+
+        return (
+            <CashEquivalentsPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'report-definitions.manage')}
+            />
+        );
+    },
+});
+
 const agingRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/reports/aging',
@@ -1637,6 +1663,7 @@ const routeTree = rootRoute.addChildren([
                 reportRoute,
                 trialBalanceRoute,
                 generalLedgerRoute,
+                cashEquivalentsRoute,
                 cashFlowRoute,
                 equityChangesRoute,
                 agingRoute,

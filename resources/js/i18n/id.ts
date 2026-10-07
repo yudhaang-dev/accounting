@@ -2089,6 +2089,28 @@ export const id = {
                 'Komponen {{components}}, buku besar {{ledger}}, selisih {{difference}}.',
         },
     },
+    cashEquivalents: {
+        pageTitle: 'Kas dan setara kas',
+        title: 'Kas dan setara kas',
+        link: 'Atur akun kas dan setara kas untuk arus kas',
+        fix: 'Perbaiki pemetaan kas dan setara kas',
+        description:
+            'Akun aset yang dihitung sebagai kas dan setara kas oleh laporan arus kas. Setiap perubahan menjadi versi baru pemetaan.',
+        noneTitle: 'Belum dipetakan',
+        none: 'Arus kas tidak bisa dijalankan sebelum akun kas dan setara kas dipilih.',
+        current: 'Versi {{version}}, {{count}} akun.',
+        since: 'Berlaku sejak {{date}}.',
+        problemsTitle: 'Akun yang tidak lagi memenuhi syarat',
+        accounts: 'Akun kas dan setara kas',
+        filter: 'Cari kode atau nama akun',
+        effective: 'Berlaku mulai',
+        effectiveHint:
+            'Kosongkan untuk berlaku mulai hari ini; pemetaan pertama berlaku untuk semua tanggal.',
+        save: 'Simpan pemetaan',
+        saved: 'Pemetaan kas dan setara kas disimpan.',
+        conflict:
+            'Pemetaan sudah diubah orang lain. Data dimuat ulang; periksa lalu simpan lagi.',
+    },
     generalLedger: {
         pageTitle: 'Buku besar',
         title: 'Buku besar',

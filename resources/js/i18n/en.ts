@@ -2096,6 +2096,28 @@ export const en: Widen<typeof id> = {
                 'Components {{components}}, ledger {{ledger}}, difference {{difference}}.',
         },
     },
+    cashEquivalents: {
+        pageTitle: 'Cash and cash equivalents',
+        title: 'Cash and cash equivalents',
+        link: 'Set the cash and cash equivalents accounts for the cash flow',
+        fix: 'Fix the cash and cash equivalents mapping',
+        description:
+            'The asset accounts the cash flow report counts as cash and cash equivalents. Every change becomes a new version of the mapping.',
+        noneTitle: 'Not mapped yet',
+        none: 'The cash flow cannot run until the cash and cash equivalents accounts are picked.',
+        current: 'Version {{version}}, {{count}} accounts.',
+        since: 'In force since {{date}}.',
+        problemsTitle: 'Accounts that no longer qualify',
+        accounts: 'Cash and cash equivalents accounts',
+        filter: 'Search by account code or name',
+        effective: 'In force from',
+        effectiveHint:
+            'Leave empty to start today; the first mapping applies to all dates.',
+        save: 'Save mapping',
+        saved: 'The cash and cash equivalents mapping was saved.',
+        conflict:
+            'Someone else changed the mapping. It was reloaded; check it and save again.',
+    },
     generalLedger: {
         pageTitle: 'General ledger',
         title: 'General ledger',

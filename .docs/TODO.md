@@ -159,7 +159,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
   - [x] **M8-13c** Pembanding rencana: kolom `plan`, versi rencana, tampilan `variances` dan aturan favorable — RP-FR-11, RP-FR-12, RP-AC-04
   - [x] **M8-13d** Neraca saldo yang sudah ada diperluas: mode kertas kerja (`adjustment_keys[]`), penanda batch saldo konversi dan cakupan histori; buku besar per akun dengan saldo berjalan, tautan ke entri, dan ekspor CSV — RP-FR-05, RP-FR-06, RP-AC-11 — melengkapi M1-09f
   - [x] **M8-13e** Arus kas langsung dan perubahan ekuitas: penampil hasil klasifikasi, baris belum diklasifikasikan beserta rinciannya, rekonsiliasi kas, pesan pemetaan `cash_equivalents` belum lengkap — RP-FR-09, RP-FR-10, RP-AC-02, RP-AC-09
-  - [ ] **M8-13f** Pemetaan `cash_equivalents`: tampilan versi berlaku, ubah dengan `lock_version`, masalah kelayakan akun — RP-FR-03, RP-FR-09
+  - [x] **M8-13f** Pemetaan `cash_equivalents`: tampilan versi berlaku, ubah dengan `lock_version`, masalah kelayakan akun — RP-FR-03, RP-FR-09
   - [ ] **M8-13g** Editor definisi laporan: baris (judul, kumpulan akun, subtotal, `current_year_earnings`, `cash_equivalents`), kolom, dasar nilai, versi baru saat struktur berubah, pesan validasi per baris — RP-FR-01, RP-FR-02, RP-AC-07
   - [ ] **M8-13h** Editor klasifikasi mutasi: baris, aturan per akun dan key Jenis Transaksi, komponen ekuitas — RP-FR-03, RP-FR-10
   - [ ] **M8-13i** Impor template definisi laporan: tinjau definisi, konfirmasi, pesan kode akun yang hilang dari bagan akun — RP-FR-01, X-AC-03 — melengkapi M8-12

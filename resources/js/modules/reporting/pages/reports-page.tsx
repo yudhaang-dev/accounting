@@ -114,6 +114,16 @@ export function ReportsPage({ companyId }: { companyId: string }) {
                 </div>
             )}
 
+            <p className="text-sm">
+                <Link
+                    to="/w/$companyId/reports/cash-equivalents"
+                    params={{ companyId }}
+                    className="underline underline-offset-4"
+                >
+                    {t('cashEquivalents.link')}
+                </Link>
+            </p>
+
             {classifications.data !== undefined &&
                 classifications.data.length > 0 && (
                     <section className="flex flex-col gap-2">

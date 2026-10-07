@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { AlertTriangleIcon, CheckIcon } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -226,7 +227,20 @@ function CashFlowResult({
     const money = (value: string) => formatDecimal(value, i18n.language);
 
     if (report.isError) {
-        return <ErrorView error={report.error} />;
+        return (
+            <>
+                <ErrorView error={report.error} />
+                {isApiError(report.error) && report.error.status === 422 && (
+                    <Link
+                        to="/w/$companyId/reports/cash-equivalents"
+                        params={{ companyId }}
+                        className="text-sm underline underline-offset-4"
+                    >
+                        {t('cashEquivalents.fix')}
+                    </Link>
+                )}
+            </>
+        );
     }
 
     if (report.data === undefined) {
@@ -250,6 +264,13 @@ function CashFlowResult({
                         {t('classifications.mappingProblemsTitle')}
                     </AlertTitle>
                     <AlertDescription>
+                        <Link
+                            to="/w/$companyId/reports/cash-equivalents"
+                            params={{ companyId }}
+                            className="mb-1 block underline underline-offset-4"
+                        >
+                            {t('cashEquivalents.fix')}
+                        </Link>
                         <ul className="list-inside list-disc">
                             {problems.map(([accountId, messages]) => (
                                 <li key={accountId}>
