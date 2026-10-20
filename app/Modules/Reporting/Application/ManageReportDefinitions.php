@@ -25,7 +25,7 @@ final class ManageReportDefinitions
     ) {}
 
     /**
-     * @param  array<string, mixed>  $data  key, name, kind, structure
+     * @param  array<string, mixed>  $data  key, name, kind, structure, publish_on_period_close, publish_on_year_close
      *
      * @throws ValidationException
      */
@@ -40,11 +40,13 @@ final class ManageReportDefinitions
                 'name' => $data['name'],
                 'kind' => $data['kind'] ?? ReportStructure::CUSTOM,
                 'current_version' => 1,
+                'publish_on_period_close' => (bool) ($data['publish_on_period_close'] ?? false),
+                'publish_on_year_close' => (bool) ($data['publish_on_year_close'] ?? false),
             ])->refresh();
 
             $this->addVersion($definition, 1, $structure, $actorId);
 
-            $this->audit->record('report_definition.created', "Report definition {$definition->name} created.", $definition, after: $definition->only(['key', 'name', 'kind']), companyId: $definition->company_id);
+            $this->audit->record('report_definition.created', "Report definition {$definition->name} created.", $definition, after: $definition->only(['key', 'name', 'kind', 'publish_on_period_close', 'publish_on_year_close']), companyId: $definition->company_id);
 
             return $definition;
         }));
@@ -54,7 +56,7 @@ final class ManageReportDefinitions
      * Renames the definition and, when `structure` is given and differs from the current one, adds
      * the next version.
      *
-     * @param  array<string, mixed>  $data  any of name, structure
+     * @param  array<string, mixed>  $data  any of name, structure, publish_on_period_close, publish_on_year_close
      *
      * @throws ApiException VERSION_CONFLICT
      * @throws ValidationException
@@ -71,6 +73,12 @@ final class ManageReportDefinitions
                 $changes['name'] = $data['name'];
             }
 
+            foreach (['publish_on_period_close', 'publish_on_year_close'] as $flag) {
+                if (isset($data[$flag]) && (bool) $data[$flag] !== $definition->{$flag}) {
+                    $changes[$flag] = (bool) $data[$flag];
+                }
+            }
+
             $current = ReportDefinitionVersion::query()->where('definition_id', $definition->id)->where('version', $definition->current_version)->firstOrFail();
             $next = $structure !== null && $structure != $current->structure ? $definition->current_version + 1 : null;
 
@@ -78,7 +86,7 @@ final class ManageReportDefinitions
                 $changes['current_version'] = $next;
             }
 
-            $before = ['name' => $definition->name, 'version' => $definition->current_version];
+            $before = ['name' => $definition->name, 'version' => $definition->current_version, 'publish_on_period_close' => $definition->publish_on_period_close, 'publish_on_year_close' => $definition->publish_on_year_close];
             $definition->updateLocked($changes, $expectedVersion);
 
             if ($next !== null) {
@@ -86,7 +94,7 @@ final class ManageReportDefinitions
             }
 
             if ($changes !== []) {
-                $this->audit->record('report_definition.updated', "Report definition {$definition->name} updated.", $definition, before: $before, after: ['name' => $definition->name, 'version' => $definition->current_version], companyId: $definition->company_id);
+                $this->audit->record('report_definition.updated', "Report definition {$definition->name} updated.", $definition, before: $before, after: ['name' => $definition->name, 'version' => $definition->current_version, 'publish_on_period_close' => $definition->publish_on_period_close, 'publish_on_year_close' => $definition->publish_on_year_close], companyId: $definition->company_id);
             }
 
             return $definition->refresh();

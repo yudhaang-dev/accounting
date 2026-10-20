@@ -1,17 +1,17 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import { en } from './en';
-import { id } from './id';
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+import { en } from "./en";
+import { id } from "./id";
 
-export const LOCALES = ['id', 'en'] as const;
+export const LOCALES = ["id", "en"] as const;
 export type Locale = (typeof LOCALES)[number];
 
-const STORAGE_KEY = 'locale';
-const DEFAULT_LOCALE: Locale = 'id';
+const STORAGE_KEY = "locale";
+const DEFAULT_LOCALE: Locale = "id";
 
-declare module 'i18next' {
+declare module "i18next" {
     interface CustomTypeOptions {
-        defaultNS: 'translation';
+        defaultNS: "translation";
         resources: { translation: typeof id };
     }
 }

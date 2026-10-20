@@ -15,6 +15,7 @@ use App\Modules\GeneralLedger\Application\EloquentOpeningBalances;
 use App\Modules\GeneralLedger\Application\EloquentPeriodDirectory;
 use App\Modules\GeneralLedger\Application\EloquentPostingService;
 use App\Modules\GeneralLedger\Application\EloquentPostingValidator;
+use App\Modules\GeneralLedger\Application\SetPeriodStatus;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
 use App\Modules\GeneralLedger\Contracts\AccountRoles;
 use App\Modules\GeneralLedger\Contracts\FiscalYearClosing;
@@ -28,6 +29,7 @@ use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
 use App\Support\Currency\CurrencyUsage;
 use App\Support\Currency\ForeignCurrencyRequirements;
+use App\Support\Ledger\ClosingListener;
 use App\Support\Modules\ModuleServiceProvider;
 
 class GeneralLedgerServiceProvider extends ModuleServiceProvider
@@ -43,6 +45,7 @@ class GeneralLedgerServiceProvider extends ModuleServiceProvider
         $this->app->bind(AccountRoles::class, EloquentAccountRoles::class);
         $this->app->bind(CurrencyUsage::class, EloquentCurrencyUsage::class);
         $this->app->bind(ForeignCurrencyRequirements::class, EloquentForeignCurrencyRequirements::class);
+        $this->app->when(SetPeriodStatus::class)->needs('$listeners')->giveTagged(ClosingListener::TAG);
         $this->app->bind(PeriodDirectory::class, EloquentPeriodDirectory::class);
         $this->app->bind(LedgerReader::class, EloquentLedgerReader::class);
         $this->app->bind(JournalDirectory::class, EloquentJournalDirectory::class);

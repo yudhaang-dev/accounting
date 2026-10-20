@@ -3,6 +3,10 @@
 // Messages of report definitions (RP-FR-01, RP-FR-02).
 return [
 
+    'auto_publish_reason' => [
+        'period_close' => 'Published automatically when the period was closed.',
+        'year_close' => 'Published automatically when the fiscal year was closed.',
+    ],
     'snapshot_scope_restricted' => 'A snapshot is read by everyone who may read reports, so a user limited to some dimension values cannot publish one.',
     'key_taken' => 'A report definition with this key already exists.',
     'template_unknown' => 'This report definition template does not exist.',

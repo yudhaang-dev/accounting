@@ -1,24 +1,24 @@
-import { queryOptions } from '@tanstack/react-query';
-import { api, unwrap } from '@/api/client';
-import type { operations } from '@/api/schema';
-import { downloadFile } from '@/lib/download';
-import type { Coverage } from '@/modules/reporting/components/coverage-notice';
+import { queryOptions } from "@tanstack/react-query";
+import { api, unwrap } from "@/api/client";
+import type { operations } from "@/api/schema";
+import { downloadFile } from "@/lib/download";
+import type { Coverage } from "@/modules/reporting/components/coverage-notice";
 import {
     filterParams,
     type ReportFilter,
-} from '@/modules/reporting/report-filter';
+} from "@/modules/reporting/report-filter";
 
 type Body =
-    operations['reports.general-ledger']['responses'][200]['content']['application/json'];
+    operations["reports.general-ledger"]["responses"][200]["content"]["application/json"];
 
 /** The generated type leaves out the coverage fields of the report (RP-FR-13). */
-export type GeneralLedger = Body['data'] & Coverage;
-export type GeneralLedgerLine = GeneralLedger['lines'][number];
+export type GeneralLedger = Body["data"] & Coverage;
+export type GeneralLedgerLine = GeneralLedger["lines"][number];
 
 const params = (accountId: string, filter: ReportFilter) => {
-    const query = filterParams(filter, 'range');
+    const query = filterParams(filter, "range");
 
-    query.set('account_id', accountId);
+    query.set("account_id", accountId);
 
     return query;
 };
@@ -31,17 +31,17 @@ export const generalLedgerQuery = (
 ) =>
     queryOptions({
         queryKey: [
-            'companies',
+            "companies",
             companyId,
-            'reports',
-            'general-ledger',
+            "reports",
+            "general-ledger",
             accountId,
             filter,
         ],
         queryFn: async (): Promise<GeneralLedger> =>
             (
                 await unwrap(
-                    api.GET('/companies/{companyId}/reports/general-ledger', {
+                    api.GET("/companies/{companyId}/reports/general-ledger", {
                         params: {
                             path: { companyId },
                             query: {
@@ -67,7 +67,7 @@ export function exportGeneralLedger(
 ) {
     return downloadFile(
         `/api/v1/companies/${companyId}/reports/general-ledger?${params(accountId, filter)}`,
-        'text/csv',
+        "text/csv",
         `general-ledger_${code}_${filter.from}_${filter.to}.csv`,
     );
 }

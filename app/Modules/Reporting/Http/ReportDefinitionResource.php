@@ -24,7 +24,7 @@ class ReportDefinitionResource extends JsonResource
     }
 
     /**
-     * @return array{id: string, key: string, name: string, kind: string, current_version: int, lock_version: int, version: int|null, structure: array<string, mixed>|null}
+     * @return array{id: string, key: string, name: string, kind: string, current_version: int, publish_on_period_close: bool, publish_on_year_close: bool, lock_version: int, version: int|null, structure: array<string, mixed>|null}
      */
     public function toArray(Request $request): array
     {
@@ -34,6 +34,8 @@ class ReportDefinitionResource extends JsonResource
             'name' => $this->resource->name,
             'kind' => $this->resource->kind,
             'current_version' => $this->resource->current_version,
+            'publish_on_period_close' => $this->resource->publish_on_period_close,
+            'publish_on_year_close' => $this->resource->publish_on_year_close,
             'lock_version' => $this->resource->lock_version,
             'version' => $this->version?->version,
             'structure' => $this->version?->structure,

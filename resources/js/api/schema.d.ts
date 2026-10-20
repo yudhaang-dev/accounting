@@ -4541,6 +4541,8 @@ export interface components {
             name: string;
             kind: string;
             current_version: number;
+            publish_on_period_close: boolean;
+            publish_on_year_close: boolean;
             lock_version: number;
             version: number;
             structure: {
@@ -4615,6 +4617,8 @@ export interface components {
             key: string;
             name: string;
             kind?: string;
+            publish_on_period_close?: boolean;
+            publish_on_year_close?: boolean;
             structure: {
                 basis?: string;
                 rows?: string[];

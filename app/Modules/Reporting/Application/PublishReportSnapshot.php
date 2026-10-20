@@ -32,10 +32,11 @@ final class PublishReportSnapshot
     /**
      * @param  array<string, mixed>  $params  validated report parameters; `from`..`to`, or `as_of` for both
      * @param  int|null  $version  the version of the definition to run, the current one when null
+     * @param  int|null  $actorId  null when the system publishes, on closing a period or year
      *
      * @throws ApiException FORBIDDEN for a user with a data scope
      */
-    public function __invoke(string $companyId, string $definitionId, array $params, DataScope $scope, int $actorId, ?int $version = null, ?string $reason = null, ?string $recomputedFromId = null): ReportSnapshot
+    public function __invoke(string $companyId, string $definitionId, array $params, DataScope $scope, ?int $actorId, ?int $version = null, ?string $reason = null, ?string $recomputedFromId = null): ReportSnapshot
     {
         if ($scope->isRestricted()) {
             throw new ApiException(ErrorCode::Forbidden, (string) __('reports.snapshot_scope_restricted'));

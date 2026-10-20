@@ -1,10 +1,10 @@
-import { useMutation } from '@tanstack/react-query';
-import { DownloadIcon } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
-import { isApiError } from '@/lib/http';
+import { useMutation } from "@tanstack/react-query";
+import { DownloadIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { isApiError } from "@/lib/http";
 
 /** Downloads a report as CSV under the same permission and filters as the screen (X-FR-02). */
 export function ExportButton({
@@ -21,7 +21,7 @@ export function ExportButton({
             toast.error(
                 isApiError(error) && error.status !== 0
                     ? error.message
-                    : t('reports.exportFailed'),
+                    : t("reports.exportFailed"),
             ),
     });
 
@@ -37,7 +37,7 @@ export function ExportButton({
             ) : (
                 <DownloadIcon data-icon="inline-start" />
             )}
-            {download.isPending ? t('reports.exporting') : t('reports.export')}
+            {download.isPending ? t("reports.exporting") : t("reports.export")}
         </Button>
     );
 }

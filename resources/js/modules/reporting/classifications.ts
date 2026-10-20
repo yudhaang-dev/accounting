@@ -1,33 +1,33 @@
-import { queryOptions } from '@tanstack/react-query';
-import { api, unwrap } from '@/api/client';
-import type { components, operations } from '@/api/schema';
-import { downloadFile } from '@/lib/download';
-import type { Coverage } from '@/modules/reporting/components/coverage-notice';
+import { queryOptions } from "@tanstack/react-query";
+import { api, unwrap } from "@/api/client";
+import type { components, operations } from "@/api/schema";
+import { downloadFile } from "@/lib/download";
+import type { Coverage } from "@/modules/reporting/components/coverage-notice";
 import {
     filterParams,
     type ReportFilter,
-} from '@/modules/reporting/report-filter';
+} from "@/modules/reporting/report-filter";
 
 export type MovementClassification =
-    components['schemas']['MovementClassificationResource'];
+    components["schemas"]["MovementClassificationResource"];
 
 type CashFlowBody =
-    operations['movement-classifications.cash-flow']['responses'][200]['content']['application/json']['data'];
+    operations["movement-classifications.cash-flow"]["responses"][200]["content"]["application/json"]["data"];
 type EquityBody =
-    operations['movement-classifications.equity-changes']['responses'][200]['content']['application/json']['data'];
+    operations["movement-classifications.equity-changes"]["responses"][200]["content"]["application/json"]["data"];
 
 /** The generated types leave out the coverage fields of the reports (RP-FR-13). */
 export type CashFlow = CashFlowBody & Coverage;
 export type EquityChanges = EquityBody & Coverage;
-export type Unclassified = CashFlow['unclassified'][number];
+export type Unclassified = CashFlow["unclassified"][number];
 
 export const classificationsQuery = (companyId: string) =>
     queryOptions({
-        queryKey: ['companies', companyId, 'movement-classifications', 'list'],
+        queryKey: ["companies", companyId, "movement-classifications", "list"],
         queryFn: async (): Promise<MovementClassification[]> =>
             (
                 await unwrap(
-                    api.GET('/companies/{companyId}/movement-classifications', {
+                    api.GET("/companies/{companyId}/movement-classifications", {
                         params: {
                             path: { companyId },
                             query: { per_page: 200 },
@@ -39,12 +39,12 @@ export const classificationsQuery = (companyId: string) =>
 
 export const classificationQuery = (companyId: string, id: string) =>
     queryOptions({
-        queryKey: ['companies', companyId, 'movement-classifications', id],
+        queryKey: ["companies", companyId, "movement-classifications", id],
         queryFn: async (): Promise<MovementClassification> =>
             (
                 await unwrap(
                     api.GET(
-                        '/companies/{companyId}/movement-classifications/{id}',
+                        "/companies/{companyId}/movement-classifications/{id}",
                         { params: { path: { companyId, id } } },
                     ),
                 )
@@ -64,18 +64,18 @@ export const cashFlowQuery = (
 ) =>
     queryOptions({
         queryKey: [
-            'companies',
+            "companies",
             companyId,
-            'movement-classifications',
+            "movement-classifications",
             id,
-            'cash-flow',
+            "cash-flow",
             filter,
         ],
         queryFn: async (): Promise<CashFlow> =>
             (
                 await unwrap(
                     api.GET(
-                        '/companies/{companyId}/movement-classifications/{id}/cash-flow',
+                        "/companies/{companyId}/movement-classifications/{id}/cash-flow",
                         {
                             params: {
                                 path: { companyId, id },
@@ -83,7 +83,7 @@ export const cashFlowQuery = (
                             },
                             // The generated query type cannot express `dimensions[<key>]`.
                             querySerializer: () =>
-                                filterParams(filter, 'range').toString(),
+                                filterParams(filter, "range").toString(),
                         },
                     ),
                 )
@@ -98,25 +98,25 @@ export const equityChangesQuery = (
 ) =>
     queryOptions({
         queryKey: [
-            'companies',
+            "companies",
             companyId,
-            'movement-classifications',
+            "movement-classifications",
             id,
-            'equity-changes',
+            "equity-changes",
             filter,
         ],
         queryFn: async (): Promise<EquityChanges> =>
             (
                 await unwrap(
                     api.GET(
-                        '/companies/{companyId}/movement-classifications/{id}/equity-changes',
+                        "/companies/{companyId}/movement-classifications/{id}/equity-changes",
                         {
                             params: {
                                 path: { companyId, id },
                                 query: query(filter),
                             },
                             querySerializer: () =>
-                                filterParams(filter, 'range').toString(),
+                                filterParams(filter, "range").toString(),
                         },
                     ),
                 )
@@ -127,12 +127,12 @@ export const equityChangesQuery = (
 export function exportClassificationReport(
     companyId: string,
     classification: { id: string; key: string },
-    report: 'cash-flow' | 'equity-changes',
+    report: "cash-flow" | "equity-changes",
     filter: ReportFilter,
 ) {
     return downloadFile(
-        `/api/v1/companies/${companyId}/movement-classifications/${classification.id}/${report}?${filterParams(filter, 'range')}`,
-        'text/csv',
+        `/api/v1/companies/${companyId}/movement-classifications/${classification.id}/${report}?${filterParams(filter, "range")}`,
+        "text/csv",
         `${report}_${classification.key}_${filter.from}_${filter.to}.csv`,
     );
 }

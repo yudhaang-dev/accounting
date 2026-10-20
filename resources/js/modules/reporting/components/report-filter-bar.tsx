@@ -1,18 +1,18 @@
-import { useQuery } from '@tanstack/react-query';
-import { ChevronDownIcon } from 'lucide-react';
-import { useState, type FormEvent, type ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
-import { DatePicker } from '@/components/date-picker';
-import { FormAlert } from '@/components/form-alert';
-import { SearchableSelect } from '@/components/searchable-select';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useQuery } from "@tanstack/react-query";
+import { ChevronDownIcon } from "lucide-react";
+import { useState, type FormEvent, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { DatePicker } from "@/components/date-picker";
+import { FormAlert } from "@/components/form-alert";
+import { SearchableSelect } from "@/components/searchable-select";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+} from "@/components/ui/collapsible";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import {
     JOURNAL_SOURCES,
     filterOptionsQuery,
@@ -20,7 +20,7 @@ import {
     validateFilter,
     type DateMode,
     type ReportFilter,
-} from '@/modules/reporting/report-filter';
+} from "@/modules/reporting/report-filter";
 
 type Props = {
     companyId: string;
@@ -48,7 +48,7 @@ export function ReportFilterBar({
     companyId,
     value,
     onApply,
-    dateMode = 'range',
+    dateMode = "range",
     withPlanVersion = false,
     withWorkpaper = false,
     children,
@@ -79,7 +79,7 @@ export function ReportFilterBar({
     };
 
     const toggle = (
-        field: 'transaction_type_keys' | 'adjustment_keys',
+        field: "transaction_type_keys" | "adjustment_keys",
         key: string,
         checked: boolean,
     ) =>
@@ -90,7 +90,7 @@ export function ReportFilterBar({
                 : draft[field].filter((k) => k !== key),
         });
 
-    const dateField = (field: 'from' | 'to' | 'as_of') => (
+    const dateField = (field: "from" | "to" | "as_of") => (
         <Field
             key={field}
             className="w-56"
@@ -113,35 +113,35 @@ export function ReportFilterBar({
     return (
         <form noValidate onSubmit={show} className="flex flex-col gap-3">
             <div className="flex flex-wrap items-start gap-3">
-                {dateMode === 'range' ? (
+                {dateMode === "range" ? (
                     <>
-                        {dateField('from')}
-                        {dateField('to')}
+                        {dateField("from")}
+                        {dateField("to")}
                     </>
                 ) : (
-                    dateField('as_of')
+                    dateField("as_of")
                 )}
                 <div className="flex items-center gap-2 self-end">
-                    <Button type="submit">{t('reports.filter.show')}</Button>
+                    <Button type="submit">{t("reports.filter.show")}</Button>
                     {children}
                 </div>
             </div>
 
             <Collapsible open={open} onOpenChange={setOpen}>
                 <CollapsibleTrigger
-                    className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+                    className={buttonVariants({ variant: "ghost", size: "sm" })}
                 >
                     <ChevronDownIcon
                         data-icon="inline-start"
-                        className={open ? 'rotate-180' : undefined}
+                        className={open ? "rotate-180" : undefined}
                     />
-                    {t('reports.filter.more')}
-                    {narrowing && ` · ${t('reports.filter.active')}`}
+                    {t("reports.filter.more")}
+                    {narrowing && ` · ${t("reports.filter.active")}`}
                 </CollapsibleTrigger>
                 <CollapsibleContent className="flex flex-col gap-4 pt-3">
                     {options.isError ? (
                         <FormAlert>
-                            {t('reports.filter.optionsFailed')}
+                            {t("reports.filter.optionsFailed")}
                         </FormAlert>
                     ) : (
                         <>
@@ -160,7 +160,7 @@ export function ReportFilterBar({
                                                 label: `${v.code} · ${v.name}`,
                                             }))}
                                             value={
-                                                draft.dimensions[type.key] ?? ''
+                                                draft.dimensions[type.key] ?? ""
                                             }
                                             onValueChange={(id) =>
                                                 setDraft({
@@ -172,16 +172,16 @@ export function ReportFilterBar({
                                                 })
                                             }
                                             placeholder={t(
-                                                'reports.filter.allValues',
+                                                "reports.filter.allValues",
                                             )}
-                                            emptyText={t('common.noMatch')}
+                                            emptyText={t("common.noMatch")}
                                             clearable
                                         />
                                     </Field>
                                 ))}
                                 <Field className="w-56">
                                     <FieldLabel htmlFor="rf-source">
-                                        {t('reports.filter.source')}
+                                        {t("reports.filter.source")}
                                     </FieldLabel>
                                     <SearchableSelect
                                         id="rf-source"
@@ -198,20 +198,20 @@ export function ReportFilterBar({
                                         onValueChange={(source) =>
                                             setDraft({
                                                 ...draft,
-                                                source: source as ReportFilter['source'],
+                                                source: source as ReportFilter["source"],
                                             })
                                         }
                                         placeholder={t(
-                                            'reports.filter.allSources',
+                                            "reports.filter.allSources",
                                         )}
-                                        emptyText={t('common.noMatch')}
+                                        emptyText={t("common.noMatch")}
                                         clearable
                                     />
                                 </Field>
                                 {withPlanVersion && (
                                     <Field className="w-56">
                                         <FieldLabel htmlFor="rf-plan">
-                                            {t('reports.filter.planVersion')}
+                                            {t("reports.filter.planVersion")}
                                         </FieldLabel>
                                         <SearchableSelect
                                             id="rf-plan"
@@ -229,9 +229,9 @@ export function ReportFilterBar({
                                                 })
                                             }
                                             placeholder={t(
-                                                'reports.filter.defaultPlan',
+                                                "reports.filter.defaultPlan",
                                             )}
-                                            emptyText={t('common.noMatch')}
+                                            emptyText={t("common.noMatch")}
                                             clearable
                                         />
                                     </Field>
@@ -242,14 +242,14 @@ export function ReportFilterBar({
                                 options.data.transactionTypes.length > 0 && (
                                     <KeyChecklist
                                         legend={t(
-                                            'reports.filter.transactionTypes',
+                                            "reports.filter.transactionTypes",
                                         )}
                                         idPrefix="rf-tt"
                                         types={options.data.transactionTypes}
                                         selected={draft.transaction_type_keys}
                                         onToggle={(key, checked) =>
                                             toggle(
-                                                'transaction_type_keys',
+                                                "transaction_type_keys",
                                                 key,
                                                 checked,
                                             )
@@ -261,17 +261,17 @@ export function ReportFilterBar({
                                 options.data.transactionTypes.length > 0 && (
                                     <KeyChecklist
                                         legend={t(
-                                            'reports.filter.adjustmentKeys',
+                                            "reports.filter.adjustmentKeys",
                                         )}
                                         hint={t(
-                                            'reports.filter.adjustmentKeysHint',
+                                            "reports.filter.adjustmentKeysHint",
                                         )}
                                         idPrefix="rf-adj"
                                         types={options.data.transactionTypes}
                                         selected={draft.adjustment_keys}
                                         onToggle={(key, checked) =>
                                             toggle(
-                                                'adjustment_keys',
+                                                "adjustment_keys",
                                                 key,
                                                 checked,
                                             )

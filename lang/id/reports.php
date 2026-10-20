@@ -3,6 +3,10 @@
 // Pesan definisi laporan (RP-FR-01, RP-FR-02).
 return [
 
+    'auto_publish_reason' => [
+        'period_close' => 'Diterbitkan otomatis saat periode ditutup.',
+        'year_close' => 'Diterbitkan otomatis saat tahun buku ditutup.',
+    ],
     'snapshot_scope_restricted' => 'Snapshot dibaca oleh semua yang boleh membaca laporan, sehingga user yang dibatasi pada nilai dimensi tertentu tidak dapat menerbitkannya.',
     'key_taken' => 'Sudah ada definisi laporan dengan kunci ini.',
     'template_unknown' => 'Template definisi laporan ini tidak ada.',

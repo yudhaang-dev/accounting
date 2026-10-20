@@ -1,12 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
-import { AlertTriangleIcon, CheckIcon } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
-import { FormAlert } from '@/components/form-alert';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { AlertTriangleIcon, CheckIcon } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { FormAlert } from "@/components/form-alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     Table,
     TableBody,
@@ -15,27 +15,27 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
-import { useDocumentTitle } from '@/hooks/use-document-title';
-import { todayIso } from '@/lib/date';
-import { formatDecimal } from '@/lib/decimal';
-import { genericErrorMessage } from '@/lib/errors';
-import { isApiError } from '@/lib/http';
+} from "@/components/ui/table";
+import { useDocumentTitle } from "@/hooks/use-document-title";
+import { todayIso } from "@/lib/date";
+import { formatDecimal } from "@/lib/decimal";
+import { genericErrorMessage } from "@/lib/errors";
+import { isApiError } from "@/lib/http";
 import {
     cashFlowQuery,
     classificationQuery,
     equityChangesQuery,
     exportClassificationReport,
     type Unclassified,
-} from '@/modules/reporting/classifications';
-import { CoverageNotice } from '@/modules/reporting/components/coverage-notice';
-import { ExportButton } from '@/modules/reporting/components/export-button';
-import { ReportFilterBar } from '@/modules/reporting/components/report-filter-bar';
+} from "@/modules/reporting/classifications";
+import { CoverageNotice } from "@/modules/reporting/components/coverage-notice";
+import { ExportButton } from "@/modules/reporting/components/export-button";
+import { ReportFilterBar } from "@/modules/reporting/components/report-filter-bar";
 import {
     emptyFilter,
     type ReportFilter,
-} from '@/modules/reporting/report-filter';
-import { accountNamesQuery } from '@/modules/transaction-entry/entries';
+} from "@/modules/reporting/report-filter";
+import { accountNamesQuery } from "@/modules/transaction-entry/entries";
 
 const initialFilter = (): ReportFilter => ({
     ...emptyFilter(),
@@ -54,7 +54,7 @@ function Shell({
 }: {
     companyId: string;
     classificationId: string;
-    report: 'cash-flow' | 'equity-changes';
+    report: "cash-flow" | "equity-changes";
     title: string;
     description: string;
     children: (filter: ReportFilter) => ReactNode;
@@ -76,11 +76,11 @@ function Shell({
                     </h1>
                     <p className="text-sm text-muted-foreground">
                         {classification.data
-                            ? t('classifications.of', {
+                            ? t("classifications.of", {
                                   name: classification.data.name,
                                   version: classification.data.current_version,
                               })
-                            : ' '}
+                            : " "}
                     </p>
                     <p className="max-w-2xl text-sm text-muted-foreground">
                         {description}
@@ -141,9 +141,9 @@ function UnclassifiedNotice({
     return (
         <Alert role="status">
             <AlertTriangleIcon />
-            <AlertTitle>{t('classifications.unclassifiedTitle')}</AlertTitle>
+            <AlertTitle>{t("classifications.unclassifiedTitle")}</AlertTitle>
             <AlertDescription>
-                <p>{t('classifications.unclassifiedDescription')}</p>
+                <p>{t("classifications.unclassifiedDescription")}</p>
                 <ul className="mt-1 list-inside list-disc">
                     {items.map((item) => (
                         <li
@@ -157,17 +157,17 @@ function UnclassifiedNotice({
                                     from: filter.from,
                                     to: filter.to,
                                 }}
-                                aria-label={t('trialBalance.ledger', {
+                                aria-label={t("trialBalance.ledger", {
                                     code: item.code,
                                 })}
                                 className="font-mono text-xs underline underline-offset-4"
                             >
                                 {item.code}
-                            </Link>{' '}
+                            </Link>{" "}
                             {item.name}
-                            {' · '}
+                            {" · "}
                             {item.transaction_type_key ??
-                                t('classifications.noKey')}
+                                t("classifications.noKey")}
                         </li>
                     ))}
                 </ul>
@@ -181,8 +181,8 @@ function Restricted({ restricted }: { restricted: boolean }) {
 
     return restricted ? (
         <Alert role="status">
-            <AlertTitle>{t('reports.restrictedTitle')}</AlertTitle>
-            <AlertDescription>{t('reports.restricted')}</AlertDescription>
+            <AlertTitle>{t("reports.restrictedTitle")}</AlertTitle>
+            <AlertDescription>{t("reports.restricted")}</AlertDescription>
         </Alert>
     ) : null;
 }
@@ -232,8 +232,8 @@ export function CashFlowPage({
             companyId={companyId}
             classificationId={classificationId}
             report="cash-flow"
-            title={t('classifications.cashFlow.title')}
-            description={t('classifications.cashFlow.description')}
+            title={t("classifications.cashFlow.title")}
+            description={t("classifications.cashFlow.description")}
         >
             {(filter) => (
                 <CashFlowResult
@@ -276,7 +276,7 @@ function CashFlowResult({
                         params={{ companyId }}
                         className="text-sm underline underline-offset-4"
                     >
-                        {t('cashEquivalents.fix')}
+                        {t("cashEquivalents.fix")}
                     </Link>
                 )}
             </>
@@ -293,7 +293,7 @@ function CashFlowResult({
     return (
         <div className="flex flex-col gap-3">
             <div className="text-sm text-muted-foreground">
-                {t('reports.currency', { currency: data.functional_currency })}
+                {t("reports.currency", { currency: data.functional_currency })}
             </div>
             <Restricted restricted={data.restricted} />
             <CoverageNotice report={data} />
@@ -301,7 +301,7 @@ function CashFlowResult({
             {problems.length > 0 && (
                 <Alert variant="destructive" role="alert">
                     <AlertTitle>
-                        {t('classifications.mappingProblemsTitle')}
+                        {t("classifications.mappingProblemsTitle")}
                     </AlertTitle>
                     <AlertDescription>
                         <Link
@@ -309,7 +309,7 @@ function CashFlowResult({
                             params={{ companyId }}
                             className="mb-1 block underline underline-offset-4"
                         >
-                            {t('cashEquivalents.fix')}
+                            {t("cashEquivalents.fix")}
                         </Link>
                         <ul className="list-inside list-disc">
                             {problems.map(([accountId, messages]) => (
@@ -317,7 +317,7 @@ function CashFlowResult({
                                     {names.data?.[accountId]
                                         ? `${names.data[accountId].code} ${names.data[accountId].name}`
                                         : accountId}
-                                    : {messages.join(' ')}
+                                    : {messages.join(" ")}
                                 </li>
                             ))}
                         </ul>
@@ -329,15 +329,15 @@ function CashFlowResult({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>{t('reports.row')}</TableHead>
+                            <TableHead>{t("reports.row")}</TableHead>
                             <TableHead className="text-end">
-                                {t('classifications.cashFlow.inflow')}
+                                {t("classifications.cashFlow.inflow")}
                             </TableHead>
                             <TableHead className="text-end">
-                                {t('classifications.cashFlow.outflow')}
+                                {t("classifications.cashFlow.outflow")}
                             </TableHead>
                             <TableHead className="text-end">
-                                {t('classifications.cashFlow.net')}
+                                {t("classifications.cashFlow.net")}
                             </TableHead>
                         </TableRow>
                     </TableHeader>
@@ -360,7 +360,7 @@ function CashFlowResult({
                     <TableFooter>
                         <TableRow>
                             <TableCell colSpan={3} className="font-medium">
-                                {t('classifications.cashFlow.netIncrease')}
+                                {t("classifications.cashFlow.netIncrease")}
                             </TableCell>
                             <TableCell className="text-end font-medium tabular-nums">
                                 {money(data.cash.net_increase)}
@@ -377,25 +377,25 @@ function CashFlowResult({
             />
 
             <dl className="grid max-w-md grid-cols-[1fr_auto] gap-x-6 gap-y-1 text-sm">
-                <dt>{t('classifications.cashFlow.opening')}</dt>
+                <dt>{t("classifications.cashFlow.opening")}</dt>
                 <dd className="text-end tabular-nums">
                     {money(data.cash.opening_balance)}
                 </dd>
-                <dt>{t('classifications.cashFlow.netIncrease')}</dt>
+                <dt>{t("classifications.cashFlow.netIncrease")}</dt>
                 <dd className="text-end tabular-nums">
                     {money(data.cash.net_increase)}
                 </dd>
-                <dt>{t('classifications.cashFlow.closing')}</dt>
+                <dt>{t("classifications.cashFlow.closing")}</dt>
                 <dd className="text-end tabular-nums">
                     {money(data.cash.closing_balance)}
                 </dd>
             </dl>
             <Reconciled
                 ok={data.cash.reconciled}
-                okText={t('classifications.cashFlow.reconciled')}
-                title={t('classifications.cashFlow.unreconciledTitle')}
+                okText={t("classifications.cashFlow.reconciled")}
+                title={t("classifications.cashFlow.unreconciledTitle")}
             >
-                {t('classifications.cashFlow.unreconciled', {
+                {t("classifications.cashFlow.unreconciled", {
                     difference: money(data.cash.difference),
                 })}
             </Reconciled>
@@ -418,8 +418,8 @@ export function EquityChangesPage({
             companyId={companyId}
             classificationId={classificationId}
             report="equity-changes"
-            title={t('classifications.equity.title')}
-            description={t('classifications.equity.description')}
+            title={t("classifications.equity.title")}
+            description={t("classifications.equity.description")}
         >
             {(filter) => (
                 <EquityResult
@@ -446,7 +446,7 @@ function EquityResult({
         equityChangesQuery(companyId, classificationId, filter),
     );
     const money = (value: string | undefined) =>
-        formatDecimal(value ?? '0.00', i18n.language);
+        formatDecimal(value ?? "0.00", i18n.language);
 
     if (report.isError) {
         return <ErrorView error={report.error} />;
@@ -461,7 +461,7 @@ function EquityResult({
     return (
         <div className="flex flex-col gap-3">
             <div className="text-sm text-muted-foreground">
-                {t('reports.currency', { currency: data.functional_currency })}
+                {t("reports.currency", { currency: data.functional_currency })}
             </div>
             <Restricted restricted={data.restricted} />
             <CoverageNotice report={data} />
@@ -471,16 +471,16 @@ function EquityResult({
                     <TableHeader>
                         <TableRow>
                             <TableHead>
-                                {t('classifications.equity.component')}
+                                {t("classifications.equity.component")}
                             </TableHead>
                             <TableHead className="text-end">
-                                {t('classifications.equity.opening')}
+                                {t("classifications.equity.opening")}
                             </TableHead>
                             <TableHead className="text-end">
-                                {t('classifications.equity.movement')}
+                                {t("classifications.equity.movement")}
                             </TableHead>
                             <TableHead className="text-end">
-                                {t('classifications.equity.closing')}
+                                {t("classifications.equity.closing")}
                             </TableHead>
                             <TableHead />
                         </TableRow>
@@ -502,7 +502,7 @@ function EquityResult({
                                     {!component.reconciled && (
                                         <Badge variant="destructive">
                                             {t(
-                                                'classifications.equity.notReconciled',
+                                                "classifications.equity.notReconciled",
                                             )}
                                         </Badge>
                                     )}
@@ -517,7 +517,7 @@ function EquityResult({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>{t('reports.row')}</TableHead>
+                            <TableHead>{t("reports.row")}</TableHead>
                             {data.components.map((component) => (
                                 <TableHead
                                     key={component.key}
@@ -527,7 +527,7 @@ function EquityResult({
                                 </TableHead>
                             ))}
                             <TableHead className="text-end">
-                                {t('classifications.equity.total')}
+                                {t("classifications.equity.total")}
                             </TableHead>
                         </TableRow>
                     </TableHeader>
@@ -560,10 +560,10 @@ function EquityResult({
 
             <Reconciled
                 ok={data.equity.reconciled}
-                okText={t('classifications.equity.reconciled')}
-                title={t('classifications.equity.unreconciledTitle')}
+                okText={t("classifications.equity.reconciled")}
+                title={t("classifications.equity.unreconciledTitle")}
             >
-                {t('classifications.equity.unreconciled', {
+                {t("classifications.equity.unreconciled", {
                     components: money(data.equity.components_total),
                     ledger: money(data.equity.ledger_total),
                     difference: money(data.equity.difference),

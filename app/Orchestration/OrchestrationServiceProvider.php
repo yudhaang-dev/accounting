@@ -5,6 +5,8 @@ namespace App\Orchestration;
 use App\Orchestration\Company\ActivateCompany;
 use App\Orchestration\Company\ChartOfAccountsRequirement;
 use App\Orchestration\Company\FiscalCalendarRequirement;
+use App\Orchestration\Ledger\CloseFiscalYear;
+use App\Support\Ledger\ClosingListener;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,6 +23,8 @@ class OrchestrationServiceProvider extends ServiceProvider
         $this->app->when(ActivateCompany::class)
             ->needs('$requirements')
             ->giveTagged(ActivateCompany::REQUIREMENTS_TAG);
+
+        $this->app->when(CloseFiscalYear::class)->needs('$listeners')->giveTagged(ClosingListener::TAG);
     }
 
     public function boot(): void

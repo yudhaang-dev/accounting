@@ -16,6 +16,8 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $kind
  * @property int $current_version
+ * @property bool $publish_on_period_close
+ * @property bool $publish_on_year_close
  * @property int $lock_version
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -24,9 +26,14 @@ class ReportDefinition extends VersionedCompanyModel
 {
     protected $table = 'rp_report_definitions';
 
-    protected $attributes = ['kind' => 'custom', 'current_version' => 1];
+    protected $attributes = ['kind' => 'custom', 'current_version' => 1, 'publish_on_period_close' => false, 'publish_on_year_close' => false];
 
-    protected $fillable = ['key', 'name', 'kind', 'current_version'];
+    protected $fillable = ['key', 'name', 'kind', 'current_version', 'publish_on_period_close', 'publish_on_year_close'];
+
+    protected function casts(): array
+    {
+        return ['publish_on_period_close' => 'boolean', 'publish_on_year_close' => 'boolean'];
+    }
 
     /** @return HasMany<ReportDefinitionVersion, $this> */
     public function versions(): HasMany

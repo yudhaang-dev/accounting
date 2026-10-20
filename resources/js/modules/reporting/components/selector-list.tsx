@@ -1,18 +1,18 @@
-import { PlusIcon, Trash2Icon } from 'lucide-react';
+import { PlusIcon, Trash2Icon } from "lucide-react";
 import {
     Controller,
     useFieldArray,
     useWatch,
     type Control,
     type FieldValues,
-} from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
-import { SearchableSelect } from '@/components/searchable-select';
-import { Button } from '@/components/ui/button';
-import { FieldError } from '@/components/ui/field';
-import { ACCOUNT_CLASSES } from '@/modules/general-ledger/accounts';
-import { SELECTOR_TYPES } from '@/modules/reporting/definition-form';
-import { OptionSelect } from '@/modules/transaction-entry/components/option-select';
+} from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { SearchableSelect } from "@/components/searchable-select";
+import { Button } from "@/components/ui/button";
+import { FieldError } from "@/components/ui/field";
+import { ACCOUNT_CLASSES } from "@/modules/general-ledger/accounts";
+import { SELECTOR_TYPES } from "@/modules/reporting/definition-form";
+import { OptionSelect } from "@/modules/transaction-entry/components/option-select";
 
 export type SelectorLabels = {
     type: (s: number) => string;
@@ -64,9 +64,9 @@ export function SelectorList({
                 className="self-start"
                 onClick={() =>
                     selectors.append({
-                        type: 'account',
-                        id: '',
-                        class: 'asset',
+                        type: "account",
+                        id: "",
+                        class: "asset",
                     })
                 }
             >
@@ -118,7 +118,7 @@ function SelectorRow({
                     />
                 )}
             />
-            {type === 'class' ? (
+            {type === "class" ? (
                 <Controller
                     control={control}
                     name={`${at}.class`}
@@ -145,8 +145,8 @@ function SelectorRow({
                             value={field.value}
                             onValueChange={field.onChange}
                             className="w-72"
-                            placeholder={t('definitionEditor.pickAccount')}
-                            emptyText={t('common.noMatch')}
+                            placeholder={t("definitionEditor.pickAccount")}
+                            emptyText={t("common.noMatch")}
                             aria-label={labels.account(s)}
                             aria-invalid={message ? true : undefined}
                         />

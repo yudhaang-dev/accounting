@@ -29,6 +29,8 @@ const definition = {
     kind: 'income_statement',
     current_version: 3,
     lock_version: 4,
+    publish_on_period_close: true,
+    publish_on_year_close: false,
     version: 3,
     structure: {
         basis: 'movement',
@@ -128,6 +130,8 @@ describe('report definition editor', () => {
             key: 'income',
             name: 'Laba Rugi',
             kind: 'custom',
+            publish_on_period_close: false,
+            publish_on_year_close: false,
             structure: {
                 basis: 'movement',
                 rows: [
@@ -201,6 +205,47 @@ describe('report definition editor', () => {
             { row: 'sales', sign: 1 },
         ]);
         expect(body.structure.columns[1]?.shift.years).toBe(-1);
+    });
+
+    it('shows when the definition is published automatically and saves the change (RP-FR-14)', async () => {
+        const api = mockApi({
+            ...routes(),
+            [`PUT ${base}/report-definitions/${defId}`]: () =>
+                json({ data: definition }),
+        });
+
+        renderApp(editPath);
+        const typist = userEvent.setup();
+
+        const onPeriod = await screen.findByRole('checkbox', {
+            name: 'Saat periode ditutup',
+        });
+        const onYear = screen.getByRole('checkbox', {
+            name: 'Saat tahun buku ditutup',
+        });
+
+        expect(onPeriod).toBeChecked();
+        expect(onYear).not.toBeChecked();
+
+        await typist.click(onPeriod);
+        await typist.click(onYear);
+        await typist.click(
+            screen.getByRole('button', { name: 'Simpan perubahan' }),
+        );
+
+        await waitFor(() =>
+            expect(
+                api.called(`PUT ${base}/report-definitions/${defId}`),
+            ).toHaveLength(1),
+        );
+
+        expect(
+            api.called(`PUT ${base}/report-definitions/${defId}`)[0]?.body,
+        ).toMatchObject({
+            publish_on_period_close: false,
+            publish_on_year_close: true,
+            lock_version: 4,
+        });
     });
 
     it('puts the server messages on the row they belong to (RP-AC-07)', async () => {

@@ -23621,6 +23621,12 @@
                     "current_version": {
                         "type": "integer"
                     },
+                    "publish_on_period_close": {
+                        "type": "boolean"
+                    },
+                    "publish_on_year_close": {
+                        "type": "boolean"
+                    },
                     "lock_version": {
                         "type": "integer"
                     },
@@ -23638,6 +23644,8 @@
                     "name",
                     "kind",
                     "current_version",
+                    "publish_on_period_close",
+                    "publish_on_year_close",
                     "lock_version",
                     "version",
                     "structure"
@@ -23920,6 +23928,12 @@
                     "kind": {
                         "type": "string",
                         "pattern": "^[a-z][a-z0-9_]{0,31}$"
+                    },
+                    "publish_on_period_close": {
+                        "type": "boolean"
+                    },
+                    "publish_on_year_close": {
+                        "type": "boolean"
                     },
                     "structure": {
                         "type": "object",

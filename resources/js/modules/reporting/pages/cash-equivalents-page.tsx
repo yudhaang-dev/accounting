@@ -1,27 +1,27 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangleIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
-import { DatePicker } from '@/components/date-picker';
-import { FormAlert } from '@/components/form-alert';
-import { SubmitButton } from '@/components/submit-button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useDocumentTitle } from '@/hooks/use-document-title';
-import { formatIsoDate } from '@/lib/date';
-import { actionErrorMessage, genericErrorMessage } from '@/lib/errors';
-import { isApiError } from '@/lib/http';
-import { allAccountsQuery } from '@/modules/general-ledger/accounts';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertTriangleIcon } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { DatePicker } from "@/components/date-picker";
+import { FormAlert } from "@/components/form-alert";
+import { SubmitButton } from "@/components/submit-button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDocumentTitle } from "@/hooks/use-document-title";
+import { formatIsoDate } from "@/lib/date";
+import { actionErrorMessage, genericErrorMessage } from "@/lib/errors";
+import { isApiError } from "@/lib/http";
+import { allAccountsQuery } from "@/modules/general-ledger/accounts";
 import {
     cashEquivalentsKey,
     cashEquivalentsQuery,
     saveCashEquivalents,
     type CashEquivalentsMapping,
-} from '@/modules/reporting/cash-equivalents';
+} from "@/modules/reporting/cash-equivalents";
 
 /**
  * The accounts the cash flow counts as cash and cash equivalents (RP-FR-03, RP-FR-09): the mapping in
@@ -39,16 +39,16 @@ export function CashEquivalentsPage({
     const mapping = useQuery(cashEquivalentsQuery(companyId));
     const accounts = useQuery(allAccountsQuery(companyId));
 
-    useDocumentTitle(t('cashEquivalents.pageTitle'));
+    useDocumentTitle(t("cashEquivalents.pageTitle"));
 
     return (
         <>
             <div className="flex flex-col gap-1">
                 <h1 className="text-xl font-semibold tracking-tight">
-                    {t('cashEquivalents.title')}
+                    {t("cashEquivalents.title")}
                 </h1>
                 <p className="max-w-2xl text-sm text-muted-foreground">
-                    {t('cashEquivalents.description')}
+                    {t("cashEquivalents.description")}
                 </p>
             </div>
 
@@ -93,8 +93,8 @@ function MappingForm({
     const { t, i18n } = useTranslation();
     const queryClient = useQueryClient();
     const [chosen, setChosen] = useState<string[]>(mapping.account_ids);
-    const [effective, setEffective] = useState('');
-    const [filter, setFilter] = useState('');
+    const [effective, setEffective] = useState("");
+    const [filter, setFilter] = useState("");
     const [formError, setFormError] = useState<string | null>(null);
 
     const byId = useMemo(
@@ -105,8 +105,8 @@ function MappingForm({
     const candidates = accounts
         .filter(
             (account) =>
-                (account.class === 'asset' &&
-                    account.status === 'active' &&
+                (account.class === "asset" &&
+                    account.status === "active" &&
                     account.is_leaf) ||
                 mapping.account_ids.includes(account.id),
         )
@@ -136,16 +136,16 @@ function MappingForm({
             });
             // The cash flow answers differently once the mapping changed.
             await queryClient.invalidateQueries({
-                queryKey: ['companies', companyId, 'movement-classifications'],
+                queryKey: ["companies", companyId, "movement-classifications"],
             });
-            toast.success(t('cashEquivalents.saved'));
+            toast.success(t("cashEquivalents.saved"));
         },
         onError: async (error) => {
-            if (isApiError(error) && error.code === 'VERSION_CONFLICT') {
+            if (isApiError(error) && error.code === "VERSION_CONFLICT") {
                 await queryClient.invalidateQueries({
                     queryKey: cashEquivalentsKey(companyId),
                 });
-                toast.error(t('cashEquivalents.conflict'));
+                toast.error(t("cashEquivalents.conflict"));
 
                 return;
             }
@@ -163,19 +163,19 @@ function MappingForm({
             {mapping.lock_version === 0 ? (
                 <Alert role="status">
                     <AlertTriangleIcon />
-                    <AlertTitle>{t('cashEquivalents.noneTitle')}</AlertTitle>
+                    <AlertTitle>{t("cashEquivalents.noneTitle")}</AlertTitle>
                     <AlertDescription>
-                        {t('cashEquivalents.none')}
+                        {t("cashEquivalents.none")}
                     </AlertDescription>
                 </Alert>
             ) : (
                 <p className="text-sm text-muted-foreground">
-                    {t('cashEquivalents.current', {
+                    {t("cashEquivalents.current", {
                         version: mapping.lock_version,
                         count: mapping.account_ids.length,
                     })}
                     {mapping.effective_date &&
-                        ` ${t('cashEquivalents.since', {
+                        ` ${t("cashEquivalents.since", {
                             date: formatIsoDate(
                                 mapping.effective_date,
                                 i18n.language,
@@ -187,13 +187,13 @@ function MappingForm({
             {problems.length > 0 && (
                 <Alert variant="destructive" role="alert">
                     <AlertTitle>
-                        {t('cashEquivalents.problemsTitle')}
+                        {t("cashEquivalents.problemsTitle")}
                     </AlertTitle>
                     <AlertDescription>
                         <ul className="list-inside list-disc">
                             {problems.map(([id, messages]) => (
                                 <li key={id}>
-                                    {label(id)}: {messages.join(' ')}
+                                    {label(id)}: {messages.join(" ")}
                                 </li>
                             ))}
                         </ul>
@@ -203,23 +203,23 @@ function MappingForm({
 
             <Field>
                 <FieldLabel htmlFor="ce-filter">
-                    {t('cashEquivalents.accounts')}
+                    {t("cashEquivalents.accounts")}
                 </FieldLabel>
                 <Input
                     id="ce-filter"
                     value={filter}
-                    placeholder={t('cashEquivalents.filter')}
+                    placeholder={t("cashEquivalents.filter")}
                     onChange={(event) => setFilter(event.target.value)}
                 />
             </Field>
             <div
                 role="group"
-                aria-label={t('cashEquivalents.accounts')}
+                aria-label={t("cashEquivalents.accounts")}
                 className="flex max-h-80 flex-col gap-2 overflow-y-auto rounded-lg border p-3"
             >
                 {candidates.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                        {t('common.noMatch')}
+                        {t("common.noMatch")}
                     </p>
                 ) : (
                     candidates.map((account) => (
@@ -260,7 +260,7 @@ function MappingForm({
                             id="ce-effective-label"
                             htmlFor="ce-effective"
                         >
-                            {t('cashEquivalents.effective')}
+                            {t("cashEquivalents.effective")}
                         </FieldLabel>
                         <DatePicker
                             id="ce-effective"
@@ -270,7 +270,7 @@ function MappingForm({
                             clearable
                         />
                         <FieldDescription>
-                            {t('cashEquivalents.effectiveHint')}
+                            {t("cashEquivalents.effectiveHint")}
                         </FieldDescription>
                     </Field>
 
@@ -279,11 +279,11 @@ function MappingForm({
                     <SubmitButton
                         className="w-auto self-start"
                         pending={save.isPending}
-                        pendingLabel={t('common.saving')}
+                        pendingLabel={t("common.saving")}
                         disabled={chosen.length === 0 || !changed}
                         onClick={() => save.mutate()}
                     >
-                        {t('cashEquivalents.save')}
+                        {t("cashEquivalents.save")}
                     </SubmitButton>
                 </>
             )}

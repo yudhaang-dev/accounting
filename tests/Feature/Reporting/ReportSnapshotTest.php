@@ -195,3 +195,118 @@ describe('a snapshot stays as published (RP-AC-08, X-AC-04)', function () {
         $this->actingAs($this->admin)->postJson("{$this->url}/report-snapshots/{$first['id']}/recompute", ['version' => 9])->assertNotFound();
     });
 });
+
+describe('publishing when a period or year closes (RP-FR-14)', function () {
+    function snapFebruary(): string
+    {
+        return (string) DB::table('gl_periods')->where('company_id', test()->companyId)->where('name', '2026-02')->value('id');
+    }
+
+    function snapFlag(string $flag, bool $on = true, ?string $definitionId = null, int $version = 1)
+    {
+        return test()->actingAs(test()->admin)->putJson(test()->url.'/report-definitions/'.($definitionId ?? test()->definition['id']), [$flag => $on, 'lock_version' => $version]);
+    }
+
+    function snapSnapshots(?string $definitionId = null): array
+    {
+        return test()->actingAs(test()->admin)->getJson(test()->url.'/report-snapshots?definition_id='.($definitionId ?? test()->definition['id']))->assertOk()->json('data');
+    }
+
+    it('starts off for a new definition and changes with lock_version', function () {
+        expect($this->definition)->toMatchArray(['publish_on_period_close' => false, 'publish_on_year_close' => false]);
+
+        snapFlag('publish_on_period_close')->assertOk()->assertJsonPath('data.publish_on_period_close', true)->assertJsonPath('data.publish_on_year_close', false)->assertJsonPath('data.lock_version', 2);
+        snapFlag('publish_on_year_close', true, version: 1)->assertStatus(409)->assertJsonPath('code', 'VERSION_CONFLICT');
+    });
+
+    it('publishes the definitions that ask for it when the period closes, and no others', function () {
+        $other = $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions", ['key' => 'plain', 'name' => 'Plain', 'structure' => $this->structure])->assertCreated()->json('data.id');
+        snapFlag('publish_on_period_close')->assertOk();
+
+        $this->actingAs($this->admin)->postJson("{$this->url}/periods/".snapFebruary().'/close')->assertOk();
+
+        $snapshots = snapSnapshots();
+
+        expect($snapshots)->toHaveCount(1)
+            ->and($snapshots[0]['parameters'])->toMatchArray(['from' => '2026-02-01', 'to' => '2026-02-28'])
+            ->and($snapshots[0]['reason'])->toBe('Published automatically when the period was closed.')
+            ->and($snapshots[0]['published_by'])->toBe($this->admin->id)
+            ->and(snapValue(test()->actingAs(test()->admin)->getJson(test()->url.'/report-snapshots/'.$snapshots[0]['id'])->json('data'), 'revenue'))->toBe('500.00')
+            ->and(snapSnapshots($other))->toBeEmpty();
+    });
+
+    it('does not publish on a soft close or when only the year flag is on', function () {
+        snapFlag('publish_on_year_close')->assertOk();
+
+        $this->actingAs($this->admin)->postJson("{$this->url}/periods/".snapFebruary().'/soft-close')->assertOk();
+        $this->actingAs($this->admin)->postJson("{$this->url}/periods/".snapFebruary().'/close')->assertOk();
+
+        expect(snapSnapshots())->toBeEmpty();
+    });
+
+    it('publishes a balance sheet at the closing date', function () {
+        $sheet = $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions", [
+            'key' => 'sheet', 'name' => 'Sheet', 'kind' => 'balance_sheet',
+            'structure' => [
+                'basis' => 'closing',
+                'rows' => [['key' => 'assets', 'label' => 'Assets', 'type' => 'accounts', 'accounts' => [['type' => 'account', 'id' => $this->bank]]]],
+                'columns' => [['key' => 'at', 'label' => 'At', 'kind' => 'as_of']],
+            ],
+        ])->assertCreated()->json('data.id');
+        snapFlag('publish_on_period_close', true, $sheet)->assertOk();
+
+        $this->actingAs($this->admin)->postJson("{$this->url}/periods/".snapFebruary().'/close')->assertOk();
+
+        expect(snapSnapshots($sheet))->toHaveCount(1)
+            ->and(snapSnapshots($sheet)[0]['parameters'])->toMatchArray(['from' => '2026-02-28', 'to' => '2026-02-28']);
+    });
+
+    it('publishes again when the period is closed again after a reopening', function () {
+        snapFlag('publish_on_period_close')->assertOk();
+
+        $this->actingAs($this->admin)->postJson("{$this->url}/periods/".snapFebruary().'/close')->assertOk();
+        $this->actingAs($this->admin)->postJson("{$this->url}/periods/".snapFebruary().'/reopen', ['reason' => 'Late invoice'])->assertOk();
+        $this->actingAs($this->admin)->postJson("{$this->url}/periods/".snapFebruary().'/close')->assertOk();
+
+        expect(array_column(snapSnapshots(), 'sequence'))->toEqualCanonicalizing([1, 2]);
+    });
+
+    it('publishes when the fiscal year closes', function () {
+        mapRoleTo('retained_earnings', snapAccountId($this->companyId, '3130'));
+        snapFlag('publish_on_year_close')->assertOk();
+        $year = (string) DB::table('gl_fiscal_years')->where('company_id', $this->companyId)->where('name', 'FY2026')->value('id');
+
+        $this->actingAs($this->admin)->postJson("{$this->url}/fiscal-years/{$year}/close")->assertCreated();
+
+        $snapshots = snapSnapshots();
+
+        expect($snapshots)->toHaveCount(1)
+            ->and($snapshots[0]['parameters'])->toMatchArray(['from' => '2026-01-01', 'to' => '2026-12-31'])
+            ->and($snapshots[0]['reason'])->toBe('Published automatically when the fiscal year was closed.');
+
+        // A year that is closed already answers from its run and publishes nothing more.
+        $this->actingAs($this->admin)->postJson("{$this->url}/fiscal-years/{$year}/close")->assertOk();
+        expect(snapSnapshots())->toHaveCount(1);
+    });
+
+    it('audits a definition that cannot be published and still closes the period', function () {
+        // The direct cash flow needs the cash_equivalents role, which this company never mapped.
+        $broken = $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions", [
+            'key' => 'cashflow', 'name' => 'Cash flow', 'kind' => 'cash_flow_indirect',
+            'structure' => [
+                'basis' => 'movement',
+                'rows' => [['key' => 'cash', 'label' => 'Cash', 'type' => 'cash_equivalents']],
+                'columns' => [['key' => 'month', 'label' => 'Month', 'kind' => 'period']],
+            ],
+        ])->assertCreated()->json('data.id');
+
+        snapFlag('publish_on_period_close', true, $broken)->assertOk();
+        snapFlag('publish_on_period_close')->assertOk();
+
+        $this->actingAs($this->admin)->postJson("{$this->url}/periods/".snapFebruary().'/close')->assertOk()->assertJsonPath('data.status', 'closed');
+
+        expect(snapSnapshots($broken))->toBeEmpty()
+            ->and(snapSnapshots())->toHaveCount(1)
+            ->and(AuditEntry::where('event', 'report_snapshot.auto_publish_failed')->where('company_id', $this->companyId)->count())->toBe(1);
+    });
+});

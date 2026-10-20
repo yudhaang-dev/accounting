@@ -20,6 +20,8 @@ class SaveReportDefinitionRequest extends FormRequest
             'key' => $creating ? ['required', 'string', 'regex:/^[a-z][a-z0-9_]{0,63}$/'] : ['prohibited'],
             'name' => [$creating ? 'required' : 'sometimes', 'string', 'max:255'],
             'kind' => $creating ? ['sometimes', 'string', 'regex:/^[a-z][a-z0-9_]{0,31}$/'] : ['prohibited'],
+            'publish_on_period_close' => ['sometimes', 'boolean'],
+            'publish_on_year_close' => ['sometimes', 'boolean'],
             'structure' => [$creating ? 'required' : 'sometimes', 'array'],
             'structure.basis' => ['sometimes', 'string'],
             'structure.rows' => ['required_with:structure', 'array'],

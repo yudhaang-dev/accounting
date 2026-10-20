@@ -7,13 +7,15 @@ use App\Modules\GeneralLedger\Domain\PeriodStatus;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Platform\Audit\Audit;
+use App\Support\Ledger\ClosingListener;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Moves a period between `open`, `soft_closed` and `closed` (GL-FR-04). Reopening needs a reason;
  * every change is audited with the actor and the reason when there is one. Results derived from a
- * closed period (closing journals, report snapshots) do not exist yet; the milestones that add them
- * flag them for recalculation here (GL-FR-04, GL-FR-14, X-FR-03).
+ * closed period are flagged for recalculation when it reopens (GL-FR-14, X-FR-03); closing it tells the
+ * {@see ClosingListener}s, which derive report snapshots (RP-FR-14).
  */
 final class SetPeriodStatus
 {
@@ -24,7 +26,11 @@ final class SetPeriodStatus
         'reopen' => [PeriodStatus::SoftClosed, PeriodStatus::Closed],
     ];
 
-    public function __construct(private readonly Audit $audit) {}
+    /** @param  iterable<ClosingListener>  $listeners */
+    public function __construct(
+        private readonly Audit $audit,
+        private readonly iterable $listeners = [],
+    ) {}
 
     /**
      * Keeps the period open to the postings the ledger policy names and refuses all others.
@@ -41,7 +47,14 @@ final class SetPeriodStatus
      */
     public function close(string $periodId, ?string $reason = null): Period
     {
-        return $this->change($periodId, 'close', PeriodStatus::Closed, 'period.closed', $reason);
+        $period = $this->change($periodId, 'close', PeriodStatus::Closed, 'period.closed', $reason);
+        $actorId = Auth::id();
+
+        foreach ($this->listeners as $listener) {
+            $listener->periodClosed($period->company_id, $period->id, $period->start_date->toDateString(), $period->end_date->toDateString(), $actorId === null ? null : (int) $actorId);
+        }
+
+        return $period;
     }
 
     /**
