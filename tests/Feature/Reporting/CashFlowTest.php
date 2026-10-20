@@ -179,3 +179,15 @@ describe('indirect method (RP-FR-09, RP-AC-02)', function () {
             ->assertUnprocessable()->assertJsonValidationErrors(['cash_equivalents']);
     });
 });
+
+describe('CSV export (X-FR-02)', function () {
+    it('downloads the direct cash flow with the cash reconciliation', function () {
+        cfMapCash();
+        cfActivity();
+
+        $response = $this->actingAs($this->viewer)->get("{$this->url}/movement-classifications/".cfClassification().'/cash-flow?from=2026-04-01&to=2026-04-30', ['Accept' => 'text/csv'])
+            ->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+        expect($response->streamedContent())->toContain('row,label,inflow,outflow,net')->toContain('operating,')->toContain('closing_balance,,,,11280000.00');
+    });
+});

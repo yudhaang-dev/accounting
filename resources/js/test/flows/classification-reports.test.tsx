@@ -1,4 +1,5 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
     account,
@@ -347,4 +348,60 @@ describe('classification links', () => {
             screen.getByRole('link', { name: 'Perubahan ekuitas' }),
         ).toHaveAttribute('href', equityPath);
     });
+});
+
+describe('classification report export (X-FR-02)', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it.each([
+        ['cash-flow', cashPath, cashFlow],
+        ["equity-changes", equityPath, equity],
+    ] as const)(
+        'exports the %s report as CSV with the same filters',
+        async (kind, path, body) => {
+            let downloaded: string | undefined;
+
+            URL.createObjectURL = vi.fn(() => 'blob:csv');
+            URL.revokeObjectURL = vi.fn();
+            vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(
+                function (this: HTMLAnchorElement) {
+                    downloaded = this.download;
+                },
+            );
+
+            const api = mockApi({
+                ...routes(() => json({ data: body() }), kind),
+                [`GET ${base}/movement-classifications/${classId}/${kind}`]: (
+                    call,
+                ) =>
+                    call.accept?.includes('text/csv')
+                        ? new Response('row,label\n', {
+                              headers: {
+                                  'Content-Type': 'text/csv; charset=UTF-8',
+                              },
+                          })
+                        : json({ data: body() }),
+            });
+
+            renderApp(path);
+            const typist = userEvent.setup();
+
+            await screen.findByText('Klasifikasi Standar · versi 2');
+            await typist.click(
+                screen.getByRole('button', { name: 'Ekspor CSV' }),
+            );
+
+            await waitFor(() => expect(downloaded).toBeDefined());
+            expect(downloaded).toMatch(
+                new RegExp(`^${kind}_standard_\\d{4}-01-01_`),
+            );
+            expect(
+                api
+                    .called(
+                        `GET ${base}/movement-classifications/${classId}/${kind}`,
+                    )
+                    .some((call) => call.accept?.includes('text/csv')),
+            ).toBe(true);
+        },
+    );
 });

@@ -204,3 +204,14 @@ describe('classifying movement (RP-FR-03)', function () {
         $this->actingAs($this->viewer)->getJson("{$this->url}/movement-classifications/{$id}/result")->assertUnprocessable()->assertJsonValidationErrors(['from', 'to']);
     });
 });
+
+describe('CSV export (X-FR-02)', function () {
+    it('downloads the classified rows and the total', function () {
+        $id = mcCreate()->json('data.id');
+
+        $response = $this->actingAs($this->viewer)->get("{$this->url}/movement-classifications/{$id}/result?from=2026-02-01&to=2026-02-28", ['Accept' => 'text/csv'])
+            ->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+        expect($response->streamedContent())->toContain('row,label,debit,credit,net')->toContain('invoices,')->toContain('total,');
+    });
+});

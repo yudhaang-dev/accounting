@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 import { api, unwrap } from '@/api/client';
 import type { components, operations } from '@/api/schema';
+import { downloadFile } from '@/lib/download';
 import type { Coverage } from '@/modules/reporting/components/coverage-notice';
 import {
     filterParams,
@@ -121,3 +122,17 @@ export const equityChangesQuery = (
                 )
             ).data as EquityChanges,
     });
+
+/** The direct cash flow or the equity changes as CSV, under the same permission and filters (X-FR-02). */
+export function exportClassificationReport(
+    companyId: string,
+    classification: { id: string; key: string },
+    report: 'cash-flow' | 'equity-changes',
+    filter: ReportFilter,
+) {
+    return downloadFile(
+        `/api/v1/companies/${companyId}/movement-classifications/${classification.id}/${report}?${filterParams(filter, 'range')}`,
+        'text/csv',
+        `${report}_${classification.key}_${filter.from}_${filter.to}.csv`,
+    );
+}

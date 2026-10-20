@@ -272,3 +272,29 @@ describe('evaluation (RP-FR-01, RP-FR-02)', function () {
         rdRun($created['id'], 'from=2026-02-01')->assertUnprocessable();
     });
 });
+
+describe('CSV export and account drill-down (X-FR-02, API-AC-07)', function () {
+    it('lists the accounts each row claims', function () {
+        $id = rdCreate()->json('data.id');
+
+        $rows = collect(rdRun($id)->assertOk()->json('data.rows'))->keyBy('key');
+
+        expect($rows['revenue']['accounts'])->toBe([['account_id' => $this->sales, 'code' => '4110', 'name' => $rows['revenue']['accounts'][0]['name']]])
+            ->and($rows['costs']['accounts'][0]['account_id'])->toBe($this->expense)
+            ->and($rows['income'])->not->toHaveKey('accounts')
+            ->and($rows['profit'])->not->toHaveKey('accounts');
+    });
+
+    it('downloads the rows with one column per report column', function () {
+        $id = rdCreate()->json('data.id');
+
+        $response = $this->actingAs($this->viewer)->get("{$this->url}/report-definitions/{$id}/result?from=2026-02-01&to=2026-02-28", ['Accept' => 'text/csv'])
+            ->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+        $lines = preg_split('/\R/', trim(substr($response->streamedContent(), 3)));
+
+        expect($lines[0])->toStartWith('row,label,type,')
+            ->and($lines)->toHaveCount(count(rdStructure()['rows']) + 1 + 1)
+            ->and($response->streamedContent())->toContain('revenue,Revenue,accounts,');
+    });
+});

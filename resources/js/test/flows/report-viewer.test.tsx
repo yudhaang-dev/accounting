@@ -1,4 +1,5 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
     account,
@@ -417,5 +418,99 @@ describe('plan comparison', () => {
             await screen.findByText('Rencana tidak tersedia (Rencana)'),
         ).toBeInTheDocument();
         expect(screen.queryByText('0,00')).not.toBeInTheDocument();
+    });
+});
+
+describe('report viewer export and drill-down (X-FR-02, API-AC-07)', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it('exports the same filters as CSV', async () => {
+        let downloaded: string | undefined;
+
+        URL.createObjectURL = vi.fn(() => 'blob:csv');
+        URL.revokeObjectURL = vi.fn();
+        vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(
+            function (this: HTMLAnchorElement) {
+                downloaded = this.download;
+            },
+        );
+
+        const api = mockApi({
+            ...routes(result()),
+            [`GET ${base}/report-definitions/${defId}/result`]: (call) =>
+                call.accept?.includes('text/csv')
+                    ? new Response('row,label\nsales,Penjualan\n', {
+                          headers: {
+                              'Content-Type': 'text/csv; charset=UTF-8',
+                              'Content-Disposition':
+                                  'attachment; filename="report_income-statement_2026-01-01_2026-10-07.csv"',
+                          },
+                      })
+                    : json({ data: result() }),
+        });
+
+        renderApp(viewPath);
+        const typist = userEvent.setup();
+
+        await screen.findByText('Penjualan');
+        await typist.click(screen.getByRole('button', { name: 'Ekspor CSV' }));
+
+        await waitFor(() => expect(downloaded).toBeDefined());
+        expect(downloaded).toBe(
+            'report_income-statement_2026-01-01_2026-10-07.csv',
+        );
+
+        const csv = api
+            .called(`GET ${base}/report-definitions/${defId}/result`)
+            .find((call) => call.accept?.includes('text/csv'));
+
+        expect(csv?.query.from).toMatch(/^\d{4}-01-01$/);
+    });
+
+    it('links a row of one account to its ledger and a row of several to a list', async () => {
+        mockApi(
+            routes(
+                result({
+                    rows: [
+                        {
+                            key: 'sales',
+                            label: 'Penjualan',
+                            type: 'accounts',
+                            accounts: [
+                                { account_id: 'a1', code: '4110', name: 'Penjualan Barang' },
+                            ],
+                            values: { current: '10.00' },
+                        },
+                        {
+                            key: 'costs',
+                            label: 'Biaya',
+                            type: 'accounts',
+                            accounts: [
+                                { account_id: 'a2', code: '6110', name: 'Gaji' },
+                                { account_id: 'a3', code: '6220', name: 'Sewa' },
+                            ],
+                            values: { current: '5.00' },
+                        },
+                    ],
+                }),
+            ),
+        );
+
+        renderApp(viewPath);
+
+        const sales = (await screen.findByText('Penjualan')).closest('tr') as HTMLElement;
+        const costs = screen.getByText('Biaya').closest('tr') as HTMLElement;
+
+        expect(
+            within(sales)
+                .getByRole('link', { name: 'Lihat buku besar akun 4110' })
+                .getAttribute('href'),
+        ).toMatch(/\/reports\/general-ledger\?account_id=a1&from=2026-01-01&to=2026-10-07/);
+        expect(within(costs).getByText('Buku besar (2)')).toBeInTheDocument();
+        expect(
+            within(costs)
+                .getByRole('link', { name: 'Lihat buku besar akun 6220' })
+                .getAttribute('href'),
+        ).toMatch(/account_id=a3/);
     });
 });

@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 import { api, unwrap } from '@/api/client';
 import type { components, operations } from '@/api/schema';
+import { downloadFile } from '@/lib/download';
 import { fetchAll } from '@/lib/fetch-all';
 import {
     filterParams,
@@ -38,6 +39,8 @@ export type CashCheck = {
 export type ReportResult = Omit<Result, 'columns' | 'rows'> & {
     columns: ReportColumn[];
     rows: (Result['rows'][number] & {
+        /** The accounts an `accounts` or `cash_equivalents` row claims, to follow into the ledger. */
+        accounts?: { account_id: string; code: string; name: string }[];
         variances?: Record<
             string,
             { percentage: string | null; favorable: boolean | null }
@@ -127,3 +130,17 @@ export const reportResultQuery = (
                 )) as unknown as { data: ReportResult }
             ).data,
     });
+
+/** The same result as CSV, under the same permission and filters (X-FR-02). */
+export function exportReportResult(
+    companyId: string,
+    definition: { id: string; key: string },
+    filter: ReportFilter,
+    mode: 'range' | 'as_of',
+) {
+    return downloadFile(
+        `/api/v1/companies/${companyId}/report-definitions/${definition.id}/result?${filterParams(filter, mode)}`,
+        'text/csv',
+        `report_${definition.key}_${filter.from}_${filter.to}.csv`,
+    );
+}

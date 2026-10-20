@@ -25,9 +25,11 @@ import {
     cashFlowQuery,
     classificationQuery,
     equityChangesQuery,
+    exportClassificationReport,
     type Unclassified,
 } from '@/modules/reporting/classifications';
 import { CoverageNotice } from '@/modules/reporting/components/coverage-notice';
+import { ExportButton } from '@/modules/reporting/components/export-button';
 import { ReportFilterBar } from '@/modules/reporting/components/report-filter-bar';
 import {
     emptyFilter,
@@ -45,12 +47,14 @@ const initialFilter = (): ReportFilter => ({
 function Shell({
     companyId,
     classificationId,
+    report,
     title,
     description,
     children,
 }: {
     companyId: string;
     classificationId: string;
+    report: 'cash-flow' | 'equity-changes';
     title: string;
     description: string;
     children: (filter: ReportFilter) => ReactNode;
@@ -65,21 +69,36 @@ function Shell({
 
     return (
         <>
-            <div className="flex flex-col gap-1">
-                <h1 className="text-xl font-semibold tracking-tight">
-                    {title}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                    {classification.data
-                        ? t('classifications.of', {
-                              name: classification.data.name,
-                              version: classification.data.current_version,
-                          })
-                        : ' '}
-                </p>
-                <p className="max-w-2xl text-sm text-muted-foreground">
-                    {description}
-                </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-xl font-semibold tracking-tight">
+                        {title}
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        {classification.data
+                            ? t('classifications.of', {
+                                  name: classification.data.name,
+                                  version: classification.data.current_version,
+                              })
+                            : ' '}
+                    </p>
+                    <p className="max-w-2xl text-sm text-muted-foreground">
+                        {description}
+                    </p>
+                </div>
+                <ExportButton
+                    disabled={classification.data === undefined}
+                    onExport={async () => {
+                        if (classification.data) {
+                            await exportClassificationReport(
+                                companyId,
+                                classification.data,
+                                report,
+                                filter,
+                            );
+                        }
+                    }}
+                />
             </div>
             <ReportFilterBar
                 companyId={companyId}
@@ -212,6 +231,7 @@ export function CashFlowPage({
         <Shell
             companyId={companyId}
             classificationId={classificationId}
+            report="cash-flow"
             title={t('classifications.cashFlow.title')}
             description={t('classifications.cashFlow.description')}
         >
@@ -397,6 +417,7 @@ export function EquityChangesPage({
         <Shell
             companyId={companyId}
             classificationId={classificationId}
+            report="equity-changes"
             title={t('classifications.equity.title')}
             description={t('classifications.equity.description')}
         >

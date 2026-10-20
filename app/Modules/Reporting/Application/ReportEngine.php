@@ -122,6 +122,23 @@ final class ReportEngine
 
         $scale = $this->currencies->functionalScale($companyId);
         $rows = [];
+        $accountsById = [];
+
+        foreach ($chart as $account) {
+            $accountsById[$account->id] = $account;
+        }
+
+        $claimedBy = [];
+
+        foreach ($claims as $accountId => $rowKey) {
+            $claimedBy[$rowKey][] = ['account_id' => $accountId, 'code' => $accountsById[$accountId]->code ?? '', 'name' => $accountsById[$accountId]->name ?? ''];
+        }
+
+        foreach ($claimedBy as &$claimed) {
+            usort($claimed, fn (array $a, array $b): int => strcmp($a['code'], $b['code']));
+        }
+
+        unset($claimed);
 
         foreach ($this->rowsWithUnmapped($structure['rows'], $unmapped !== []) as $row) {
             $cells = [];
@@ -133,13 +150,12 @@ final class ReportEngine
 
             $variances = $this->variances($structure['columns'], $row, $values);
 
-            $rows[] = ['key' => $row['key'], 'label' => $row['label'], 'type' => $row['type'], 'values' => $cells, ...($variances === [] ? [] : ['variances' => $variances])];
-        }
-
-        $accountsById = [];
-
-        foreach ($chart as $account) {
-            $accountsById[$account->id] = $account;
+            $rows[] = [
+                'key' => $row['key'], 'label' => $row['label'], 'type' => $row['type'],
+                ...(in_array($row['type'], ['accounts', 'cash_equivalents'], true) ? ['accounts' => $claimedBy[$row['key']] ?? []] : []),
+                'values' => $cells,
+                ...($variances === [] ? [] : ['variances' => $variances]),
+            ];
         }
 
         $list = [];

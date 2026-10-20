@@ -11,6 +11,7 @@ use App\Support\Access\DataScopeContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\Response;
 
 class ReportDefinitionController
 {
@@ -111,9 +112,13 @@ class ReportDefinitionController
      * the same four fields; the direct cash flow also needs the transaction types, so before the cutover
      * date it is only as complete as a history by transactions.
      *
-     * @response array{data: array{definition: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array{key: string, label: string, kind: string, from: string|null, to: string|null, available: bool}>, rows: list<array{key: string, label: string, type: string, values: array<string, string|null>}>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}}
+     * An `accounts` or `cash_equivalents` row lists the `accounts` it claims, to follow into the ledger (X-FR-02).
+     *
+     * With `Accept: text/csv` the rows and column values are downloaded instead, under the same permission (X-FR-02).
+     *
+     * @response array{data: array{definition: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array{key: string, label: string, kind: string, from: string|null, to: string|null, available: bool}>, rows: list<array{key: string, label: string, type: string, accounts?: list<array{account_id: string, code: string, name: string}>, values: array<string, string|null>}>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}}
      */
-    public function evaluate(EvaluateReportRequest $request, ReportEngine $engine, DataScopeContext $scope, string $companyId, string $id): JsonResponse
+    public function evaluate(EvaluateReportRequest $request, ReportEngine $engine, DataScopeContext $scope, string $companyId, string $id): JsonResponse|Response
     {
         $definition = ReportDefinition::query()->findOrFail($id);
         $version = $this->version($definition, $request->integer('version') ?: null);
@@ -126,9 +131,15 @@ class ReportDefinitionController
         /** @var array{basis: string, rows: list<array<string, mixed>>, columns: list<array<string, mixed>>} $structure */
         $structure = $version->structure;
 
+        $result = $engine($companyId, $structure, $from, $to, $scope->current(), ReportFilter::fromParameters($params), $definition->kind);
+
+        if (ReportCsv::wanted($request)) {
+            return ReportCsv::definition($definition->key, $result);
+        }
+
         return new JsonResponse(['data' => [
             'definition' => ['id' => $definition->id, 'key' => $definition->key, 'version' => $version->version],
-            ...$engine($companyId, $structure, $from, $to, $scope->current(), ReportFilter::fromParameters($params), $definition->kind),
+            ...$result,
         ]]);
     }
 

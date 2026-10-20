@@ -2318,6 +2318,10 @@ export const en: Widen<typeof id> = {
         total: 'Total and closing balance',
     },
     reports: {
+        export: 'Export CSV',
+        exporting: 'Downloading…',
+        exportFailed: 'The export failed. Try again.',
+        ledgerLinks: 'Ledger',
         pageTitle: 'Reports',
         title: 'Reports',
         description:

@@ -22,6 +22,7 @@ import { formatDecimal } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
 import { CoverageNotice } from '@/modules/reporting/components/coverage-notice';
+import { ExportButton } from '@/modules/reporting/components/export-button';
 import {
     SnapshotDialog,
     type SnapshotTarget,
@@ -30,6 +31,7 @@ import { ReportFilterBar } from '@/modules/reporting/components/report-filter-ba
 import {
     comparesWithPlan,
     dateModeOf,
+    exportReportResult,
     reportDefinitionQuery,
     type ReportDefinition,
     reportResultQuery,
@@ -131,6 +133,17 @@ function Viewer({
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                    <ExportButton
+                        disabled={result.data === undefined}
+                        onExport={() =>
+                            exportReportResult(
+                                companyId,
+                                definition,
+                                filter,
+                                mode,
+                            )
+                        }
+                    />
                     <Link
                         to="/w/$companyId/reports/$definitionId/snapshots"
                         params={{ companyId, definitionId: definition.id }}
@@ -211,6 +224,50 @@ function ledgerRange(result: ReportResult, accountId: string) {
             : `${to.slice(0, 4)}-01-01`;
 
     return { account_id: accountId, from, to };
+}
+
+/** The ledger of each account a row adds up (X-FR-02): one link for one account, a list for several. */
+function AccountLinks({
+    companyId,
+    result,
+    accounts,
+}: {
+    companyId: string;
+    result: ReportResult;
+    accounts: ReportResult['rows'][number]['accounts'];
+}) {
+    const { t } = useTranslation();
+
+    if (!accounts || accounts.length === 0) {
+        return null;
+    }
+
+    const links = accounts.map((account) => (
+        <Link
+            key={account.account_id}
+            to="/w/$companyId/reports/general-ledger"
+            params={{ companyId }}
+            search={ledgerRange(result, account.account_id)}
+            aria-label={t('trialBalance.ledger', { code: account.code })}
+            title={account.name}
+            className="font-mono text-xs font-normal underline underline-offset-4"
+        >
+            {account.code}
+        </Link>
+    ));
+
+    if (links.length === 1) {
+        return <div className="mt-0.5">{links}</div>;
+    }
+
+    return (
+        <details className="mt-0.5 text-xs font-normal">
+            <summary className="cursor-pointer text-muted-foreground">
+                {t('reports.ledgerLinks')} ({links.length})
+            </summary>
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">{links}</div>
+        </details>
+    );
 }
 
 /** The values of a report, as run now or as a snapshot kept them. */
@@ -323,6 +380,11 @@ export function ResultView({
                                     }
                                 >
                                     {row.label}
+                                    <AccountLinks
+                                        companyId={companyId}
+                                        result={result}
+                                        accounts={row.accounts}
+                                    />
                                 </TableCell>
                                 {result.columns.map((column) => (
                                     <TableCell

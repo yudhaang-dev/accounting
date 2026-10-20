@@ -1814,7 +1814,8 @@ export interface paths {
          *     credit and net (debit - credit). Movement without a matching rule is in the `unclassified` row
          *     and listed in `unclassified`, so `total` always equals the movement of the ledger. The filters of
          *     the trial balance apply (`account_id`, `dimensions`, `transaction_type_keys`, `source`); for a
-         *     user limited to some dimension values only the lines inside that scope count (IA-FR-03)
+         *     user limited to some dimension values only the lines inside that scope count (IA-FR-03). With
+         *     `Accept: text/csv` the rows are downloaded instead (X-FR-02)
          */
         get: operations["movement-classifications.result"];
         put?: never;
@@ -1839,7 +1840,7 @@ export interface paths {
          *     `outflow` and `net`; `unclassified` lists what no rule matched, still counted. `cash` reconciles
          *     `opening_balance` + `imported_opening_balance` + `net_increase` with `closing_balance` and says
          *     so in `reconciled`; `mapping.problems` lists mapped accounts that no longer qualify. 422 when
-         *     the role is not mapped
+         *     the role is not mapped. With `Accept: text/csv` the rows and cash reconciliation are downloaded (X-FR-02)
          */
         get: operations["movement-classifications.cash-flow"];
         put?: never;
@@ -1865,7 +1866,8 @@ export interface paths {
          *     opening. Equity and result accounts that no component claims are in the `unassigned` component
          *     and movement that no rule matches in the `unclassified` row. `equity` compares the closing total
          *     with the equity of the ledger, which the balance sheet shows, and `balanced` says they agree.
-         *     Amounts are credit-positive. 422 when the classification has no components
+         *     Amounts are credit-positive. 422 when the classification has no components. With `Accept: text/csv`
+         *     the components and rows are downloaded (X-FR-02)
          */
         get: operations["movement-classifications.equity-changes"];
         put?: never;
@@ -2777,6 +2779,10 @@ export interface paths {
          *     what came before. The trial balance, general ledger, direct cash flow and equity changes carry
          *     the same four fields; the direct cash flow also needs the transaction types, so before the cutover
          *     date it is only as complete as a history by transactions.
+         *
+         *     An `accounts` or `cash_equivalents` row lists the `accounts` it claims, to follow into the ledger (X-FR-02).
+         *
+         *     With `Accept: text/csv` the rows and column values are downloaded instead, under the same permission (X-FR-02).
          */
         get: operations["report-definitions.result"];
         put?: never;
@@ -11315,6 +11321,11 @@ export interface operations {
                                 key: string;
                                 label: string;
                                 type: string;
+                                accounts?: {
+                                    account_id: string;
+                                    code: string;
+                                    name: string;
+                                }[];
                                 values: {
                                     [key: string]: string | null;
                                 };

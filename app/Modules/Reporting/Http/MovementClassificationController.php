@@ -13,6 +13,7 @@ use App\Support\Access\DataScopeContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\Response;
 
 class MovementClassificationController
 {
@@ -70,11 +71,12 @@ class MovementClassificationController
      * credit and net (debit - credit). Movement without a matching rule is in the `unclassified` row
      * and listed in `unclassified`, so `total` always equals the movement of the ledger. The filters of
      * the trial balance apply (`account_id`, `dimensions`, `transaction_type_keys`, `source`); for a
-     * user limited to some dimension values only the lines inside that scope count (IA-FR-03).
+     * user limited to some dimension values only the lines inside that scope count (IA-FR-03). With
+     * `Accept: text/csv` the rows are downloaded instead (X-FR-02).
      *
      * @response array{data: array{classification: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, rows: list<array{key: string, label: string, debit: string, credit: string, net: string}>, total: array{debit: string, credit: string, net: string}, unclassified: list<array{account_id: string, code: string, name: string, transaction_type_key: string|null}>}}
      */
-    public function evaluate(EvaluateClassificationRequest $request, MovementClassifier $classifier, DataScopeContext $scope, string $companyId, string $id): JsonResponse
+    public function evaluate(EvaluateClassificationRequest $request, MovementClassifier $classifier, DataScopeContext $scope, string $companyId, string $id): JsonResponse|Response
     {
         $classification = MovementClassification::query()->findOrFail($id);
         $version = $this->version($classification, $request->integer('version') ?: null);
@@ -82,9 +84,15 @@ class MovementClassificationController
         /** @var array<string, mixed>&array{from: string, to: string} $params */
         $params = $request->validated();
 
+        $result = $classifier($companyId, $version->structure, $params['from'], $params['to'], $scope->current(), ReportFilter::fromParameters($params));
+
+        if (ReportCsv::wanted($request)) {
+            return ReportCsv::classification($classification->key, $result);
+        }
+
         return new JsonResponse(['data' => [
             'classification' => ['id' => $classification->id, 'key' => $classification->key, 'version' => $version->version],
-            ...$classifier($companyId, $version->structure, $params['from'], $params['to'], $scope->current(), ReportFilter::fromParameters($params)),
+            ...$result,
         ]]);
     }
 
@@ -95,11 +103,11 @@ class MovementClassificationController
      * `outflow` and `net`; `unclassified` lists what no rule matched, still counted. `cash` reconciles
      * `opening_balance` + `imported_opening_balance` + `net_increase` with `closing_balance` and says
      * so in `reconciled`; `mapping.problems` lists mapped accounts that no longer qualify. 422 when
-     * the role is not mapped.
+     * the role is not mapped. With `Accept: text/csv` the rows and cash reconciliation are downloaded (X-FR-02).
      *
      * @response array{data: array{classification: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, rows: list<array{key: string, label: string, inflow: string, outflow: string, net: string}>, unclassified: list<array{account_id: string, code: string, name: string, transaction_type_key: string|null}>, mapping: array{version: int, account_ids: list<string>, problems: array<string, list<string>>}, cash: array{opening_balance: string, imported_opening_balance: string, net_increase: string, closing_balance: string, difference: string, reconciled: bool}}}
      */
-    public function cashFlow(EvaluateClassificationRequest $request, DirectCashFlow $cashFlow, DataScopeContext $scope, string $companyId, string $id): JsonResponse
+    public function cashFlow(EvaluateClassificationRequest $request, DirectCashFlow $cashFlow, DataScopeContext $scope, string $companyId, string $id): JsonResponse|Response
     {
         $classification = MovementClassification::query()->findOrFail($id);
         $version = $this->version($classification, $request->integer('version') ?: null);
@@ -107,9 +115,15 @@ class MovementClassificationController
         /** @var array<string, mixed>&array{from: string, to: string} $params */
         $params = $request->validated();
 
+        $result = $cashFlow($companyId, $version->structure, $params['from'], $params['to'], $scope->current(), ReportFilter::fromParameters($params));
+
+        if (ReportCsv::wanted($request)) {
+            return ReportCsv::cashFlow($classification->key, $result);
+        }
+
         return new JsonResponse(['data' => [
             'classification' => ['id' => $classification->id, 'key' => $classification->key, 'version' => $version->version],
-            ...$cashFlow($companyId, $version->structure, $params['from'], $params['to'], $scope->current(), ReportFilter::fromParameters($params)),
+            ...$result,
         ]]);
     }
 
@@ -121,11 +135,12 @@ class MovementClassificationController
      * opening. Equity and result accounts that no component claims are in the `unassigned` component
      * and movement that no rule matches in the `unclassified` row. `equity` compares the closing total
      * with the equity of the ledger, which the balance sheet shows, and `balanced` says they agree.
-     * Amounts are credit-positive. 422 when the classification has no components.
+     * Amounts are credit-positive. 422 when the classification has no components. With `Accept: text/csv`
+     * the components and rows are downloaded (X-FR-02).
      *
      * @response array{data: array{classification: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, components: list<array{key: string, label: string, opening_balance: string, movement: string, closing_balance: string, reconciled: bool}>, rows: list<array{key: string, label: string, values: array<string, string>, total: string}>, unclassified: list<array{account_id: string, code: string, name: string, transaction_type_key: string|null}>, equity: array{components_total: string, ledger_total: string, difference: string, reconciled: bool, balanced: bool}}}
      */
-    public function equityChanges(EvaluateClassificationRequest $request, EquityChanges $equity, DataScopeContext $scope, string $companyId, string $id): JsonResponse
+    public function equityChanges(EvaluateClassificationRequest $request, EquityChanges $equity, DataScopeContext $scope, string $companyId, string $id): JsonResponse|Response
     {
         $classification = MovementClassification::query()->findOrFail($id);
         $version = $this->version($classification, $request->integer('version') ?: null);
@@ -133,9 +148,15 @@ class MovementClassificationController
         /** @var array<string, mixed>&array{from: string, to: string} $params */
         $params = $request->validated();
 
+        $result = $equity($companyId, $version->structure, $params['from'], $params['to'], $scope->current(), ReportFilter::fromParameters($params));
+
+        if (ReportCsv::wanted($request)) {
+            return ReportCsv::equityChanges($classification->key, $result);
+        }
+
         return new JsonResponse(['data' => [
             'classification' => ['id' => $classification->id, 'key' => $classification->key, 'version' => $version->version],
-            ...$equity($companyId, $version->structure, $params['from'], $params['to'], $scope->current(), ReportFilter::fromParameters($params)),
+            ...$result,
         ]]);
     }
 

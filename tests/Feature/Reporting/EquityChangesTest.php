@@ -147,3 +147,14 @@ describe('statement of changes in equity (RP-FR-10, RP-AC-09)', function () {
         ])->assertUnprocessable()->assertJsonValidationErrors(['structure.components.0.key']);
     });
 });
+
+describe('CSV export (X-FR-02)', function () {
+    it('downloads the equity changes with one column per component', function () {
+        eqActivity();
+
+        $response = $this->actingAs($this->viewer)->get("{$this->url}/movement-classifications/".eqClassification().'/equity-changes?from=2026-04-01&to=2026-04-30', ['Accept' => 'text/csv'])
+            ->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+        expect($response->streamedContent())->toContain('row,label,capital,dividends,profit,total')->toContain('profit_for_year,');
+    });
+});

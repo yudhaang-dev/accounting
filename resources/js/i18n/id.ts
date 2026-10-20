@@ -2312,6 +2312,10 @@ export const id = {
         total: 'Total dan saldo akhir',
     },
     reports: {
+        export: 'Ekspor CSV',
+        exporting: 'Mengunduh…',
+        exportFailed: 'Ekspor gagal. Coba lagi.',
+        ledgerLinks: 'Buku besar',
         pageTitle: 'Laporan',
         title: 'Laporan',
         description:
