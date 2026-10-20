@@ -477,7 +477,11 @@ describe('report viewer export and drill-down (X-FR-02, API-AC-07)', () => {
                             label: 'Penjualan',
                             type: 'accounts',
                             accounts: [
-                                { account_id: 'a1', code: '4110', name: 'Penjualan Barang' },
+                                {
+                                    account_id: 'a1',
+                                    code: '4110',
+                                    name: 'Penjualan Barang',
+                                },
                             ],
                             values: { current: '10.00' },
                         },
@@ -486,8 +490,16 @@ describe('report viewer export and drill-down (X-FR-02, API-AC-07)', () => {
                             label: 'Biaya',
                             type: 'accounts',
                             accounts: [
-                                { account_id: 'a2', code: '6110', name: 'Gaji' },
-                                { account_id: 'a3', code: '6220', name: 'Sewa' },
+                                {
+                                    account_id: 'a2',
+                                    code: '6110',
+                                    name: 'Gaji',
+                                },
+                                {
+                                    account_id: 'a3',
+                                    code: '6220',
+                                    name: 'Sewa',
+                                },
                             ],
                             values: { current: '5.00' },
                         },
@@ -498,14 +510,18 @@ describe('report viewer export and drill-down (X-FR-02, API-AC-07)', () => {
 
         renderApp(viewPath);
 
-        const sales = (await screen.findByText('Penjualan')).closest('tr') as HTMLElement;
+        const sales = (await screen.findByText('Penjualan')).closest(
+            'tr',
+        ) as HTMLElement;
         const costs = screen.getByText('Biaya').closest('tr') as HTMLElement;
 
         expect(
             within(sales)
                 .getByRole('link', { name: 'Lihat buku besar akun 4110' })
                 .getAttribute('href'),
-        ).toMatch(/\/reports\/general-ledger\?account_id=a1&from=2026-01-01&to=2026-10-07/);
+        ).toMatch(
+            /\/reports\/general-ledger\?account_id=a1&from=2026-01-01&to=2026-10-07/,
+        );
         expect(within(costs).getByText('Buku besar (2)')).toBeInTheDocument();
         expect(
             within(costs)

@@ -33,7 +33,10 @@ const coverage = {
     coverage_status: 'complete',
 };
 
-const routes = (result: () => Response, kind: 'cash-flow' | 'equity-changes') => ({
+const routes = (
+    result: () => Response,
+    kind: 'cash-flow' | 'equity-changes',
+) => ({
     'GET /api/v1/me': () => json({ data: account }),
     'GET /api/v1/me/workspaces': () =>
         json({
@@ -184,9 +187,7 @@ describe('direct cash flow', () => {
         renderApp(cashPath);
 
         expect(
-            await screen.findByText(
-                'Pemetaan kas dan setara kas bermasalah',
-            ),
+            await screen.findByText('Pemetaan kas dan setara kas bermasalah'),
         ).toBeInTheDocument();
         expect(
             await screen.findByText(/1111 Kas Kecil: Akun bukan aset\./),
@@ -199,8 +200,7 @@ describe('direct cash flow', () => {
                 () =>
                     json(
                         {
-                            message:
-                                'Peran cash_equivalents belum dipetakan.',
+                            message: 'Peran cash_equivalents belum dipetakan.',
                             code: 'VALIDATION_FAILED',
                             errors: {
                                 cash_equivalents: [
@@ -273,8 +273,9 @@ describe('changes in equity', () => {
 
         renderApp(equityPath);
 
-        const capital = (await screen.findAllByText('Modal'))[0]
-            ?.closest('tr') as HTMLElement;
+        const capital = (await screen.findAllByText('Modal'))[0]?.closest(
+            'tr',
+        ) as HTMLElement;
 
         expect(within(capital).getByText('1.000,00')).toBeInTheDocument();
         expect(within(capital).getByText('1.100,00')).toBeInTheDocument();
@@ -285,7 +286,9 @@ describe('changes in equity', () => {
 
         expect(within(profit).getAllByText('-20,00')).toHaveLength(2);
         expect(
-            screen.getByText('Total komponen sama dengan ekuitas di buku besar'),
+            screen.getByText(
+                'Total komponen sama dengan ekuitas di buku besar',
+            ),
         ).toBeInTheDocument();
     });
 
@@ -355,7 +358,7 @@ describe('classification report export (X-FR-02)', () => {
 
     it.each([
         ['cash-flow', cashPath, cashFlow],
-        ["equity-changes", equityPath, equity],
+        ['equity-changes', equityPath, equity],
     ] as const)(
         'exports the %s report as CSV with the same filters',
         async (kind, path, body) => {
