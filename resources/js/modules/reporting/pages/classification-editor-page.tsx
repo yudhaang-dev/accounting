@@ -1,7 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
-import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
+import {
+    ArrowDownIcon,
+    ArrowUpIcon,
+    PlusIcon,
+    Trash2Icon,
+} from 'lucide-react';
+import { useState } from 'react';
 import {
     Controller,
     useFieldArray,
@@ -9,25 +14,25 @@ import {
     useWatch,
     type Control,
     type FieldValues,
-} from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { FormAlert } from "@/components/form-alert";
-import { SubmitButton } from "@/components/submit-button";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+} from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { FormAlert } from '@/components/form-alert';
+import { SubmitButton } from '@/components/submit-button';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Field,
     FieldDescription,
     FieldError,
     FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useDocumentTitle } from "@/hooks/use-document-title";
-import { actionErrorMessage, genericErrorMessage } from "@/lib/errors";
-import { isApiError } from "@/lib/http";
-import { allAccountsQuery } from "@/modules/general-ledger/accounts";
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useDocumentTitle } from '@/hooks/use-document-title';
+import { actionErrorMessage, genericErrorMessage } from '@/lib/errors';
+import { isApiError } from '@/lib/http';
+import { allAccountsQuery } from '@/modules/general-ledger/accounts';
 import {
     blankClassification,
     blankComponent,
@@ -36,17 +41,17 @@ import {
     toForm,
     updateClassification,
     type ClassificationForm,
-} from "@/modules/reporting/classification-form";
+} from '@/modules/reporting/classification-form';
 import {
     classificationQuery,
     type MovementClassification,
-} from "@/modules/reporting/classifications";
-import { SelectorList } from "@/modules/reporting/components/selector-list";
-import { formErrors } from "@/modules/reporting/definition-form";
-import { OptionSelect } from "@/modules/transaction-entry/components/option-select";
+} from '@/modules/reporting/classifications';
+import { SelectorList } from '@/modules/reporting/components/selector-list';
+import { formErrors } from '@/modules/reporting/definition-form';
+import { OptionSelect } from '@/modules/transaction-entry/components/option-select';
 
 type Errors = Record<string, string>;
-type Register = ReturnType<typeof useForm<ClassificationForm>>["register"];
+type Register = ReturnType<typeof useForm<ClassificationForm>>['register'];
 
 /** Loads the classification to change, or opens an empty form for a new one. */
 export function ClassificationEditorPage({
@@ -58,14 +63,14 @@ export function ClassificationEditorPage({
 }) {
     const { t } = useTranslation();
     const classification = useQuery({
-        ...classificationQuery(companyId, classificationId ?? ""),
+        ...classificationQuery(companyId, classificationId ?? ''),
         enabled: classificationId !== undefined,
     });
 
     useDocumentTitle(
         classificationId
-            ? t("classificationEditor.editTitle")
-            : t("classificationEditor.newTitle"),
+            ? t('classificationEditor.editTitle')
+            : t('classificationEditor.newTitle'),
     );
 
     if (classificationId === undefined) {
@@ -106,11 +111,11 @@ function Editor({
             ? toForm(classification)
             : blankClassification(),
     });
-    const rows = useFieldArray({ control, name: "rows" });
-    const rules = useFieldArray({ control, name: "rules" });
-    const components = useFieldArray({ control, name: "components" });
-    const useComponents = useWatch({ control, name: "useComponents" });
-    const rowKeys = useWatch({ control, name: "rows" })
+    const rows = useFieldArray({ control, name: 'rows' });
+    const rules = useFieldArray({ control, name: 'rules' });
+    const components = useFieldArray({ control, name: 'components' });
+    const useComponents = useWatch({ control, name: 'useComponents' });
+    const rowKeys = useWatch({ control, name: 'rows' })
         .map((row) => row.key)
         .filter(Boolean);
     const accounts = useQuery(allAccountsQuery(companyId));
@@ -127,31 +132,35 @@ function Editor({
                 : createClassification(companyId, form),
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: ["companies", companyId, "movement-classifications"],
+                queryKey: [
+                    'companies',
+                    companyId,
+                    'movement-classifications',
+                ],
             });
-            toast.success(t("classificationEditor.saved"));
+            toast.success(t('classificationEditor.saved'));
             await navigate({
-                to: "/w/$companyId/reports",
+                to: '/w/$companyId/reports',
                 params: { companyId },
             });
         },
         onError: async (error) => {
             if (isApiError(error) && error.status === 422) {
                 setErrors(formErrors(error.errors));
-                setFormError(t("classificationEditor.invalid"));
+                setFormError(t('classificationEditor.invalid'));
 
                 return;
             }
 
-            if (isApiError(error) && error.code === "VERSION_CONFLICT") {
+            if (isApiError(error) && error.code === 'VERSION_CONFLICT') {
                 await queryClient.invalidateQueries({
                     queryKey: [
-                        "companies",
+                        'companies',
                         companyId,
-                        "movement-classifications",
+                        'movement-classifications',
                     ],
                 });
-                setFormError(t("classificationEditor.conflict"));
+                setFormError(t('classificationEditor.conflict'));
 
                 return;
             }
@@ -185,58 +194,58 @@ function Editor({
             <div className="flex flex-col gap-1">
                 <h1 className="text-xl font-semibold tracking-tight">
                     {editing
-                        ? t("classificationEditor.editTitle")
-                        : t("classificationEditor.newTitle")}
+                        ? t('classificationEditor.editTitle')
+                        : t('classificationEditor.newTitle')}
                 </h1>
                 <p className="max-w-2xl text-sm text-muted-foreground">
                     {editing
-                        ? t("classificationEditor.editDescription", {
+                        ? t('classificationEditor.editDescription', {
                               version: classification.current_version,
                           })
-                        : t("classificationEditor.newDescription")}
+                        : t('classificationEditor.newDescription')}
                 </p>
             </div>
 
             {formError && <FormAlert>{formError}</FormAlert>}
             {orphans.length > 0 && (
                 <FormAlert>
-                    {orphans.map(([, message]) => message).join(" ")}
+                    {orphans.map(([, message]) => message).join(' ')}
                 </FormAlert>
             )}
 
             <section className="grid gap-4 sm:grid-cols-2">
                 <Field data-invalid={errors.key ? true : undefined}>
                     <FieldLabel htmlFor="cls-key">
-                        {t("definitionEditor.key")}
+                        {t('definitionEditor.key')}
                     </FieldLabel>
                     <Input
                         id="cls-key"
                         disabled={editing}
-                        {...register("key")}
+                        {...register('key')}
                     />
-                    {err("key")}
+                    {err('key')}
                 </Field>
                 <Field data-invalid={errors.name ? true : undefined}>
                     <FieldLabel htmlFor="cls-name">
-                        {t("definitionEditor.name")}
+                        {t('definitionEditor.name')}
                     </FieldLabel>
-                    <Input id="cls-name" {...register("name")} />
-                    {err("name")}
+                    <Input id="cls-name" {...register('name')} />
+                    {err('name')}
                 </Field>
             </section>
 
             <section className="flex flex-col gap-3">
                 <h2 className="text-base font-semibold">
-                    {t("classificationEditor.rows")}
+                    {t('classificationEditor.rows')}
                 </h2>
                 <p className="max-w-2xl text-sm text-muted-foreground">
-                    {t("classificationEditor.rowsHint")}
+                    {t('classificationEditor.rowsHint')}
                 </p>
                 {rows.fields.map((row, index) => (
                     <div
                         key={row.id}
                         role="group"
-                        aria-label={t("definitionEditor.rowN", {
+                        aria-label={t('definitionEditor.rowN', {
                             n: index + 1,
                         })}
                         className="flex flex-wrap items-start gap-3 rounded-lg border p-3"
@@ -248,7 +257,7 @@ function Editor({
                             }
                         >
                             <FieldLabel htmlFor={`crow-${index}-key`}>
-                                {t("definitionEditor.rowKey", { n: index + 1 })}
+                                {t('definitionEditor.rowKey', { n: index + 1 })}
                             </FieldLabel>
                             <Input
                                 id={`crow-${index}-key`}
@@ -263,7 +272,7 @@ function Editor({
                             }
                         >
                             <FieldLabel htmlFor={`crow-${index}-label`}>
-                                {t("definitionEditor.rowLabel", {
+                                {t('definitionEditor.rowLabel', {
                                     n: index + 1,
                                 })}
                             </FieldLabel>
@@ -278,7 +287,7 @@ function Editor({
                                 type="button"
                                 size="icon-sm"
                                 variant="ghost"
-                                aria-label={t("definitionEditor.moveUp", {
+                                aria-label={t('definitionEditor.moveUp', {
                                     n: index + 1,
                                 })}
                                 disabled={index === 0}
@@ -290,7 +299,7 @@ function Editor({
                                 type="button"
                                 size="icon-sm"
                                 variant="ghost"
-                                aria-label={t("definitionEditor.moveDown", {
+                                aria-label={t('definitionEditor.moveDown', {
                                     n: index + 1,
                                 })}
                                 disabled={index === rows.fields.length - 1}
@@ -302,7 +311,7 @@ function Editor({
                                 type="button"
                                 size="icon-sm"
                                 variant="ghost"
-                                aria-label={t("definitionEditor.removeRow", {
+                                aria-label={t('definitionEditor.removeRow', {
                                     n: index + 1,
                                 })}
                                 onClick={() => rows.remove(index)}
@@ -312,24 +321,24 @@ function Editor({
                         </div>
                     </div>
                 ))}
-                {err("rows")}
+                {err('rows')}
                 <Button
                     type="button"
                     variant="outline"
                     className="self-start"
-                    onClick={() => rows.append({ key: "", label: "" })}
+                    onClick={() => rows.append({ key: '', label: '' })}
                 >
                     <PlusIcon data-icon="inline-start" />
-                    {t("definitionEditor.addRow")}
+                    {t('definitionEditor.addRow')}
                 </Button>
             </section>
 
             <section className="flex flex-col gap-3">
                 <h2 className="text-base font-semibold">
-                    {t("classificationEditor.rules")}
+                    {t('classificationEditor.rules')}
                 </h2>
                 <p className="max-w-2xl text-sm text-muted-foreground">
-                    {t("classificationEditor.rulesHint")}
+                    {t('classificationEditor.rulesHint')}
                 </p>
                 {rules.fields.map((rule, index) => {
                     const n = index + 1;
@@ -337,12 +346,12 @@ function Editor({
                     return (
                         <fieldset
                             key={rule.id}
-                            aria-label={t("classificationEditor.ruleN", { n })}
+                            aria-label={t('classificationEditor.ruleN', { n })}
                             className="flex flex-col gap-3 rounded-lg border p-4"
                         >
                             <div className="flex items-center justify-between">
                                 <legend className="text-sm font-medium">
-                                    {t("classificationEditor.ruleN", { n })}
+                                    {t('classificationEditor.ruleN', { n })}
                                 </legend>
                                 <div className="flex gap-1">
                                     <Button
@@ -350,7 +359,7 @@ function Editor({
                                         size="icon-sm"
                                         variant="ghost"
                                         aria-label={t(
-                                            "classificationEditor.moveRuleUp",
+                                            'classificationEditor.moveRuleUp',
                                             { n },
                                         )}
                                         disabled={index === 0}
@@ -365,7 +374,7 @@ function Editor({
                                         size="icon-sm"
                                         variant="ghost"
                                         aria-label={t(
-                                            "classificationEditor.moveRuleDown",
+                                            'classificationEditor.moveRuleDown',
                                             { n },
                                         )}
                                         disabled={
@@ -382,7 +391,7 @@ function Editor({
                                         size="icon-sm"
                                         variant="ghost"
                                         aria-label={t(
-                                            "classificationEditor.removeRule",
+                                            'classificationEditor.removeRule',
                                             { n },
                                         )}
                                         onClick={() => rules.remove(index)}
@@ -401,7 +410,7 @@ function Editor({
                                     }
                                 >
                                     <FieldLabel htmlFor={`rule-${index}-row`}>
-                                        {t("classificationEditor.ruleRow", {
+                                        {t('classificationEditor.ruleRow', {
                                             n,
                                         })}
                                     </FieldLabel>
@@ -414,7 +423,7 @@ function Editor({
                                                 value={field.value}
                                                 onValueChange={field.onChange}
                                                 placeholder={t(
-                                                    "classificationEditor.pickRow",
+                                                    'classificationEditor.pickRow',
                                                 )}
                                                 items={rowKeys.map((key) => ({
                                                     value: key,
@@ -435,7 +444,7 @@ function Editor({
                                     }
                                 >
                                     <FieldLabel htmlFor={`rule-${index}-keys`}>
-                                        {t("classificationEditor.ruleKeys", {
+                                        {t('classificationEditor.ruleKeys', {
                                             n,
                                         })}
                                     </FieldLabel>
@@ -445,7 +454,7 @@ function Editor({
                                         {...register(`rules.${index}.keys`)}
                                     />
                                     <FieldDescription>
-                                        {t("classificationEditor.ruleKeysHint")}
+                                        {t('classificationEditor.ruleKeysHint')}
                                     </FieldDescription>
                                     {err(
                                         `rules.${index}.transaction_type_keys`,
@@ -454,7 +463,7 @@ function Editor({
                             </div>
 
                             <div className="text-sm font-medium">
-                                {t("classificationEditor.ruleAccounts")}
+                                {t('classificationEditor.ruleAccounts')}
                             </div>
                             <SelectorList
                                 control={
@@ -465,26 +474,26 @@ function Editor({
                                 accountItems={accountItems}
                                 labels={{
                                     type: (s) =>
-                                        t("classificationEditor.selectorType", {
+                                        t('classificationEditor.selectorType', {
                                             n,
                                             s,
                                         }),
                                     class: (s) =>
                                         t(
-                                            "classificationEditor.selectorClass",
+                                            'classificationEditor.selectorClass',
                                             { n, s },
                                         ),
                                     account: (s) =>
                                         t(
-                                            "classificationEditor.selectorAccount",
+                                            'classificationEditor.selectorAccount',
                                             { n, s },
                                         ),
                                     remove: (s) =>
                                         t(
-                                            "classificationEditor.removeSelector",
+                                            'classificationEditor.removeSelector',
                                             { n, s },
                                         ),
-                                    add: t("classificationEditor.addSelector", {
+                                    add: t('classificationEditor.addSelector', {
                                         n,
                                     }),
                                 }}
@@ -492,7 +501,7 @@ function Editor({
                         </fieldset>
                     );
                 })}
-                {err("rules")}
+                {err('rules')}
                 <Button
                     type="button"
                     variant="outline"
@@ -500,13 +509,13 @@ function Editor({
                     onClick={() => rules.append(blankRule())}
                 >
                     <PlusIcon data-icon="inline-start" />
-                    {t("classificationEditor.addRule")}
+                    {t('classificationEditor.addRule')}
                 </Button>
             </section>
 
             <section className="flex flex-col gap-3">
                 <h2 className="text-base font-semibold">
-                    {t("classificationEditor.components")}
+                    {t('classificationEditor.components')}
                 </h2>
                 <Controller
                     control={control}
@@ -531,15 +540,15 @@ function Editor({
                                 htmlFor="cls-use-components"
                                 className="font-normal"
                             >
-                                {t("classificationEditor.useComponents")}
+                                {t('classificationEditor.useComponents')}
                             </FieldLabel>
                         </Field>
                     )}
                 />
                 <p className="max-w-2xl text-sm text-muted-foreground">
-                    {t("classificationEditor.componentsHint")}
+                    {t('classificationEditor.componentsHint')}
                 </p>
-                {err("components")}
+                {err('components')}
                 {useComponents &&
                     components.fields.map((component, index) => {
                         const n = index + 1;
@@ -548,14 +557,14 @@ function Editor({
                             <fieldset
                                 key={component.id}
                                 aria-label={t(
-                                    "classificationEditor.componentN",
+                                    'classificationEditor.componentN',
                                     { n },
                                 )}
                                 className="flex flex-col gap-3 rounded-lg border p-4"
                             >
                                 <div className="flex items-center justify-between">
                                     <legend className="text-sm font-medium">
-                                        {t("classificationEditor.componentN", {
+                                        {t('classificationEditor.componentN', {
                                             n,
                                         })}
                                     </legend>
@@ -564,7 +573,7 @@ function Editor({
                                         size="icon-sm"
                                         variant="ghost"
                                         aria-label={t(
-                                            "classificationEditor.removeComponent",
+                                            'classificationEditor.removeComponent',
                                             { n },
                                         )}
                                         onClick={() => components.remove(index)}
@@ -576,7 +585,7 @@ function Editor({
                                     <ComponentField
                                         id={`comp-${index}-key`}
                                         label={t(
-                                            "classificationEditor.componentKey",
+                                            'classificationEditor.componentKey',
                                             { n },
                                         )}
                                         error={err(`components.${index}.key`)}
@@ -589,7 +598,7 @@ function Editor({
                                     <ComponentField
                                         id={`comp-${index}-label`}
                                         label={t(
-                                            "classificationEditor.componentLabel",
+                                            'classificationEditor.componentLabel',
                                             { n },
                                         )}
                                         error={err(`components.${index}.label`)}
@@ -610,26 +619,26 @@ function Editor({
                                     labels={{
                                         type: (s) =>
                                             t(
-                                                "classificationEditor.componentSelectorType",
+                                                'classificationEditor.componentSelectorType',
                                                 { n, s },
                                             ),
                                         class: (s) =>
                                             t(
-                                                "classificationEditor.componentSelectorClass",
+                                                'classificationEditor.componentSelectorClass',
                                                 { n, s },
                                             ),
                                         account: (s) =>
                                             t(
-                                                "classificationEditor.componentSelectorAccount",
+                                                'classificationEditor.componentSelectorAccount',
                                                 { n, s },
                                             ),
                                         remove: (s) =>
                                             t(
-                                                "classificationEditor.removeComponentSelector",
+                                                'classificationEditor.removeComponentSelector',
                                                 { n, s },
                                             ),
                                         add: t(
-                                            "classificationEditor.addComponentSelector",
+                                            'classificationEditor.addComponentSelector',
                                             { n },
                                         ),
                                     }}
@@ -645,7 +654,7 @@ function Editor({
                         onClick={() => components.append(blankComponent())}
                     >
                         <PlusIcon data-icon="inline-start" />
-                        {t("classificationEditor.addComponent")}
+                        {t('classificationEditor.addComponent')}
                     </Button>
                 )}
             </section>
@@ -653,11 +662,11 @@ function Editor({
             <SubmitButton
                 className="w-auto self-start"
                 pending={save.isPending}
-                pendingLabel={t("common.saving")}
+                pendingLabel={t('common.saving')}
             >
                 {editing
-                    ? t("definitionEditor.saveChanges")
-                    : t("classificationEditor.create")}
+                    ? t('definitionEditor.saveChanges')
+                    : t('classificationEditor.create')}
             </SubmitButton>
         </form>
     );

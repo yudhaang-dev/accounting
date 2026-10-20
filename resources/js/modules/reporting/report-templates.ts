@@ -1,27 +1,27 @@
-import { queryOptions } from "@tanstack/react-query";
-import { api, unwrap } from "@/api/client";
-import type { operations } from "@/api/schema";
+import { queryOptions } from '@tanstack/react-query';
+import { api, unwrap } from '@/api/client';
+import type { operations } from '@/api/schema';
 
 type Index =
-    operations["report-definition-templates.index"]["responses"][200]["content"]["application/json"];
+    operations['report-definition-templates.index']['responses'][200]['content']['application/json'];
 type Show =
-    operations["report-definition-templates.show"]["responses"][200]["content"]["application/json"];
+    operations['report-definition-templates.show']['responses'][200]['content']['application/json'];
 
-export type TemplateSummary = Index["data"][number];
-export type Template = Show["data"];
-export type TemplateDefinition = Template["definitions"][number];
+export type TemplateSummary = Index['data'][number];
+export type Template = Show['data'];
+export type TemplateDefinition = Template['definitions'][number];
 
 /** A selector as a template writes it: a class, or the template code of a parent account. */
 export type TemplateSelector = { class?: string; code?: string };
 
 export const templatesQuery = (companyId: string) =>
     queryOptions({
-        queryKey: ["companies", companyId, "report-definition-templates"],
+        queryKey: ['companies', companyId, 'report-definition-templates'],
         queryFn: async (): Promise<TemplateSummary[]> =>
             (
                 await unwrap(
                     api.GET(
-                        "/companies/{companyId}/report-definition-templates",
+                        '/companies/{companyId}/report-definition-templates',
                         { params: { path: { companyId } } },
                     ),
                 )
@@ -30,12 +30,12 @@ export const templatesQuery = (companyId: string) =>
 
 export const templateQuery = (companyId: string, key: string) =>
     queryOptions({
-        queryKey: ["companies", companyId, "report-definition-templates", key],
+        queryKey: ['companies', companyId, 'report-definition-templates', key],
         queryFn: async (): Promise<Template> =>
             (
                 await unwrap(
                     api.GET(
-                        "/companies/{companyId}/report-definition-templates/{key}",
+                        '/companies/{companyId}/report-definition-templates/{key}',
                         { params: { path: { companyId, key } } },
                     ),
                 )
@@ -50,13 +50,10 @@ export async function importTemplate(
 ) {
     return (
         await unwrap(
-            api.POST(
-                "/companies/{companyId}/report-definitions/import-template",
-                {
-                    params: { path: { companyId } },
-                    body: { template, keys, confirmed: true } as never,
-                },
-            ),
+            api.POST('/companies/{companyId}/report-definitions/import-template', {
+                params: { path: { companyId } },
+                body: { template, keys, confirmed: true } as never,
+            }),
         )
     ).data;
 }

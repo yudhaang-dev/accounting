@@ -1,7 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
-import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
+import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { useState } from 'react';
 import {
     Controller,
     useFieldArray,
@@ -9,26 +9,26 @@ import {
     useWatch,
     type Control,
     type FieldValues,
-} from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { FormAlert } from "@/components/form-alert";
-import { SearchableSelect } from "@/components/searchable-select";
-import { SubmitButton } from "@/components/submit-button";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+} from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { FormAlert } from '@/components/form-alert';
+import { SearchableSelect } from '@/components/searchable-select';
+import { SubmitButton } from '@/components/submit-button';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Field,
     FieldDescription,
     FieldError,
     FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useDocumentTitle } from "@/hooks/use-document-title";
-import { actionErrorMessage, genericErrorMessage } from "@/lib/errors";
-import { isApiError } from "@/lib/http";
-import { allAccountsQuery } from "@/modules/general-ledger/accounts";
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useDocumentTitle } from '@/hooks/use-document-title';
+import { actionErrorMessage, genericErrorMessage } from '@/lib/errors';
+import { isApiError } from '@/lib/http';
+import { allAccountsQuery } from '@/modules/general-ledger/accounts';
 import {
     BASES,
     COLUMN_KINDS,
@@ -43,14 +43,14 @@ import {
     toForm,
     updateDefinition,
     type DefinitionForm,
-} from "@/modules/reporting/definition-form";
+} from '@/modules/reporting/definition-form';
 import {
     reportDefinitionQuery,
     type ReportDefinition,
-} from "@/modules/reporting/report-definitions";
-import { SelectorList } from "@/modules/reporting/components/selector-list";
-import { OptionSelect } from "@/modules/transaction-entry/components/option-select";
-import { versionsQuery } from "@/modules/planning/plans";
+} from '@/modules/reporting/report-definitions';
+import { SelectorList } from '@/modules/reporting/components/selector-list';
+import { OptionSelect } from '@/modules/transaction-entry/components/option-select';
+import { versionsQuery } from '@/modules/planning/plans';
 
 type Errors = Record<string, string>;
 
@@ -64,14 +64,14 @@ export function DefinitionEditorPage({
 }) {
     const { t } = useTranslation();
     const definition = useQuery({
-        ...reportDefinitionQuery(companyId, definitionId ?? ""),
+        ...reportDefinitionQuery(companyId, definitionId ?? ''),
         enabled: definitionId !== undefined,
     });
 
     useDocumentTitle(
         definitionId
-            ? t("definitionEditor.editTitle")
-            : t("definitionEditor.newTitle"),
+            ? t('definitionEditor.editTitle')
+            : t('definitionEditor.newTitle'),
     );
 
     if (definitionId === undefined) {
@@ -116,19 +116,19 @@ function Editor({
                   columns: [
                       {
                           ...blankColumn(),
-                          key: "period",
-                          label: t("definitionEditor.defaultColumn"),
+                          key: 'period',
+                          label: t('definitionEditor.defaultColumn'),
                       },
                   ],
               },
     });
-    const rows = useFieldArray({ control, name: "rows" });
-    const columns = useFieldArray({ control, name: "columns" });
-    const watchedColumns = useWatch({ control, name: "columns" });
+    const rows = useFieldArray({ control, name: 'rows' });
+    const columns = useFieldArray({ control, name: 'columns' });
+    const watchedColumns = useWatch({ control, name: 'columns' });
     const accounts = useQuery(allAccountsQuery(companyId));
     const versions = useQuery({
         ...versionsQuery(companyId),
-        enabled: watchedColumns.some((column) => column.kind === "plan"),
+        enabled: watchedColumns.some((column) => column.kind === 'plan'),
     });
     const editing = definition !== undefined;
 
@@ -139,27 +139,27 @@ function Editor({
                 : createDefinition(companyId, form),
         onSuccess: async (saved) => {
             await queryClient.invalidateQueries({
-                queryKey: ["companies", companyId, "report-definitions"],
+                queryKey: ['companies', companyId, 'report-definitions'],
             });
-            toast.success(t("definitionEditor.saved"));
+            toast.success(t('definitionEditor.saved'));
             await navigate({
-                to: "/w/$companyId/reports/$definitionId",
+                to: '/w/$companyId/reports/$definitionId',
                 params: { companyId, definitionId: saved.id },
             });
         },
         onError: async (error) => {
             if (isApiError(error) && error.status === 422) {
                 setErrors(formErrors(error.errors));
-                setFormError(t("definitionEditor.invalid"));
+                setFormError(t('definitionEditor.invalid'));
 
                 return;
             }
 
-            if (isApiError(error) && error.code === "VERSION_CONFLICT") {
+            if (isApiError(error) && error.code === 'VERSION_CONFLICT') {
                 await queryClient.invalidateQueries({
-                    queryKey: ["companies", companyId, "report-definitions"],
+                    queryKey: ['companies', companyId, 'report-definitions'],
                 });
-                setFormError(t("definitionEditor.conflict"));
+                setFormError(t('definitionEditor.conflict'));
 
                 return;
             }
@@ -197,47 +197,47 @@ function Editor({
             <div className="flex flex-col gap-1">
                 <h1 className="text-xl font-semibold tracking-tight">
                     {editing
-                        ? t("definitionEditor.editTitle")
-                        : t("definitionEditor.newTitle")}
+                        ? t('definitionEditor.editTitle')
+                        : t('definitionEditor.newTitle')}
                 </h1>
                 <p className="max-w-2xl text-sm text-muted-foreground">
                     {editing
-                        ? t("definitionEditor.editDescription", {
+                        ? t('definitionEditor.editDescription', {
                               version: definition.current_version,
                           })
-                        : t("definitionEditor.newDescription")}
+                        : t('definitionEditor.newDescription')}
                 </p>
             </div>
 
             {formError && <FormAlert>{formError}</FormAlert>}
             {orphans.length > 0 && (
                 <FormAlert>
-                    {orphans.map(([, message]) => message).join(" ")}
+                    {orphans.map(([, message]) => message).join(' ')}
                 </FormAlert>
             )}
 
             <section className="grid gap-4 sm:grid-cols-2">
                 <Field data-invalid={errors.key ? true : undefined}>
                     <FieldLabel htmlFor="def-key">
-                        {t("definitionEditor.key")}
+                        {t('definitionEditor.key')}
                     </FieldLabel>
                     <Input
                         id="def-key"
                         disabled={editing}
-                        {...register("key")}
+                        {...register('key')}
                     />
-                    {err("key")}
+                    {err('key')}
                 </Field>
                 <Field data-invalid={errors.name ? true : undefined}>
                     <FieldLabel htmlFor="def-name">
-                        {t("definitionEditor.name")}
+                        {t('definitionEditor.name')}
                     </FieldLabel>
-                    <Input id="def-name" {...register("name")} />
-                    {err("name")}
+                    <Input id="def-name" {...register('name')} />
+                    {err('name')}
                 </Field>
                 <Field>
                     <FieldLabel htmlFor="def-kind">
-                        {t("definitionEditor.kind")}
+                        {t('definitionEditor.kind')}
                     </FieldLabel>
                     <Controller
                         control={control}
@@ -255,12 +255,12 @@ function Editor({
                         )}
                     />
                     <FieldDescription>
-                        {t("definitionEditor.kindHint")}
+                        {t('definitionEditor.kindHint')}
                     </FieldDescription>
                 </Field>
                 <Field>
                     <FieldLabel htmlFor="def-basis">
-                        {t("definitionEditor.basis")}
+                        {t('definitionEditor.basis')}
                     </FieldLabel>
                     <Controller
                         control={control}
@@ -277,15 +277,15 @@ function Editor({
                         )}
                     />
                     <FieldDescription>
-                        {t("definitionEditor.basisHint")}
+                        {t('definitionEditor.basisHint')}
                     </FieldDescription>
                 </Field>
                 <Field>
-                    <FieldLabel>{t("definitionEditor.autoPublish")}</FieldLabel>
+                    <FieldLabel>{t('definitionEditor.autoPublish')}</FieldLabel>
                     {(
                         [
-                            ["publish_on_period_close", "periodClose"],
-                            ["publish_on_year_close", "yearClose"],
+                            ['publish_on_period_close', 'periodClose'],
+                            ['publish_on_year_close', 'yearClose'],
                         ] as const
                     ).map(([name, label]) => (
                         <Controller
@@ -312,14 +312,14 @@ function Editor({
                         />
                     ))}
                     <FieldDescription>
-                        {t("definitionEditor.autoPublishHint")}
+                        {t('definitionEditor.autoPublishHint')}
                     </FieldDescription>
                 </Field>
             </section>
 
             <section className="flex flex-col gap-3">
                 <h2 className="text-base font-semibold">
-                    {t("definitionEditor.rows")}
+                    {t('definitionEditor.rows')}
                 </h2>
                 {rows.fields.map((row, index) => (
                     <RowCard
@@ -334,7 +334,7 @@ function Editor({
                         onRemove={() => rows.remove(index)}
                     />
                 ))}
-                {err("rows")}
+                {err('rows')}
                 <Button
                     type="button"
                     variant="outline"
@@ -342,13 +342,13 @@ function Editor({
                     onClick={() => rows.append(blankRow())}
                 >
                     <PlusIcon data-icon="inline-start" />
-                    {t("definitionEditor.addRow")}
+                    {t('definitionEditor.addRow')}
                 </Button>
             </section>
 
             <section className="flex flex-col gap-3">
                 <h2 className="text-base font-semibold">
-                    {t("definitionEditor.columns")}
+                    {t('definitionEditor.columns')}
                 </h2>
                 {columns.fields.map((column, index) => (
                     <ColumnCard
@@ -364,7 +364,7 @@ function Editor({
                         onRemove={() => columns.remove(index)}
                     />
                 ))}
-                {err("columns")}
+                {err('columns')}
                 <Button
                     type="button"
                     variant="outline"
@@ -372,24 +372,24 @@ function Editor({
                     onClick={() => columns.append(blankColumn())}
                 >
                     <PlusIcon data-icon="inline-start" />
-                    {t("definitionEditor.addColumn")}
+                    {t('definitionEditor.addColumn')}
                 </Button>
             </section>
 
             <SubmitButton
                 className="w-auto self-start"
                 pending={save.isPending}
-                pendingLabel={t("common.saving")}
+                pendingLabel={t('common.saving')}
             >
                 {editing
-                    ? t("definitionEditor.saveChanges")
-                    : t("definitionEditor.create")}
+                    ? t('definitionEditor.saveChanges')
+                    : t('definitionEditor.create')}
             </SubmitButton>
         </form>
     );
 }
 
-type Register = ReturnType<typeof useForm<DefinitionForm>>["register"];
+type Register = ReturnType<typeof useForm<DefinitionForm>>['register'];
 
 function RowCard({
     index,
@@ -414,7 +414,7 @@ function RowCard({
     const n = index + 1;
     const at = `rows.${index}`;
     const type = useWatch({ control, name: `rows.${index}.type` });
-    const allRows = useWatch({ control, name: "rows" });
+    const allRows = useWatch({ control, name: 'rows' });
     const earlier = allRows
         .slice(0, index)
         .map((row) => row.key)
@@ -424,23 +424,23 @@ function RowCard({
         errors[`${at}.${path}`] ? (
             <FieldError>{errors[`${at}.${path}`]}</FieldError>
         ) : null;
-    const withSign = type !== "heading";
+    const withSign = type !== 'heading';
 
     return (
         <fieldset
-            aria-label={t("definitionEditor.rowN", { n })}
+            aria-label={t('definitionEditor.rowN', { n })}
             className="flex flex-col gap-3 rounded-lg border p-4"
         >
             <div className="flex items-center justify-between">
                 <legend className="text-sm font-medium">
-                    {t("definitionEditor.rowN", { n })}
+                    {t('definitionEditor.rowN', { n })}
                 </legend>
                 <div className="flex gap-1">
                     <Button
                         type="button"
                         size="icon-sm"
                         variant="ghost"
-                        aria-label={t("definitionEditor.moveUp", { n })}
+                        aria-label={t('definitionEditor.moveUp', { n })}
                         disabled={index === 0}
                         onClick={() => onMove(index - 1)}
                     >
@@ -450,7 +450,7 @@ function RowCard({
                         type="button"
                         size="icon-sm"
                         variant="ghost"
-                        aria-label={t("definitionEditor.moveDown", { n })}
+                        aria-label={t('definitionEditor.moveDown', { n })}
                         disabled={index === count - 1}
                         onClick={() => onMove(index + 1)}
                     >
@@ -460,7 +460,7 @@ function RowCard({
                         type="button"
                         size="icon-sm"
                         variant="ghost"
-                        aria-label={t("definitionEditor.removeRow", { n })}
+                        aria-label={t('definitionEditor.removeRow', { n })}
                         onClick={onRemove}
                     >
                         <Trash2Icon />
@@ -471,27 +471,27 @@ function RowCard({
             <div className="grid gap-3 sm:grid-cols-3">
                 <Field data-invalid={errors[`${at}.key`] ? true : undefined}>
                     <FieldLabel htmlFor={`row-${index}-key`}>
-                        {t("definitionEditor.rowKey", { n })}
+                        {t('definitionEditor.rowKey', { n })}
                     </FieldLabel>
                     <Input
                         id={`row-${index}-key`}
                         {...register(`rows.${index}.key`)}
                     />
-                    {err("key")}
+                    {err('key')}
                 </Field>
                 <Field data-invalid={errors[`${at}.label`] ? true : undefined}>
                     <FieldLabel htmlFor={`row-${index}-label`}>
-                        {t("definitionEditor.rowLabel", { n })}
+                        {t('definitionEditor.rowLabel', { n })}
                     </FieldLabel>
                     <Input
                         id={`row-${index}-label`}
                         {...register(`rows.${index}.label`)}
                     />
-                    {err("label")}
+                    {err('label')}
                 </Field>
                 <Field data-invalid={errors[`${at}.type`] ? true : undefined}>
                     <FieldLabel htmlFor={`row-${index}-type`}>
-                        {t("definitionEditor.rowType", { n })}
+                        {t('definitionEditor.rowType', { n })}
                     </FieldLabel>
                     <Controller
                         control={control}
@@ -507,7 +507,7 @@ function RowCard({
                             />
                         )}
                     />
-                    {err("type")}
+                    {err('type')}
                 </Field>
             </div>
 
@@ -515,7 +515,7 @@ function RowCard({
                 <div className="grid gap-3 sm:grid-cols-3">
                     <Field>
                         <FieldLabel htmlFor={`row-${index}-sign`}>
-                            {t("definitionEditor.rowSign", { n })}
+                            {t('definitionEditor.rowSign', { n })}
                         </FieldLabel>
                         <Controller
                             control={control}
@@ -526,7 +526,7 @@ function RowCard({
                                     value={field.value}
                                     onValueChange={field.onChange}
                                     items={options(
-                                        ["debit", "credit"] as const,
+                                        ['debit', 'credit'] as const,
                                         (value) =>
                                             t(
                                                 `definitionEditor.signs.${value}`,
@@ -535,11 +535,11 @@ function RowCard({
                                 />
                             )}
                         />
-                        {err("sign")}
+                        {err('sign')}
                     </Field>
                     <Field>
                         <FieldLabel htmlFor={`row-${index}-favorable`}>
-                            {t("definitionEditor.rowFavorable", { n })}
+                            {t('definitionEditor.rowFavorable', { n })}
                         </FieldLabel>
                         <Controller
                             control={control}
@@ -550,14 +550,14 @@ function RowCard({
                                     value={field.value}
                                     onValueChange={field.onChange}
                                     placeholder={t(
-                                        "definitionEditor.favorableAuto",
+                                        'definitionEditor.favorableAuto',
                                     )}
                                     items={options(
-                                        ["", "higher", "lower"] as const,
+                                        ['', 'higher', 'lower'] as const,
                                         (value) =>
-                                            value === ""
+                                            value === ''
                                                 ? t(
-                                                      "definitionEditor.favorableAuto",
+                                                      'definitionEditor.favorableAuto',
                                                   )
                                                 : t(
                                                       `definitionEditor.favorables.${value}`,
@@ -566,12 +566,12 @@ function RowCard({
                                 />
                             )}
                         />
-                        {err("favorable")}
+                        {err('favorable')}
                     </Field>
-                    {(type === "accounts" || type === "cash_equivalents") && (
+                    {(type === 'accounts' || type === 'cash_equivalents') && (
                         <Field>
                             <FieldLabel htmlFor={`row-${index}-basis`}>
-                                {t("definitionEditor.rowBasis", { n })}
+                                {t('definitionEditor.rowBasis', { n })}
                             </FieldLabel>
                             <Controller
                                 control={control}
@@ -582,11 +582,11 @@ function RowCard({
                                         value={field.value}
                                         onValueChange={field.onChange}
                                         items={options(
-                                            ["", ...BASES] as const,
+                                            ['', ...BASES] as const,
                                             (value) =>
-                                                value === ""
+                                                value === ''
                                                     ? t(
-                                                          "definitionEditor.basisDefault",
+                                                          'definitionEditor.basisDefault',
                                                       )
                                                     : t(
                                                           `definitionEditor.bases.${value}`,
@@ -595,16 +595,16 @@ function RowCard({
                                     />
                                 )}
                             />
-                            {err("basis")}
+                            {err('basis')}
                         </Field>
                     )}
                 </div>
             )}
 
-            {type === "accounts" && (
+            {type === 'accounts' && (
                 <div className="flex flex-col gap-2">
                     <div className="text-sm font-medium">
-                        {t("definitionEditor.accountSet")}
+                        {t('definitionEditor.accountSet')}
                     </div>
                     <SelectorList
                         control={control as unknown as Control<FieldValues>}
@@ -613,23 +613,23 @@ function RowCard({
                         accountItems={accountItems}
                         labels={{
                             type: (s) =>
-                                t("definitionEditor.selectorType", { n, s }),
+                                t('definitionEditor.selectorType', { n, s }),
                             class: (s) =>
-                                t("definitionEditor.selectorClass", { n, s }),
+                                t('definitionEditor.selectorClass', { n, s }),
                             account: (s) =>
-                                t("definitionEditor.selectorAccount", { n, s }),
+                                t('definitionEditor.selectorAccount', { n, s }),
                             remove: (s) =>
-                                t("definitionEditor.removeSelector", { n, s }),
-                            add: t("definitionEditor.addSelector", { n }),
+                                t('definitionEditor.removeSelector', { n, s }),
+                            add: t('definitionEditor.addSelector', { n }),
                         }}
                     />
                 </div>
             )}
 
-            {type === "subtotal" && (
+            {type === 'subtotal' && (
                 <div className="flex flex-col gap-2">
                     <div className="text-sm font-medium">
-                        {t("definitionEditor.terms")}
+                        {t('definitionEditor.terms')}
                     </div>
                     {terms.fields.map((term, s) => (
                         <div
@@ -645,12 +645,12 @@ function RowCard({
                                         onValueChange={field.onChange}
                                         className="w-28"
                                         aria-label={t(
-                                            "definitionEditor.termSign",
+                                            'definitionEditor.termSign',
                                             { n, t: s + 1 },
                                         )}
                                         items={[
-                                            { value: "1", label: "+" },
-                                            { value: "-1", label: "−" },
+                                            { value: '1', label: '+' },
+                                            { value: '-1', label: '−' },
                                         ]}
                                     />
                                 )}
@@ -664,10 +664,10 @@ function RowCard({
                                         onValueChange={field.onChange}
                                         className="w-64"
                                         placeholder={t(
-                                            "definitionEditor.termRow",
+                                            'definitionEditor.termRow',
                                         )}
                                         aria-label={t(
-                                            "definitionEditor.termRowN",
+                                            'definitionEditor.termRowN',
                                             { n, t: s + 1 },
                                         )}
                                         aria-invalid={
@@ -681,7 +681,7 @@ function RowCard({
                                                 label:
                                                     key === UNMAPPED
                                                         ? t(
-                                                              "definitionEditor.unmappedRow",
+                                                              'definitionEditor.unmappedRow',
                                                           )
                                                         : key,
                                             }),
@@ -693,7 +693,7 @@ function RowCard({
                                 type="button"
                                 size="icon-sm"
                                 variant="ghost"
-                                aria-label={t("definitionEditor.removeTerm", {
+                                aria-label={t('definitionEditor.removeTerm', {
                                     n,
                                     t: s + 1,
                                 })}
@@ -708,16 +708,16 @@ function RowCard({
                             )}
                         </div>
                     ))}
-                    {err("terms")}
+                    {err('terms')}
                     <Button
                         type="button"
                         size="sm"
                         variant="outline"
                         className="self-start"
-                        onClick={() => terms.append({ row: "", sign: "1" })}
+                        onClick={() => terms.append({ row: '', sign: '1' })}
                     >
                         <PlusIcon data-icon="inline-start" />
-                        {t("definitionEditor.addTerm", { n })}
+                        {t('definitionEditor.addTerm', { n })}
                     </Button>
                 </div>
             )}
@@ -744,7 +744,7 @@ function ColumnCard({
     const n = index + 1;
     const at = `columns.${index}`;
     const kind = useWatch({ control, name: `columns.${index}.kind` });
-    const all = useWatch({ control, name: "columns" });
+    const all = useWatch({ control, name: 'columns' });
     const earlier = all
         .slice(0, index)
         .filter((column) => column.key)
@@ -756,18 +756,18 @@ function ColumnCard({
 
     return (
         <fieldset
-            aria-label={t("definitionEditor.columnN", { n })}
+            aria-label={t('definitionEditor.columnN', { n })}
             className="flex flex-col gap-3 rounded-lg border p-4"
         >
             <div className="flex items-center justify-between">
                 <legend className="text-sm font-medium">
-                    {t("definitionEditor.columnN", { n })}
+                    {t('definitionEditor.columnN', { n })}
                 </legend>
                 <Button
                     type="button"
                     size="icon-sm"
                     variant="ghost"
-                    aria-label={t("definitionEditor.removeColumn", { n })}
+                    aria-label={t('definitionEditor.removeColumn', { n })}
                     onClick={onRemove}
                 >
                     <Trash2Icon />
@@ -776,27 +776,27 @@ function ColumnCard({
             <div className="grid gap-3 sm:grid-cols-3">
                 <Field data-invalid={errors[`${at}.key`] ? true : undefined}>
                     <FieldLabel htmlFor={`col-${index}-key`}>
-                        {t("definitionEditor.columnKey", { n })}
+                        {t('definitionEditor.columnKey', { n })}
                     </FieldLabel>
                     <Input
                         id={`col-${index}-key`}
                         {...register(`columns.${index}.key`)}
                     />
-                    {err("key")}
+                    {err('key')}
                 </Field>
                 <Field data-invalid={errors[`${at}.label`] ? true : undefined}>
                     <FieldLabel htmlFor={`col-${index}-label`}>
-                        {t("definitionEditor.columnLabel", { n })}
+                        {t('definitionEditor.columnLabel', { n })}
                     </FieldLabel>
                     <Input
                         id={`col-${index}-label`}
                         {...register(`columns.${index}.label`)}
                     />
-                    {err("label")}
+                    {err('label')}
                 </Field>
                 <Field data-invalid={errors[`${at}.kind`] ? true : undefined}>
                     <FieldLabel htmlFor={`col-${index}-kind`}>
-                        {t("definitionEditor.columnKind", { n })}
+                        {t('definitionEditor.columnKind', { n })}
                     </FieldLabel>
                     <Controller
                         control={control}
@@ -812,13 +812,13 @@ function ColumnCard({
                             />
                         )}
                     />
-                    {err("kind")}
+                    {err('kind')}
                 </Field>
             </div>
 
-            {kind === "difference" ? (
+            {kind === 'difference' ? (
                 <div className="grid gap-3 sm:grid-cols-2">
-                    {(["minuend", "subtrahend"] as const).map((side) => (
+                    {(['minuend', 'subtrahend'] as const).map((side) => (
                         <Field
                             key={side}
                             data-invalid={
@@ -837,7 +837,7 @@ function ColumnCard({
                                         value={field.value}
                                         onValueChange={field.onChange}
                                         placeholder={t(
-                                            "definitionEditor.pickColumn",
+                                            'definitionEditor.pickColumn',
                                         )}
                                         items={earlier}
                                     />
@@ -853,7 +853,7 @@ function ColumnCard({
                         data-invalid={errors[`${at}.shift`] ? true : undefined}
                     >
                         <FieldLabel htmlFor={`col-${index}-years`}>
-                            {t("definitionEditor.shiftYears", { n })}
+                            {t('definitionEditor.shiftYears', { n })}
                         </FieldLabel>
                         <Input
                             id={`col-${index}-years`}
@@ -866,7 +866,7 @@ function ColumnCard({
                         data-invalid={errors[`${at}.shift`] ? true : undefined}
                     >
                         <FieldLabel htmlFor={`col-${index}-months`}>
-                            {t("definitionEditor.shiftMonths", { n })}
+                            {t('definitionEditor.shiftMonths', { n })}
                         </FieldLabel>
                         <Input
                             id={`col-${index}-months`}
@@ -874,13 +874,13 @@ function ColumnCard({
                             placeholder="0"
                             {...register(`columns.${index}.shift_months`)}
                         />
-                        {err("shift")}
+                        {err('shift')}
                     </Field>
-                    {kind === "plan" && (
+                    {kind === 'plan' && (
                         <>
                             <Field>
                                 <FieldLabel htmlFor={`col-${index}-span`}>
-                                    {t("definitionEditor.planSpan", { n })}
+                                    {t('definitionEditor.planSpan', { n })}
                                 </FieldLabel>
                                 <Controller
                                     control={control}
@@ -891,7 +891,7 @@ function ColumnCard({
                                             value={field.value}
                                             onValueChange={field.onChange}
                                             items={options(
-                                                ["period", "ytd"] as const,
+                                                ['period', 'ytd'] as const,
                                                 (value) =>
                                                     t(
                                                         `definitionEditor.columnKinds.${value}`,
@@ -900,11 +900,11 @@ function ColumnCard({
                                         />
                                     )}
                                 />
-                                {err("span")}
+                                {err('span')}
                             </Field>
                             <Field className="sm:col-span-3">
                                 <FieldLabel htmlFor={`col-${index}-plan`}>
-                                    {t("definitionEditor.planVersion", { n })}
+                                    {t('definitionEditor.planVersion', { n })}
                                 </FieldLabel>
                                 <Controller
                                     control={control}
@@ -916,18 +916,18 @@ function ColumnCard({
                                             value={field.value}
                                             onValueChange={field.onChange}
                                             placeholder={t(
-                                                "definitionEditor.planAuto",
+                                                'definitionEditor.planAuto',
                                             )}
-                                            emptyText={t("common.noMatch")}
+                                            emptyText={t('common.noMatch')}
                                             clearable
                                             className="w-72"
                                         />
                                     )}
                                 />
                                 <FieldDescription>
-                                    {t("definitionEditor.planAutoHint")}
+                                    {t('definitionEditor.planAutoHint')}
                                 </FieldDescription>
-                                {err("plan_version_id")}
+                                {err('plan_version_id')}
                             </Field>
                         </>
                     )}

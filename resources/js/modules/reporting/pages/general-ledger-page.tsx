@@ -1,22 +1,22 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { BookOpenIcon, DownloadIcon } from "lucide-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { FormAlert } from "@/components/form-alert";
-import { SearchableSelect } from "@/components/searchable-select";
-import { Button } from "@/components/ui/button";
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
+import { BookOpenIcon, DownloadIcon } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { FormAlert } from '@/components/form-alert';
+import { SearchableSelect } from '@/components/searchable-select';
+import { Button } from '@/components/ui/button';
 import {
     Empty,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
     EmptyTitle,
-} from "@/components/ui/empty";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
+} from '@/components/ui/empty';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import {
     Table,
     TableBody,
@@ -25,23 +25,23 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { useDocumentTitle } from "@/hooks/use-document-title";
-import { formatIsoDate, todayIso } from "@/lib/date";
-import { formatDecimal, isPositive } from "@/lib/decimal";
-import { genericErrorMessage } from "@/lib/errors";
-import { isApiError } from "@/lib/http";
-import { lineAccountsQuery } from "@/modules/transaction-entry/entries";
-import { CoverageNotice } from "@/modules/reporting/components/coverage-notice";
-import { ReportFilterBar } from "@/modules/reporting/components/report-filter-bar";
+} from '@/components/ui/table';
+import { useDocumentTitle } from '@/hooks/use-document-title';
+import { formatIsoDate, todayIso } from '@/lib/date';
+import { formatDecimal, isPositive } from '@/lib/decimal';
+import { genericErrorMessage } from '@/lib/errors';
+import { isApiError } from '@/lib/http';
+import { lineAccountsQuery } from '@/modules/transaction-entry/entries';
+import { CoverageNotice } from '@/modules/reporting/components/coverage-notice';
+import { ReportFilterBar } from '@/modules/reporting/components/report-filter-bar';
 import {
     exportGeneralLedger,
     generalLedgerQuery,
-} from "@/modules/reporting/general-ledger";
+} from '@/modules/reporting/general-ledger';
 import {
     emptyFilter,
     type ReportFilter,
-} from "@/modules/reporting/report-filter";
+} from '@/modules/reporting/report-filter';
 
 export type GeneralLedgerSearch = {
     account_id?: string;
@@ -75,9 +75,9 @@ export function GeneralLedgerPage({
         from: search.from ?? `${new Date().getFullYear()}-01-01`,
         to: search.to ?? todayIso(),
     }));
-    const accountId = search.account_id ?? "";
+    const accountId = search.account_id ?? '';
 
-    useDocumentTitle(t("generalLedger.pageTitle"));
+    useDocumentTitle(t('generalLedger.pageTitle'));
 
     const accounts = useQuery({
         ...lineAccountsQuery(companyId),
@@ -85,7 +85,7 @@ export function GeneralLedgerPage({
     });
     const report = useQuery({
         ...generalLedgerQuery(companyId, accountId, filter),
-        enabled: accountId !== "",
+        enabled: accountId !== '',
     });
 
     const download = useMutation({
@@ -94,18 +94,18 @@ export function GeneralLedgerPage({
                 companyId,
                 accountId,
                 filter,
-                report.data?.account.code ?? "account",
+                report.data?.account.code ?? 'account',
             ),
         onError: (error) =>
             toast.error(
                 isApiError(error) && error.status !== 0
                     ? error.message
-                    : t("generalLedger.exportFailed"),
+                    : t('generalLedger.exportFailed'),
             ),
     });
 
     const money = (value: string) =>
-        isPositive(value) ? formatDecimal(value, i18n.language) : "";
+        isPositive(value) ? formatDecimal(value, i18n.language) : '';
     const amount = (value: string) => formatDecimal(value, i18n.language);
 
     return (
@@ -113,10 +113,10 @@ export function GeneralLedgerPage({
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex flex-col gap-1">
                     <h1 className="text-xl font-semibold tracking-tight">
-                        {t("generalLedger.title")}
+                        {t('generalLedger.title')}
                     </h1>
                     <p className="max-w-2xl text-sm text-muted-foreground">
-                        {t("generalLedger.description")}
+                        {t('generalLedger.description')}
                     </p>
                 </div>
                 <Button
@@ -131,15 +131,15 @@ export function GeneralLedgerPage({
                         <DownloadIcon data-icon="inline-start" />
                     )}
                     {download.isPending
-                        ? t("generalLedger.exporting")
-                        : t("generalLedger.export")}
+                        ? t('generalLedger.exporting')
+                        : t('generalLedger.export')}
                 </Button>
             </div>
 
             {canReadAccounts && (
                 <Field className="w-80">
                     <FieldLabel htmlFor="gl-account">
-                        {t("generalLedger.account")}
+                        {t('generalLedger.account')}
                     </FieldLabel>
                     <SearchableSelect
                         id="gl-account"
@@ -149,8 +149,8 @@ export function GeneralLedgerPage({
                         }))}
                         value={accountId}
                         onValueChange={onAccountChange}
-                        placeholder={t("generalLedger.pickAccount")}
-                        emptyText={t("common.noMatch")}
+                        placeholder={t('generalLedger.pickAccount')}
+                        emptyText={t('common.noMatch')}
                     />
                 </Field>
             )}
@@ -161,15 +161,15 @@ export function GeneralLedgerPage({
                 onApply={setFilter}
             />
 
-            {accountId === "" ? (
+            {accountId === '' ? (
                 <Empty className="max-w-xl flex-none border py-10">
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
                             <BookOpenIcon />
                         </EmptyMedia>
-                        <EmptyTitle>{t("generalLedger.noAccount")}</EmptyTitle>
+                        <EmptyTitle>{t('generalLedger.noAccount')}</EmptyTitle>
                         <EmptyDescription>
-                            {t("generalLedger.noAccountDescription")}
+                            {t('generalLedger.noAccountDescription')}
                         </EmptyDescription>
                     </EmptyHeader>
                 </Empty>
@@ -189,11 +189,11 @@ export function GeneralLedgerPage({
                         <h2 className="text-base font-medium">
                             <span className="font-mono text-sm">
                                 {report.data.account.code}
-                            </span>{" "}
+                            </span>{' '}
                             {report.data.account.name}
                         </h2>
                         <span className="text-sm text-muted-foreground">
-                            {t("generalLedger.currency", {
+                            {t('generalLedger.currency', {
                                 currency: report.data.functional_currency,
                             })}
                         </span>
@@ -206,29 +206,29 @@ export function GeneralLedgerPage({
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>
-                                        {t("generalLedger.date")}
+                                        {t('generalLedger.date')}
                                     </TableHead>
                                     <TableHead>
-                                        {t("generalLedger.journal")}
+                                        {t('generalLedger.journal')}
                                     </TableHead>
                                     <TableHead>
-                                        {t("generalLedger.descriptionColumn")}
+                                        {t('generalLedger.descriptionColumn')}
                                     </TableHead>
                                     <TableHead className="text-end">
-                                        {t("generalLedger.debit")}
+                                        {t('generalLedger.debit')}
                                     </TableHead>
                                     <TableHead className="text-end">
-                                        {t("generalLedger.credit")}
+                                        {t('generalLedger.credit')}
                                     </TableHead>
                                     <TableHead className="text-end">
-                                        {t("generalLedger.balance")}
+                                        {t('generalLedger.balance')}
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 <TableRow>
                                     <TableCell colSpan={5} className="italic">
-                                        {t("generalLedger.opening")}
+                                        {t('generalLedger.opening')}
                                     </TableCell>
                                     <TableCell className="text-end tabular-nums">
                                         {amount(report.data.opening_balance)}
@@ -273,7 +273,7 @@ export function GeneralLedgerPage({
                                                             className="text-xs text-muted-foreground underline-offset-4 hover:underline"
                                                         >
                                                             {t(
-                                                                "generalLedger.entry",
+                                                                'generalLedger.entry',
                                                             )}
                                                         </Link>
                                                     )}
@@ -297,7 +297,7 @@ export function GeneralLedgerPage({
                                                             ([key, value]) =>
                                                                 `${key}: ${String(value)}`,
                                                         )
-                                                        .join(" · ")}
+                                                        .join(' · ')}
                                                 </div>
                                             )}
                                         </TableCell>
@@ -319,7 +319,7 @@ export function GeneralLedgerPage({
                                         colSpan={3}
                                         className="font-medium"
                                     >
-                                        {t("generalLedger.total")}
+                                        {t('generalLedger.total')}
                                     </TableCell>
                                     <TableCell className="text-end font-medium tabular-nums">
                                         {amount(report.data.totals.debit)}

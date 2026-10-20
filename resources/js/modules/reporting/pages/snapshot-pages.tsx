@@ -1,20 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { CameraIcon } from "lucide-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { FormAlert } from "@/components/form-alert";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
+import { CameraIcon } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { FormAlert } from '@/components/form-alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
     Empty,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
     EmptyTitle,
-} from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
+} from '@/components/ui/empty';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -22,28 +22,28 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { useDocumentTitle } from "@/hooks/use-document-title";
-import { formatIsoDate } from "@/lib/date";
-import { genericErrorMessage } from "@/lib/errors";
-import { isApiError } from "@/lib/http";
+} from '@/components/ui/table';
+import { useDocumentTitle } from '@/hooks/use-document-title';
+import { formatIsoDate } from '@/lib/date';
+import { genericErrorMessage } from '@/lib/errors';
+import { isApiError } from '@/lib/http';
 import {
     SnapshotDialog,
     type SnapshotTarget,
-} from "@/modules/reporting/components/snapshot-dialogs";
-import { reportDefinitionQuery } from "@/modules/reporting/report-definitions";
-import { ResultView } from "@/modules/reporting/pages/report-viewer-page";
+} from '@/modules/reporting/components/snapshot-dialogs';
+import { reportDefinitionQuery } from '@/modules/reporting/report-definitions';
+import { ResultView } from '@/modules/reporting/pages/report-viewer-page';
 import {
     needsRecompute,
     snapshotQuery,
     snapshotsQuery,
     type ReportSnapshotSummary,
-} from "@/modules/reporting/snapshots";
+} from '@/modules/reporting/snapshots';
 
 const stampOf = (value: string, locale: string) =>
     new Date(value).toLocaleString(locale, {
-        dateStyle: "medium",
-        timeStyle: "short",
+        dateStyle: 'medium',
+        timeStyle: 'short',
     });
 
 /** The dates a snapshot covers: one date or a range. */
@@ -52,7 +52,7 @@ function rangeOf(parameters: Record<string, unknown>, locale: string) {
     const to = parameters.to as string | undefined;
 
     if (!from || !to) {
-        return "—";
+        return '—';
     }
 
     return from === to
@@ -83,7 +83,7 @@ export function SnapshotsPage({
     const snapshots = useQuery(snapshotsQuery(companyId, definitionId));
     const [target, setTarget] = useState<SnapshotTarget | null>(null);
 
-    useDocumentTitle(t("snapshots.pageTitle"));
+    useDocumentTitle(t('snapshots.pageTitle'));
 
     const current = definition.data?.current_version;
 
@@ -92,20 +92,20 @@ export function SnapshotsPage({
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex flex-col gap-1">
                     <h1 className="text-xl font-semibold tracking-tight">
-                        {t("snapshots.title", {
-                            name: definition.data?.name ?? "…",
+                        {t('snapshots.title', {
+                            name: definition.data?.name ?? '…',
                         })}
                     </h1>
                     <p className="max-w-2xl text-sm text-muted-foreground">
-                        {t("snapshots.description")}
+                        {t('snapshots.description')}
                     </p>
                 </div>
                 <Link
                     to="/w/$companyId/reports/$definitionId"
                     params={{ companyId, definitionId }}
-                    className={buttonVariants({ variant: "outline" })}
+                    className={buttonVariants({ variant: 'outline' })}
                 >
-                    {t("snapshots.backToReport")}
+                    {t('snapshots.backToReport')}
                 </Link>
             </div>
 
@@ -119,12 +119,12 @@ export function SnapshotsPage({
                         <EmptyMedia variant="icon">
                             <CameraIcon />
                         </EmptyMedia>
-                        <EmptyTitle>{t("snapshots.empty")}</EmptyTitle>
+                        <EmptyTitle>{t('snapshots.empty')}</EmptyTitle>
                         <EmptyDescription>
                             {t(
                                 canPublish
-                                    ? "snapshots.emptyCanPublish"
-                                    : "snapshots.emptyReadOnly",
+                                    ? 'snapshots.emptyCanPublish'
+                                    : 'snapshots.emptyReadOnly',
                             )}
                         </EmptyDescription>
                     </EmptyHeader>
@@ -134,18 +134,18 @@ export function SnapshotsPage({
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>{t("snapshots.number")}</TableHead>
+                                <TableHead>{t('snapshots.number')}</TableHead>
                                 <TableHead>
-                                    {t("snapshots.publishedAt")}
+                                    {t('snapshots.publishedAt')}
                                 </TableHead>
-                                <TableHead>{t("snapshots.range")}</TableHead>
+                                <TableHead>{t('snapshots.range')}</TableHead>
                                 <TableHead className="text-end">
-                                    {t("snapshots.definitionVersion")}
+                                    {t('snapshots.definitionVersion')}
                                 </TableHead>
-                                <TableHead>{t("snapshots.reason")}</TableHead>
+                                <TableHead>{t('snapshots.reason')}</TableHead>
                                 <TableHead>
                                     <span className="sr-only">
-                                        {t("snapshots.actions")}
+                                        {t('snapshots.actions')}
                                     </span>
                                 </TableHead>
                             </TableRow>
@@ -166,7 +166,7 @@ export function SnapshotsPage({
                                     canPublish={canPublish}
                                     onRecompute={() =>
                                         setTarget({
-                                            kind: "recompute",
+                                            kind: 'recompute',
                                             snapshotId: snapshot.id,
                                             definitionId,
                                         })
@@ -223,7 +223,7 @@ function SnapshotRow({
                     }}
                     className="font-medium underline-offset-4 hover:underline"
                 >
-                    {t("snapshots.numberOf", { number: snapshot.sequence })}
+                    {t('snapshots.numberOf', { number: snapshot.sequence })}
                 </Link>
             </TableCell>
             <TableCell>{stampOf(snapshot.published_at, locale)}</TableCell>
@@ -232,14 +232,14 @@ function SnapshotRow({
                 {snapshot.definition_version}
                 {stale && (
                     <Badge variant="outline" className="ms-2">
-                        {t("snapshots.stale")}
+                        {t('snapshots.stale')}
                     </Badge>
                 )}
             </TableCell>
             <TableCell className="text-muted-foreground">
                 {origin && (
                     <div className="text-xs">
-                        {t("snapshots.recomputedFrom", {
+                        {t('snapshots.recomputedFrom', {
                             number: origin.sequence,
                         })}
                     </div>
@@ -251,12 +251,12 @@ function SnapshotRow({
                     <Button
                         variant="ghost"
                         size="sm"
-                        aria-label={t("snapshots.recomputeNamed", {
+                        aria-label={t('snapshots.recomputeNamed', {
                             number: snapshot.sequence,
                         })}
                         onClick={onRecompute}
                     >
-                        {t("snapshots.recompute.button")}
+                        {t('snapshots.recompute.button')}
                     </Button>
                 )}
             </TableCell>
@@ -285,15 +285,15 @@ export function SnapshotDetailPage({
     const snapshot = useQuery(snapshotQuery(companyId, snapshotId));
     const [target, setTarget] = useState<SnapshotTarget | null>(null);
 
-    useDocumentTitle(t("snapshots.pageTitle"));
+    useDocumentTitle(t('snapshots.pageTitle'));
 
     const back = (
         <Link
             to="/w/$companyId/reports/$definitionId/snapshots"
             params={{ companyId, definitionId }}
-            className={buttonVariants({ variant: "outline" })}
+            className={buttonVariants({ variant: 'outline' })}
         >
-            {t("snapshots.backToList")}
+            {t('snapshots.backToList')}
         </Link>
     );
 
@@ -302,9 +302,9 @@ export function SnapshotDetailPage({
             <>
                 {isApiError(snapshot.error) && snapshot.error.status === 403 ? (
                     <Alert role="status">
-                        <AlertTitle>{t("snapshots.scopeTitle")}</AlertTitle>
+                        <AlertTitle>{t('snapshots.scopeTitle')}</AlertTitle>
                         <AlertDescription>
-                            {t("snapshots.scope")}
+                            {t('snapshots.scope')}
                         </AlertDescription>
                     </Alert>
                 ) : (
@@ -328,12 +328,12 @@ export function SnapshotDetailPage({
     const boundary = data.data_boundary as Record<string, unknown>;
     const filters = Object.entries(data.parameters).filter(
         ([key, value]) =>
-            !["from", "to", "as_of"].includes(key) &&
+            !['from', 'to', 'as_of'].includes(key) &&
             value !== null &&
-            value !== "" &&
+            value !== '' &&
             !(Array.isArray(value) && value.length === 0) &&
             !(
-                typeof value === "object" &&
+                typeof value === 'object' &&
                 !Array.isArray(value) &&
                 Object.keys(value as object).length === 0
             ),
@@ -345,19 +345,19 @@ export function SnapshotDetailPage({
                 <div className="flex flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-2">
                         <h1 className="text-xl font-semibold tracking-tight">
-                            {t("snapshots.detailTitle", {
-                                name: definition.data?.name ?? "…",
+                            {t('snapshots.detailTitle', {
+                                name: definition.data?.name ?? '…',
                                 number: data.sequence,
                             })}
                         </h1>
                         {stale && (
                             <Badge variant="outline">
-                                {t("snapshots.stale")}
+                                {t('snapshots.stale')}
                             </Badge>
                         )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                        {t("snapshots.publishedOn", {
+                        {t('snapshots.publishedOn', {
                             at: stampOf(data.published_at, i18n.language),
                         })}
                     </p>
@@ -368,13 +368,13 @@ export function SnapshotDetailPage({
                         <Button
                             onClick={() =>
                                 setTarget({
-                                    kind: "recompute",
+                                    kind: 'recompute',
                                     snapshotId: data.id,
                                     definitionId,
                                 })
                             }
                         >
-                            {t("snapshots.recompute.button")}
+                            {t('snapshots.recompute.button')}
                         </Button>
                     )}
                 </div>
@@ -382,9 +382,9 @@ export function SnapshotDetailPage({
 
             {stale && (
                 <Alert role="status">
-                    <AlertTitle>{t("snapshots.staleTitle")}</AlertTitle>
+                    <AlertTitle>{t('snapshots.staleTitle')}</AlertTitle>
                     <AlertDescription>
-                        {t("snapshots.staleDescription", {
+                        {t('snapshots.staleDescription', {
                             published: data.definition_version,
                             current: definition.data?.current_version,
                         })}
@@ -393,25 +393,25 @@ export function SnapshotDetailPage({
             )}
 
             <dl className="grid gap-x-6 gap-y-2 rounded-lg border p-4 text-sm sm:grid-cols-2">
-                <Item label={t("snapshots.range")}>
+                <Item label={t('snapshots.range')}>
                     {rangeOf(data.parameters, i18n.language)}
                 </Item>
-                <Item label={t("snapshots.definitionVersion")}>
+                <Item label={t('snapshots.definitionVersion')}>
                     {data.definition_version}
                 </Item>
-                <Item label={t("snapshots.mappingVersion")}>
-                    {String(data.mapping_versions.cash_equivalents ?? "—")}
+                <Item label={t('snapshots.mappingVersion')}>
+                    {String(data.mapping_versions.cash_equivalents ?? '—')}
                 </Item>
-                <Item label={t("snapshots.computedAt")}>
-                    {typeof boundary.computed_at === "string"
+                <Item label={t('snapshots.computedAt')}>
+                    {typeof boundary.computed_at === 'string'
                         ? stampOf(boundary.computed_at, i18n.language)
-                        : "—"}
+                        : '—'}
                 </Item>
                 {data.reason && (
-                    <Item label={t("snapshots.reason")}>{data.reason}</Item>
+                    <Item label={t('snapshots.reason')}>{data.reason}</Item>
                 )}
                 {data.recomputed_from_id && (
-                    <Item label={t("snapshots.recomputedLabel")}>
+                    <Item label={t('snapshots.recomputedLabel')}>
                         <Link
                             to="/w/$companyId/reports/$definitionId/snapshots/$snapshotId"
                             params={{
@@ -421,20 +421,20 @@ export function SnapshotDetailPage({
                             }}
                             className="underline underline-offset-4"
                         >
-                            {t("snapshots.openOriginal")}
+                            {t('snapshots.openOriginal')}
                         </Link>
                     </Item>
                 )}
                 {filters.length > 0 && (
-                    <Item label={t("snapshots.filters")}>
+                    <Item label={t('snapshots.filters')}>
                         <ul>
                             {filters.map(([key, value]) => (
                                 <li key={key}>
                                     <span className="font-mono text-xs">
                                         {key}
                                     </span>
-                                    {": "}
-                                    {typeof value === "object"
+                                    {': '}
+                                    {typeof value === 'object'
                                         ? JSON.stringify(value)
                                         : String(value)}
                                 </li>

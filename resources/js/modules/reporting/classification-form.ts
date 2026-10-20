@@ -1,6 +1,6 @@
-import { api, unwrap } from "@/api/client";
-import type { MovementClassification } from "@/modules/reporting/classifications";
-import type { SelectorRow } from "@/modules/reporting/definition-form";
+import { api, unwrap } from '@/api/client';
+import type { MovementClassification } from '@/modules/reporting/classifications';
+import type { SelectorRow } from '@/modules/reporting/definition-form';
 
 export type ClassificationRowForm = { key: string; label: string };
 
@@ -28,27 +28,27 @@ export type ClassificationForm = {
 };
 
 export const blankSelector = (): SelectorRow => ({
-    type: "class",
-    id: "",
-    class: "asset",
+    type: 'class',
+    id: '',
+    class: 'asset',
 });
 
 export const blankRule = (): RuleForm => ({
-    row: "",
+    row: '',
     accounts: [blankSelector()],
-    keys: "",
+    keys: '',
 });
 
 export const blankComponent = (): ComponentForm => ({
-    key: "",
-    label: "",
+    key: '',
+    label: '',
     accounts: [blankSelector()],
 });
 
 export const blankClassification = (): ClassificationForm => ({
-    key: "",
-    name: "",
-    rows: [{ key: "", label: "" }],
+    key: '',
+    name: '',
+    rows: [{ key: '', label: '' }],
     rules: [blankRule()],
     useComponents: false,
     components: [],
@@ -70,15 +70,15 @@ type Structure = {
 
 const selectors = (list: Record<string, string>[] | undefined) =>
     (list ?? []).map((selector) => ({
-        type: selector.type as SelectorRow["type"],
-        id: selector.id ?? "",
-        class: selector.class ?? "",
+        type: selector.type as SelectorRow['type'],
+        id: selector.id ?? '',
+        class: selector.class ?? '',
     }));
 
 const selectorBody = (list: SelectorRow[]) =>
     list.map((selector) =>
-        selector.type === "class"
-            ? { type: "class", class: selector.class }
+        selector.type === 'class'
+            ? { type: 'class', class: selector.class }
             : { type: selector.type, id: selector.id },
     );
 
@@ -95,7 +95,7 @@ export function toForm(
         rules: (structure.rules ?? []).map((rule) => ({
             row: rule.row,
             accounts: selectors(rule.accounts),
-            keys: (rule.transaction_type_keys ?? []).join(", "),
+            keys: (rule.transaction_type_keys ?? []).join(', '),
         })),
         useComponents: structure.components !== undefined,
         components: (structure.components ?? []).map((component) => ({
@@ -114,7 +114,7 @@ export function toStructure(form: ClassificationForm) {
             row: rule.row,
             accounts: selectorBody(rule.accounts),
             transaction_type_keys: rule.keys
-                .split(",")
+                .split(',')
                 .map((key) => key.trim())
                 .filter(Boolean),
         })),
@@ -136,7 +136,7 @@ export async function createClassification(
 ): Promise<MovementClassification> {
     return (
         await unwrap(
-            api.POST("/companies/{companyId}/movement-classifications", {
+            api.POST('/companies/{companyId}/movement-classifications', {
                 params: { path: { companyId } },
                 body: {
                     key: form.key,
@@ -155,7 +155,7 @@ export async function updateClassification(
 ): Promise<MovementClassification> {
     return (
         await unwrap(
-            api.PUT("/companies/{companyId}/movement-classifications/{id}", {
+            api.PUT('/companies/{companyId}/movement-classifications/{id}', {
                 params: { path: { companyId, id: classification.id } },
                 body: {
                     name: form.name,

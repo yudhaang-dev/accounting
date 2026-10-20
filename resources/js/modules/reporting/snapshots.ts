@@ -1,36 +1,36 @@
-import { queryOptions } from "@tanstack/react-query";
-import { api, unwrap } from "@/api/client";
-import type { operations } from "@/api/schema";
-import { fetchAll } from "@/lib/fetch-all";
-import type { ReportResult } from "@/modules/reporting/report-definitions";
+import { queryOptions } from '@tanstack/react-query';
+import { api, unwrap } from '@/api/client';
+import type { operations } from '@/api/schema';
+import { fetchAll } from '@/lib/fetch-all';
+import type { ReportResult } from '@/modules/reporting/report-definitions';
 import {
     filterParams,
     type DateMode,
     type ReportFilter,
-} from "@/modules/reporting/report-filter";
+} from '@/modules/reporting/report-filter';
 
 type Show =
-    operations["report-snapshots.show"]["responses"][200]["content"]["application/json"]["data"];
+    operations['report-snapshots.show']['responses'][200]['content']['application/json']['data'];
 
 /** A published report without its values (RP-FR-14). */
-export type ReportSnapshotSummary = Omit<Show, "result">;
+export type ReportSnapshotSummary = Omit<Show, 'result'>;
 
 /** A snapshot with the result it was published with. */
-export type ReportSnapshot = Omit<Show, "result"> & { result: ReportResult };
+export type ReportSnapshot = Omit<Show, 'result'> & { result: ReportResult };
 
 export const snapshotsQuery = (companyId: string, definitionId: string) =>
     queryOptions({
         queryKey: [
-            "companies",
+            'companies',
             companyId,
-            "report-snapshots",
-            "list",
+            'report-snapshots',
+            'list',
             definitionId,
         ],
         queryFn: async (): Promise<ReportSnapshotSummary[]> =>
             fetchAll((page) =>
                 unwrap(
-                    api.GET("/companies/{companyId}/report-snapshots", {
+                    api.GET('/companies/{companyId}/report-snapshots', {
                         params: {
                             path: { companyId },
                             query: {
@@ -46,13 +46,13 @@ export const snapshotsQuery = (companyId: string, definitionId: string) =>
 
 export const snapshotQuery = (companyId: string, id: string) =>
     queryOptions({
-        queryKey: ["companies", companyId, "report-snapshots", id],
+        queryKey: ['companies', companyId, 'report-snapshots', id],
         // A user with a data scope gets 403: the page says so instead of retrying.
         retry: false,
         queryFn: async (): Promise<ReportSnapshot> =>
             (
                 (await unwrap(
-                    api.GET("/companies/{companyId}/report-snapshots/{id}", {
+                    api.GET('/companies/{companyId}/report-snapshots/{id}', {
                         params: { path: { companyId, id } },
                     }),
                 )) as unknown as { data: ReportSnapshot }
@@ -64,7 +64,7 @@ function publishBody(filter: ReportFilter, mode: DateMode, reason: string) {
     const params = filterParams(filter, mode);
     const body: Record<string, unknown> = {};
 
-    for (const key of ["from", "to", "as_of", "source", "plan_version_id"]) {
+    for (const key of ['from', 'to', 'as_of', 'source', 'plan_version_id']) {
         const value = params.get(key);
 
         if (value) {
@@ -84,7 +84,7 @@ function publishBody(filter: ReportFilter, mode: DateMode, reason: string) {
         body.transaction_type_keys = filter.transaction_type_keys;
     }
 
-    if (reason !== "") {
+    if (reason !== '') {
         body.reason = reason;
     }
 
@@ -102,7 +102,7 @@ export async function publishSnapshot(
     return (
         await unwrap(
             api.POST(
-                "/companies/{companyId}/report-definitions/{id}/snapshots",
+                '/companies/{companyId}/report-definitions/{id}/snapshots',
                 {
                     params: { path: { companyId, id: definitionId } },
                     body: publishBody(filter, mode, reason) as never,
@@ -120,9 +120,9 @@ export async function recomputeSnapshot(
 ): Promise<ReportSnapshotSummary> {
     return (
         await unwrap(
-            api.POST("/companies/{companyId}/report-snapshots/{id}/recompute", {
+            api.POST('/companies/{companyId}/report-snapshots/{id}/recompute', {
                 params: { path: { companyId, id } },
-                body: (reason === "" ? {} : { reason }) as never,
+                body: (reason === '' ? {} : { reason }) as never,
             }),
         )
     ).data as ReportSnapshotSummary;
@@ -130,6 +130,6 @@ export async function recomputeSnapshot(
 
 /** The definition changed after the snapshot was published, so a recalculation would differ. */
 export const needsRecompute = (
-    snapshot: Pick<ReportSnapshotSummary, "definition_version">,
+    snapshot: Pick<ReportSnapshotSummary, 'definition_version'>,
     currentVersion: number,
 ): boolean => snapshot.definition_version < currentVersion;

@@ -1,32 +1,32 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { FormAlert } from "@/components/form-alert";
-import { FormDialog } from "@/components/form-dialog";
-import { SubmitButton } from "@/components/submit-button";
-import { Button } from "@/components/ui/button";
-import { DialogFooter } from "@/components/ui/dialog";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Textarea } from "@/components/ui/textarea";
-import { actionErrorMessage } from "@/lib/errors";
-import { isApiError } from "@/lib/http";
-import type { DateMode, ReportFilter } from "@/modules/reporting/report-filter";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { FormAlert } from '@/components/form-alert';
+import { FormDialog } from '@/components/form-dialog';
+import { SubmitButton } from '@/components/submit-button';
+import { Button } from '@/components/ui/button';
+import { DialogFooter } from '@/components/ui/dialog';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Textarea } from '@/components/ui/textarea';
+import { actionErrorMessage } from '@/lib/errors';
+import { isApiError } from '@/lib/http';
+import type { DateMode, ReportFilter } from '@/modules/reporting/report-filter';
 import {
     publishSnapshot,
     recomputeSnapshot,
     type ReportSnapshotSummary,
-} from "@/modules/reporting/snapshots";
+} from '@/modules/reporting/snapshots';
 
 type Target =
     | {
-          kind: "publish";
+          kind: 'publish';
           definitionId: string;
           filter: ReportFilter;
           mode: DateMode;
       }
-    | { kind: "recompute"; snapshotId: string; definitionId: string };
+    | { kind: 'recompute'; snapshotId: string; definitionId: string };
 
 function SnapshotForm({
     companyId,
@@ -40,13 +40,13 @@ function SnapshotForm({
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const navigate = useNavigate();
-    const [reason, setReason] = useState("");
+    const [reason, setReason] = useState('');
     const [formError, setFormError] = useState<string | null>(null);
-    const prefix = target.kind === "publish" ? "publish" : "recompute";
+    const prefix = target.kind === 'publish' ? 'publish' : 'recompute';
 
     const run = useMutation({
         mutationFn: (): Promise<ReportSnapshotSummary> =>
-            target.kind === "publish"
+            target.kind === 'publish'
                 ? publishSnapshot(
                       companyId,
                       target.definitionId,
@@ -61,12 +61,12 @@ function SnapshotForm({
                   ),
         onSuccess: async (snapshot) => {
             await queryClient.invalidateQueries({
-                queryKey: ["companies", companyId, "report-snapshots"],
+                queryKey: ['companies', companyId, 'report-snapshots'],
             });
             toast.success(t(`snapshots.${prefix}.done`));
             onDone();
             await navigate({
-                to: "/w/$companyId/reports/$definitionId/snapshots/$snapshotId",
+                to: '/w/$companyId/reports/$definitionId/snapshots/$snapshotId',
                 params: {
                     companyId,
                     definitionId: target.definitionId,
@@ -78,7 +78,7 @@ function SnapshotForm({
         onError: (error) =>
             setFormError(
                 isApiError(error) && error.status === 422
-                    ? Object.values(error.errors).flat().join(" ") ||
+                    ? Object.values(error.errors).flat().join(' ') ||
                           error.message
                     : actionErrorMessage(error, t),
             ),
@@ -100,7 +100,7 @@ function SnapshotForm({
                 {formError && <FormAlert>{formError}</FormAlert>}
                 <Field>
                     <FieldLabel htmlFor="snapshot-reason">
-                        {t("snapshots.reason")}
+                        {t('snapshots.reason')}
                     </FieldLabel>
                     <Textarea
                         id="snapshot-reason"
@@ -113,7 +113,7 @@ function SnapshotForm({
                 </Field>
                 <DialogFooter>
                     <Button type="button" variant="ghost" onClick={onDone}>
-                        {t("common.cancel")}
+                        {t('common.cancel')}
                     </Button>
                     <SubmitButton
                         className="w-auto"
@@ -142,7 +142,7 @@ export function SnapshotDialog({
     onClose: () => void;
 }) {
     const { t } = useTranslation();
-    const kind = target?.kind ?? "publish";
+    const kind = target?.kind ?? 'publish';
 
     return (
         <FormDialog

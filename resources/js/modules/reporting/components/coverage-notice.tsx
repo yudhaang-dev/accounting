@@ -1,7 +1,7 @@
-import { useTranslation } from "react-i18next";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { formatIsoDate } from "@/lib/date";
-import type { CoverageStatus } from "@/modules/reporting/report-definitions";
+import { useTranslation } from 'react-i18next';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { formatIsoDate } from '@/lib/date';
+import type { CoverageStatus } from '@/modules/reporting/report-definitions';
 
 /** What every report says about the history it covers (RP-FR-13). */
 export type Coverage = {
@@ -14,7 +14,7 @@ export type Coverage = {
 export function CoverageNotice({ report }: { report: Coverage }) {
     const { t, i18n } = useTranslation();
 
-    if (report.coverage_status === "complete") {
+    if (report.coverage_status === 'complete') {
         return null;
     }
 
@@ -25,14 +25,14 @@ export function CoverageNotice({ report }: { report: Coverage }) {
             </AlertTitle>
             <AlertDescription>
                 {report.coverage_from && report.coverage_to
-                    ? t("reports.coverage.range", {
+                    ? t('reports.coverage.range', {
                           from: formatIsoDate(
                               report.coverage_from,
                               i18n.language,
                           ),
                           to: formatIsoDate(report.coverage_to, i18n.language),
                       })
-                    : t("reports.coverage.none")}
+                    : t('reports.coverage.none')}
             </AlertDescription>
         </Alert>
     );

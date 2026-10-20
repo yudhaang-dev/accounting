@@ -1,29 +1,29 @@
-import { api, unwrap } from "@/api/client";
-import type { ReportDefinition } from "@/modules/reporting/report-definitions";
+import { api, unwrap } from '@/api/client';
+import type { ReportDefinition } from '@/modules/reporting/report-definitions';
 
 export const KINDS = [
-    "custom",
-    "income_statement",
-    "balance_sheet",
-    "cash_flow_indirect",
+    'custom',
+    'income_statement',
+    'balance_sheet',
+    'cash_flow_indirect',
 ] as const;
-export const BASES = ["balance", "movement", "opening", "closing"] as const;
+export const BASES = ['balance', 'movement', 'opening', 'closing'] as const;
 export const ROW_TYPES = [
-    "heading",
-    "accounts",
-    "subtotal",
-    "current_year_earnings",
-    "cash_equivalents",
+    'heading',
+    'accounts',
+    'subtotal',
+    'current_year_earnings',
+    'cash_equivalents',
 ] as const;
 export const COLUMN_KINDS = [
-    "period",
-    "ytd",
-    "as_of",
-    "plan",
-    "difference",
+    'period',
+    'ytd',
+    'as_of',
+    'plan',
+    'difference',
 ] as const;
-export const SELECTOR_TYPES = ["account", "parent", "class"] as const;
-export const UNMAPPED = "unmapped";
+export const SELECTOR_TYPES = ['account', 'parent', 'class'] as const;
+export const UNMAPPED = 'unmapped';
 
 export type SelectorRow = {
     type: (typeof SELECTOR_TYPES)[number];
@@ -31,13 +31,13 @@ export type SelectorRow = {
     class: string;
 };
 
-export type TermRow = { row: string; sign: "1" | "-1" };
+export type TermRow = { row: string; sign: '1' | '-1' };
 
 export type RowForm = {
     key: string;
     label: string;
     type: (typeof ROW_TYPES)[number];
-    sign: "debit" | "credit";
+    sign: 'debit' | 'credit';
     /** `higher`, `lower`, or empty for what the sign implies. */
     favorable: string;
     /** Empty means the basis of the whole definition. */
@@ -53,7 +53,7 @@ export type ColumnForm = {
     /** How far back the range moves, as positive numbers; the API takes them negative. */
     shift_years: string;
     shift_months: string;
-    span: "period" | "ytd";
+    span: 'period' | 'ytd';
     plan_version_id: string;
     minuend: string;
     subtrahend: string;
@@ -72,37 +72,37 @@ export type DefinitionForm = {
 };
 
 export const blankRow = (): RowForm => ({
-    key: "",
-    label: "",
-    type: "accounts",
-    sign: "debit",
-    favorable: "",
-    basis: "",
-    accounts: [{ type: "class", id: "", class: "asset" }],
+    key: '',
+    label: '',
+    type: 'accounts',
+    sign: 'debit',
+    favorable: '',
+    basis: '',
+    accounts: [{ type: 'class', id: '', class: 'asset' }],
     terms: [],
 });
 
 export const blankColumn = (): ColumnForm => ({
-    key: "",
-    label: "",
-    kind: "period",
-    shift_years: "",
-    shift_months: "",
-    span: "period",
-    plan_version_id: "",
-    minuend: "",
-    subtrahend: "",
+    key: '',
+    label: '',
+    kind: 'period',
+    shift_years: '',
+    shift_months: '',
+    span: 'period',
+    plan_version_id: '',
+    minuend: '',
+    subtrahend: '',
 });
 
 export const blankDefinition = (): DefinitionForm => ({
-    key: "",
-    name: "",
-    kind: "custom",
-    basis: "movement",
+    key: '',
+    name: '',
+    kind: 'custom',
+    basis: 'movement',
     publish_on_period_close: false,
     publish_on_year_close: false,
     rows: [blankRow()],
-    columns: [{ ...blankColumn(), key: "period", label: "Periode" }],
+    columns: [{ ...blankColumn(), key: 'period', label: 'Periode' }],
 });
 
 type Structure = {
@@ -111,7 +111,7 @@ type Structure = {
     columns?: Record<string, unknown>[];
 };
 
-const text = (value: unknown) => (typeof value === "string" ? value : "");
+const text = (value: unknown) => (typeof value === 'string' ? value : '');
 
 /** The editor's form for a definition as the API holds it. */
 export function toForm(definition: ReportDefinition): DefinitionForm {
@@ -121,33 +121,33 @@ export function toForm(definition: ReportDefinition): DefinitionForm {
         key: definition.key,
         name: definition.name,
         kind: (KINDS as readonly string[]).includes(definition.kind)
-            ? (definition.kind as DefinitionForm["kind"])
-            : "custom",
-        basis: (BASES as readonly string[]).includes(structure.basis ?? "")
-            ? (structure.basis as DefinitionForm["basis"])
-            : "movement",
+            ? (definition.kind as DefinitionForm['kind'])
+            : 'custom',
+        basis: (BASES as readonly string[]).includes(structure.basis ?? '')
+            ? (structure.basis as DefinitionForm['basis'])
+            : 'movement',
         publish_on_period_close: definition.publish_on_period_close,
         publish_on_year_close: definition.publish_on_year_close,
         rows: (structure.rows ?? []).map((row) => ({
             ...blankRow(),
             key: text(row.key),
             label: text(row.label),
-            type: row.type as RowForm["type"],
-            sign: row.sign === "credit" ? "credit" : "debit",
+            type: row.type as RowForm['type'],
+            sign: row.sign === 'credit' ? 'credit' : 'debit',
             favorable: text(row.favorable),
             basis: text(row.basis),
             accounts: (
                 (row.accounts as Record<string, string>[] | undefined) ?? []
             ).map((selector) => ({
-                type: selector.type as SelectorRow["type"],
-                id: selector.id ?? "",
-                class: selector.class ?? "",
+                type: selector.type as SelectorRow['type'],
+                id: selector.id ?? '',
+                class: selector.class ?? '',
             })),
             terms: (
                 (row.terms as { row: string; sign: number }[] | undefined) ?? []
             ).map((term) => ({
                 row: term.row,
-                sign: term.sign === -1 ? "-1" : "1",
+                sign: term.sign === -1 ? '-1' : '1',
             })),
         })),
         columns: (structure.columns ?? []).map((column) => {
@@ -160,10 +160,10 @@ export function toForm(definition: ReportDefinition): DefinitionForm {
                 ...blankColumn(),
                 key: text(column.key),
                 label: text(column.label),
-                kind: column.kind as ColumnForm["kind"],
-                shift_years: shift.years ? String(-shift.years) : "",
-                shift_months: shift.months ? String(-shift.months) : "",
-                span: column.span === "ytd" ? "ytd" : "period",
+                kind: column.kind as ColumnForm['kind'],
+                shift_years: shift.years ? String(-shift.years) : '',
+                shift_months: shift.months ? String(-shift.months) : '',
+                span: column.span === 'ytd' ? 'ytd' : 'period',
                 plan_version_id: text(column.plan_version_id),
                 minuend: text(column.minuend),
                 subtrahend: text(column.subtrahend),
@@ -189,7 +189,7 @@ export function toStructure(form: DefinitionForm) {
                 type: row.type,
             };
 
-            if (row.type !== "heading") {
+            if (row.type !== 'heading') {
                 out.sign = row.sign;
 
                 if (row.favorable) {
@@ -197,21 +197,21 @@ export function toStructure(form: DefinitionForm) {
                 }
             }
 
-            if (row.type === "accounts" || row.type === "cash_equivalents") {
+            if (row.type === 'accounts' || row.type === 'cash_equivalents') {
                 if (row.basis) {
                     out.basis = row.basis;
                 }
             }
 
-            if (row.type === "accounts") {
+            if (row.type === 'accounts') {
                 out.accounts = row.accounts.map((selector) =>
-                    selector.type === "class"
-                        ? { type: "class", class: selector.class }
+                    selector.type === 'class'
+                        ? { type: 'class', class: selector.class }
                         : { type: selector.type, id: selector.id },
                 );
             }
 
-            if (row.type === "subtotal") {
+            if (row.type === 'subtotal') {
                 out.terms = row.terms.map((term) => ({
                     row: term.row,
                     sign: Number(term.sign),
@@ -227,7 +227,7 @@ export function toStructure(form: DefinitionForm) {
                 kind: column.kind,
             };
 
-            if (column.kind === "difference") {
+            if (column.kind === 'difference') {
                 out.minuend = column.minuend;
                 out.subtrahend = column.subtrahend;
             } else {
@@ -236,7 +236,7 @@ export function toStructure(form: DefinitionForm) {
                     months: -wholeNumber(column.shift_months),
                 };
 
-                if (column.kind === "plan") {
+                if (column.kind === 'plan') {
                     out.span = column.span;
                     out.plan_version_id = column.plan_version_id || null;
                 }
@@ -258,7 +258,7 @@ export function formErrors(
         Object.entries(errors).flatMap(([path, messages]) =>
             messages[0] === undefined
                 ? []
-                : [[path.replace(/^structure\./, ""), messages[0]]],
+                : [[path.replace(/^structure\./, ''), messages[0]]],
         ),
     );
 }
@@ -269,7 +269,7 @@ export async function createDefinition(
 ): Promise<ReportDefinition> {
     return (
         await unwrap(
-            api.POST("/companies/{companyId}/report-definitions", {
+            api.POST('/companies/{companyId}/report-definitions', {
                 params: { path: { companyId } },
                 body: {
                     key: form.key,
@@ -291,7 +291,7 @@ export async function updateDefinition(
 ): Promise<ReportDefinition> {
     return (
         await unwrap(
-            api.PUT("/companies/{companyId}/report-definitions/{id}", {
+            api.PUT('/companies/{companyId}/report-definitions/{id}', {
                 params: { path: { companyId, id: definition.id } },
                 body: {
                     name: form.name,

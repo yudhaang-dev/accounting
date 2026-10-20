@@ -1,13 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { AlertTriangleIcon, CheckIcon } from "lucide-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { FormAlert } from "@/components/form-alert";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
+import { AlertTriangleIcon, CheckIcon } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { FormAlert } from '@/components/form-alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -15,19 +15,19 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { useDocumentTitle } from "@/hooks/use-document-title";
-import { formatIsoDate, todayIso } from "@/lib/date";
-import { formatDecimal } from "@/lib/decimal";
-import { genericErrorMessage } from "@/lib/errors";
-import { isApiError } from "@/lib/http";
-import { CoverageNotice } from "@/modules/reporting/components/coverage-notice";
-import { ExportButton } from "@/modules/reporting/components/export-button";
+} from '@/components/ui/table';
+import { useDocumentTitle } from '@/hooks/use-document-title';
+import { formatIsoDate, todayIso } from '@/lib/date';
+import { formatDecimal } from '@/lib/decimal';
+import { genericErrorMessage } from '@/lib/errors';
+import { isApiError } from '@/lib/http';
+import { CoverageNotice } from '@/modules/reporting/components/coverage-notice';
+import { ExportButton } from '@/modules/reporting/components/export-button';
 import {
     SnapshotDialog,
     type SnapshotTarget,
-} from "@/modules/reporting/components/snapshot-dialogs";
-import { ReportFilterBar } from "@/modules/reporting/components/report-filter-bar";
+} from '@/modules/reporting/components/snapshot-dialogs';
+import { ReportFilterBar } from '@/modules/reporting/components/report-filter-bar';
 import {
     comparesWithPlan,
     dateModeOf,
@@ -36,17 +36,17 @@ import {
     type ReportDefinition,
     reportResultQuery,
     type ReportResult,
-} from "@/modules/reporting/report-definitions";
+} from '@/modules/reporting/report-definitions';
 import {
     emptyFilter,
     type ReportFilter,
-} from "@/modules/reporting/report-filter";
+} from '@/modules/reporting/report-filter';
 
-const initialFilter = (mode: "range" | "as_of"): ReportFilter => ({
+const initialFilter = (mode: 'range' | 'as_of'): ReportFilter => ({
     ...emptyFilter(),
     from: `${new Date().getFullYear()}-01-01`,
     to: todayIso(),
-    as_of: mode === "as_of" ? todayIso() : "",
+    as_of: mode === 'as_of' ? todayIso() : '',
 });
 
 /**
@@ -68,7 +68,7 @@ export function ReportViewerPage({
     const { t } = useTranslation();
     const definition = useQuery(reportDefinitionQuery(companyId, definitionId));
 
-    useDocumentTitle(definition.data?.name ?? t("reports.pageTitle"));
+    useDocumentTitle(definition.data?.name ?? t('reports.pageTitle'));
 
     if (definition.isError) {
         return (
@@ -127,7 +127,7 @@ function Viewer({
                         </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                        {t("reports.versionOf", {
+                        {t('reports.versionOf', {
                             version: definition.current_version,
                         })}
                     </p>
@@ -147,9 +147,9 @@ function Viewer({
                     <Link
                         to="/w/$companyId/reports/$definitionId/snapshots"
                         params={{ companyId, definitionId: definition.id }}
-                        className={buttonVariants({ variant: "outline" })}
+                        className={buttonVariants({ variant: 'outline' })}
                     >
-                        {t("snapshots.link")}
+                        {t('snapshots.link')}
                     </Link>
                     {canPublish && (
                         <Button
@@ -157,23 +157,23 @@ function Viewer({
                             disabled={result.data === undefined}
                             onClick={() =>
                                 setSnapshot({
-                                    kind: "publish",
+                                    kind: 'publish',
                                     definitionId: definition.id,
                                     filter,
                                     mode,
                                 })
                             }
                         >
-                            {t("snapshots.publish.button")}
+                            {t('snapshots.publish.button')}
                         </Button>
                     )}
                     {canManage && (
                         <Link
                             to="/w/$companyId/reports/$definitionId/edit"
                             params={{ companyId, definitionId: definition.id }}
-                            className={buttonVariants({ variant: "outline" })}
+                            className={buttonVariants({ variant: 'outline' })}
                         >
-                            {t("definitionEditor.edit")}
+                            {t('definitionEditor.edit')}
                         </Link>
                     )}
                 </div>
@@ -217,7 +217,7 @@ function Viewer({
 /** The ledger of an account over the dates the report covered; a balance sheet reads from the start of its year. */
 function ledgerRange(result: ReportResult, accountId: string) {
     const parameters = result.parameters as { from?: string; to?: string };
-    const to = parameters.to ?? "";
+    const to = parameters.to ?? '';
     const from =
         parameters.from && parameters.from !== to
             ? parameters.from
@@ -234,7 +234,7 @@ function AccountLinks({
 }: {
     companyId: string;
     result: ReportResult;
-    accounts: ReportResult["rows"][number]["accounts"];
+    accounts: ReportResult['rows'][number]['accounts'];
 }) {
     const { t } = useTranslation();
 
@@ -248,7 +248,7 @@ function AccountLinks({
             to="/w/$companyId/reports/general-ledger"
             params={{ companyId }}
             search={ledgerRange(result, account.account_id)}
-            aria-label={t("trialBalance.ledger", { code: account.code })}
+            aria-label={t('trialBalance.ledger', { code: account.code })}
             title={account.name}
             className="font-mono text-xs font-normal underline underline-offset-4"
         >
@@ -263,7 +263,7 @@ function AccountLinks({
     return (
         <details className="mt-0.5 text-xs font-normal">
             <summary className="cursor-pointer text-muted-foreground">
-                {t("reports.ledgerLinks")} ({links.length})
+                {t('reports.ledgerLinks')} ({links.length})
             </summary>
             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">{links}</div>
         </details>
@@ -283,22 +283,22 @@ export function ResultView({
     const { t } = useTranslation();
     const money = (value: string | null | undefined) =>
         value === null || value === undefined
-            ? "—"
+            ? '—'
             : formatDecimal(value, locale);
 
     return (
         <div className="flex flex-col gap-3">
             <div className="text-sm text-muted-foreground">
-                {t("reports.currency", {
+                {t('reports.currency', {
                     currency: result.functional_currency,
                 })}
             </div>
 
             {result.restricted && (
                 <Alert role="status">
-                    <AlertTitle>{t("reports.restrictedTitle")}</AlertTitle>
+                    <AlertTitle>{t('reports.restrictedTitle')}</AlertTitle>
                     <AlertDescription>
-                        {t("reports.restricted")}
+                        {t('reports.restricted')}
                     </AlertDescription>
                 </Alert>
             )}
@@ -306,16 +306,16 @@ export function ResultView({
             <CoverageNotice report={result} />
 
             {result.columns
-                .filter((column) => column.kind === "plan" && !column.available)
+                .filter((column) => column.kind === 'plan' && !column.available)
                 .map((column) => (
                     <Alert key={column.key} role="status">
                         <AlertTitle>
-                            {t("reports.variance.planUnavailableTitle", {
+                            {t('reports.variance.planUnavailableTitle', {
                                 column: column.label,
                             })}
                         </AlertTitle>
                         <AlertDescription>
-                            {t("reports.variance.planUnavailable")}
+                            {t('reports.variance.planUnavailable')}
                         </AlertDescription>
                     </Alert>
                 ))}
@@ -326,7 +326,7 @@ export function ResultView({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>{t("reports.row")}</TableHead>
+                            <TableHead>{t('reports.row')}</TableHead>
                             {result.columns.map((column) => (
                                 <TableHead
                                     key={column.key}
@@ -346,14 +346,14 @@ export function ResultView({
                                         ) : null
                                     ) : (
                                         <Badge variant="outline">
-                                            {t("reports.unavailable")}
+                                            {t('reports.unavailable')}
                                         </Badge>
                                     )}
                                     {column.available &&
                                         column.coverage_status ===
-                                            "partial" && (
+                                            'partial' && (
                                             <Badge variant="outline">
-                                                {t("reports.partial")}
+                                                {t('reports.partial')}
                                             </Badge>
                                         )}
                                 </TableHead>
@@ -366,16 +366,16 @@ export function ResultView({
                                 key={row.key}
                                 data-row-type={row.type}
                                 className={
-                                    row.type === "unmapped"
-                                        ? "bg-muted/50"
+                                    row.type === 'unmapped'
+                                        ? 'bg-muted/50'
                                         : undefined
                                 }
                             >
                                 <TableCell
                                     className={
-                                        row.type === "heading" ||
-                                        row.type === "subtotal"
-                                            ? "font-semibold"
+                                        row.type === 'heading' ||
+                                        row.type === 'subtotal'
+                                            ? 'font-semibold'
                                             : undefined
                                     }
                                 >
@@ -389,10 +389,10 @@ export function ResultView({
                                 {result.columns.map((column) => (
                                     <TableCell
                                         key={column.key}
-                                        className={`text-end tabular-nums ${row.type === "subtotal" ? "font-semibold" : ""}`}
+                                        className={`text-end tabular-nums ${row.type === 'subtotal' ? 'font-semibold' : ''}`}
                                     >
-                                        {row.type === "heading" ? (
-                                            ""
+                                        {row.type === 'heading' ? (
+                                            ''
                                         ) : (
                                             <>
                                                 {money(row.values[column.key])}
@@ -417,9 +417,9 @@ export function ResultView({
             {result.unmapped_accounts.length > 0 && (
                 <Alert role="status">
                     <AlertTriangleIcon />
-                    <AlertTitle>{t("reports.unmappedTitle")}</AlertTitle>
+                    <AlertTitle>{t('reports.unmappedTitle')}</AlertTitle>
                     <AlertDescription>
-                        <p>{t("reports.unmappedDescription")}</p>
+                        <p>{t('reports.unmappedDescription')}</p>
                         <ul className="mt-1 list-inside list-disc">
                             {result.unmapped_accounts.map((account) => (
                                 <li key={account.account_id}>
@@ -430,13 +430,13 @@ export function ResultView({
                                             result,
                                             account.account_id,
                                         )}
-                                        aria-label={t("trialBalance.ledger", {
+                                        aria-label={t('trialBalance.ledger', {
                                             code: account.code,
                                         })}
                                         className="font-mono text-xs underline underline-offset-4"
                                     >
                                         {account.code}
-                                    </Link>{" "}
+                                    </Link>{' '}
                                     {account.name}
                                 </li>
                             ))}
@@ -458,7 +458,8 @@ function Variance({
     locale,
 }: {
     variance:
-        { percentage: string | null; favorable: boolean | null } | undefined;
+        | { percentage: string | null; favorable: boolean | null }
+        | undefined;
     locale: string;
 }) {
     const { t } = useTranslation();
@@ -471,17 +472,17 @@ function Variance({
         <div className="flex items-center justify-end gap-1 text-xs font-normal text-muted-foreground">
             <span>
                 {variance.percentage === null
-                    ? "—"
+                    ? '—'
                     : `${formatDecimal(variance.percentage, locale)}%`}
             </span>
             {variance.favorable !== null && (
                 <Badge
-                    variant={variance.favorable ? "secondary" : "destructive"}
+                    variant={variance.favorable ? 'secondary' : 'destructive'}
                 >
                     {t(
                         variance.favorable
-                            ? "reports.variance.favorable"
-                            : "reports.variance.unfavorable",
+                            ? 'reports.variance.favorable'
+                            : 'reports.variance.unfavorable',
                     )}
                 </Badge>
             )}
@@ -508,7 +509,7 @@ function Checks({
                     <div key={key} className="flex items-center gap-2 text-sm">
                         <Badge variant="secondary">
                             <CheckIcon data-icon="inline-start" />
-                            {t("reports.balanceChecks.balanced")}
+                            {t('reports.balanceChecks.balanced')}
                         </Badge>
                         <span className="text-muted-foreground">
                             {label(key)}
@@ -517,12 +518,12 @@ function Checks({
                 ) : (
                     <Alert key={key} variant="destructive" role="alert">
                         <AlertTitle>
-                            {t("reports.balanceChecks.unbalancedTitle", {
+                            {t('reports.balanceChecks.unbalancedTitle', {
                                 column: label(key),
                             })}
                         </AlertTitle>
                         <AlertDescription>
-                            {t("reports.balanceChecks.unbalanced", {
+                            {t('reports.balanceChecks.unbalanced', {
                                 assets: money(check.assets),
                                 other: money(check.liabilities_and_equity),
                                 difference: money(check.difference),
@@ -536,7 +537,7 @@ function Checks({
                     <div key={key} className="flex items-center gap-2 text-sm">
                         <Badge variant="secondary">
                             <CheckIcon data-icon="inline-start" />
-                            {t("reports.cashChecks.reconciled")}
+                            {t('reports.cashChecks.reconciled')}
                         </Badge>
                         <span className="text-muted-foreground">
                             {label(key)}
@@ -545,12 +546,12 @@ function Checks({
                 ) : (
                     <Alert key={key} variant="destructive" role="alert">
                         <AlertTitle>
-                            {t("reports.cashChecks.unreconciledTitle", {
+                            {t('reports.cashChecks.unreconciledTitle', {
                                 column: label(key),
                             })}
                         </AlertTitle>
                         <AlertDescription>
-                            {t("reports.cashChecks.unreconciled", {
+                            {t('reports.cashChecks.unreconciled', {
                                 opening: money(check.opening_balance),
                                 increase: money(check.net_increase),
                                 closing: money(check.closing_balance),
