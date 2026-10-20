@@ -21,6 +21,7 @@ beforeEach(function () {
     $this->url = "/api/v1/companies/{$this->companyId}";
 
     foreach (['USD', 'EUR'] as $code) {
+        mapExchangeDifferenceRoles($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => $code])->assertCreated();
     }
 
@@ -320,7 +321,6 @@ describe('access', function () {
     });
 
     it('refuses recording once the company is inactive', function () {
-        confirmChartOfAccounts($this->admin, $this->companyId);
         setUpFiscalCalendar($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();
         $this->actingAs($this->admin)->postJson("{$this->url}/deactivate")->assertOk();

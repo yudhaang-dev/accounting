@@ -65,6 +65,7 @@ describe('refusals leave no journal and the entry as it was (TE-AC-03)', functio
     });
 
     it('refuses a foreign line that has no rate', function () {
+        mapExchangeDifferenceRoles($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
         $id = valEntry(['lines' => [
             ['account_id' => $this->bank, 'debit' => '1.00', 'currency' => 'USD'],
@@ -153,6 +154,7 @@ describe('structured entries', function () {
     });
 
     it('measures the scale in the currency of the entry', function () {
+        mapExchangeDifferenceRoles($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'JPY', 'scale' => 0])->assertCreated();
 
         $id = valSale(['total' => '100.50', 'revenue' => $this->sales], ['currency' => 'JPY', 'exchange_rate' => '110']);
@@ -161,6 +163,7 @@ describe('structured entries', function () {
     });
 
     it('refuses a currency the company deactivated after the draft', function () {
+        mapExchangeDifferenceRoles($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
 
         $id = valSale(['total' => '100.00', 'revenue' => $this->sales], ['currency' => 'USD', 'exchange_rate' => '16000']);

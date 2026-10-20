@@ -8,5 +8,6 @@ return [
     'functional_always_active' => 'Mata uang fungsional selalu aktif dan tidak dapat dinonaktifkan.',
     'in_use' => 'Mata uang :code sudah dipakai transaksi dan tidak dapat dinonaktifkan.',
     'functional_scale_locked' => 'Skala mata uang fungsional hanya dapat diubah selama perusahaan berstatus setup.',
+    'roles_required' => 'Mata uang asing memerlukan peran akun selisih kurs yang sudah dipetakan lebih dulu.',
 
 ];

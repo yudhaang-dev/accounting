@@ -19,6 +19,8 @@ beforeEach(function () {
     [$this->companyId] = createWorkspaceAs($this->admin);
     $this->url = "/api/v1/companies/{$this->companyId}";
     $this->currencies = "{$this->url}/currencies";
+
+    mapExchangeDifferenceRoles($this->admin, $this->companyId);
 });
 
 function activateCurrency(string $code, array $overrides = [])
@@ -78,6 +80,18 @@ describe('activating currencies (MD-FR-06)', function () {
         activateCurrency('USD', ['rounding_mode' => 'banker'])->assertUnprocessable()->assertJsonValidationErrors(['rounding_mode']);
     });
 
+    it('refuses a foreign currency until the exchange difference roles are mapped (GL-FR-10)', function () {
+        $other = User::factory()->create();
+        [$otherCompany] = createWorkspaceAs($other, 'Unmapped');
+        confirmChartOfAccounts($other, $otherCompany);
+
+        $response = $this->actingAs($other)->postJson("/api/v1/companies/{$otherCompany}/currencies", ['currency' => 'USD'])
+            ->assertStatus(422)->assertJsonPath('code', 'MAPPING_REQUIRED');
+
+        expect(array_keys($response->json('errors')))->toBe(['fx_realized_gain', 'fx_realized_loss', 'fx_unrealized_gain', 'fx_unrealized_loss', 'fx_rounding']);
+        $this->actingAs($other)->getJson("/api/v1/companies/{$otherCompany}/currencies/USD")->assertNotFound();
+    });
+
     it('filters the list by status and search, and keeps companies apart', function () {
         activateCurrency('USD')->assertCreated();
         $this->actingAs($this->admin)->postJson("{$this->currencies}/USD/deactivate")->assertOk();
@@ -121,7 +135,6 @@ describe('changing scale, rounding and status (MD-FR-06)', function () {
         $this->actingAs($this->admin)->patchJson("{$this->currencies}/IDR", ['lock_version' => 1, 'scale' => 0])->assertOk()->assertJsonPath('data.scale', 0);
         $this->actingAs($this->admin)->patchJson("{$this->currencies}/IDR", ['lock_version' => 2, 'rounding_mode' => 'half_even'])->assertOk();
 
-        confirmChartOfAccounts($this->admin, $this->companyId);
         setUpFiscalCalendar($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();
 
@@ -130,7 +143,6 @@ describe('changing scale, rounding and status (MD-FR-06)', function () {
     });
 
     it('refuses changes once the company is inactive', function () {
-        confirmChartOfAccounts($this->admin, $this->companyId);
         setUpFiscalCalendar($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();
         $this->actingAs($this->admin)->postJson("{$this->url}/deactivate")->assertOk();

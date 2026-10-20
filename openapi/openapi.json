@@ -3558,6 +3558,128 @@
                 }
             }
         },
+        "/companies/{companyId}/currency-balances": {
+            "get": {
+                "operationId": "currency-balances.index",
+                "summary": "Balance of each account in each transaction currency up to and including `as_of` (GL-FR-08),\nordered by account code and currency. Every row has `debit` and `credit` in that currency and\n`functional_debit` and `functional_credit`, the same movements as recorded in the functional\ncurrency; combinations without movement are left out. `account_id` limits it to one account\n(404 when it is not an account of the company). For a user limited to some dimension values only\nthe lines inside that scope are added up and `restricted` is true (IA-FR-03)",
+                "tags": [
+                    "CurrencyBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "as_of",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "account_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "as_of": {
+                                                    "type": "string"
+                                                },
+                                                "restricted": {
+                                                    "type": "boolean"
+                                                },
+                                                "balances": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "account_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "currency": {
+                                                                "type": "string"
+                                                            },
+                                                            "debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "functional_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "functional_credit": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "account_id",
+                                                            "code",
+                                                            "name",
+                                                            "currency",
+                                                            "debit",
+                                                            "credit",
+                                                            "functional_debit",
+                                                            "functional_credit"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "as_of",
+                                                "restricted",
+                                                "balances"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/dimension-types": {
             "get": {
                 "operationId": "dimension-types.index",

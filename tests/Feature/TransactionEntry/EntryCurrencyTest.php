@@ -23,6 +23,8 @@ beforeEach(function () {
     $this->gain = curAccountId('4130');
     $this->loss = curAccountId('6220');
 
+    mapExchangeDifferenceRoles($this->admin, $this->companyId);
+
     $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
     $this->actingAs($this->admin)->postJson("{$this->url}/rate-types", ['key' => 'spot', 'label' => 'Spot'])->assertCreated();
     $this->actingAs($this->admin)->postJson("{$this->url}/rate-types", ['key' => 'tax', 'label' => 'Kurs pajak'])->assertCreated();
@@ -153,6 +155,7 @@ describe('free-lines entries', function () {
     });
 
     it('refuses a currency the version does not accept or the company has not activated', function () {
+        mapExchangeDifferenceRoles($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'EUR'])->assertCreated();
         curVersion(['allowed_currencies' => ['USD']]);
 
@@ -203,7 +206,7 @@ describe('structured entries', function () {
 
     it('carries what is left over in the functional currency to the exchange difference accounts (TE-AC-10)', function () {
         foreach (['fx_realized_gain' => $this->gain, 'fx_realized_loss' => $this->loss] as $role => $accountId) {
-            $this->actingAs($this->admin)->putJson("{$this->url}/account-roles/{$role}", ['lock_version' => 0, 'account_id' => $accountId])->assertOk();
+            mapRoleTo("{$role}", $accountId);
         }
 
         curStructured();

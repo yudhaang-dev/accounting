@@ -67,7 +67,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [x] **M4-02** Status `soft_closed` dengan kebijakan per key Jenis Transaksi, tutup/buka periode beralasan, pola kalender 4-4-5 dan rentang bebas — GL-FR-03, GL-FR-04, GL-AC-04 — penandaan hasil turunan saat membuka kembali di M8-11; layar SPA di M4-12
 - [x] **M4-03** Pembalikan jurnal di sisi GL — GL-FR-06, GL-AC-11
 - [x] **M4-04** Kebijakan override akun kontrol — GL-FR-07 — alur entri membawa alasan override di M5
-- [x] **M4-05** Baris valas, pembulatan ke `fx_rounding`, saldo per mata uang — GL-FR-08, GL-AC-05 — endpoint saldo per mata uang belum ada; penolakan aktivasi mata uang tanpa pemetaan peran belum
+- [x] **M4-05** Baris valas, pembulatan ke `fx_rounding`, saldo per mata uang — GL-FR-08, GL-AC-05 — `GET /currency-balances` belum punya layar SPA
 - [x] **M4-06** Pemetaan peran GL berversi dan interface validasi target peran — GL-FR-10, X-AC-02, X-AC-03
 - [x] **M4-07** Revaluasi akun non-kontrol dengan kebijakan pembalikan otomatis — GL-FR-09, GL-AC-06 — revaluasi open item di M6-07
 - [x] **M4-08** Impor saldo konversi: `cutover_date`, `ledger_start_date`, pemetaan kode sumber, saldo YTD, idempoten — GL-FR-11, GL-AC-07 — baris akun kontrol baru dapat diimpor setelah Subledger menyuplai total open item (M6-10); penanda batch di neraca saldo menyusul di M8-08

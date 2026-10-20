@@ -280,6 +280,7 @@ describe('an invoice (SL-FR-04)', function () {
     });
 
     it('records a foreign currency invoice at the rate of the entry in both currencies', function () {
+        mapExchangeDifferenceRoles($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
         docType('usd_sale', docInvoiceBody(['allowed_currencies' => ['USD'], 'allow_rate_input' => true]))->assertCreated();
 
@@ -356,6 +357,7 @@ describe('a payment (SL-FR-04, SL-FR-11)', function () {
     });
 
     it('refuses a cash account whose currency is not the one of the lines', function () {
+        mapExchangeDifferenceRoles($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
         $usdBank = docAccountId('1115');
         $version = $this->actingAs($this->admin)->getJson("{$this->url}/accounts/{$usdBank}")->json('data.lock_version');

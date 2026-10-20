@@ -37,6 +37,8 @@ beforeEach(function () {
         $this->actingAs($this->admin)->patchJson("{$this->url}/accounts/{$id}", ['lock_version' => $version, 'allowed_sources' => ['subledger']])->assertOk();
     }
 
+    mapExchangeDifferenceRoles($this->admin, $this->companyId);
+
     $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
 
     $this->profileId = $this->actingAs($this->admin)->postJson("{$this->url}/posting-profiles", ['name' => 'Third parties'])->assertCreated()->json('data.id');
@@ -130,7 +132,7 @@ describe('what the subledger holds against the ledger (SL-FR-09)', function () {
         $march = (string) DB::table('gl_periods')->where('company_id', $this->companyId)->where('name', '2026-03')->value('id');
 
         foreach (['unrealized_gain' => $this->gain, 'unrealized_loss' => $this->loss] as $role => $account) {
-            $this->actingAs($this->admin)->putJson("{$this->url}/account-roles/fx_{$role}", ['lock_version' => 0, 'account_id' => $account])->assertOk();
+            mapRoleTo("fx_{$role}", $account);
         }
 
         $this->actingAs($this->admin)->putJson("{$this->url}/ledger-policy", [

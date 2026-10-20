@@ -700,6 +700,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/currency-balances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Balance of each account in each transaction currency up to and including `as_of` (GL-FR-08),
+         *     ordered by account code and currency. Every row has `debit` and `credit` in that currency and
+         *     `functional_debit` and `functional_credit`, the same movements as recorded in the functional
+         *     currency; combinations without movement are left out. `account_id` limits it to one account
+         *     (404 when it is not an account of the company). For a user limited to some dimension values only
+         *     the lines inside that scope are added up and `restricted` is true (IA-FR-03)
+         */
+        get: operations["currency-balances.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/dimension-types": {
         parameters: {
             query?: never;
@@ -6502,6 +6526,48 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "currency-balances.index": {
+        parameters: {
+            query: {
+                as_of: string;
+                account_id?: string | null;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            as_of: string;
+                            restricted: boolean;
+                            balances: {
+                                account_id: string;
+                                code: string;
+                                name: string;
+                                currency: string;
+                                debit: string;
+                                credit: string;
+                                functional_debit: string;
+                                functional_credit: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "dimension-types.index": {

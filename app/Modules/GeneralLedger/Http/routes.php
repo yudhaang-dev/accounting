@@ -4,6 +4,7 @@ use App\Modules\GeneralLedger\Contracts\AccountRole;
 use App\Modules\GeneralLedger\Http\AccountController;
 use App\Modules\GeneralLedger\Http\AccountRoleController;
 use App\Modules\GeneralLedger\Http\AccountTemplateController;
+use App\Modules\GeneralLedger\Http\CurrencyBalanceController;
 use App\Modules\GeneralLedger\Http\FiscalCalendarController;
 use App\Modules\GeneralLedger\Http\FiscalYearController;
 use App\Modules\GeneralLedger\Http\JournalController;
@@ -60,6 +61,8 @@ Route::companyScoped(function () {
 
     Route::post('periods/{id}/revaluation', [RevaluationController::class, 'store'])
         ->middleware('permission:periods.revalue')->where('id', ApiServiceProvider::ULID)->name('periods.revaluation');
+
+    Route::get('currency-balances', [CurrencyBalanceController::class, 'index'])->middleware('permission:journals.read')->name('currency-balances.index');
 
     Route::get('journals', [JournalController::class, 'index'])->middleware('permission:journals.read')->name('journals.index');
     Route::get('journals/{id}', [JournalController::class, 'show'])

@@ -1,9 +1,13 @@
 <?php
 
 use App\Models\User;
+use App\Modules\GeneralLedger\Contracts\AccountRole;
+use App\Modules\GeneralLedger\Contracts\AccountRoles;
+use App\Modules\GeneralLedger\Domain\Account;
 use App\Modules\IdentityAccess\Domain\Membership;
 use App\Modules\IdentityAccess\Domain\Role;
 use App\Modules\IdentityAccess\Domain\Workspace;
+use App\Support\Company\CompanyScope;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -104,4 +108,44 @@ function setUpFiscalCalendar(User $admin, string $companyId, int $startMonth = 1
     test()->actingAs($admin)->postJson("/api/v1/companies/{$companyId}/fiscal-years", [
         'start_date' => $firstStart,
     ])->assertCreated();
+}
+
+/**
+ * Maps the exchange difference roles that are still unmapped (gains to 7130, losses and rounding to
+ * 7230), which a company needs before it may activate a foreign currency (GL-FR-10). Imports the chart
+ * when the company has none.
+ */
+function mapExchangeDifferenceRoles(User $admin, string $companyId): void
+{
+    $roles = app(AccountRoles::class);
+    $missing = $roles->missing($companyId, AccountRole::foreignCurrencyRoles());
+
+    if ($missing === []) {
+        return;
+    }
+
+    $accounts = fn () => Account::withoutGlobalScope(CompanyScope::class)->where('company_id', $companyId);
+
+    if (! $accounts()->exists()) {
+        confirmChartOfAccounts($admin, $companyId);
+    }
+
+    $ids = $accounts()->whereIn('code', ['7130', '7230'])->pluck('id', 'code');
+
+    foreach ($missing as $role) {
+        $code = in_array($role, [AccountRole::FxRealizedGain, AccountRole::FxUnrealizedGain], true) ? '7130' : '7230';
+        $roles->change($companyId, $role, $ids[$code], 0, $admin->id);
+    }
+}
+
+/**
+ * Maps a role of the current test company to an account as the next version, whatever version it is on;
+ * `mapExchangeDifferenceRoles()` may already have mapped it. In force from the start, as the posting dates
+ * of the tests lie before the day the test runs.
+ */
+function mapRoleTo(string $role, string $accountId): void
+{
+    $current = app(AccountRoles::class)->current(test()->companyId, AccountRole::from($role));
+
+    test()->actingAs(test()->admin)->putJson(test()->url."/account-roles/{$role}", ['lock_version' => $current->version ?? 0, 'account_id' => $accountId, 'effective_date' => '1970-01-01'])->assertOk();
 }

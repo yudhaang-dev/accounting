@@ -92,6 +92,7 @@ describe('storing posting attributes (GL-FR-02)', function () {
     });
 
     it('creates an account with its attributes and reads them back through the contract', function () {
+        mapExchangeDifferenceRoles($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
 
         $id = $this->actingAs($this->admin)->postJson("{$this->url}/accounts", [
@@ -142,6 +143,7 @@ describe('storing posting attributes (GL-FR-02)', function () {
     });
 
     it('clears the restricted currency when the restriction leaves `specific`', function () {
+        mapExchangeDifferenceRoles($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
 
         patchAttributes($this->bank, ['currency_restriction' => 'specific', 'restricted_currency' => 'USD'])->assertOk();
@@ -254,6 +256,7 @@ describe('posting against account attributes (GL-AC-02)', function () {
     });
 
     it('refuses a line whose currency the account does not accept', function () {
+        mapExchangeDifferenceRoles($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
         patchAttributes($this->bank, ['currency_restriction' => 'specific', 'restricted_currency' => 'USD'])->assertOk();
 

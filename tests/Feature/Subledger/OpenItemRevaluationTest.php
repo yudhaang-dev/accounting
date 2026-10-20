@@ -32,6 +32,8 @@ beforeEach(function () {
         $this->actingAs($this->admin)->patchJson("{$this->url}/accounts/{$id}", ['lock_version' => $version, 'allowed_sources' => ['subledger']])->assertOk();
     }
 
+    mapExchangeDifferenceRoles($this->admin, $this->companyId);
+
     $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
     $this->actingAs($this->admin)->postJson("{$this->url}/rate-types", ['key' => 'closing', 'label' => 'Closing rate'])->assertCreated();
     foreach ([['2026-03-31', '15500'], ['2026-04-30', '16000']] as [$date, $rate]) {
@@ -39,7 +41,7 @@ beforeEach(function () {
     }
 
     foreach (['fx_realized_gain' => $this->realizedGain, 'fx_realized_loss' => $this->realizedLoss, 'fx_unrealized_gain' => $this->unrealizedGain, 'fx_unrealized_loss' => $this->unrealizedLoss] as $role => $account) {
-        $this->actingAs($this->admin)->putJson("{$this->url}/account-roles/{$role}", ['lock_version' => 0, 'account_id' => $account])->assertOk();
+        mapRoleTo("{$role}", $account);
     }
 
     $profile = $this->profileId = $this->actingAs($this->admin)->postJson("{$this->url}/posting-profiles", ['name' => 'Third parties'])->assertCreated()->json('data.id');

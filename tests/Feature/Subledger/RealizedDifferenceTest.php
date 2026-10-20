@@ -30,6 +30,8 @@ beforeEach(function () {
         $this->actingAs($this->admin)->patchJson("{$this->url}/accounts/{$id}", ['lock_version' => $version, 'allowed_sources' => ['subledger']])->assertOk();
     }
 
+    mapExchangeDifferenceRoles($this->admin, $this->companyId);
+
     $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
 
     $profile = $this->actingAs($this->admin)->postJson("{$this->url}/posting-profiles", ['name' => 'Third parties'])->assertCreated()->json('data.id');
@@ -52,7 +54,7 @@ beforeEach(function () {
 function mapFxRoles(): void
 {
     foreach (['fx_realized_gain' => test()->gain, 'fx_realized_loss' => test()->loss] as $role => $account) {
-        test()->actingAs(test()->admin)->putJson(test()->url."/account-roles/{$role}", ['lock_version' => 0, 'account_id' => $account])->assertOk();
+        mapRoleTo("{$role}", $account);
     }
 }
 
@@ -149,8 +151,9 @@ describe('a payment at another rate than the invoice (SL-AC-02)', function () {
 });
 
 describe('without the realized exchange accounts', function () {
-    it('is refused at submit while the gain or loss account is not mapped', function () {
+    it('is refused at submit while the gain or loss account is not a valid target', function () {
         $invoice = openUsdInvoice('1000', '15000');
+        $this->actingAs($this->admin)->postJson("{$this->url}/accounts/".docAccountId('7130').'/deactivate')->assertOk();
 
         docAct($this->preparer, usdReceipt('1000', '15500', [['open_item_id' => $invoice, 'amount' => '1000']])->assertCreated()->json('data.id'), 'submit')
             ->assertStatus(422)->assertJsonPath('code', 'MAPPING_REQUIRED');

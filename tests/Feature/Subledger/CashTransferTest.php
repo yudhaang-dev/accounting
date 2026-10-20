@@ -27,12 +27,14 @@ beforeEach(function () {
         $this->actingAs($this->admin)->patchJson("{$this->url}/accounts/{$id}", ['lock_version' => $version, 'allowed_sources' => ['subledger']])->assertOk();
     }
 
+    mapExchangeDifferenceRoles($this->admin, $this->companyId);
+
     $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
     $this->actingAs($this->admin)->postJson("{$this->url}/rate-types", ['key' => 'spot', 'label' => 'Spot'])->assertCreated();
     $this->actingAs($this->admin)->postJson("{$this->url}/exchange-rates", ['rate_type' => 'spot', 'currency' => 'USD', 'effective_date' => '2026-03-01', 'rate' => '16000.00'])->assertCreated();
 
     foreach (['fx_realized_gain' => $this->gain, 'fx_realized_loss' => $this->loss] as $role => $account) {
-        $this->actingAs($this->admin)->putJson("{$this->url}/account-roles/{$role}", ['lock_version' => 0, 'account_id' => $account])->assertOk();
+        mapRoleTo("{$role}", $account);
     }
 
     $cash = fn (string $name, string $currency, string $account) => $this->actingAs($this->admin)->postJson("{$this->url}/cash-accounts", [

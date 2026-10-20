@@ -11,6 +11,7 @@ use App\Modules\GeneralLedger\Domain\Account;
 use App\Platform\Api\ApiException;
 use App\Support\Company\CompanyScope;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 beforeEach(function () {
@@ -24,6 +25,8 @@ beforeEach(function () {
     $this->bank = fxAccountId($this->companyId, '1112');
     $this->sales = fxAccountId($this->companyId, '4110');
     $this->fxRounding = fxAccountId($this->companyId, '7230');
+
+    mapExchangeDifferenceRoles($this->admin, $this->companyId);
 
     $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
     $this->actingAs($this->admin)->postJson("{$this->url}/rate-types", ['key' => 'central_bank', 'label' => 'Central bank'])->assertCreated();
@@ -181,10 +184,6 @@ describe('foreign currency lines (GL-FR-08, GL-AC-05)', function () {
 });
 
 describe('rounding difference of a conversion (GL-FR-05)', function () {
-    beforeEach(function () {
-        $this->actingAs($this->admin)->putJson("{$this->url}/account-roles/fx_rounding", ['lock_version' => 0, 'account_id' => $this->fxRounding])->assertOk();
-    });
-
     it('books a difference within the tolerance to the fx_rounding account', function () {
         fxPolicy('0.01')->assertOk()->assertJsonPath('data.fx_rounding_tolerance', '0.01');
 
@@ -235,7 +234,8 @@ describe('rounding difference of a conversion (GL-FR-05)', function () {
 });
 
 describe('rounding without a mapping (X-AC-03)', function () {
-    it('asks for the fx_rounding mapping when it is needed and missing', function () {
+    it('asks for the fx_rounding mapping when it is needed and its account is no longer a valid target', function () {
+        $this->actingAs($this->admin)->postJson("{$this->url}/accounts/{$this->fxRounding}/deactivate")->assertOk();
         fxPolicy('0.01')->assertOk();
 
         $failure = fxFailure(roundingCommand());
@@ -279,6 +279,7 @@ describe('balances per transaction currency (GL-FR-08)', function () {
 
 describe('deactivating a currency that was used (MD-FR-06)', function () {
     it('refuses it once a journal line carries the currency, and allows it before', function () {
+        mapExchangeDifferenceRoles($this->admin, $this->companyId);
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'EUR'])->assertCreated();
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies/EUR/deactivate")->assertOk();
 
@@ -286,5 +287,38 @@ describe('deactivating a currency that was used (MD-FR-06)', function () {
 
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies/USD/deactivate")
             ->assertConflict()->assertJsonPath('code', 'INVALID_STATE_TRANSITION');
+    });
+});
+
+describe('currency balances endpoint (GL-FR-08)', function () {
+    it('lists the balance of each account per transaction currency as of a date', function () {
+        fxPost(usdSale());
+        fxPost(fxCommand([
+            new PostJournalLine($this->sales, '250000.00', '0'),
+            new PostJournalLine($this->bank, '0', '250000.00'),
+        ], '2026-03-21'));
+
+        $data = $this->actingAs($this->admin)->getJson("{$this->url}/currency-balances?as_of=2026-03-31&account_id={$this->bank}")->assertOk()->json('data');
+
+        expect($data['restricted'])->toBeFalse()
+            ->and(array_column($data['balances'], 'currency'))->toBe(['IDR', 'USD'])
+            ->and($data['balances'][1])->toMatchArray(['code' => '1112', 'debit' => '1000.00', 'credit' => '0.00', 'functional_debit' => '15000000.00', 'functional_credit' => '0.00'])
+            ->and($data['balances'][0])->toMatchArray(['currency' => 'IDR', 'debit' => '0.00', 'credit' => '250000.00']);
+
+        $earlier = $this->actingAs($this->admin)->getJson("{$this->url}/currency-balances?as_of=2026-03-16")->assertOk()->json('data.balances');
+
+        expect(collect($earlier)->where('code', '1112')->pluck('currency')->all())->toBe(['USD'])
+            ->and(array_column($earlier, 'code'))->toContain('4110');
+    });
+
+    it('needs as_of, finds only accounts of the company and asks for journals.read', function () {
+        $this->actingAs($this->admin)->getJson("{$this->url}/currency-balances")->assertUnprocessable()->assertJsonValidationErrors(['as_of']);
+        $this->actingAs($this->admin)->getJson("{$this->url}/currency-balances?as_of=2026-03-31&account_id=".Str::ulid())->assertNotFound();
+
+        $outsider = memberWithRoles($this->companyId, 'viewer');
+        $this->actingAs($outsider)->getJson("{$this->url}/currency-balances?as_of=2026-03-31")->assertOk();
+
+        $stranger = User::factory()->create();
+        $this->actingAs($stranger)->getJson("{$this->url}/currency-balances?as_of=2026-03-31")->assertForbidden();
     });
 });

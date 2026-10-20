@@ -94,6 +94,8 @@ describe('cash accounts (SL-FR-03)', function () {
     it('needs a currency activated for the company that the ledger account accepts', function () {
         newBank(['currency' => 'USD', 'account_id' => $this->foreignBank])->assertUnprocessable()->assertJsonValidationErrors(['currency']);
 
+        mapExchangeDifferenceRoles($this->admin, $this->companyId);
+
         $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
 
         newBank(['currency' => 'USD', 'account_id' => $this->foreignBank])->assertCreated()->assertJsonPath('data.currency', 'USD');

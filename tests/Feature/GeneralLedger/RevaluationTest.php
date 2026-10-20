@@ -24,14 +24,16 @@ beforeEach(function () {
     $this->gain = revalAccountId($this->companyId, '7130');
     $this->loss = revalAccountId($this->companyId, '7230');
 
+    mapExchangeDifferenceRoles($this->admin, $this->companyId);
+
     $this->actingAs($this->admin)->postJson("{$this->url}/currencies", ['currency' => 'USD'])->assertCreated();
     $this->actingAs($this->admin)->postJson("{$this->url}/rate-types", ['key' => 'closing', 'label' => 'Closing rate'])->assertCreated();
     revalRate('2026-03-10', '15000');
 
     // The bank account holds USD that is revalued; the unrealized gain and loss roles are mapped.
     $this->actingAs($this->admin)->patchJson("{$this->url}/accounts/{$this->bank}", ['lock_version' => 1, 'is_revaluable' => true])->assertOk();
-    $this->actingAs($this->admin)->putJson("{$this->url}/account-roles/fx_unrealized_gain", ['lock_version' => 0, 'account_id' => $this->gain])->assertOk();
-    $this->actingAs($this->admin)->putJson("{$this->url}/account-roles/fx_unrealized_loss", ['lock_version' => 0, 'account_id' => $this->loss])->assertOk();
+    mapRoleTo('fx_unrealized_gain', $this->gain);
+    mapRoleTo('fx_unrealized_loss', $this->loss);
     revalPolicy('closing', true);
 
     $this->march = (string) DB::table('gl_periods')->where('company_id', $this->companyId)->where('name', '2026-03')->value('id');
