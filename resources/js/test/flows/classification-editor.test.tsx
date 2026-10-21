@@ -57,7 +57,9 @@ const classification = {
     },
 };
 
-const routes = (permissions = ['reports.read', 'report-definitions.manage']) => ({
+const routes = (
+    permissions = ['reports.read', 'report-definitions.manage'],
+) => ({
     'GET /api/v1/me': () => json({ data: account }),
     'GET /api/v1/me/workspaces': () =>
         json({ data: [{ ...workspace, permissions }] }),
@@ -84,7 +86,10 @@ describe('movement classification editor', () => {
         await typist.type(await screen.findByLabelText('Kunci'), 'standard');
         await typist.type(screen.getByLabelText('Nama'), 'Klasifikasi Standar');
         await typist.type(screen.getByLabelText('Kunci baris 1'), 'operating');
-        await typist.type(screen.getByLabelText('Label baris 1'), 'Operasional');
+        await typist.type(
+            screen.getByLabelText('Label baris 1'),
+            'Operasional',
+        );
         await typist.click(
             screen.getByRole('combobox', { name: 'Baris tujuan aturan 1' }),
         );
@@ -129,13 +134,16 @@ describe('movement classification editor', () => {
             await screen.findByText(/Versi saat ini: 2/),
         ).toBeInTheDocument();
         expect(screen.getByLabelText('Kunci')).toBeDisabled();
-        expect(screen.getByLabelText('Key Jenis Transaksi aturan 1')).toHaveValue(
-            'capex, asset_sale',
-        );
+        expect(
+            screen.getByLabelText('Key Jenis Transaksi aturan 1'),
+        ).toHaveValue('capex, asset_sale');
         expect(screen.getByLabelText('Label komponen 1')).toHaveValue('Modal');
 
         await typist.clear(screen.getByLabelText('Label komponen 1'));
-        await typist.type(screen.getByLabelText('Label komponen 1'), 'Modal disetor');
+        await typist.type(
+            screen.getByLabelText('Label komponen 1'),
+            'Modal disetor',
+        );
         await typist.click(
             screen.getByRole('button', { name: 'Simpan perubahan' }),
         );
@@ -212,9 +220,10 @@ describe('movement classification editor', () => {
         await waitFor(() =>
             expect(api.called(`PUT ${url}/${classId}`)).toHaveLength(1),
         );
+        const [request] = api.called(`PUT ${url}/${classId}`);
+
         expect(
-            (api.called(`PUT ${url}/${classId}`)[0]?.body as { structure: object })
-                .structure,
+            (request?.body as { structure: object } | undefined)?.structure,
         ).not.toHaveProperty('components');
     });
 
@@ -267,7 +276,9 @@ describe('movement classification editor', () => {
             await screen.findByRole('link', { name: 'Klasifikasi baru' }),
         ).toHaveAttribute('href', `${listPath}/classifications/new`);
         expect(
-            screen.getByRole('link', { name: 'Ubah klasifikasi Klasifikasi Standar' }),
+            screen.getByRole('link', {
+                name: 'Ubah klasifikasi Klasifikasi Standar',
+            }),
         ).toHaveAttribute('href', editPath);
     });
 
@@ -281,6 +292,8 @@ describe('movement classification editor', () => {
         ) as HTMLElement;
 
         expect(within(row).queryByRole('link', { name: /Ubah/ })).toBeNull();
-        expect(screen.queryByRole('link', { name: 'Klasifikasi baru' })).toBeNull();
+        expect(
+            screen.queryByRole('link', { name: 'Klasifikasi baru' }),
+        ).toBeNull();
     });
 });

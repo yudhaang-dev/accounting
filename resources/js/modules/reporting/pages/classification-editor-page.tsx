@@ -1,11 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import {
-    ArrowDownIcon,
-    ArrowUpIcon,
-    PlusIcon,
-    Trash2Icon,
-} from 'lucide-react';
+import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 import {
     Controller,
@@ -132,11 +127,7 @@ function Editor({
                 : createClassification(companyId, form),
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: [
-                    'companies',
-                    companyId,
-                    'movement-classifications',
-                ],
+                queryKey: ['companies', companyId, 'movement-classifications'],
             });
             toast.success(t('classificationEditor.saved'));
             await navigate({

@@ -52,8 +52,9 @@ export function AgingPage({
     const { t, i18n } = useTranslation();
     const [draftDate, setDraftDate] = useState(todayIso());
     const [asOf, setAsOf] = useState(todayIso());
-    const [controlRole, setControlRole] =
-        useState<ControlRole>('receivables_control');
+    const [controlRole, setControlRole] = useState<ControlRole>(
+        'receivables_control',
+    );
     const [partyId, setPartyId] = useState('');
     const [basis, setBasis] = useState<AgingBasis | undefined>();
     const [editingPolicy, setEditingPolicy] = useState(false);
@@ -143,7 +144,9 @@ export function AgingPage({
                         <Button
                             key={role}
                             type="button"
-                            variant={controlRole === role ? 'default' : 'outline'}
+                            variant={
+                                controlRole === role ? 'default' : 'outline'
+                            }
                             aria-pressed={controlRole === role}
                             onClick={() => {
                                 setControlRole(role);
@@ -186,7 +189,11 @@ export function AgingPage({
                         />
                     </div>
                 )}
-                <div className="flex gap-1" role="group" aria-label={t('aging.basis')}>
+                <div
+                    className="flex gap-1"
+                    role="group"
+                    aria-label={t('aging.basis')}
+                >
                     {(['due_date', 'document_date'] as const).map((value) => (
                         <Button
                             key={value}
@@ -258,7 +265,9 @@ export function AgingPage({
                                                 ),
                                             )}
                                             <TableCell className="text-end tabular-nums">
-                                                {money(party.totals.total ?? '0')}
+                                                {money(
+                                                    party.totals.total ?? '0',
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                         {party.items.map((item) => (
@@ -276,7 +285,9 @@ export function AgingPage({
                                                             }}
                                                             className="underline underline-offset-2"
                                                         >
-                                                            {item.document_number}
+                                                            {
+                                                                item.document_number
+                                                            }
                                                         </Link>
                                                     ) : (
                                                         item.document_number
@@ -328,7 +339,9 @@ export function AgingPage({
                                             key={bucket.key}
                                             className="text-end tabular-nums"
                                         >
-                                            {money(data.totals[bucket.key] ?? '0')}
+                                            {money(
+                                                data.totals[bucket.key] ?? '0',
+                                            )}
                                         </TableCell>
                                     ))}
                                     <TableCell className="text-end tabular-nums">

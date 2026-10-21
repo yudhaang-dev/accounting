@@ -64,15 +64,15 @@ export function ReportsPage({
                         >
                             {t('reportImport.button')}
                         </Button>
-                    {canManage && (
-                        <Link
-                            to="/w/$companyId/reports/new"
-                            params={{ companyId }}
-                            className={buttonVariants()}
-                        >
-                            {t('definitionEditor.newButton')}
-                        </Link>
-                    )}
+                        {canManage && (
+                            <Link
+                                to="/w/$companyId/reports/new"
+                                params={{ companyId }}
+                                className={buttonVariants()}
+                            >
+                                {t('definitionEditor.newButton')}
+                            </Link>
+                        )}
                     </div>
                 )}
             </div>

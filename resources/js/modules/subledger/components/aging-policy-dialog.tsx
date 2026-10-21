@@ -144,8 +144,12 @@ function PolicyForm({
                         aria-invalid={invalid ? true : undefined}
                         onChange={(event) => setBuckets(event.target.value)}
                     />
-                    <FieldDescription>{t('aging.bucketsHint')}</FieldDescription>
-                    {invalid && <FieldError>{t('aging.bucketsInvalid')}</FieldError>}
+                    <FieldDescription>
+                        {t('aging.bucketsHint')}
+                    </FieldDescription>
+                    {invalid && (
+                        <FieldError>{t('aging.bucketsInvalid')}</FieldError>
+                    )}
                 </Field>
                 <DialogFooter>
                     <Button type="button" variant="ghost" onClick={onDone}>

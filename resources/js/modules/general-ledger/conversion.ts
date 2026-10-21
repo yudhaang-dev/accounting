@@ -486,7 +486,8 @@ export type ControlMismatch = {
 const sameSigned = (a: string, b: string): boolean => {
     const sign = (value: string) => (value.startsWith('-') ? -1 : 1);
     const magnitude = (value: string) => value.replace(/^-/, '');
-    const zero = (value: string) => compareDecimals(magnitude(value), '0') === 0;
+    const zero = (value: string) =>
+        compareDecimals(magnitude(value), '0') === 0;
 
     return zero(a) && zero(b)
         ? true
@@ -506,7 +507,9 @@ export function controlMismatches(
 ): ControlMismatch[] {
     const mismatches: ControlMismatch[] = [];
 
-    for (const role of Object.keys(totals) as SourceOpenItem['control_role'][]) {
+    for (const role of Object.keys(
+        totals,
+    ) as SourceOpenItem['control_role'][]) {
         const accountId = roleAccounts[role];
 
         if (accountId === undefined) {
@@ -518,8 +521,7 @@ export function controlMismatches(
         );
         const { debit, credit } = totalsOf(own);
         const net = differenceDecimals(debit, credit);
-        const balance =
-            compareDecimals(debit, credit) < 0 ? `-${net}` : net;
+        const balance = compareDecimals(debit, credit) < 0 ? `-${net}` : net;
 
         if (!sameSigned(balance, totals[role])) {
             mismatches.push({

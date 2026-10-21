@@ -102,7 +102,12 @@ const routes = (
         }),
     [`GET ${base}`]: () => json({ data: { ...company, status: 'active' } }),
     [`GET ${base}/accounts`]: () =>
-        json(page([acc('a1', '1000', 'Aset Lancar'), acc('a2', '1200', 'Piutang')])),
+        json(
+            page([
+                acc('a1', '1000', 'Aset Lancar'),
+                acc('a2', '1200', 'Piutang'),
+            ]),
+        ),
     [`GET ${base}/report-definitions`]: () =>
         json(
             page(
@@ -149,23 +154,22 @@ describe('report template import', () => {
         const api = mockApi({
             ...routes({ extraCode: '1200' }),
             [`POST ${base}/report-definitions/import-template`]: () =>
-                json(
-                    { data: { template: 'standard', created: [] } },
-                    201,
-                ),
+                json({ data: { template: 'standard', created: [] } }, 201),
         });
 
         renderApp(listPath);
         const typist = userEvent.setup();
         const dialog = await open(typist);
 
-        expect(await within(dialog).findByText('Laba Rugi')).toBeInTheDocument();
-        expect(within(dialog).getByText('Pendapatan', { selector: 'li' })).toHaveTextContent(
-            'Pendapatan · Pendapatan',
-        );
-        expect(within(dialog).getByText('Aset', { selector: 'li' })).toHaveTextContent(
-            '1000 Aset Lancar, 1200 Piutang',
-        );
+        expect(
+            await within(dialog).findByText('Laba Rugi'),
+        ).toBeInTheDocument();
+        expect(
+            within(dialog).getByText('Pendapatan', { selector: 'li' }),
+        ).toHaveTextContent('Pendapatan · Pendapatan');
+        expect(
+            within(dialog).getByText('Aset', { selector: 'li' }),
+        ).toHaveTextContent('1000 Aset Lancar, 1200 Piutang');
 
         const submit = within(dialog).getByRole('button', {
             name: 'Impor 2 definisi',
@@ -207,7 +211,9 @@ describe('report template import', () => {
         expect(
             within(alert).getByText('Akun template tidak ada di bagan akun'),
         ).toBeInTheDocument();
-        expect(within(alert).getByText('Neraca: akun 9999')).toBeInTheDocument();
+        expect(
+            within(alert).getByText('Neraca: akun 9999'),
+        ).toBeInTheDocument();
         expect(
             within(dialog).getByText('1 akun tidak ada'),
         ).toBeInTheDocument();
@@ -240,7 +246,9 @@ describe('report template import', () => {
         const typist = userEvent.setup();
         const dialog = await open(typist);
 
-        expect(await within(dialog).findByText('Sudah ada')).toBeInTheDocument();
+        expect(
+            await within(dialog).findByText('Sudah ada'),
+        ).toBeInTheDocument();
         expect(
             within(dialog).getByRole('checkbox', { name: 'Laba Rugi' }),
         ).toHaveAttribute('aria-disabled', 'true');
@@ -299,7 +307,9 @@ describe('report template import', () => {
         const dialog = await open(typist);
 
         expect(
-            await within(dialog).findByText(/Anda tidak bisa membaca bagan akun/),
+            await within(dialog).findByText(
+                /Anda tidak bisa membaca bagan akun/,
+            ),
         ).toBeInTheDocument();
 
         await typist.click(

@@ -256,12 +256,16 @@ function ImportForm({
 
                 {problems.length > 0 && (
                     <Alert variant="destructive" role="alert">
-                        <AlertTitle>{t('reportImport.missingTitle')}</AlertTitle>
+                        <AlertTitle>
+                            {t('reportImport.missingTitle')}
+                        </AlertTitle>
                         <AlertDescription>
                             <p>{t('reportImport.missingDescription')}</p>
                             <ul className="mt-1 list-inside list-disc">
                                 {problems.map((problem) => (
-                                    <li key={`${problem.definition}-${problem.code}`}>
+                                    <li
+                                        key={`${problem.definition}-${problem.code}`}
+                                    >
                                         {t('reportImport.missingItem', problem)}
                                     </li>
                                 ))}

@@ -434,9 +434,9 @@ export function SnapshotDetailPage({
                                         {key}
                                     </span>
                                     {': '}
-                                    {typeof value === 'object'
-                                        ? JSON.stringify(value)
-                                        : String(value)}
+                                    {typeof value === 'string'
+                                        ? value
+                                        : JSON.stringify(value)}
                                 </li>
                             ))}
                         </ul>

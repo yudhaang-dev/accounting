@@ -165,9 +165,7 @@ describe('workspace selection', () => {
         ).map((node) => node.textContent);
 
         expect(labels).toEqual(['Pembukuan', 'Transaksi', 'Subledger']);
-        expect(
-            screen.getByRole('link', { name: 'Akun' }),
-        ).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Akun' })).toBeInTheDocument();
     });
 
     it('treats a company the user is not a member of as not found', async () => {

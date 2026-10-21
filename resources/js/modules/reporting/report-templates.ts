@@ -50,10 +50,13 @@ export async function importTemplate(
 ) {
     return (
         await unwrap(
-            api.POST('/companies/{companyId}/report-definitions/import-template', {
-                params: { path: { companyId } },
-                body: { template, keys, confirmed: true } as never,
-            }),
+            api.POST(
+                '/companies/{companyId}/report-definitions/import-template',
+                {
+                    params: { path: { companyId } },
+                    body: { template, keys, confirmed: true } as never,
+                },
+            ),
         )
     ).data;
 }

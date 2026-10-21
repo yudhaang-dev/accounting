@@ -72,7 +72,10 @@ const balanced = reconciliation({
     causes: [],
 });
 
-const routes = (permissions: string[], rows = [reconciliation(), balanced]) => ({
+const routes = (
+    permissions: string[],
+    rows = [reconciliation(), balanced],
+) => ({
     ...withPermissions(permissions),
     [`GET ${base}/reconciliations`]: () => list(rows),
 });
@@ -94,7 +97,9 @@ describe('reconciliation (SL-FR-09, SL-AC-05)', () => {
         expect(screen.getByText('1-1100')).toBeInTheDocument();
         expect(screen.getByText('Selisih', { selector: 'span' })).toBeVisible();
         expect(screen.getByText('Sesuai')).toBeInTheDocument();
-        expect(screen.getAllByRole('button', { name: /Aksi untuk/ })).toHaveLength(1);
+        expect(
+            screen.getAllByRole('button', { name: /Aksi untuk/ }),
+        ).toHaveLength(1);
     });
 
     it('traces a difference to the journals behind it', async () => {
@@ -109,7 +114,9 @@ describe('reconciliation (SL-FR-09, SL-AC-05)', () => {
         expect(
             within(dialog).getByRole('link', { name: 'JV-2026-0001' }),
         ).toHaveAttribute('href', `${home}/journals/${journalId}`);
-        expect(within(dialog).getByText('Penyesuaian manual')).toBeInTheDocument();
+        expect(
+            within(dialog).getByText('Penyesuaian manual'),
+        ).toBeInTheDocument();
     });
 
     it('runs the reconciliation for a date and lists its result', async () => {
@@ -124,7 +131,9 @@ describe('reconciliation (SL-FR-09, SL-AC-05)', () => {
         const typist = userEvent.setup();
 
         await typist.click(
-            await screen.findByRole('button', { name: 'Jalankan rekonsiliasi' }),
+            await screen.findByRole('button', {
+                name: 'Jalankan rekonsiliasi',
+            }),
         );
 
         await waitFor(() => expect(api.called(run)).toHaveLength(1));
@@ -133,9 +142,9 @@ describe('reconciliation (SL-FR-09, SL-AC-05)', () => {
         });
         // The list is filtered to the date that ran.
         await waitFor(() =>
-            expect(
-                api.called(index).at(-1)?.query['filter[as_of]'],
-            ).toMatch(/^\d{4}-\d{2}-\d{2}$/),
+            expect(api.called(index).at(-1)?.query['filter[as_of]']).toMatch(
+                /^\d{4}-\d{2}-\d{2}$/,
+            ),
         );
     });
 
@@ -205,6 +214,8 @@ describe('reconciliation (SL-FR-09, SL-AC-05)', () => {
         expect(
             await screen.findByRole('menuitem', { name: 'Lihat penyebab' }),
         ).toBeInTheDocument();
-        expect(screen.queryByRole('menuitem', { name: 'Waiver selisih' })).toBeNull();
+        expect(
+            screen.queryByRole('menuitem', { name: 'Waiver selisih' }),
+        ).toBeNull();
     });
 });

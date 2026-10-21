@@ -102,9 +102,9 @@ describe('aging (SL-FR-08, SL-AC-04)', () => {
 
         expect(await screen.findByText('PT Maju Jaya')).toBeInTheDocument();
         expect(screen.getAllByText('1–30 hari').length).toBeGreaterThan(0);
-        expect(screen.getAllByText('Lebih dari 30 hari').length).toBeGreaterThan(
-            0,
-        );
+        expect(
+            screen.getAllByText('Lebih dari 30 hari').length,
+        ).toBeGreaterThan(0);
         expect(screen.getByRole('link', { name: 'INV-001' })).toHaveAttribute(
             'href',
             `${home}/allocations?open_item=${itemId}`,
@@ -152,8 +152,9 @@ describe('aging (SL-FR-08, SL-AC-04)', () => {
             await screen.findByRole('button', { name: 'Bucket' }),
         );
         const dialog = await screen.findByRole('dialog');
-        const input =
-            await within(dialog).findByLabelText('Batas bucket (hari)');
+        const input = await within(dialog).findByLabelText(
+            'Batas bucket (hari)',
+        );
 
         await typist.clear(input);
         await typist.type(input, '60, 30');

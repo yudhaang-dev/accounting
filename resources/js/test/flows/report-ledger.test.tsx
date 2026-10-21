@@ -286,8 +286,7 @@ describe('general ledger', () => {
                     },
                 ]),
             ),
-        [`GET ${base}/reports/general-ledger`]: () =>
-            json({ data: ledger() }),
+        [`GET ${base}/reports/general-ledger`]: () => json({ data: ledger() }),
     };
 
     it('asks for an account before showing anything', async () => {
@@ -298,9 +297,9 @@ describe('general ledger', () => {
         expect(
             (await screen.findAllByText('Pilih akun')).length,
         ).toBeGreaterThan(0);
-        expect(
-            api.called(`GET ${base}/reports/general-ledger`),
-        ).toHaveLength(0);
+        expect(api.called(`GET ${base}/reports/general-ledger`)).toHaveLength(
+            0,
+        );
     });
 
     it('shows the running balance, foreign amounts and links to journal and entry (RP-FR-06)', async () => {

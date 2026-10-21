@@ -315,9 +315,12 @@ export function PartyMappingTable({
                             </td>
                             <td className="min-w-64 px-3 py-2">
                                 <SearchableSelect
-                                    aria-label={t('conversion.opening.partyFor', {
-                                        ref,
-                                    })}
+                                    aria-label={t(
+                                        'conversion.opening.partyFor',
+                                        {
+                                            ref,
+                                        },
+                                    )}
                                     items={items}
                                     value={mapping[ref] ?? ''}
                                     onValueChange={(partyId) =>

@@ -1,14 +1,14 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { CircleCheckIcon, CircleXIcon } from "lucide-react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { ConfirmDialog } from "@/components/confirm-dialog";
-import { FormAlert } from "@/components/form-alert";
-import { SubmitButton } from "@/components/submit-button";
-import { Button } from "@/components/ui/button";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
+import { CircleCheckIcon, CircleXIcon } from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/confirm-dialog';
+import { FormAlert } from '@/components/form-alert';
+import { SubmitButton } from '@/components/submit-button';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -16,24 +16,24 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
     Field,
     FieldError,
     FieldGroup,
     FieldLabel,
-} from "@/components/ui/field";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
-import { formatDecimal } from "@/lib/decimal";
-import { actionErrorMessage, genericErrorMessage } from "@/lib/errors";
-import { applyApiErrors } from "@/lib/forms";
-import { isApiError } from "@/lib/http";
+} from '@/components/ui/field';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
+import { formatDecimal } from '@/lib/decimal';
+import { actionErrorMessage, genericErrorMessage } from '@/lib/errors';
+import { applyApiErrors } from '@/lib/forms';
+import { isApiError } from '@/lib/http';
 import {
     closeFiscalYear,
     closingStatusQuery,
     reopenFiscalYear,
-} from "@/modules/general-ledger/fiscal-year-closing";
+} from '@/modules/general-ledger/fiscal-year-closing';
 
 type Year = { id: string; name: string; end_date: string };
 
@@ -45,12 +45,12 @@ function Check({ ok, children }: { ok: boolean; children: React.ReactNode }) {
             {ok ? (
                 <CircleCheckIcon
                     className="mt-0.5 size-4 shrink-0 text-green-600"
-                    aria-label={t("closing.checkOk")}
+                    aria-label={t('closing.checkOk')}
                 />
             ) : (
                 <CircleXIcon
                     className="mt-0.5 size-4 shrink-0 text-destructive"
-                    aria-label={t("closing.checkFailed")}
+                    aria-label={t('closing.checkFailed')}
                 />
             )}
             <span>{children}</span>
@@ -70,7 +70,7 @@ function ReopenForm({
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const [formError, setFormError] = useState<string | null>(null);
-    const form = useForm<{ reason: string }>({ defaultValues: { reason: "" } });
+    const form = useForm<{ reason: string }>({ defaultValues: { reason: '' } });
     const {
         register,
         formState: { errors },
@@ -81,9 +81,9 @@ function ReopenForm({
             reopenFiscalYear(companyId, year.id, reason.trim()),
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: ["companies", companyId],
+                queryKey: ['companies', companyId],
             });
-            toast.success(t("closing.reopened", { name: year.name }));
+            toast.success(t('closing.reopened', { name: year.name }));
             onDone();
         },
         onError: (error) => {
@@ -111,7 +111,7 @@ function ReopenForm({
                 {formError && <FormAlert>{formError}</FormAlert>}
                 <Field data-invalid={errors.reason ? true : undefined}>
                     <FieldLabel htmlFor="reopen-year-reason">
-                        {t("periods.reason")}
+                        {t('periods.reason')}
                     </FieldLabel>
                     <Textarea
                         id="reopen-year-reason"
@@ -119,9 +119,9 @@ function ReopenForm({
                         maxLength={500}
                         autoFocus
                         aria-invalid={errors.reason ? true : undefined}
-                        {...register("reason", {
+                        {...register('reason', {
                             validate: (value) =>
-                                value.trim() !== "" || t("common.required"),
+                                value.trim() !== '' || t('common.required'),
                         })}
                     />
                     {errors.reason && (
@@ -130,14 +130,14 @@ function ReopenForm({
                 </Field>
                 <DialogFooter>
                     <Button type="button" variant="ghost" onClick={onDone}>
-                        {t("common.cancel")}
+                        {t('common.cancel')}
                     </Button>
                     <SubmitButton
                         className="w-auto"
                         pending={reopen.isPending}
-                        pendingLabel={t("periods.reopening")}
+                        pendingLabel={t('periods.reopening')}
                     >
-                        {t("closing.reopenSubmit")}
+                        {t('closing.reopenSubmit')}
                     </SubmitButton>
                 </DialogFooter>
             </FieldGroup>
@@ -177,9 +177,9 @@ export function FiscalYearClosingPanel({
         mutationFn: () => closeFiscalYear(companyId, year.id),
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: ["companies", companyId],
+                queryKey: ['companies', companyId],
             });
-            toast.success(t("closing.closed", { name: year.name }));
+            toast.success(t('closing.closed', { name: year.name }));
         },
         onSettled: () => setConfirming(false),
         // The server says why: unfinished entries, a missing mapping, a period that refuses the journal.
@@ -195,30 +195,30 @@ export function FiscalYearClosingPanel({
     }
 
     const { closing, checks, ready } = status.data;
-    const result = closing?.result ?? "0";
-    const profit = !result.startsWith("-");
+    const result = closing?.result ?? '0';
+    const profit = !result.startsWith('-');
 
     return (
         <section
-            aria-label={t("closing.title", { name: year.name })}
+            aria-label={t('closing.title', { name: year.name })}
             className="flex flex-col gap-3 rounded-lg border p-4"
         >
             <h2 className="text-base font-semibold">
-                {t("closing.title", { name: year.name })}
+                {t('closing.title', { name: year.name })}
             </h2>
 
             {closing ? (
                 <>
                     <p className="text-sm">
-                        {t("closing.isClosed", { name: year.name })}{" "}
+                        {t('closing.isClosed', { name: year.name })}{' '}
                         {closing.journal_id
-                            ? t(profit ? "closing.profit" : "closing.loss", {
+                            ? t(profit ? 'closing.profit' : 'closing.loss', {
                                   amount: formatDecimal(
-                                      result.replace("-", ""),
+                                      result.replace('-', ''),
                                       i18n.language,
                                   ),
                               })
-                            : t("closing.noActivity")}
+                            : t('closing.noActivity')}
                     </p>
                     {canReadJournals && closing.journal_id && (
                         <Link
@@ -229,8 +229,8 @@ export function FiscalYearClosingPanel({
                             }}
                             className="text-sm underline underline-offset-4"
                         >
-                            {t("closing.openJournal", {
-                                number: closing.journal_number ?? "",
+                            {t('closing.openJournal', {
+                                number: closing.journal_number ?? '',
                             })}
                         </Link>
                     )}
@@ -240,7 +240,7 @@ export function FiscalYearClosingPanel({
                                 variant="outline"
                                 onClick={() => setReopening(true)}
                             >
-                                {t("closing.reopenAction")}
+                                {t('closing.reopenAction')}
                             </Button>
                         </div>
                     )}
@@ -250,49 +250,49 @@ export function FiscalYearClosingPanel({
                     <ul className="flex flex-col gap-2">
                         <Check ok={checks.retained_earnings.ok}>
                             {checks.retained_earnings.ok ? (
-                                t("closing.retainedOk")
+                                t('closing.retainedOk')
                             ) : (
                                 <>
-                                    {t("closing.retainedMissing")}{" "}
+                                    {t('closing.retainedMissing')}{' '}
                                     <Link
                                         to="/w/$companyId/ledger-settings"
                                         params={{ companyId }}
                                         className="underline underline-offset-4"
                                     >
-                                        {t("closing.toSettings")}
+                                        {t('closing.toSettings')}
                                     </Link>
                                 </>
                             )}
                         </Check>
                         <Check ok={checks.last_period.ok}>
                             {checks.last_period.ok
-                                ? t("closing.periodOk", {
-                                      name: checks.last_period.name ?? "",
+                                ? t('closing.periodOk', {
+                                      name: checks.last_period.name ?? '',
                                   })
                                 : t(
                                       checks.last_period.status ===
-                                          "soft_closed"
-                                          ? "closing.periodSoftClosed"
-                                          : "closing.periodClosed",
-                                      { name: checks.last_period.name ?? "" },
+                                          'soft_closed'
+                                          ? 'closing.periodSoftClosed'
+                                          : 'closing.periodClosed',
+                                      { name: checks.last_period.name ?? '' },
                                   )}
                         </Check>
                         <Check ok={checks.unfinished_entries.ok}>
                             {checks.unfinished_entries.ok ? (
-                                t("closing.entriesOk")
+                                t('closing.entriesOk')
                             ) : (
                                 <>
-                                    {t("closing.entriesPending", {
+                                    {t('closing.entriesPending', {
                                         count: checks.unfinished_entries.count,
                                         date: year.end_date,
-                                    })}{" "}
+                                    })}{' '}
                                     {canReadEntries && (
                                         <Link
                                             to="/w/$companyId/entries"
                                             params={{ companyId }}
                                             className="underline underline-offset-4"
                                         >
-                                            {t("closing.toEntries")}
+                                            {t('closing.toEntries')}
                                         </Link>
                                     )}
                                 </>
@@ -300,11 +300,11 @@ export function FiscalYearClosingPanel({
                         </Check>
                         <Check ok={checks.reconciliation.ok}>
                             {checks.reconciliation.ok
-                                ? t("closing.reconciliationOk")
-                                : t("closing.reconciliationPending", {
+                                ? t('closing.reconciliationOk')
+                                : t('closing.reconciliationPending', {
                                       count: checks.reconciliation.count,
                                       date: year.end_date,
-                                  })}{" "}
+                                  })}{' '}
                             {!checks.reconciliation.ok &&
                                 canReadReconciliations && (
                                     <Link
@@ -313,7 +313,7 @@ export function FiscalYearClosingPanel({
                                         search={{ as_of: year.end_date }}
                                         className="underline underline-offset-4"
                                     >
-                                        {t("closing.toReconciliations")}
+                                        {t('closing.toReconciliations')}
                                     </Link>
                                 )}
                         </Check>
@@ -324,7 +324,7 @@ export function FiscalYearClosingPanel({
                                 disabled={!ready || close.isPending}
                                 onClick={() => setConfirming(true)}
                             >
-                                {t("closing.closeAction")}
+                                {t('closing.closeAction')}
                             </Button>
                         </div>
                     )}
@@ -334,9 +334,9 @@ export function FiscalYearClosingPanel({
             <ConfirmDialog
                 open={confirming}
                 onOpenChange={setConfirming}
-                title={t("confirm.closeYear.title", { name: year.name })}
-                description={t("confirm.closeYear.description")}
-                confirmLabel={t("confirm.closeYear.action")}
+                title={t('confirm.closeYear.title', { name: year.name })}
+                description={t('confirm.closeYear.description')}
+                confirmLabel={t('confirm.closeYear.action')}
                 pending={close.isPending}
                 onConfirm={() => close.mutate()}
             />
@@ -344,10 +344,10 @@ export function FiscalYearClosingPanel({
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>
-                            {t("closing.reopenTitle", { name: year.name })}
+                            {t('closing.reopenTitle', { name: year.name })}
                         </DialogTitle>
                         <DialogDescription>
-                            {t("closing.reopenDescription")}
+                            {t('closing.reopenDescription')}
                         </DialogDescription>
                     </DialogHeader>
                     {reopening && (
