@@ -427,7 +427,7 @@ Bagian ini untuk akuntan atau administrator pemegang izin kelola kebijakan.
 
 *Transaksi → Jenis transaksi* menampilkan semua jenis beserta mode, versi, dan pola nomor.
 
-- **Impor template** menyarankan jenis umum. Tinjau tiap jenis (field dan aturan posting), pilih yang Anda mau, centang pernyataan konfirmasi, lalu klik **Impor**. Template yang tersedia: *Jenis Transaksi umum* (Jurnal Umum, Jurnal Penyesuaian, Ringkasan Payroll, Penjualan Kredit) dan *Transaksi harian* (Terima Pembayaran Pelanggan, Tagihan Pemasok, Bayar Pemasok, Transfer Antar Kas atau Bank). Jenis yang kuncinya sudah ada ditandai *Sudah ada*.
+- **Impor template** menyarankan jenis umum. Tinjau tiap jenis (field dan aturan posting), pilih yang Anda mau, centang pernyataan konfirmasi, lalu klik **Impor**. Template yang tersedia: *Jenis Transaksi umum* (Jurnal Umum, Jurnal Penyesuaian, Ringkasan Payroll, Penjualan Kredit) dan *Transaksi harian* (Terima Pembayaran Pelanggan, Tagihan Pemasok, Bayar Pemasok, Transfer Antar Kas atau Bank, serta Terima Pembayaran dan Bayar Pemasok untuk rekening beda mata uang). Jenis yang kuncinya sudah ada ditandai *Sudah ada*.
 - **Jenis baru** membuat jenis baris bebas dengan versi pertama yang sudah terbit. Kunci (huruf kecil, angka, garis bawah) tidak bisa diubah setelah dibuat.
 - **Atur penomoran** menentukan pola nomor entri, misalnya `JU/{yyyy}/{mm}/{seq}`, lebar urutan, kapan urutan mulai dari 1 lagi, dan kapan nomor diberikan (saat entri dibuat atau saat diajukan). Memberi nomor saat diajukan menjaga urutan bebas dari draf yang tidak jadi dipakai.
 
@@ -535,7 +535,7 @@ Klien tidak bisa menyetujui entri. Peristiwa yang dikirim klien masuk ke alur en
 | `MAPPING_REQUIRED` | Peran akun atau akun kontrol belum dipetakan | Petakan di Pengaturan buku besar atau Profil posting |
 | Kurs tidak ditemukan | Tidak ada kurs pada tanggal itu | Catat kurs di menu Kurs, atau isi manual bila jenis mengizinkan |
 | `TWO_FACTOR_REQUIRED` | Aksi mewajibkan 2FA dan akun belum memasangnya | Aktifkan 2FA di akun Anda |
-| Lines to the cash account … must be in its currency | Mata uang entri berbeda dari mata uang rekening kas/bank | Pakai rekening yang mata uangnya sama dengan entri (lihat 14) |
+| Lines to the cash account … must be in its currency | Mata uang entri berbeda dari mata uang rekening kas/bank pada jenis yang memakai satu jumlah | Pakai jenis *… Rekening Beda Mata Uang*, atau rekening yang mata uangnya sama dengan entri (lihat 14) |
 | Draf sudah diubah di tempat lain | Orang lain menyimpan lebih dulu | Data terbaru sudah dimuat; periksa lalu simpan lagi |
 | Akun / pihak / rekening tidak valid | Dinonaktifkan atau tidak memenuhi syarat | Pilih yang lain atau aktifkan kembali |
 | Tidak ada menu yang diharapkan | Izin belum diberikan | Hubungi administrator |
@@ -546,7 +546,7 @@ Pesan "diubah di tempat lain" muncul karena setiap data punya nomor versi; siste
 
 ## 14. Batasan yang perlu diketahui
 
-- **Pembayaran valas ke rekening beda mata uang.** Pembayaran atau uang muka yang mata uang entrinya berbeda dari mata uang rekening kas/bank belum didukung dan ditolak saat **Ajukan**. Pakai rekening yang mata uangnya sama dengan faktur. Transfer antar rekening beda mata uang didukung.
+- **Pembayaran ke rekening beda mata uang.** Jenis yang memakai satu jumlah untuk faktur dan rekening (*Terima Pembayaran Pelanggan*, *Bayar Pemasok*) menolak saat **Ajukan** bila mata uang entri berbeda dari mata uang rekening. Untuk kasus itu pakai *Terima Pembayaran, Rekening Beda Mata Uang* atau *Bayar Pemasok, Rekening Beda Mata Uang*: Anda mengisi dua jumlah, yang melunasi faktur dan yang masuk atau keluar di rekening. Kurs rekening diambil dari tabel kurs. Selisih antara keduanya masuk ke akun selisih kurs. Transfer antar rekening beda mata uang juga didukung.
 - **Biaya tunai tanpa pihak** belum tersedia sebagai jenis siap pakai. Rute subledger mewajibkan pihak dan akun kas hanya menerima sumber Subledger. Catat lewat Tagihan Pemasok lalu Bayar Pemasok, atau minta akuntan merancang jenis yang sesuai.
 - **Uang muka pelanggan** tercatat sebagai saldo kredit akun piutang (lihat 6.4).
 - **Kalender fiskal** di wizard hanya bulanan. Pola lain dibuat lewat API.

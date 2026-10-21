@@ -150,7 +150,7 @@ Transaksi → Jenis transaksi → **Impor template**. Tinjau tiap jenis, pilih y
 | Template | Jenis |
 | --- | --- |
 | Jenis Transaksi umum | Jurnal Umum, Jurnal Penyesuaian, Ringkasan Payroll, Penjualan Kredit |
-| Transaksi harian | Terima Pembayaran Pelanggan, Tagihan Pemasok, Bayar Pemasok, Transfer Antar Kas atau Bank |
+| Transaksi harian | Terima Pembayaran Pelanggan, Tagihan Pemasok, Bayar Pemasok, Transfer Antar Kas atau Bank, Terima Pembayaran dan Bayar Pemasok untuk rekening beda mata uang |
 
 Template tidak mengenal COA Anda, jadi akun biaya, pendapatan, dan payroll berupa **field akun** yang diisi pengguna. **Persempit sebelum dipakai admin:** buka perancang, buat versi baru, dan pada field akun isi *Akun yang boleh dipilih* dengan akun yang relevan saja (misalnya hanya akun pendapatan). Atau ganti field akun dengan **akun tetap** di aturan posting bila akunnya selalu sama.
 
@@ -180,7 +180,7 @@ Menerbitkan versi memeriksa kelengkapan; pesannya menyebut yang kurang.
 
 ### Hal valas yang perlu Anda sampaikan ke admin
 
-Pembayaran atau uang muka yang mata uang entrinya berbeda dari mata uang rekening kas/bank **belum didukung** dan ditolak saat diajukan. Admin harus memakai rekening yang mata uangnya sama dengan faktur. Transfer antar rekening beda mata uang didukung.
+Jenis pembayaran yang memakai **satu jumlah** untuk faktur dan rekening ditolak saat diajukan bila mata uang entri berbeda dari mata uang rekening. Untuk kasus itu sediakan jenis **… Rekening Beda Mata Uang** dari template *Transaksi harian*. Aturannya: jumlah kas punya field sendiri (tidak dipakai aturan lain), baris kas mengikuti mata uang rekening dengan kurs dari tabel kurs, baris kontrol memakai mata uang entri, dan satu aturan *Selisih kurs* menutup sisanya ke akun peran selisih kurs. Pastikan kurs rekening ada di tabel kurs pada tanggal transaksi dan peran selisih kurs sudah dipetakan. Admin mengisi dua jumlah: yang melunasi faktur dan yang diterima atau dibayar di rekening. Transfer antar rekening beda mata uang juga didukung.
 
 ---
 

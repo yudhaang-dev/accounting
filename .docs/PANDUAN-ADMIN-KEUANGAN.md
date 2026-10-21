@@ -109,7 +109,7 @@ Jenis *baris bebas* meminta Anda memilih akun dan mengisi debit atau kredit send
 
 Bila jenis mengizinkan, isian **Mata uang** dan **Kurs** tampil. Kosongkan kurs untuk memakai tabel kurs yang dicatat akuntan. Bila kurs tanggal itu belum ada, entri ditolak: minta akuntan mencatat kursnya.
 
-**Batasan penting:** pembayaran atau uang muka yang mata uangnya **berbeda dari mata uang rekening** belum didukung dan ditolak saat **Ajukan**. Pakai rekening yang mata uangnya sama dengan fakturnya.
+**Rekening beda mata uang.** Bila faktur dan rekening berbeda mata uang (misalnya faktur USD dibayar ke rekening rupiah), pakai **Terima Pembayaran, Rekening Beda Mata Uang** atau **Bayar Pemasok, Rekening Beda Mata Uang**. Pilih **Mata uang** entri sama dengan mata uang faktur, lalu isi dua jumlah: *Jumlah faktur yang dilunasi* (dalam mata uang faktur) dan *Jumlah diterima* atau *dibayar* (dalam mata uang rekening, sesuai mutasi bank). Kurs diambil dari tabel kurs; bila kursnya belum ada, entri ditolak. Selisih antara keduanya dicatat sebagai selisih kurs. Jenis **Terima Pembayaran Pelanggan** dan **Bayar Pemasok** biasa menolak saat **Ajukan** bila mata uangnya tidak sama dengan rekening.
 
 ### Lampiran dan keterangan
 
@@ -228,7 +228,7 @@ Penutupan periode, revaluasi, rekonsiliasi, dan tutup tahun dilakukan akuntan.
 | Periode ditutup / tidak menerima posting | Tanggal akuntansi di periode yang sudah ditutup | Pakai tanggal di periode terbuka, atau minta akuntan membuka kembali |
 | `MAPPING_REQUIRED` | Pemetaan akun belum diatur | Hubungi akuntan |
 | Kurs tidak ditemukan | Tidak ada kurs pada tanggal itu | Minta akuntan mencatat kurs |
-| Lines to the cash account … must be in its currency | Mata uang entri berbeda dari mata uang rekening | Pakai rekening yang mata uangnya sama dengan fakturnya |
+| Lines to the cash account … must be in its currency | Mata uang entri berbeda dari mata uang rekening pada jenis yang memakai satu jumlah | Pakai jenis *… Rekening Beda Mata Uang*, atau rekening yang mata uangnya sama dengan fakturnya |
 | `TWO_FACTOR_REQUIRED` | Aksi ini mewajibkan 2FA di akun Anda | Aktifkan 2FA di akun Anda |
 | Draf sudah diubah di tempat lain | Orang lain menyimpan lebih dulu | Data terbaru sudah dimuat; periksa lalu simpan lagi |
 | Akun, pihak, atau rekening tidak valid | Sudah dinonaktifkan | Pilih yang lain atau minta akuntan mengaktifkannya |
