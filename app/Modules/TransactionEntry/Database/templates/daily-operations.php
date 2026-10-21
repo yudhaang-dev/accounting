@@ -86,6 +86,63 @@ return [
                 'allocations_field' => 'allocations',
             ],
         ],
+        // For a payment in a currency other than the one of the cash account, e.g. a USD invoice paid into a
+        // rupiah account. The entry is in the currency of the invoice; the cash amount is what the account
+        // received, in its own currency. What the two amounts do not explain is the exchange difference.
+        [
+            'key' => 'customer_receipt_cross_currency',
+            'label' => 'Terima Pembayaran, Rekening Beda Mata Uang',
+            'mode' => 'structured',
+            'fields' => [
+                ['name' => 'customer', 'type' => 'party', 'label' => 'Pelanggan'],
+                ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Diterima di rekening'],
+                ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
+                ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah faktur yang dilunasi (mata uang entri)'],
+                ['name' => 'cash_amount', 'type' => 'amount', 'label' => 'Jumlah diterima (mata uang rekening)'],
+                ['name' => 'allocations', 'type' => 'allocations', 'label' => 'Faktur yang dilunasi', 'required' => false],
+            ],
+            'posting_rules' => [
+                ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'cash_amount', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => false],
+                ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'customer'], 'apply_dimensions' => false, 'reuses_field' => false],
+                ['type' => 'fx_difference', 'apply_dimensions' => false],
+            ],
+            'subledger_route' => [
+                'kind' => 'payment',
+                'control_role' => 'receivables_control',
+                'party_field' => 'customer',
+                'document_number_field' => 'receipt_number',
+                'due_date_field' => null,
+                'cash_account_field' => 'bank',
+                'allocations_field' => 'allocations',
+            ],
+        ],
+        [
+            'key' => 'supplier_payment_cross_currency',
+            'label' => 'Bayar Pemasok, Rekening Beda Mata Uang',
+            'mode' => 'structured',
+            'fields' => [
+                ['name' => 'supplier', 'type' => 'party', 'label' => 'Pemasok'],
+                ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Dibayar dari rekening'],
+                ['name' => 'payment_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
+                ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah tagihan yang dilunasi (mata uang entri)'],
+                ['name' => 'cash_amount', 'type' => 'amount', 'label' => 'Jumlah dibayar (mata uang rekening)'],
+                ['name' => 'allocations', 'type' => 'allocations', 'label' => 'Tagihan yang dilunasi', 'required' => false],
+            ],
+            'posting_rules' => [
+                ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'supplier'], 'apply_dimensions' => false, 'reuses_field' => false],
+                ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'cash_amount', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => false],
+                ['type' => 'fx_difference', 'apply_dimensions' => false],
+            ],
+            'subledger_route' => [
+                'kind' => 'payment',
+                'control_role' => 'payables_control',
+                'party_field' => 'supplier',
+                'document_number_field' => 'payment_number',
+                'due_date_field' => null,
+                'cash_account_field' => 'bank',
+                'allocations_field' => 'allocations',
+            ],
+        ],
         // Both amounts are asked for so that a transfer between accounts of different currencies can state each
         // in the currency of its account; for the same currency they are the same number.
         [

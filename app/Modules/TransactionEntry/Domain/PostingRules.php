@@ -63,6 +63,37 @@ final class PostingRules
     }
 
     /**
+     * Indexes of the rules whose cash line is in the currency of its cash account instead of the currency of
+     * the entry (TE-FR-06): every cash rule of a transfer, and the cash rule of a payment whose amount field
+     * no other rule uses, since a field two rules share can only mean one amount in one currency. The
+     * difference between the two amounts is what an `fx_difference` rule makes up.
+     *
+     * @param  list<RuleLine>  $rules
+     * @return list<int>
+     */
+    public static function cashInAccountCurrency(array $rules, bool $transfer): array
+    {
+        $users = [];
+
+        foreach ($rules as $rule) {
+            if ($rule['type'] === self::AMOUNT) {
+                $field = $rule['amount_field'] ?? '';
+                $users[$field] = ($users[$field] ?? 0) + 1;
+            }
+        }
+
+        $indexes = [];
+
+        foreach ($rules as $index => $rule) {
+            if ($rule['type'] === self::AMOUNT && ($rule['account']['source'] ?? null) === self::CASH_ACCOUNT && ($transfer || ($users[$rule['amount_field'] ?? ''] ?? 0) === 1)) {
+                $indexes[] = $index;
+            }
+        }
+
+        return $indexes;
+    }
+
+    /**
      * @param  RuleLine  $rule
      * @return list<string>
      */

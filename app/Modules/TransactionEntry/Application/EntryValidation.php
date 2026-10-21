@@ -8,6 +8,7 @@ use App\Modules\Subledger\Contracts\PartyDirectory;
 use App\Modules\TransactionEntry\Domain\Entry;
 use App\Modules\TransactionEntry\Domain\FieldType;
 use App\Modules\TransactionEntry\Domain\FieldValues;
+use App\Modules\TransactionEntry\Domain\PostingRules;
 use App\Modules\TransactionEntry\Domain\SubledgerRoute;
 use App\Modules\TransactionEntry\Domain\TransactionTypeVersion;
 use App\Modules\TransactionEntry\Domain\VersionStatus;
@@ -52,8 +53,10 @@ final class EntryValidation
             $values = $entry->field_values;
             $errors = FieldValues::errors($fields, $values);
             $scale = $this->rates->scaleOf($entry->currency);
-            // The amounts of a transfer are each in the currency of their cash account, which the ledger checks line by line.
-            $transfer = SubledgerRoute::isTransfer($version->subledger_route);
+            // The amounts of a transfer, and the cash amount of a payment that has one of its own, are in the
+            // currency of their cash account, which the ledger checks line by line.
+            $rules = $version->posting_rules ?? [];
+            $inAccountCurrency = array_map(fn (int $index): string => $rules[$index]['amount_field'] ?? '', PostingRules::cashInAccountCurrency($rules, SubledgerRoute::isTransfer($version->subledger_route)));
             $companyId = $this->company->require();
 
             foreach ($fields as $field) {
@@ -64,7 +67,7 @@ final class EntryValidation
                     continue;
                 }
 
-                if ($field['type'] === FieldType::Amount->value && ! $transfer && $this->decimals($value) > $scale) {
+                if ($field['type'] === FieldType::Amount->value && ! in_array($field['name'], $inAccountCurrency, true) && $this->decimals($value) > $scale) {
                     $errors[$key] = [__('entries.value_scale', ['field' => $field['label'], 'scale' => $scale])];
                 } elseif ($field['type'] === FieldType::Account->value && $this->accounts->find($companyId, $value) === null) {
                     $errors[$key] = [__('entries.field_account_unknown', ['id' => $value])];

@@ -61,7 +61,7 @@ final class EntryLines
         $fxRules = [];
         $balance = BigDecimal::zero();
         $pending = $foreign !== null && $applied === null;
-        $transfer = SubledgerRoute::isTransfer($version->subledger_route);
+        $cashInAccountCurrency = PostingRules::cashInAccountCurrency($version->posting_rules ?? [], SubledgerRoute::isTransfer($version->subledger_route));
 
         foreach ($version->posting_rules ?? [] as $index => $rule) {
             $dimensionsOf = $rule['apply_dimensions'] ? $dimensions : [];
@@ -82,8 +82,8 @@ final class EntryLines
             $accountId = $this->accountOf($rule, $values, $version, $accountingDate);
             [$lineCurrency, $lineApplied, $lineInput] = [$foreign, $applied, $inputRate];
 
-            // The cash of a transfer is in the currency of its account, at the rate in the table (TE-FR-06).
-            if ($transfer && ($rule['account']['source'] ?? null) === PostingRules::CASH_ACCOUNT) {
+            // The cash of a transfer, or of a payment with an amount of its own, is in the currency of its account, at the rate in the table (TE-FR-06).
+            if (in_array($index, $cashInAccountCurrency, true)) {
                 $lineCurrency = $this->rates->foreign($this->cashAccountData($rule['account']['field'] ?? '', $values)->currency);
                 $lineInput = null;
                 $lineApplied = $lineCurrency === null ? null : $this->rates->resolve($version, $lineCurrency, null, $accountingDate, $strict);
