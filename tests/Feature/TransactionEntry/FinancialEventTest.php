@@ -435,3 +435,127 @@ describe('who may send and read (401, 403)', function () {
         $this->actingAs($this->viewer)->postJson("{$this->url}/financial-events", evPayload())->assertForbidden();
     });
 });
+
+describe('batch of events (TE-FR-17, API-TR-26)', function () {
+    function evBatch(array $events, ?string $token = null)
+    {
+        return evSend('POST', test()->url.'/financial-events/batch', ['events' => $events], $token ?? test()->token);
+    }
+
+    function evItem(string $key, array $overrides = []): array
+    {
+        return evPayload(array_merge(['references' => ['source_transaction_id' => $key]], $overrides));
+    }
+
+    it('answers each event on its own, in order, as the single endpoint would', function () {
+        evSendEvent(evItem('known'))->assertCreated();
+
+        $response = evBatch([
+            evItem('new-1'),
+            evItem('known'),
+            evItem('known', ['amounts' => ['salary_expense' => '1', 'net_payable' => '1', 'withholding_payable' => '0']]),
+            evItem('bad', ['amounts' => ['salary_expense' => '100', 'net_payable' => '90', 'withholding_payable' => '0']]),
+            evItem('new-2'),
+        ])->assertOk();
+
+        expect($response->json('data.*.index'))->toBe([0, 1, 2, 3, 4])
+            ->and($response->json('data.*.status'))->toBe([201, 200, 409, 422, 201])
+            ->and($response->json('data.0.data.status'))->toBe('submitted')
+            ->and($response->json('data.1.data.event_id'))->not->toBeNull()->and($response->json('data.1'))->not->toHaveKey('error')
+            ->and($response->json('data.2.error.code'))->toBe('SOURCE_TRANSACTION_CONFLICT')
+            ->and($response->json('data.3.error'))->toHaveKeys(['message', 'errors'])->and($response->json('data.3'))->not->toHaveKey('data')
+            ->and(evEntries())->toBe(3);
+    });
+
+    it('records nothing for the bad event, so that the corrected one under the same key is new', function () {
+        evBatch([evItem('a', ['amounts' => ['salary_expense' => '100', 'net_payable' => '90', 'withholding_payable' => '0']])])->assertOk()->assertJsonPath('data.0.status', 422);
+
+        expect(evEntries())->toBe(0);
+
+        evBatch([evItem('a')])->assertOk()->assertJsonPath('data.0.status', 201);
+    });
+
+    it('is safe to send again as a whole', function () {
+        $batch = [evItem('a'), evItem('b')];
+
+        $first = evBatch($batch)->assertOk()->json('data');
+        $again = evBatch($batch)->assertOk()->json('data');
+
+        expect(array_column($again, 'status'))->toBe([200, 200])
+            ->and(array_column(array_column($again, 'data'), 'event_id'))->toBe(array_column(array_column($first, 'data'), 'event_id'))
+            ->and(evEntries())->toBe(2);
+    });
+
+    it('treats the same key twice in one batch as a resend', function () {
+        $response = evBatch([evItem('a'), evItem('a'), evItem('a', ['accounting_date' => '2026-03-30'])])->assertOk();
+
+        expect($response->json('data.*.status'))->toBe([201, 200, 409])->and(evEntries())->toBe(1);
+    });
+
+    it('refuses an event outside the allowlist for that event only, without saying anything about the type', function () {
+        $this->actingAs($this->admin)->postJson("{$this->url}/transaction-types", ['key' => 'general_journal', 'label' => 'Jurnal Umum'])->assertCreated();
+
+        $response = evBatch([evItem('a', ['transaction_type' => ['key' => 'general_journal']]), evItem('b')])->assertOk();
+
+        expect($response->json('data.*.status'))->toBe([403, 201])->and($response->json('data.0.error'))->not->toHaveKey('errors')
+            ->and($response->json('data.0.error.code'))->toBe('FORBIDDEN')->and(evEntries())->toBe(1);
+    });
+
+    it('refuses what the single endpoint refuses, such as source_system and unknown sections', function () {
+        $response = evBatch([evItem('a', ['source_system' => 'hr']), evItem('b', ['employees' => []]), evPayload(['references' => ['source_document_number' => 'x']])])->assertOk();
+
+        expect($response->json('data.*.status'))->toBe([422, 422, 422])
+            ->and(array_keys($response->json('data.0.error.errors')))->toContain('source_system')
+            ->and(array_keys($response->json('data.1.error.errors')))->toContain('employees')
+            ->and(array_keys($response->json('data.2.error.errors')))->toContain('references.source_transaction_id')
+            ->and(evEntries())->toBe(0);
+    });
+
+    it('takes the source system from the client for every event', function () {
+        $first = evBatch([evItem('a')])->assertOk()->json('data.0.data.event_id');
+
+        expect($this->actingAs($this->admin)->getJson("{$this->url}/entries/{$first}")->json('data.source_system'))->toBe('payroll');
+    });
+
+    it('refuses a bad envelope as a whole: none, too many, not a list, items that are no events', function () {
+        evBatch([])->assertUnprocessable()->assertJsonValidationErrors(['events']);
+        evBatch(array_map(fn (int $n) => evItem("e{$n}"), range(1, config('api.batch.max_events') + 1)))->assertUnprocessable()->assertJsonValidationErrors(['events']);
+        evBatch(['a' => evItem('a')])->assertUnprocessable()->assertJsonValidationErrors(['events']);
+        evBatch(['text'])->assertUnprocessable()->assertJsonValidationErrors(['events.0']);
+        evSend('POST', "{$this->url}/financial-events/batch", [], $this->token)->assertUnprocessable()->assertJsonValidationErrors(['events']);
+
+        expect(evEntries())->toBe(0);
+    });
+
+    it('takes a batch up to the limit', function () {
+        config(['api.batch.max_events' => 3]);
+
+        evBatch([evItem('a'), evItem('b'), evItem('c')])->assertOk()->assertJsonCount(3, 'data');
+        evBatch([evItem('a'), evItem('b'), evItem('c'), evItem('d')])->assertUnprocessable();
+    });
+
+    it('keeps the events on the approval path like any other: submitted, never decided by the client', function () {
+        $id = evBatch([evItem('a')])->assertOk()->json('data.0.data.event_id');
+
+        evSend('POST', "{$this->url}/entries/{$id}/approve", [], $this->token)->assertForbidden();
+        $this->actingAs($this->approver)->postJson("{$this->url}/entries/{$id}/approve")->assertOk();
+    });
+
+    it('asks for credentials and the scope to write, and is for clients, not users', function () {
+        evSend('POST', "{$this->url}/financial-events/batch", ['events' => [evItem('a')]])->assertUnauthorized();
+
+        $reader = evClient(['name' => 'Reader', 'source_system' => 'reader', 'scopes' => ['financial-events:read:self']]);
+        evBatch([evItem('a')], evToken($reader))->assertForbidden();
+
+        $this->actingAs($this->admin)->postJson("{$this->url}/financial-events/batch", ['events' => [evItem('a')]])->assertForbidden();
+
+        expect(evEntries())->toBe(0);
+    });
+
+    it('does not reach another company', function () {
+        $other = User::factory()->create();
+        [$otherCompany] = createWorkspaceAs($other, 'Other');
+
+        evSend('POST', "/api/v1/companies/{$otherCompany}/financial-events/batch", ['events' => [evItem('a')]], $this->token)->assertForbidden();
+    });
+});

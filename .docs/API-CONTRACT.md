@@ -156,7 +156,7 @@ Kode baru ditambahkan ke tabel ini sebelum dipakai.
 ## 6. Fase 2
 
 - **API-TR-25 Webhook (`F2`).** Dikirim lewat outbox setelah commit, ditandatangani HMAC-SHA256 beserta timestamp, dan dicoba ulang dengan backoff. Penerima memproses secara idempoten berdasarkan ID webhook.
-- **API-TR-26 Batch event (`F2`).** `POST .../financial-events/batch` dengan hasil per item (TE-FR-17).
+- **API-TR-26 Batch event (`F2`).** `POST .../financial-events/batch` dengan body `{ "events": [ ...payload API-TR-17 ] }` (1 sampai `API_BATCH_MAX_EVENTS`, default 100; di luar itu 422 untuk seluruh permintaan) dan hasil per item (TE-FR-17). Respons 200 berisi `data`: satu hasil per event menurut urutan kirim, `{ index, status, data }` bila diterima atau `{ index, status, error }` bila tidak, dengan `status` dan `error` sama seperti bila event dikirim sendiri (API-TR-12, API-TR-20). Event diproses berurutan, tiap event atomik dan idempoten sendiri (TE-FR-13), sehingga kunci sama dalam satu batch adalah kiriman ulang dan mengirim ulang batch utuh aman. Allowlist Jenis Transaksi dan scope berlaku per event; rate limit menghitung satu batch sebagai satu permintaan.
 
 ## 7. Kriteria penerimaan
 

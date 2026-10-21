@@ -27,6 +27,11 @@ return [
         'ttl_seconds' => (int) env('API_TOKEN_TTL_SECONDS', 600),
     ],
 
+    'batch' => [
+        // Most events one batch may carry (TE-FR-17); the rate limit counts the batch as one request.
+        'max_events' => (int) env('API_BATCH_MAX_EVENTS', 100),
+    ],
+
     'idempotency' => [
         // How long an Idempotency-Key is remembered (API-TR-13).
         'ttl_hours' => (int) env('API_IDEMPOTENCY_TTL_HOURS', 24),

@@ -6401,6 +6401,68 @@
                 }
             }
         },
+        "/companies/{companyId}/financial-events/batch": {
+            "post": {
+                "operationId": "financial-events.batch",
+                "summary": "Sends many financial events at once (TE-FR-17, API-TR-26). The events are taken in order, each as the\nsingle endpoint would take it, atomic and idempotent on its own: a bad event costs only itself. The\nanswer is 200 with one result per event, `index` being its place in `events` and `status` the HTTP\nstatus it would have had alone (201, 200, 409, 422, 403); a result carries `data` or, when the event\nwas not taken, `error` in the shape of API-TR-12. Sending the whole batch again is safe",
+                "tags": [
+                    "FinancialEvent"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FinancialEventBatchRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "array",
+                                                "items": {}
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/financial-events/changes": {
             "get": {
                 "operationId": "financial-events.changes",
@@ -21035,6 +21097,27 @@
                     "allocations"
                 ],
                 "title": "FieldType"
+            },
+            "FinancialEventBatchRequest": {
+                "type": "object",
+                "description": "The envelope of a batch of financial events (TE-FR-17, API-TR-26). Only the envelope is validated here;\neach event is validated, allowed, and recorded on its own, so that one bad event never costs the others.",
+                "properties": {
+                    "events": {
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "minItems": 1,
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "events"
+                ],
+                "title": "FinancialEventBatchRequest"
             },
             "FinancialEventChangeResource": {
                 "type": "object",

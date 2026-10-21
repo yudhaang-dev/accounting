@@ -173,7 +173,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 - [ ] **B-01** Rekonsiliasi bank lewat impor mutasi — SL-FR-13
 - [ ] **B-02** Webhook bertanda tangan lewat outbox — API-TR-25
-- [ ] **B-03** Endpoint batch event — TE-FR-17, API-TR-26
+- [x] **B-03** Endpoint batch event — TE-FR-17, API-TR-26
 - [ ] **B-04** Atribusi pembayaran ke akun biaya asal untuk metrik kas — RP-FR-11
 
 ### Post-MVP

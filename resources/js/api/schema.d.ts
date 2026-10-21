@@ -1209,6 +1209,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/financial-events/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sends many financial events at once (TE-FR-17, API-TR-26). The events are taken in order, each as the
+         *     single endpoint would take it, atomic and idempotent on its own: a bad event costs only itself. The
+         *     answer is 200 with one result per event, `index` being its place in `events` and `status` the HTTP
+         *     status it would have had alone (201, 200, 409, 422, 403); a result carries `data` or, when the event
+         *     was not taken, `error` in the shape of API-TR-12. Sending the whole batch again is safe
+         */
+        post: operations["financial-events.batch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/financial-events/changes": {
         parameters: {
             query?: never;
@@ -3919,6 +3942,14 @@ export interface components {
          * @enum {string}
          */
         FieldType: "amount" | "date" | "text" | "reference" | "account" | "party" | "cash_account" | "dimension" | "allocations";
+        /**
+         * FinancialEventBatchRequest
+         * @description The envelope of a batch of financial events (TE-FR-17, API-TR-26). Only the envelope is validated here;
+         *     each event is validated, allowed, and recorded on its own, so that one bad event never costs the others.
+         */
+        FinancialEventBatchRequest: {
+            events: string[][];
+        };
         /** FinancialEventChangeResource */
         FinancialEventChangeResource: {
             cursor: string;
@@ -7699,6 +7730,36 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "financial-events.batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinancialEventBatchRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown[][];
+                    };
                 };
             };
             401: components["responses"]["AuthenticationException"];
