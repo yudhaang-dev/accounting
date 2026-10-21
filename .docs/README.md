@@ -27,6 +27,9 @@ Kebutuhan produk sistem pembukuan *headless* (API-first) untuk SPA first-party d
 | — | [DOMAIN-DEPENDENCIES.md](DOMAIN-DEPENDENCIES.md) | Kepemilikan modul & graf dependensi |
 | — | [CHART-OF-ACCOUNTS.md](CHART-OF-ACCOUNTS.md) | Template COA & saran peran akun (data, bukan kode) |
 | `ADR` | [adr/](adr/) | Keputusan arsitektur dan alasannya |
+| — | [PANDUAN-PENGGUNA.md](PANDUAN-PENGGUNA.md) | Panduan pemakaian aplikasi (lengkap) untuk admin keuangan dan akuntan |
+| — | [PANDUAN-AKUNTAN-SETUP.md](PANDUAN-AKUNTAN-SETUP.md) | Panduan akuntan: penyiapan perusahaan sampai serah terima |
+| — | [PANDUAN-ADMIN-KEUANGAN.md](PANDUAN-ADMIN-KEUANGAN.md) | Panduan admin keuangan: pencatatan dan pemantauan harian |
 | `M`, `B` | [TODO.md](TODO.md) | Rencana implementasi per milestone |
 | `R` | [REFERENCES.md](REFERENCES.md) | Rujukan standar dan regulasi |
 
