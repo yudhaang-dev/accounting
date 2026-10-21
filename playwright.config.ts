@@ -20,7 +20,8 @@ export default defineConfig({
     workers: 1,
     retries: 0,
     reporter: [['list']],
-    timeout: 60_000,
+    // The whole M1 flow is one scenario, and PHP's built-in server answers one request at a time.
+    timeout: 180_000,
     expect: { timeout: 10_000 },
     use: {
         baseURL: BASE_URL,

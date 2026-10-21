@@ -68,3 +68,9 @@ jobs:
 
       - name: Run CI Checks
         run: composer ci:check
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run end-to-end tests
+        run: pnpm run e2e

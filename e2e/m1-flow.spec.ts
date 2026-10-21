@@ -297,7 +297,8 @@ test('from sign-in to a posted journal in the trial balance', async ({
 
         await expect(trail).toContainText('Toko Budi');
         await expect(trail.getByRole('link', { name: 'Entri' })).toBeVisible();
-        await expect(trail).toContainText('ENT/');
+        // The number comes from the series of the type: its key, the year and month, then a sequence.
+        await expect(trail).toContainText('GENERAL/');
         await shot(page, 'entry-posted');
     });
 

@@ -42,7 +42,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
   - [x] **M1-09d** Form dan daftar entri beserta aksinya (submit, approve, post) — jenis transaksi pertama dibuat dari form oleh pemegang `policies.manage` sampai ada perancang di M5-14
   - [x] **M1-09e** Detail jurnal
   - [x] **M1-09f** Neraca saldo (drill-down dan ekspor CSV)
-- [x] **M1-10** Test feature end-to-end untuk seluruh alur M1 — belum dijalankan di CI (butuh layanan PostgreSQL dan unduhan browser)
+- [x] **M1-10** Test feature end-to-end untuk seluruh alur M1 — langkah CI-nya ditambahkan (`pnpm run e2e` setelah `composer ci:check`) tetapi belum pernah berjalan di GitHub Actions; lulus di mesin lokal
 
 ## M2 — Data induk
 
