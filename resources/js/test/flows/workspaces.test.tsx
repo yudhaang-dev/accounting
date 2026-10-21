@@ -138,6 +138,38 @@ describe('workspace selection', () => {
         ).toBeInTheDocument();
     });
 
+    it('groups the sidebar by area and leaves out a group without a visible item', async () => {
+        mockApi({
+            ...signedIn,
+            'GET /api/v1/me/workspaces': () =>
+                json({
+                    data: [
+                        {
+                            ...workspace,
+                            permissions: [
+                                'accounts.read',
+                                'entries.read',
+                                'parties.read',
+                            ],
+                        },
+                    ],
+                }),
+            [`GET /api/v1/companies/${workspace.company_id}`]: () =>
+                json({ data: company }),
+        });
+        renderApp(`/w/${workspace.company_id}`);
+
+        await screen.findByRole('heading', { name: 'PT Toko Budi' });
+        const labels = Array.from(
+            document.querySelectorAll('[data-slot="sidebar-group-label"]'),
+        ).map((node) => node.textContent);
+
+        expect(labels).toEqual(['Pembukuan', 'Transaksi', 'Subledger']);
+        expect(
+            screen.getByRole('link', { name: 'Akun' }),
+        ).toBeInTheDocument();
+    });
+
     it('treats a company the user is not a member of as not found', async () => {
         const api = mockApi({ ...signedInWithWorkspace });
         renderApp('/w/01JCOMPANYOTHER000000000001');

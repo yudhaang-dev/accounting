@@ -51,6 +51,7 @@ import {
     SidebarFooter,
     SidebarGroup,
     SidebarGroupContent,
+    SidebarGroupLabel,
     SidebarHeader,
     SidebarInset,
     SidebarMenu,
@@ -69,199 +70,242 @@ import { Breadcrumbs } from '@/app/breadcrumbs';
 import { Separator } from '@/components/ui/separator';
 import { WorkspaceSwitcher } from '@/modules/identity-access/components/workspace-switcher';
 
-/** Company screens in the sidebar; an item shows only for users holding its permission. */
+/** Company screens in the sidebar, grouped by area; an item shows only for users holding its permission, and a group with no visible item is left out. */
 const NAV = [
     {
-        to: '/w/$companyId',
-        label: 'app.navHome',
-        icon: HouseIcon,
-        permission: null,
+        label: null,
+        items: [
+            {
+                to: '/w/$companyId',
+                label: 'app.navHome',
+                icon: HouseIcon,
+                permission: null,
+            },
+        ],
     },
     {
-        to: '/w/$companyId/accounts',
-        label: 'app.navAccounts',
-        icon: ListTreeIcon,
-        permission: 'accounts.read',
+        label: 'app.navGroupAccounting',
+        items: [
+            {
+                to: '/w/$companyId/accounts',
+                label: 'app.navAccounts',
+                icon: ListTreeIcon,
+                permission: 'accounts.read',
+            },
+            {
+                to: '/w/$companyId/periods',
+                label: 'app.navPeriods',
+                icon: CalendarRangeIcon,
+                permission: 'periods.read',
+            },
+            {
+                to: '/w/$companyId/ledger-settings',
+                label: 'app.navLedgerSettings',
+                icon: SlidersHorizontalIcon,
+                permission: 'accounts.read',
+            },
+            {
+                to: '/w/$companyId/opening-balances',
+                label: 'app.navOpeningBalances',
+                icon: ArrowDownToLineIcon,
+                permission: 'journals.read',
+            },
+            {
+                to: '/w/$companyId/journals',
+                label: 'app.navJournals',
+                icon: BookTextIcon,
+                permission: 'journals.read',
+            },
+        ],
     },
     {
-        to: '/w/$companyId/periods',
-        label: 'app.navPeriods',
-        icon: CalendarRangeIcon,
-        permission: 'periods.read',
+        label: 'app.navGroupMasterData',
+        items: [
+            {
+                to: '/w/$companyId/dimensions',
+                label: 'app.navDimensions',
+                icon: ShapesIcon,
+                permission: 'dimensions.read',
+            },
+            {
+                to: '/w/$companyId/currencies',
+                label: 'app.navCurrencies',
+                icon: CoinsIcon,
+                permission: 'currencies.read',
+            },
+            {
+                to: '/w/$companyId/exchange-rates',
+                label: 'app.navRates',
+                icon: TrendingUpIcon,
+                permission: 'exchange-rates.read',
+            },
+        ],
     },
     {
-        to: '/w/$companyId/ledger-settings',
-        label: 'app.navLedgerSettings',
-        icon: SlidersHorizontalIcon,
-        permission: 'accounts.read',
+        label: 'app.navGroupTransactions',
+        items: [
+            {
+                to: '/w/$companyId/entries',
+                label: 'app.navEntries',
+                icon: FileTextIcon,
+                permission: 'entries.read',
+            },
+            {
+                to: '/w/$companyId/approvals',
+                label: 'app.navApprovals',
+                icon: InboxIcon,
+                permission: 'entries.approve',
+            },
+            {
+                to: '/w/$companyId/recurring-schedules',
+                label: 'app.navSchedules',
+                icon: RepeatIcon,
+                permission: 'recurring-schedules.read',
+            },
+            {
+                to: '/w/$companyId/transaction-types',
+                label: 'app.navTransactionTypes',
+                icon: LayersIcon,
+                permission: 'entries.read',
+            },
+            {
+                to: '/w/$companyId/approval-policy',
+                label: 'app.navApprovalPolicy',
+                icon: ListChecksIcon,
+                permission: 'policies.manage',
+            },
+        ],
     },
     {
-        to: '/w/$companyId/opening-balances',
-        label: 'app.navOpeningBalances',
-        icon: ArrowDownToLineIcon,
-        permission: 'journals.read',
+        label: 'app.navGroupSubledger',
+        items: [
+            {
+                to: '/w/$companyId/parties',
+                label: 'app.navParties',
+                icon: UsersRoundIcon,
+                permission: 'parties.read',
+            },
+            {
+                to: '/w/$companyId/posting-profiles',
+                label: 'app.navPostingProfiles',
+                icon: WorkflowIcon,
+                permission: 'posting-profiles.read',
+            },
+            {
+                to: '/w/$companyId/cash-accounts',
+                label: 'app.navCashAccounts',
+                icon: LandmarkIcon,
+                permission: 'cash-accounts.read',
+            },
+            {
+                to: '/w/$companyId/cash-transactions',
+                label: 'app.navCashTransactions',
+                icon: ArrowRightLeftIcon,
+                permission: 'cash-transactions.read',
+            },
+            {
+                to: '/w/$companyId/documents',
+                label: 'app.navDocuments',
+                icon: FileStackIcon,
+                permission: 'documents.read',
+            },
+            {
+                to: '/w/$companyId/open-items',
+                label: 'app.navOpenItems',
+                icon: ReceiptTextIcon,
+                permission: 'open-items.read',
+            },
+            {
+                to: '/w/$companyId/allocations',
+                label: 'app.navAllocations',
+                icon: SplitIcon,
+                permission: 'allocations.read',
+            },
+            {
+                to: '/w/$companyId/reconciliations',
+                label: 'app.navReconciliations',
+                icon: ScaleIcon,
+                permission: 'reconciliations.read',
+            },
+        ],
     },
     {
-        to: '/w/$companyId/dimensions',
-        label: 'app.navDimensions',
-        icon: ShapesIcon,
-        permission: 'dimensions.read',
+        label: 'app.navGroupReporting',
+        items: [
+            {
+                to: '/w/$companyId/reports',
+                label: 'app.navReports',
+                icon: FileTextIcon,
+                permission: 'reports.read',
+            },
+            {
+                to: '/w/$companyId/reports/trial-balance',
+                label: 'app.navTrialBalance',
+                icon: SigmaIcon,
+                permission: 'reports.read',
+            },
+            {
+                to: '/w/$companyId/reports/general-ledger',
+                label: 'app.navGeneralLedger',
+                icon: BookOpenIcon,
+                permission: 'reports.read',
+            },
+            {
+                to: '/w/$companyId/reports/aging',
+                label: 'app.navAging',
+                icon: HourglassIcon,
+                permission: 'reports.read',
+            },
+        ],
     },
     {
-        to: '/w/$companyId/currencies',
-        label: 'app.navCurrencies',
-        icon: CoinsIcon,
-        permission: 'currencies.read',
+        label: 'app.navGroupPlanning',
+        items: [
+            {
+                to: '/w/$companyId/plans',
+                label: 'app.navPlans',
+                icon: ClipboardListIcon,
+                permission: 'plans.read',
+            },
+        ],
     },
     {
-        to: '/w/$companyId/exchange-rates',
-        label: 'app.navRates',
-        icon: TrendingUpIcon,
-        permission: 'exchange-rates.read',
-    },
-    {
-        to: '/w/$companyId/parties',
-        label: 'app.navParties',
-        icon: UsersRoundIcon,
-        permission: 'parties.read',
-    },
-    {
-        to: '/w/$companyId/posting-profiles',
-        label: 'app.navPostingProfiles',
-        icon: WorkflowIcon,
-        permission: 'posting-profiles.read',
-    },
-    {
-        to: '/w/$companyId/cash-accounts',
-        label: 'app.navCashAccounts',
-        icon: LandmarkIcon,
-        permission: 'cash-accounts.read',
-    },
-    {
-        to: '/w/$companyId/cash-transactions',
-        label: 'app.navCashTransactions',
-        icon: ArrowRightLeftIcon,
-        permission: 'cash-transactions.read',
-    },
-    {
-        to: '/w/$companyId/documents',
-        label: 'app.navDocuments',
-        icon: FileStackIcon,
-        permission: 'documents.read',
-    },
-    {
-        to: '/w/$companyId/open-items',
-        label: 'app.navOpenItems',
-        icon: ReceiptTextIcon,
-        permission: 'open-items.read',
-    },
-    {
-        to: '/w/$companyId/allocations',
-        label: 'app.navAllocations',
-        icon: SplitIcon,
-        permission: 'allocations.read',
-    },
-    {
-        to: '/w/$companyId/reconciliations',
-        label: 'app.navReconciliations',
-        icon: ScaleIcon,
-        permission: 'reconciliations.read',
-    },
-    {
-        to: '/w/$companyId/entries',
-        label: 'app.navEntries',
-        icon: FileTextIcon,
-        permission: 'entries.read',
-    },
-    {
-        to: '/w/$companyId/recurring-schedules',
-        label: 'app.navSchedules',
-        icon: RepeatIcon,
-        permission: 'recurring-schedules.read',
-    },
-    {
-        to: '/w/$companyId/approvals',
-        label: 'app.navApprovals',
-        icon: InboxIcon,
-        permission: 'entries.approve',
-    },
-    {
-        to: '/w/$companyId/approval-policy',
-        label: 'app.navApprovalPolicy',
-        icon: ListChecksIcon,
-        permission: 'policies.manage',
-    },
-    {
-        to: '/w/$companyId/transaction-types',
-        label: 'app.navTransactionTypes',
-        icon: LayersIcon,
-        permission: 'entries.read',
-    },
-    {
-        to: '/w/$companyId/journals',
-        label: 'app.navJournals',
-        icon: BookTextIcon,
-        permission: 'journals.read',
-    },
-    {
-        to: '/w/$companyId/reports',
-        label: 'app.navReports',
-        icon: FileTextIcon,
-        permission: 'reports.read',
-    },
-    {
-        to: '/w/$companyId/reports/trial-balance',
-        label: 'app.navTrialBalance',
-        icon: SigmaIcon,
-        permission: 'reports.read',
-    },
-    {
-        to: '/w/$companyId/reports/general-ledger',
-        label: 'app.navGeneralLedger',
-        icon: BookOpenIcon,
-        permission: 'reports.read',
-    },
-    {
-        to: '/w/$companyId/reports/aging',
-        label: 'app.navAging',
-        icon: HourglassIcon,
-        permission: 'reports.read',
-    },
-    {
-        to: '/w/$companyId/plans',
-        label: 'app.navPlans',
-        icon: ClipboardListIcon,
-        permission: 'plans.read',
-    },
-    {
-        to: '/w/$companyId/members',
-        label: 'app.navMembers',
-        icon: UsersIcon,
-        permission: 'memberships.read',
-    },
-    {
-        to: '/w/$companyId/roles',
-        label: 'app.navRoles',
-        icon: ShieldCheckIcon,
-        permission: 'roles.read',
-    },
-    {
-        to: '/w/$companyId/security-policy',
-        label: 'app.navSecurityPolicy',
-        icon: LockKeyholeIcon,
-        permission: 'policies.manage',
-    },
-    {
-        to: '/w/$companyId/integration-clients',
-        label: 'app.navIntegrations',
-        icon: PlugIcon,
-        permission: 'integration-clients.manage',
+        label: 'app.navGroupAccess',
+        items: [
+            {
+                to: '/w/$companyId/members',
+                label: 'app.navMembers',
+                icon: UsersIcon,
+                permission: 'memberships.read',
+            },
+            {
+                to: '/w/$companyId/roles',
+                label: 'app.navRoles',
+                icon: ShieldCheckIcon,
+                permission: 'roles.read',
+            },
+            {
+                to: '/w/$companyId/security-policy',
+                label: 'app.navSecurityPolicy',
+                icon: LockKeyholeIcon,
+                permission: 'policies.manage',
+            },
+            {
+                to: '/w/$companyId/integration-clients',
+                label: 'app.navIntegrations',
+                icon: PlugIcon,
+                permission: 'integration-clients.manage',
+            },
+        ],
     },
 ] as const satisfies readonly {
-    to: string;
-    label: string;
-    icon: ComponentType;
-    permission: string | null;
+    label: string | null;
+    items: readonly {
+        to: string;
+        label: string;
+        icon: ComponentType;
+        permission: string | null;
+    }[];
 }[];
 
 function initials(name: string): string {
@@ -364,46 +408,61 @@ export function AppShell({
                     />
                 </SidebarHeader>
                 <SidebarContent>
-                    {active && (
-                        <SidebarGroup>
-                            <SidebarGroupContent>
-                                <SidebarMenu>
-                                    {NAV.filter(
-                                        (item) =>
-                                            !item.permission ||
-                                            can(active, item.permission),
-                                    ).map(({ to, label, icon: Icon }) => (
-                                        <SidebarMenuItem key={to}>
-                                            <SidebarMenuButton
-                                                isActive={Boolean(
-                                                    matchRoute({
-                                                        to,
-                                                        params: {
-                                                            companyId:
-                                                                active.company_id,
-                                                        },
-                                                    }),
-                                                )}
-                                                render={
-                                                    <Link
-                                                        to={to}
-                                                        params={{
-                                                            companyId:
-                                                                active.company_id,
-                                                        }}
-                                                    />
-                                                }
-                                                tooltip={t(label)}
-                                            >
-                                                <Icon />
-                                                <span>{t(label)}</span>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    ))}
-                                </SidebarMenu>
-                            </SidebarGroupContent>
-                        </SidebarGroup>
-                    )}
+                    {active &&
+                        NAV.map((group) => ({
+                            ...group,
+                            items: group.items.filter(
+                                (item) =>
+                                    !item.permission ||
+                                    can(active, item.permission),
+                            ),
+                        }))
+                            .filter((group) => group.items.length > 0)
+                            .map((group) => (
+                                <SidebarGroup key={group.label ?? 'home'}>
+                                    {group.label && (
+                                        <SidebarGroupLabel>
+                                            {t(group.label)}
+                                        </SidebarGroupLabel>
+                                    )}
+                                    <SidebarGroupContent>
+                                        <SidebarMenu>
+                                            {group.items.map(
+                                                ({ to, label, icon: Icon }) => (
+                                                    <SidebarMenuItem key={to}>
+                                                        <SidebarMenuButton
+                                                            isActive={Boolean(
+                                                                matchRoute({
+                                                                    to,
+                                                                    params: {
+                                                                        companyId:
+                                                                            active.company_id,
+                                                                    },
+                                                                }),
+                                                            )}
+                                                            render={
+                                                                <Link
+                                                                    to={to}
+                                                                    params={{
+                                                                        companyId:
+                                                                            active.company_id,
+                                                                    }}
+                                                                />
+                                                            }
+                                                            tooltip={t(label)}
+                                                        >
+                                                            <Icon />
+                                                            <span>
+                                                                {t(label)}
+                                                            </span>
+                                                        </SidebarMenuButton>
+                                                    </SidebarMenuItem>
+                                                ),
+                                            )}
+                                        </SidebarMenu>
+                                    </SidebarGroupContent>
+                                </SidebarGroup>
+                            ))}
                 </SidebarContent>
                 <SidebarFooter>
                     <UserMenu me={me} />
