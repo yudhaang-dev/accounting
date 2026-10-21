@@ -10,7 +10,9 @@ class UpdateIntegrationClientRequest extends FormRequest
 {
     /**
      * Each list replaces the previous one. A scope removed here stops working at once, also on
-     * tokens already issued. `source_system` cannot be changed.
+     * tokens already issued. `source_system` cannot be changed. `data_scope` replaces the dimension values
+     * the client is limited to (IA-FR-03); an empty list removes the limit. Only a user without a limit may
+     * change a client.
      *
      * @return array<string, array<int, mixed>>
      */
@@ -23,6 +25,8 @@ class UpdateIntegrationClientRequest extends FormRequest
             'scopes.*' => ['string', 'distinct', Rule::in(IntegrationScopes::all())],
             'transaction_type_keys' => ['sometimes', 'array', 'max:200'],
             'transaction_type_keys.*' => ['string', 'distinct', 'regex:'.CreateIntegrationClientRequest::TYPE_KEY],
+            'data_scope' => ['sometimes', 'array', 'max:200'],
+            'data_scope.*' => ['string', 'distinct'],
         ];
     }
 }

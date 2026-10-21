@@ -7,12 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
+ * Expects `data_scope` loaded (see IntegrationClientDataScopes).
+ *
  * @property-read IntegrationClient $resource
  */
 class IntegrationClientResource extends JsonResource
 {
     /**
-     * @return array{id: string, name: string, source_system: string, client_id: string, scopes: list<string>, transaction_type_keys: list<string>, status: string, secret_rotated_at: string|null, revoked_at: string|null, created_at: string|null, lock_version: int}
+     * @return array{id: string, name: string, source_system: string, client_id: string, scopes: list<string>, transaction_type_keys: list<string>, data_scope: list<string>, status: string, secret_rotated_at: string|null, revoked_at: string|null, created_at: string|null, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -24,6 +26,8 @@ class IntegrationClientResource extends JsonResource
             'client_id' => $this->resource->oauth_client_id,
             'scopes' => $this->resource->scopes,
             'transaction_type_keys' => $this->resource->transaction_type_keys,
+            // Dimension values the client is limited to, each with its descendants; empty means no limit.
+            'data_scope' => $this->resource->getRelation('data_scope')->all(),
             // `active` or `revoked`.
             'status' => $this->resource->status->value,
             'secret_rotated_at' => $this->resource->secret_rotated_at?->toIso8601String(),

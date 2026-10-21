@@ -12,7 +12,6 @@ use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Platform\Api\Principal;
 use App\Support\Access\ActorPermissions;
-use App\Support\Access\DataScope;
 use App\Support\Access\DataScopeContext;
 use App\Support\Company\CompanyAccessGate;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -30,6 +29,7 @@ final class WorkspaceCompanyAccessGate implements CompanyAccessGate
 {
     public function __construct(
         private readonly EffectiveAccessContexts $contexts,
+        private readonly IntegrationClientDataScopes $clientScopes,
         private readonly DataScopeContext $dataScope,
         private readonly ActorPermissions $actorPermissions,
         private readonly IdleSessionGuard $idle,
@@ -105,14 +105,17 @@ final class WorkspaceCompanyAccessGate implements CompanyAccessGate
             $client->transaction_type_keys,
             $scopes,
         ));
+        // Like a member, a client limited to some dimension values sees and sends only what lies inside them (IA-FR-03).
+        $dataScope = $this->clientScopes->forClient($client->id, $companyId);
+
         $request->attributes->set(EffectiveAccessContexts::REQUEST_ATTRIBUTE, new AccessContext(
             null,
             $companyId,
             IntegrationScopes::permissionsFor($scopes),
-            DataScope::unrestricted(),
+            $dataScope,
             $client->id,
         ));
-        $this->dataScope->set(DataScope::unrestricted());
+        $this->dataScope->set($dataScope);
         $this->actorPermissions->set(IntegrationScopes::permissionsFor($scopes));
     }
 

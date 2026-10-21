@@ -7727,7 +7727,7 @@
             },
             "post": {
                 "operationId": "integration-clients.store",
-                "summary": "Registers a client for one `source_system`. The response carries `client_id` and\n`client_secret`; the secret is shown this once and only its hash is kept. The client then\nrequests tokens at `POST /api/v1/oauth/token` with `grant_type=client_credentials` and HTTP\nBasic authentication (`client_secret_basic`)",
+                "summary": "Registers a client for one `source_system`, optionally limited to dimension values with `data_scope`.\nThe response carries `client_id` and\n`client_secret`; the secret is shown this once and only its hash is kept. The client then\nrequests tokens at `POST /api/v1/oauth/token` with `grant_type=client_credentials` and HTTP\nBasic authentication (`client_secret_basic`)",
                 "tags": [
                     "IntegrationClient"
                 ],
@@ -7832,7 +7832,7 @@
             },
             "patch": {
                 "operationId": "integration-clients.update",
-                "summary": "Renames the client or replaces its scopes or transaction type allowlist. `lock_version` is required",
+                "summary": "Renames the client or replaces its scopes, transaction type allowlist or data scope. `lock_version` is required",
                 "tags": [
                     "IntegrationClient"
                 ],
@@ -19793,6 +19793,14 @@
                         },
                         "maxItems": 200,
                         "uniqueItems": true
+                    },
+                    "data_scope": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "maxItems": 200,
+                        "uniqueItems": true
                     }
                 },
                 "required": [
@@ -21951,6 +21959,10 @@
                             "type": "string"
                         }
                     },
+                    "data_scope": {
+                        "type": "string",
+                        "description": "Dimension values the client is limited to, each with its descendants; empty means no limit."
+                    },
                     "status": {
                         "type": "string",
                         "description": "`active` or `revoked`."
@@ -21984,6 +21996,7 @@
                     "client_id",
                     "scopes",
                     "transaction_type_keys",
+                    "data_scope",
                     "status",
                     "secret_rotated_at",
                     "revoked_at",
@@ -22019,6 +22032,10 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    "data_scope": {
+                        "type": "string",
+                        "description": "Dimension values the client is limited to, each with its descendants; empty means no limit."
                     },
                     "status": {
                         "type": "string",
@@ -22057,6 +22074,7 @@
                     "client_id",
                     "scopes",
                     "transaction_type_keys",
+                    "data_scope",
                     "status",
                     "secret_rotated_at",
                     "revoked_at",
@@ -24694,6 +24712,14 @@
                         "items": {
                             "type": "string",
                             "pattern": "^[a-z0-9][a-z0-9_.-]{0,63}$"
+                        },
+                        "maxItems": 200,
+                        "uniqueItems": true
+                    },
+                    "data_scope": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
                         },
                         "maxItems": 200,
                         "uniqueItems": true

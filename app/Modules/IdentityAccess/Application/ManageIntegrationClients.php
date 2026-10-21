@@ -20,6 +20,10 @@ use Laravel\Passport\ClientRepository;
  * scopes and transaction type allowlist kept here. The secret is generated once, handed back once
  * and stored only as Passport's hash. Rotation and revocation revoke the active tokens in the same
  * transaction, and the guard also checks the client on every request (IA-AC-07).
+ *
+ * A client can be limited to some dimension values like a member (IA-FR-03). A user who is limited
+ * themselves cannot register, change or give new credentials to a client: the client could reach
+ * what the user cannot. Revoking stays open to them, as it only takes access away.
  */
 final class ManageIntegrationClients
 {
@@ -27,18 +31,24 @@ final class ManageIntegrationClients
         private readonly CompanyContext $company,
         private readonly ClientRepository $oauthClients,
         private readonly Audit $audit,
+        private readonly IntegrationClientDataScopes $dataScopes,
+        private readonly MembershipDataScopes $actorLimits,
     ) {}
 
     /**
      * @param  list<string>  $scopes
      * @param  list<string>  $transactionTypeKeys
+     * @param  list<string>  $dataScope  dimension value IDs the client is limited to; empty for no limit
      * @return array{client: IntegrationClient, secret: string} `secret` is shown to the caller this once
      *
      * @throws ValidationException when the source system is already used in the company
+     * @throws ApiException FORBIDDEN for a user who is limited, DIMENSION_INVALID for a value that is not the company's
      */
-    public function register(string $name, string $sourceSystem, array $scopes, array $transactionTypeKeys, int $actorId): array
+    public function register(string $name, string $sourceSystem, array $scopes, array $transactionTypeKeys, int $actorId, array $dataScope = []): array
     {
-        return DB::transaction(function () use ($name, $sourceSystem, $scopes, $transactionTypeKeys, $actorId): array {
+        $this->actorLimits->assertActorUnrestricted();
+
+        return DB::transaction(function () use ($name, $sourceSystem, $scopes, $transactionTypeKeys, $actorId, $dataScope): array {
             $companyId = $this->company->require();
 
             $taken = IntegrationClient::query()->where('source_system', $sourceSystem)->exists();
@@ -58,6 +68,8 @@ final class ManageIntegrationClients
                 'created_by' => $actorId,
             ])->refresh();
 
+            $this->dataScopes->replace($client->id, $companyId, $dataScope);
+
             $this->audit->record(
                 'integration_client.created',
                 "Integration client {$name} registered for {$sourceSystem}.",
@@ -71,12 +83,14 @@ final class ManageIntegrationClients
     }
 
     /**
-     * @param  array{name?: string, scopes?: list<string>, transaction_type_keys?: list<string>}  $data
+     * @param  array{name?: string, scopes?: list<string>, transaction_type_keys?: list<string>, data_scope?: list<string>}  $data
      *
-     * @throws ApiException VERSION_CONFLICT, INVALID_STATE_TRANSITION when revoked
+     * @throws ApiException VERSION_CONFLICT, INVALID_STATE_TRANSITION when revoked, FORBIDDEN for a user who is limited
      */
     public function update(string $id, array $data, int $expectedVersion): IntegrationClient
     {
+        $this->actorLimits->assertActorUnrestricted();
+
         return DB::transaction(function () use ($id, $data, $expectedVersion): IntegrationClient {
             $client = $this->lock($id);
             $before = $this->snapshot($client);
@@ -90,6 +104,15 @@ final class ManageIntegrationClients
             }
 
             $client->updateLocked($changes, $expectedVersion);
+
+            if (array_key_exists('data_scope', $data)) {
+                $this->dataScopes->replace($client->id, $client->company_id, $data['data_scope']);
+
+                // A change of the scope alone leaves the row untouched, yet stale editors must conflict.
+                if ($client->lock_version === $expectedVersion && $this->snapshot($client) !== $before) {
+                    $client->forceFill(['lock_version' => $expectedVersion + 1])->save();
+                }
+            }
 
             if (isset($changes['name'])) {
                 $this->oauthClient($client)->forceFill(['name' => $changes['name']])->save();
@@ -113,10 +136,12 @@ final class ManageIntegrationClients
      *
      * @return array{client: IntegrationClient, secret: string}
      *
-     * @throws ApiException INVALID_STATE_TRANSITION when revoked
+     * @throws ApiException INVALID_STATE_TRANSITION when revoked, FORBIDDEN for a user who is limited
      */
     public function rotateSecret(string $id): array
     {
+        $this->actorLimits->assertActorUnrestricted();
+
         return DB::transaction(function () use ($id): array {
             $client = $this->lock($id);
             $oauth = $this->oauthClient($client);
@@ -208,7 +233,7 @@ final class ManageIntegrationClients
         return $values;
     }
 
-    /** @return array{name: string, source_system: string, scopes: list<string>, transaction_type_keys: list<string>, status: string} */
+    /** @return array{name: string, source_system: string, scopes: list<string>, transaction_type_keys: list<string>, data_scope: list<string>, status: string} */
     private function snapshot(IntegrationClient $client): array
     {
         return [
@@ -216,6 +241,7 @@ final class ManageIntegrationClients
             'source_system' => $client->source_system,
             'scopes' => $client->scopes,
             'transaction_type_keys' => $client->transaction_type_keys,
+            'data_scope' => $this->dataScopes->valueIds([$client->id])[$client->id],
             'status' => $client->status->value,
         ];
     }

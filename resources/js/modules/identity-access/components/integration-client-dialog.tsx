@@ -34,6 +34,7 @@ import {
     CheckItem,
     toggled,
 } from '@/modules/identity-access/components/check-item';
+import { DataScopeField } from '@/modules/identity-access/components/data-scope-field';
 
 /** The scopes are OAuth identifiers (with colons), which i18next would read as namespaces: map them to plain keys. */
 export const SCOPE_LABELS = {
@@ -49,6 +50,7 @@ type Values = {
     scopes: IntegrationScope[];
     /** Keys separated by spaces, commas or new lines. */
     type_keys: string;
+    data_scope: string[];
 };
 
 const SOURCE_SYSTEM = /^[a-z0-9][a-z0-9_.-]{1,63}$/;
@@ -58,26 +60,33 @@ const keys = (text: string): string[] => [
     ...new Set(text.split(/[\s,]+/).filter(Boolean)),
 ];
 
+const sameSet = (a: string[], b: string[]): boolean =>
+    a.length === b.length && a.every((id) => b.includes(id));
+
 function ClientForm({
     companyId,
     client,
+    canReadDimensions,
     onCreated,
     onDone,
 }: {
     companyId: string;
     client?: IntegrationClient;
+    canReadDimensions: boolean;
     onCreated: (client: IntegrationClientWithSecret) => void;
     onDone: () => void;
 }) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const [formError, setFormError] = useState<string | null>(null);
+    const initialScope = client?.data_scope ?? [];
     const form = useForm<Values>({
         defaultValues: {
             name: client?.name ?? '',
             source_system: client?.source_system ?? '',
             scopes: (client?.scopes ?? []) as IntegrationScope[],
             type_keys: (client?.transaction_type_keys ?? []).join('\n'),
+            data_scope: initialScope,
         },
     });
     const {
@@ -103,6 +112,11 @@ function ClientForm({
                 await updateIntegrationClient(companyId, client.id, {
                     ...body,
                     lock_version: client.lock_version,
+                    // Only a change is sent: a user who is limited themselves may not set a scope at all.
+                    ...(canReadDimensions &&
+                        !sameSet(values.data_scope, initialScope) && {
+                            data_scope: values.data_scope,
+                        }),
                 });
 
                 return null;
@@ -111,6 +125,9 @@ function ClientForm({
             return createIntegrationClient(companyId, {
                 ...body,
                 source_system: values.source_system.trim(),
+                ...(values.data_scope.length > 0 && {
+                    data_scope: values.data_scope,
+                }),
             });
         },
         onSuccess: async (created) => {
@@ -140,6 +157,8 @@ function ClientForm({
                         fieldMap[apiField] = 'type_keys';
                     } else if (apiField.startsWith('scopes')) {
                         fieldMap[apiField] = 'scopes';
+                    } else if (apiField.startsWith('data_scope')) {
+                        fieldMap[apiField] = 'data_scope';
                     }
                 }
 
@@ -272,6 +291,33 @@ function ClientForm({
                     )}
                 </Field>
 
+                {canReadDimensions && (
+                    <FieldSet
+                        data-invalid={errors.data_scope ? true : undefined}
+                    >
+                        <FieldLegend variant="label">
+                            {t('integrations.scope.title')}
+                        </FieldLegend>
+                        <FieldDescription>
+                            {t('integrations.scope.description')}
+                        </FieldDescription>
+                        <Controller
+                            control={control}
+                            name="data_scope"
+                            render={({ field }) => (
+                                <DataScopeField
+                                    companyId={companyId}
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                />
+                            )}
+                        />
+                        {errors.data_scope && (
+                            <FieldError>{errors.data_scope.message}</FieldError>
+                        )}
+                    </FieldSet>
+                )}
+
                 <DialogFooter>
                     <Button type="button" variant="ghost" onClick={onDone}>
                         {t('common.cancel')}
@@ -299,11 +345,14 @@ function ClientForm({
 export function IntegrationClientDialog({
     companyId,
     client,
+    canReadDimensions,
     open,
     onOpenChange,
     onCreated,
 }: {
     companyId: string;
+    /** Whether the user may read dimensions, which the data scope picker needs. */
+    canReadDimensions: boolean;
     /** The client being edited; none means registering a new one. */
     client?: IntegrationClient;
     open: boolean;
@@ -328,6 +377,7 @@ export function IntegrationClientDialog({
                 key={client?.id ?? 'new'}
                 companyId={companyId}
                 client={client}
+                canReadDimensions={canReadDimensions}
                 onCreated={onCreated}
                 onDone={() => onOpenChange(false)}
             />

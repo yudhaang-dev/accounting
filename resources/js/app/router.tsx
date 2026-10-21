@@ -828,7 +828,12 @@ const integrationClientsRoute = createRoute({
     component: function IntegrationClients() {
         const { workspace } = integrationClientsRoute.useRouteContext();
 
-        return <IntegrationClientsPage companyId={workspace.company_id} />;
+        return (
+            <IntegrationClientsPage
+                companyId={workspace.company_id}
+                canReadDimensions={can(workspace, 'dimensions.read')}
+            />
+        );
     },
 });
 

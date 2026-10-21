@@ -56,10 +56,11 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 - [x] **M3-01** Role sebagai data dan endpoint katalog permission — IA-FR-02, IA-AC-03
 - [x] **M3-02** Siklus membership: undangan, pencabutan, kedaluwarsa — IA-FR-01, IA-AC-02
-- [x] **M3-03** Cakupan data per nilai dimensi beserta turunannya, diterapkan sebagai filter di semua modul — IA-FR-03, IA-AC-04, X-AC-01 — laporan M8 menerima `DataScope` dan menandai `restricted`; entri klien integrasi (M3-05) butuh cakupan sendiri
+- [x] **M3-03** Cakupan data per nilai dimensi beserta turunannya, diterapkan sebagai filter di semua modul — IA-FR-03, IA-AC-04, X-AC-01 — laporan M8 menerima `DataScope` dan menandai `restricted`; cakupan klien integrasi ada di M3-07
 - [x] **M3-04** Kebijakan keamanan: 2FA wajib per permission, batas sesi idle, allowlist IP klien — IA-FR-04, IA-FR-05, IA-AC-05 — 2FA hanya memeriksa 2FA terpasang di akun, bukan tantangan per sesi
 - [x] **M3-05** Klien integrasi: Passport Client Credentials di `/api/v1/oauth/token`, scope, allowlist, rotasi dan pencabutan langsung — IA-FR-06, IA-AC-06, IA-AC-07, API-TR-22, API-TR-23, API-TR-24. Deploy: `php artisan passport:keys`, migrasi Passport, atur `API_TOKEN_TTL_SECONDS`
 - [x] **M3-06** SPA: anggota dan role, cakupan data, kebijakan keamanan, klien integrasi (secret tampil sekali)
+- [x] **M3-07** Cakupan data klien integrasi: `data_scope` pada pendaftaran dan ubah klien, ditegakkan gerbang akses seperti cakupan membership, pemilih cakupan di layar klien integrasi — IA-FR-03, IA-FR-06, IA-AC-08, X-AC-01 — jenis transaksi yang dipakai klien terbatas harus menerapkan dimensi pada semua barisnya; user terbatas tidak dapat mendaftarkan, mengubah, atau merotasi klien
 
 ## M4 — Buku besar
 

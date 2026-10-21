@@ -578,6 +578,7 @@ describe('integration clients', () => {
         client_id: '01JPASSPORT000000000000001',
         scopes: ['financial-events:write'],
         transaction_type_keys: ['sales'],
+        data_scope: [],
         status: 'active',
         secret_rotated_at: null,
         revoked_at: null,
@@ -754,6 +755,130 @@ describe('integration clients', () => {
             name: 'Kasir Toko',
             scopes: ['financial-events:write', 'exchange-rates:write'],
             transaction_type_keys: ['sales'],
+        });
+    });
+
+    it('shows what each client is limited to', async () => {
+        mockApi({
+            ...withPermissions(['integration-clients.manage']),
+            [`GET ${base}/integration-clients`]: () =>
+                list([
+                    client({ data_scope: [jakartaId] }),
+                    client({
+                        id: '01JCLIENT0000000000000000002',
+                        name: 'Gudang',
+                        source_system: 'wms',
+                    }),
+                ]),
+        });
+
+        renderApp(path);
+
+        expect(
+            await screen.findByText('Dibatasi (1 nilai)'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Tanpa batas')).toBeInTheDocument();
+    });
+
+    it('registers a client limited to dimension values when the user may read dimensions', async () => {
+        const create = `POST ${base}/integration-clients`;
+        const api = mockApi({
+            ...routes,
+            ...withPermissions([
+                'integration-clients.manage',
+                'dimensions.read',
+            ]),
+            ...dimensionRoutes,
+            [create]: () =>
+                json(
+                    {
+                        data: {
+                            ...client({ data_scope: [jakartaId] }),
+                            client_secret: 's3cret-shown-once',
+                        },
+                    },
+                    201,
+                ),
+        });
+
+        renderApp(path);
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('button', { name: 'Daftarkan klien' }),
+        );
+        const dialog = await screen.findByRole('dialog');
+
+        await typist.type(
+            within(dialog).getByLabelText('Nama klien'),
+            'Kasir Toko',
+        );
+        await typist.type(
+            within(dialog).getByLabelText('Sistem sumber'),
+            'pos-toko',
+        );
+        await typist.click(
+            within(dialog).getByRole('checkbox', {
+                name: 'financial-events:write',
+            }),
+        );
+        await typist.click(
+            await within(dialog).findByRole('checkbox', {
+                name: 'JKT · Jakarta',
+            }),
+        );
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Daftarkan' }),
+        );
+
+        await waitFor(() => expect(api.called(create)).toHaveLength(1));
+        expect(api.called(create)[0]?.body).toMatchObject({
+            source_system: 'pos-toko',
+            data_scope: [jakartaId],
+        });
+    });
+
+    it('sends the data scope on an edit only when it changed, and not at all without the right to read dimensions', async () => {
+        const update = `PATCH ${base}/integration-clients/${client().id}`;
+        const api = mockApi({
+            ...withPermissions([
+                'integration-clients.manage',
+                'dimensions.read',
+            ]),
+            ...dimensionRoutes,
+            [`GET ${base}/integration-clients`]: () =>
+                list([client({ data_scope: [jakartaId] })]),
+            [update]: () => json({ data: client({ lock_version: 2 }) }),
+        });
+
+        renderApp(path);
+        const typist = userEvent.setup();
+
+        await screen.findByText('Kasir Toko');
+        await rowAction(typist, 'Kasir Toko', 'Ubah');
+        let dialog = await screen.findByRole('dialog');
+
+        // Nothing touched: the scope is not part of the request.
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Simpan' }),
+        );
+        await waitFor(() => expect(api.called(update)).toHaveLength(1));
+        expect(api.called(update)[0]?.body).not.toHaveProperty('data_scope');
+
+        await rowAction(typist, 'Kasir Toko', 'Ubah');
+        dialog = await screen.findByRole('dialog');
+        await typist.click(
+            await within(dialog).findByRole('checkbox', {
+                name: 'BDG · Bandung',
+            }),
+        );
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Simpan' }),
+        );
+
+        await waitFor(() => expect(api.called(update)).toHaveLength(2));
+        expect(api.called(update)[1]?.body).toMatchObject({
+            data_scope: expect.arrayContaining([jakartaId, bandungId]),
         });
     });
 

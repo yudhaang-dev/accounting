@@ -1452,7 +1452,8 @@ export interface paths {
         get: operations["integration-clients.index"];
         put?: never;
         /**
-         * Registers a client for one `source_system`. The response carries `client_id` and
+         * Registers a client for one `source_system`, optionally limited to dimension values with `data_scope`.
+         *     The response carries `client_id` and
          *     `client_secret`; the secret is shown this once and only its hash is kept. The client then
          *     requests tokens at `POST /api/v1/oauth/token` with `grant_type=client_credentials` and HTTP
          *     Basic authentication (`client_secret_basic`)
@@ -1477,7 +1478,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Renames the client or replaces its scopes or transaction type allowlist. `lock_version` is required */
+        /** Renames the client or replaces its scopes, transaction type allowlist or data scope. `lock_version` is required */
         patch: operations["integration-clients.update"];
         trace?: never;
     };
@@ -3617,6 +3618,7 @@ export interface components {
             source_system: string;
             scopes: ("transaction-types:read" | "financial-events:write" | "financial-events:read:self" | "exchange-rates:write")[];
             transaction_type_keys?: string[];
+            data_scope?: string[];
         };
         /** CreateInvitationRequest */
         CreateInvitationRequest: {
@@ -4119,6 +4121,8 @@ export interface components {
             client_id: string;
             scopes: string[];
             transaction_type_keys: string[];
+            /** @description Dimension values the client is limited to, each with its descendants; empty means no limit. */
+            data_scope: string;
             /** @description `active` or `revoked`. */
             status: string;
             secret_rotated_at: string | null;
@@ -4135,6 +4139,8 @@ export interface components {
             client_id: string;
             scopes: string[];
             transaction_type_keys: string[];
+            /** @description Dimension values the client is limited to, each with its descendants; empty means no limit. */
+            data_scope: string;
             /** @description `active` or `revoked`. */
             status: string;
             secret_rotated_at: string | null;
@@ -4809,6 +4815,7 @@ export interface components {
             name?: string;
             scopes?: ("transaction-types:read" | "financial-events:write" | "financial-events:read:self" | "exchange-rates:write")[];
             transaction_type_keys?: string[];
+            data_scope?: string[];
         };
         /** UpdateLedgerPolicyRequest */
         UpdateLedgerPolicyRequest: {

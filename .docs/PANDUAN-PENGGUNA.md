@@ -519,11 +519,13 @@ Setiap penyimpanan menjadi versi baru dan tercatat di audit.
 
 *Akses → Klien integrasi* untuk sistem lain (mis. aplikasi penjualan) yang mengirim **peristiwa keuangan** lewat API.
 
-1. **Daftarkan klien**: nama, *sistem sumber* (tidak bisa diubah, unik per perusahaan), **scope**, dan *jenis transaksi yang diizinkan*.
+1. **Daftarkan klien**: nama, *sistem sumber* (tidak bisa diubah, unik per perusahaan), **scope**, *jenis transaksi yang diizinkan*, dan bila perlu **cakupan data** (nilai dimensi yang boleh dikirimnya, misalnya satu cabang). Tanpa centang, klien tidak dibatasi.
 2. **Salin Client ID dan Client secret saat itu juga.** Secret hanya tampil sekali dan tidak bisa ditampilkan lagi.
 3. **Rotasi secret** membatalkan token lama seketika. **Cabut klien** menghentikan akses.
 
 Klien tidak bisa menyetujui entri. Peristiwa yang dikirim klien masuk ke alur entri dan persetujuan yang sama.
+
+**Cakupan data klien.** Klien yang dibatasi ke satu cabang hanya bisa mengirim peristiwa untuk cabang itu (beserta turunannya) dan hanya bisa membaca peristiwanya sendiri dalam cakupan itu. Peristiwa untuk cabang lain, atau tanpa cabang, ditolak. Karena itu **jenis transaksi yang dipakai klien terbatas harus menerapkan dimensi pada semua baris jurnalnya**; baris tanpa dimensi dianggap di luar cakupan. Pengguna yang aksesnya sendiri dibatasi tidak bisa mendaftarkan, mengubah, atau merotasi secret klien.
 
 ---
 

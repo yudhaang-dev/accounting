@@ -22,9 +22,17 @@ export type Role = Omit<Schemas['RoleResource'], 'permissions'> & {
 export type Invitation = Schemas['InvitationResource'];
 export type PermissionEntry = { key: string; resource: string; action: string };
 export type SecurityPolicy = Schemas['SecurityPolicyResource'];
-export type IntegrationClient = Schemas['IntegrationClientResource'];
-export type IntegrationClientWithSecret =
-    Schemas['IntegrationClientWithSecretResource'];
+export type IntegrationClient = Omit<
+    Schemas['IntegrationClientResource'],
+    'data_scope'
+> & {
+    /** Dimension value ids the client is limited to, each standing for itself and its descendants. */
+    data_scope: string[];
+};
+export type IntegrationClientWithSecret = Omit<
+    Schemas['IntegrationClientWithSecretResource'],
+    'data_scope'
+> & { data_scope: string[] };
 export type IntegrationScope =
     Schemas['CreateIntegrationClientRequest']['scopes'][number];
 export type PermissionKey = NonNullable<
@@ -40,6 +48,9 @@ export const INTEGRATION_SCOPES: IntegrationScope[] = [
 
 const asMembership = (value: unknown) => value as Membership;
 const asRole = (value: unknown) => value as Role;
+const asClient = (value: unknown) => value as IntegrationClient;
+const asClientWithSecret = (value: unknown) =>
+    value as IntegrationClientWithSecret;
 
 export const membershipsQuery = (companyId: string) =>
     queryOptions({
@@ -125,16 +136,18 @@ export const integrationClientsQuery = (companyId: string) =>
     queryOptions({
         queryKey: ['companies', companyId, 'integration-clients'],
         queryFn: async (): Promise<IntegrationClient[]> =>
-            fetchAll((page) =>
-                unwrap(
-                    api.GET('/companies/{companyId}/integration-clients', {
-                        params: {
-                            path: { companyId },
-                            query: { per_page: 200, page },
-                        },
-                    }),
-                ),
-            ),
+            (
+                await fetchAll((page) =>
+                    unwrap(
+                        api.GET('/companies/{companyId}/integration-clients', {
+                            params: {
+                                path: { companyId },
+                                query: { per_page: 200, page },
+                            },
+                        }),
+                    ),
+                )
+            ).map(asClient),
     });
 
 /** Permissions grouped by resource, in catalog order: how a role or a policy lists them. */
@@ -283,14 +296,16 @@ export async function createIntegrationClient(
     companyId: string,
     body: Schemas['CreateIntegrationClientRequest'],
 ): Promise<IntegrationClientWithSecret> {
-    return (
-        await unwrap(
-            api.POST('/companies/{companyId}/integration-clients', {
-                params: { path: { companyId } },
-                body,
-            }),
-        )
-    ).data;
+    return asClientWithSecret(
+        (
+            await unwrap(
+                api.POST('/companies/{companyId}/integration-clients', {
+                    params: { path: { companyId } },
+                    body,
+                }),
+            )
+        ).data,
+    );
 }
 
 export async function updateIntegrationClient(
@@ -298,14 +313,16 @@ export async function updateIntegrationClient(
     id: string,
     body: Schemas['UpdateIntegrationClientRequest'],
 ): Promise<IntegrationClient> {
-    return (
-        await unwrap(
-            api.PATCH('/companies/{companyId}/integration-clients/{id}', {
-                params: { path: { companyId, id } },
-                body,
-            }),
-        )
-    ).data;
+    return asClient(
+        (
+            await unwrap(
+                api.PATCH('/companies/{companyId}/integration-clients/{id}', {
+                    params: { path: { companyId, id } },
+                    body,
+                }),
+            )
+        ).data,
+    );
 }
 
 /** Replaces the secret and ends every active token; the new secret is shown this once. */
@@ -313,25 +330,30 @@ export async function rotateIntegrationSecret(
     companyId: string,
     id: string,
 ): Promise<IntegrationClientWithSecret> {
-    return (
-        await unwrap(
-            api.POST(
-                '/companies/{companyId}/integration-clients/{id}/rotate-secret',
-                { params: { path: { companyId, id } } },
-            ),
-        )
-    ).data;
+    return asClientWithSecret(
+        (
+            await unwrap(
+                api.POST(
+                    '/companies/{companyId}/integration-clients/{id}/rotate-secret',
+                    { params: { path: { companyId, id } } },
+                ),
+            )
+        ).data,
+    );
 }
 
 export async function revokeIntegrationClient(
     companyId: string,
     id: string,
 ): Promise<IntegrationClient> {
-    return (
-        await unwrap(
-            api.POST('/companies/{companyId}/integration-clients/{id}/revoke', {
-                params: { path: { companyId, id } },
-            }),
-        )
-    ).data;
+    return asClient(
+        (
+            await unwrap(
+                api.POST(
+                    '/companies/{companyId}/integration-clients/{id}/revoke',
+                    { params: { path: { companyId, id } } },
+                ),
+            )
+        ).data,
+    );
 }

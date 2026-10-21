@@ -43,7 +43,13 @@ import { SecretDialog } from '@/modules/identity-access/components/secret-dialog
  * credentials. Each is tied to one `source_system`, a set of scopes and the transaction types it may
  * use. Its secret is shown once, on registering and on every rotation; revoking is final.
  */
-export function IntegrationClientsPage({ companyId }: { companyId: string }) {
+export function IntegrationClientsPage({
+    companyId,
+    canReadDimensions,
+}: {
+    companyId: string;
+    canReadDimensions: boolean;
+}) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const [registering, setRegistering] = useState(false);
@@ -137,6 +143,9 @@ export function IntegrationClientsPage({ companyId }: { companyId: string }) {
                                     {t('integrations.typeKeys')}
                                 </TableHead>
                                 <TableHead>
+                                    {t('integrations.dataScope')}
+                                </TableHead>
+                                <TableHead>
                                     {t('integrations.status')}
                                 </TableHead>
                                 <TableHead className="w-12">
@@ -183,6 +192,20 @@ export function IntegrationClientsPage({ companyId }: { companyId: string }) {
                                                 client.transaction_type_keys
                                                     .length
                                             }
+                                        </TableCell>
+                                        <TableCell>
+                                            {client.data_scope.length === 0
+                                                ? t(
+                                                      'integrations.scope.unrestricted',
+                                                  )
+                                                : t(
+                                                      'integrations.scope.restricted',
+                                                      {
+                                                          total: client
+                                                              .data_scope
+                                                              .length,
+                                                      },
+                                                  )}
                                         </TableCell>
                                         <TableCell>
                                             <Badge
@@ -243,12 +266,14 @@ export function IntegrationClientsPage({ companyId }: { companyId: string }) {
 
             <IntegrationClientDialog
                 companyId={companyId}
+                canReadDimensions={canReadDimensions}
                 open={registering}
                 onOpenChange={setRegistering}
                 onCreated={(client) => setSecret({ client, rotated: false })}
             />
             <IntegrationClientDialog
                 companyId={companyId}
+                canReadDimensions={canReadDimensions}
                 client={editing ?? undefined}
                 open={editing !== null}
                 onOpenChange={(open) => {

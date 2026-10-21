@@ -2640,6 +2640,14 @@ export const id = {
         sourceSystem: 'Sistem sumber',
         scopesTitle: 'Scope',
         typeKeys: 'Jenis transaksi',
+        dataScope: 'Cakupan data',
+        scope: {
+            title: 'Cakupan data',
+            description:
+                'Batasi klien ke nilai dimensi tertentu beserta turunannya. Klien hanya dapat mengirim peristiwa yang seluruh barisnya berada dalam nilai ini, dan hanya dapat membaca peristiwa dalam cakupannya. Jenis transaksi yang dipakai harus menerapkan dimensi pada semua barisnya. Tanpa centang, klien tidak dibatasi.',
+            unrestricted: 'Tanpa batas',
+            restricted: 'Dibatasi ({{total}} nilai)',
+        },
         status: 'Status',
         actions: 'Aksi',
         editAction: 'Ubah',

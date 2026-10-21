@@ -103,7 +103,7 @@ Proses dan perhitungan operasional milik sistem sumber — persediaan/HPP, payro
 
 ### Kriteria penerimaan
 
-- **X-AC-01** User tanpa cakupan perusahaan/dimensi tidak dapat membaca, mengubah, menyetujui, memposting, atau mengekspor data di luar cakupannya; aksi kritis tercatat di audit.
+- **X-AC-01** User atau klien integrasi tanpa cakupan perusahaan/dimensi tidak dapat membaca, mengubah, menyetujui, memposting, atau mengekspor data di luar cakupannya; aksi kritis tercatat di audit.
 - **X-AC-02** Dua perusahaan dengan kode COA berbeda memetakan peran yang sama ke akun masing-masing dan menghasilkan perhitungan yang benar; perubahan konfigurasi satu perusahaan tidak memengaruhi perusahaan lain.
 - **X-AC-03** Fitur yang membutuhkan konfigurasi wajib (pemetaan peran, kebijakan) menolak aktivasi bila konfigurasi hilang atau tidak valid, dan menyebutkan apa yang perlu diperbaiki. Saran template tidak pernah dipakai tanpa konfirmasi.
 - **X-AC-04** Mengubah konfigurasi tidak mengubah hasil tersimpan; perhitungan ulang menghasilkan versi hasil baru.

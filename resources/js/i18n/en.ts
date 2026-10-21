@@ -2643,6 +2643,14 @@ export const en: Widen<typeof id> = {
         sourceSystem: 'Source system',
         scopesTitle: 'Scopes',
         typeKeys: 'Transaction types',
+        dataScope: 'Data scope',
+        scope: {
+            title: 'Data scope',
+            description:
+                'Limit the client to dimension values and everything below them. It can only send events whose lines all lie inside these values, and only read events inside its scope. The transaction types it uses must apply the dimension to every line. With nothing ticked the client is not limited.',
+            unrestricted: 'No limit',
+            restricted: 'Limited ({{total}} values)',
+        },
         status: 'Status',
         actions: 'Actions',
         editAction: 'Edit',
