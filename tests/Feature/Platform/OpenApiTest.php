@@ -3,6 +3,9 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 
+// Scramble keeps what it analyses in memory, so these tests run in a process of their own (see composer test:suite).
+pest()->group('openapi');
+
 function generatedSpec(): array
 {
     Artisan::call('scramble:export', ['--api' => 'v1', '--stdout' => true]);

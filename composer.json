@@ -92,7 +92,17 @@
             "@lint:check",
             "@types:check",
             "@deps:check",
-            "@php artisan test"
+            "@test:suite"
+        ],
+        "test:suite": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan test --exclude-group=openapi",
+            "@php artisan test --group=openapi"
+        ],
+        "test:parallel": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan test --parallel --exclude-group=openapi",
+            "@php artisan test --group=openapi"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
