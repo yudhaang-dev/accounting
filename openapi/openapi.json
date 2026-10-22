@@ -8870,13 +8870,13 @@
         "/groups": {
             "get": {
                 "operationId": "groups.index",
-                "summary": "The groups the user holds a grant on, by name. Membership of workspaces does not list a group (IA-FR-07)",
+                "summary": "The groups the user holds a grant on, by name, each with what the user may do on it (`abilities`: `read`,\n`run`, `approve`). Membership of workspaces does not list a group (IA-FR-07)",
                 "tags": [
                     "Group"
                 ],
                 "responses": {
                     "200": {
-                        "description": "Array of `GroupDataResource`",
+                        "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -8885,7 +8885,42 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/GroupDataResource"
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "parent_company_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "presentation_currency": {
+                                                        "type": "string"
+                                                    },
+                                                    "package_policy": {
+                                                        "type": "string"
+                                                    },
+                                                    "lock_version": {
+                                                        "type": "integer"
+                                                    },
+                                                    "abilities": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "parent_company_id",
+                                                    "presentation_currency",
+                                                    "package_policy",
+                                                    "lock_version",
+                                                    "abilities"
+                                                ]
                                             }
                                         }
                                     },
@@ -8974,30 +9009,14 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "",
+                        "description": "`PerimeterMemberDataResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "company_id": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "company_id",
-                                                "status"
-                                            ]
+                                            "$ref": "#/components/schemas/PerimeterMemberDataResource"
                                         }
                                     },
                                     "required": [
@@ -10987,6 +11006,82 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/groups/{group}/member-accounts": {
+            "get": {
+                "operationId": "groups.member-accounts.index",
+                "summary": "The accounts of a member company that a mapping can use (active, postable), by code. Only for a company\nthat is an approved member of the group: reading a group does not open any other company (CO-FR-01)",
+                "tags": [
+                    "MemberAccount"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "company_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "class": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "code",
+                                                    "name",
+                                                    "class"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -19680,7 +19775,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
@@ -19745,7 +19840,43 @@
                                                     "type": "array",
                                                     "items": {
                                                         "type": "object",
-                                                        "additionalProperties": {}
+                                                        "properties": {
+                                                            "member_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "company_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "effective_from": {
+                                                                "type": "string"
+                                                            },
+                                                            "effective_to": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "approved_by": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "approved_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "member_id",
+                                                            "company_id",
+                                                            "effective_from",
+                                                            "effective_to",
+                                                            "approved_by",
+                                                            "approved_at"
+                                                        ]
                                                     }
                                                 },
                                                 "entities": {
@@ -19807,13 +19938,173 @@
                                                 },
                                                 "lines": {
                                                     "type": "array",
-                                                    "items": {}
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "group_account_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "class": {
+                                                                "type": "string"
+                                                            },
+                                                            "opening_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "opening_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "sources": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "company_id": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "account_id": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "code": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "class": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "opening_debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "opening_credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing_debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing_credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "company_id",
+                                                                        "account_id",
+                                                                        "code",
+                                                                        "name",
+                                                                        "class",
+                                                                        "opening_debit",
+                                                                        "opening_credit",
+                                                                        "debit",
+                                                                        "credit",
+                                                                        "closing_debit",
+                                                                        "closing_credit",
+                                                                        "closing"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "group_account_id",
+                                                            "code",
+                                                            "name",
+                                                            "class",
+                                                            "opening_debit",
+                                                            "opening_credit",
+                                                            "debit",
+                                                            "credit",
+                                                            "closing",
+                                                            "closing_debit",
+                                                            "closing_credit",
+                                                            "sources"
+                                                        ]
+                                                    }
                                                 },
                                                 "exceptions": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "array",
-                                                        "items": {}
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "company_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "account_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "class": {
+                                                                "type": "string"
+                                                            },
+                                                            "opening_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "opening_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "reason": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "company_id",
+                                                            "account_id",
+                                                            "code",
+                                                            "name",
+                                                            "class",
+                                                            "opening_debit",
+                                                            "opening_credit",
+                                                            "debit",
+                                                            "credit",
+                                                            "closing_debit",
+                                                            "closing_credit",
+                                                            "reason"
+                                                        ]
                                                     }
                                                 },
                                                 "totals": {
@@ -19821,108 +20112,21 @@
                                                     "properties": {
                                                         "mapped": {
                                                             "type": "object",
-                                                            "properties": {
-                                                                "opening_debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "opening_credit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "credit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing_debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing_credit": {
-                                                                    "type": "string"
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "opening_debit",
-                                                                "opening_credit",
-                                                                "debit",
-                                                                "credit",
-                                                                "closing",
-                                                                "closing_debit",
-                                                                "closing_credit"
-                                                            ]
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
                                                         },
                                                         "unmapped": {
                                                             "type": "object",
-                                                            "properties": {
-                                                                "opening_debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "opening_credit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "credit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing_debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing_credit": {
-                                                                    "type": "string"
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "opening_debit",
-                                                                "opening_credit",
-                                                                "debit",
-                                                                "credit",
-                                                                "closing",
-                                                                "closing_debit",
-                                                                "closing_credit"
-                                                            ]
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
                                                         },
                                                         "all": {
                                                             "type": "object",
-                                                            "properties": {
-                                                                "opening_debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "opening_credit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "credit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing_debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing_credit": {
-                                                                    "type": "string"
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "opening_debit",
-                                                                "opening_credit",
-                                                                "debit",
-                                                                "credit",
-                                                                "closing",
-                                                                "closing_debit",
-                                                                "closing_credit"
-                                                            ]
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
                                                         }
                                                     },
                                                     "required": [
@@ -19932,8 +20136,7 @@
                                                     ]
                                                 },
                                                 "balanced": {
-                                                    "type": "string",
-                                                    "description": "Debit equals credit over everything the entities hold, mapped or not, and every package says so."
+                                                    "type": "boolean"
                                                 }
                                             },
                                             "required": [
@@ -19979,7 +20182,7 @@
         "/groups/{group}/runs/{id}": {
             "get": {
                 "operationId": "groups.runs.show",
-                "summary": "A run as it was computed: its lines per account of the group, each with the entity accounts behind it, the\nentities and the state of their packages, and the exceptions (accounts without a mapping). It never changes\nafter the perimeter, the mapping or a ledger does (CO-FR-09)",
+                "summary": "A run as it was computed: its lines per account of the group, each with the entity accounts behind it, the\nentities and the state of their packages, and the exceptions (accounts without a mapping). It never changes\nafter the perimeter, the mapping or a ledger does (CO-FR-09). With `Accept: text/csv` the rows are downloaded\ninstead: one per entity account behind each group line, the line itself, the exceptions and the total (X-FR-02)",
                 "tags": [
                     "Run"
                 ],
@@ -20067,7 +20270,43 @@
                                                     "type": "array",
                                                     "items": {
                                                         "type": "object",
-                                                        "additionalProperties": {}
+                                                        "properties": {
+                                                            "member_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "company_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "effective_from": {
+                                                                "type": "string"
+                                                            },
+                                                            "effective_to": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "approved_by": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "approved_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "member_id",
+                                                            "company_id",
+                                                            "effective_from",
+                                                            "effective_to",
+                                                            "approved_by",
+                                                            "approved_at"
+                                                        ]
                                                     }
                                                 },
                                                 "entities": {
@@ -20129,13 +20368,173 @@
                                                 },
                                                 "lines": {
                                                     "type": "array",
-                                                    "items": {}
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "group_account_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "class": {
+                                                                "type": "string"
+                                                            },
+                                                            "opening_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "opening_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "sources": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "company_id": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "account_id": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "code": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "class": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "opening_debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "opening_credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing_debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing_credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "company_id",
+                                                                        "account_id",
+                                                                        "code",
+                                                                        "name",
+                                                                        "class",
+                                                                        "opening_debit",
+                                                                        "opening_credit",
+                                                                        "debit",
+                                                                        "credit",
+                                                                        "closing_debit",
+                                                                        "closing_credit",
+                                                                        "closing"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "group_account_id",
+                                                            "code",
+                                                            "name",
+                                                            "class",
+                                                            "opening_debit",
+                                                            "opening_credit",
+                                                            "debit",
+                                                            "credit",
+                                                            "closing",
+                                                            "closing_debit",
+                                                            "closing_credit",
+                                                            "sources"
+                                                        ]
+                                                    }
                                                 },
                                                 "exceptions": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "array",
-                                                        "items": {}
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "company_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "account_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "class": {
+                                                                "type": "string"
+                                                            },
+                                                            "opening_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "opening_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "reason": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "company_id",
+                                                            "account_id",
+                                                            "code",
+                                                            "name",
+                                                            "class",
+                                                            "opening_debit",
+                                                            "opening_credit",
+                                                            "debit",
+                                                            "credit",
+                                                            "closing_debit",
+                                                            "closing_credit",
+                                                            "reason"
+                                                        ]
                                                     }
                                                 },
                                                 "totals": {
@@ -20143,108 +20542,21 @@
                                                     "properties": {
                                                         "mapped": {
                                                             "type": "object",
-                                                            "properties": {
-                                                                "opening_debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "opening_credit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "credit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing_debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing_credit": {
-                                                                    "type": "string"
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "opening_debit",
-                                                                "opening_credit",
-                                                                "debit",
-                                                                "credit",
-                                                                "closing",
-                                                                "closing_debit",
-                                                                "closing_credit"
-                                                            ]
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
                                                         },
                                                         "unmapped": {
                                                             "type": "object",
-                                                            "properties": {
-                                                                "opening_debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "opening_credit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "credit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing_debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing_credit": {
-                                                                    "type": "string"
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "opening_debit",
-                                                                "opening_credit",
-                                                                "debit",
-                                                                "credit",
-                                                                "closing",
-                                                                "closing_debit",
-                                                                "closing_credit"
-                                                            ]
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
                                                         },
                                                         "all": {
                                                             "type": "object",
-                                                            "properties": {
-                                                                "opening_debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "opening_credit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "credit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing_debit": {
-                                                                    "type": "string"
-                                                                },
-                                                                "closing_credit": {
-                                                                    "type": "string"
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "opening_debit",
-                                                                "opening_credit",
-                                                                "debit",
-                                                                "credit",
-                                                                "closing",
-                                                                "closing_debit",
-                                                                "closing_credit"
-                                                            ]
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
                                                         }
                                                     },
                                                     "required": [
@@ -20254,8 +20566,7 @@
                                                     ]
                                                 },
                                                 "balanced": {
-                                                    "type": "string",
-                                                    "description": "Debit equals credit over everything the entities hold, mapped or not, and every package says so."
+                                                    "type": "boolean"
                                                 }
                                             },
                                             "required": [
@@ -26330,6 +26641,26 @@
                 ],
                 "title": "PartyStatus"
             },
+            "PerimeterMemberDataResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "company_id": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "company_id",
+                    "status"
+                ],
+                "title": "PerimeterMemberDataResource"
+            },
             "PerimeterMemberResource": {
                 "type": "object",
                 "properties": {
@@ -26338,6 +26669,10 @@
                     },
                     "company_id": {
                         "type": "string"
+                    },
+                    "company_name": {
+                        "type": "string",
+                        "description": "Set by the controller from the company directory; the ID stands in when the company is unknown."
                     },
                     "control_basis": {
                         "type": "string"
@@ -26391,6 +26726,7 @@
                 "required": [
                     "id",
                     "company_id",
+                    "company_name",
                     "control_basis",
                     "treatment",
                     "status",

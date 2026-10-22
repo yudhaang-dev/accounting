@@ -144,6 +144,33 @@ describe('management roll-up (CO-FR-04)', function () {
         expect($list->json('data'))->toHaveCount(1)->and($list->json('data.0.id'))->toBe($created['id'])->and($list->json('data.0'))->not->toHaveKey('lines');
     });
 
+    it('downloads the result as CSV with every group line traceable to its sources, the exceptions and the total (X-FR-02)', function () {
+        $id = rollRun()->assertCreated()->json('data.id');
+
+        $response = $this->actingAs($this->admin)->get("/api/v1/groups/{$this->groupId}/runs/{$id}", ['Accept' => 'text/csv'])->assertOk();
+        $rows = array_map('str_getcsv', preg_split('/\r?\n/', trim(ltrim($response->streamedContent(), "\xEF\xBB\xBF"))));
+        $header = array_shift($rows);
+        $rows = array_map(fn (array $row) => array_combine($header, $row), $rows);
+
+        expect($response->headers->get('Content-Disposition'))->toContain('management_rollup_2026-01-01_2026-01-31.csv');
+
+        $types = array_count_values(array_column($rows, 'type'));
+        expect($types)->toBe(['source' => 4, 'line' => 2, 'exception' => 1, 'total' => 1]);
+
+        $cash = collect($rows)->first(fn (array $row) => $row['type'] === 'line' && $row['group_account_code'] === '1000');
+        expect($cash['closing_debit'])->toBe('1250.00');
+
+        $sources = collect($rows)->where('type', 'source')->where('group_account_code', '1000');
+        expect($sources->pluck('company_name')->sort()->values()->all())->toBe(['PT Anak', 'PT Induk'])
+            ->and($sources->pluck('account_code')->sort()->values()->all())->toBe(['1111', '1112']);
+
+        $exception = collect($rows)->firstWhere('type', 'exception');
+        expect($exception)->toMatchArray(['group_account_code' => '', 'account_code' => '6220', 'company_name' => 'PT Anak', 'closing_debit' => '50.00']);
+
+        $total = collect($rows)->firstWhere('type', 'total');
+        expect($total['closing_debit'])->toBe($total['closing_credit']);
+    });
+
     it('audits every run, with who ran it and what it read (CO-FR-01)', function () {
         rollRun()->assertCreated();
 

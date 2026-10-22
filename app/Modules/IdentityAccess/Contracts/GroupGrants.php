@@ -18,6 +18,13 @@ interface GroupGrants
     public function revoke(int $userId, string $groupId, GroupAbility $ability): void;
 
     /**
+     * What the user may do on the group, as `read`, `run` and `approve`: reading is included in the other two.
+     *
+     * @return list<string>
+     */
+    public function abilitiesOf(int $userId, string $groupId): array;
+
+    /**
      * The groups the user may read, which is every group they hold a grant on.
      *
      * @return list<string>

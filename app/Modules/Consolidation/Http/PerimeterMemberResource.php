@@ -12,13 +12,15 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class PerimeterMemberResource extends JsonResource
 {
     /**
-     * @return array{id: string, company_id: string, control_basis: string, treatment: string, status: string, effective_from: string, effective_to: string|null, proposed_by: int|null, approved_by: int|null, approved_at: string|null, ended_by: int|null, ended_at: string|null}
+     * @return array{id: string, company_id: string, company_name: string, control_basis: string, treatment: string, status: string, effective_from: string, effective_to: string|null, proposed_by: int|null, approved_by: int|null, approved_at: string|null, ended_by: int|null, ended_at: string|null}
      */
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->resource->id,
             'company_id' => $this->resource->company_id,
+            // Set by the controller from the company directory; the ID stands in when the company is unknown.
+            'company_name' => (string) ($this->resource->getAttribute('company_name') ?? $this->resource->company_id),
             'control_basis' => $this->resource->control_basis,
             'treatment' => $this->resource->treatment,
             'status' => $this->resource->status,

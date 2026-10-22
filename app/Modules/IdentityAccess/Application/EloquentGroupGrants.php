@@ -22,6 +22,13 @@ final class EloquentGroupGrants implements GroupGrants
             ->exists();
     }
 
+    public function abilitiesOf(int $userId, string $groupId): array
+    {
+        $held = GroupGrant::query()->where('group_id', $groupId)->where('user_id', $userId)->pluck('ability')->map(fn (mixed $ability): string => (string) $ability)->all();
+
+        return $held === [] ? [] : array_values(array_unique(['read', ...$held]));
+    }
+
     public function groupsOf(int $userId): array
     {
         return array_values(array_map(strval(...), GroupGrant::query()->where('user_id', $userId)->distinct()->orderBy('group_id')->pluck('group_id')->all()));

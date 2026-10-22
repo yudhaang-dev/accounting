@@ -1661,7 +1661,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** The groups the user holds a grant on, by name. Membership of workspaces does not list a group (IA-FR-07) */
+        /**
+         * The groups the user holds a grant on, by name, each with what the user may do on it (`abilities`: `read`,
+         *     `run`, `approve`). Membership of workspaces does not list a group (IA-FR-07)
+         */
         get: operations["groups.index"];
         put?: never;
         /**
@@ -2076,6 +2079,26 @@ export interface paths {
         };
         /** Workspaces the signed-in user can access right now: active, unexpired memberships only */
         get: operations["me.workspaces"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{group}/member-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The accounts of a member company that a mapping can use (active, postable), by code. Only for a company
+         *     that is an approved member of the group: reading a group does not open any other company (CO-FR-01)
+         */
+        get: operations["groups.member-accounts.index"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3500,7 +3523,8 @@ export interface paths {
         /**
          * A run as it was computed: its lines per account of the group, each with the entity accounts behind it, the
          *     entities and the state of their packages, and the exceptions (accounts without a mapping). It never changes
-         *     after the perimeter, the mapping or a ledger does (CO-FR-09)
+         *     after the perimeter, the mapping or a ledger does (CO-FR-09). With `Accept: text/csv` the rows are downloaded
+         *     instead: one per entity account behind each group line, the line itself, the exceptions and the total (X-FR-02)
          */
         get: operations["groups.runs.show"];
         put?: never;
@@ -4967,10 +4991,18 @@ export interface components {
          * @enum {string}
          */
         PartyStatus: "active" | "inactive";
+        /** PerimeterMemberDataResource */
+        PerimeterMemberDataResource: {
+            id: string;
+            company_id: string;
+            status: string;
+        };
         /** PerimeterMemberResource */
         PerimeterMemberResource: {
             id: string;
             company_id: string;
+            /** @description Set by the controller from the company directory; the ID stands in when the company is unknown. */
+            company_name: string;
             control_basis: string;
             treatment: string;
             status: string;
@@ -9351,14 +9383,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Array of `GroupDataResource` */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["GroupDataResource"][];
+                        data: {
+                            id: string;
+                            name: string;
+                            parent_company_id: string;
+                            presentation_currency: string;
+                            package_policy: string;
+                            lock_version: number;
+                            abilities: string[];
+                        }[];
                     };
                 };
             };
@@ -9433,17 +9472,14 @@ export interface operations {
             };
         };
         responses: {
+            /** @description `PerimeterMemberDataResource` */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: {
-                            id: string;
-                            company_id: string;
-                            status: string;
-                        };
+                        data: components["schemas"]["PerimeterMemberDataResource"];
                     };
                 };
             };
@@ -10285,6 +10321,38 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.member-accounts.index": {
+        parameters: {
+            query: {
+                company_id: string;
+            };
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            code: string;
+                            name: string;
+                            class: string;
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "memberships.index": {
@@ -13534,7 +13602,7 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13556,7 +13624,12 @@ export interface operations {
                             created_by: number | null;
                             created_at: string | null;
                             perimeter: {
-                                [key: string]: unknown;
+                                member_id: string;
+                                company_id: string;
+                                effective_from: string;
+                                effective_to: string | null;
+                                approved_by: number | null;
+                                approved_at: string | null;
                             }[];
                             entities: {
                                 company_id: string;
@@ -13572,39 +13645,59 @@ export interface operations {
                                     [key: string]: unknown;
                                 };
                             }[];
-                            lines: unknown[];
-                            exceptions: unknown[][];
+                            lines: {
+                                group_account_id: string;
+                                code: string;
+                                name: string;
+                                class: string;
+                                opening_debit: string;
+                                opening_credit: string;
+                                debit: string;
+                                credit: string;
+                                closing: string;
+                                closing_debit: string;
+                                closing_credit: string;
+                                sources: {
+                                    company_id: string;
+                                    account_id: string;
+                                    code: string;
+                                    name: string;
+                                    class: string;
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                    closing: string;
+                                }[];
+                            }[];
+                            exceptions: {
+                                company_id: string;
+                                account_id: string;
+                                code: string;
+                                name: string;
+                                class: string;
+                                opening_debit: string;
+                                opening_credit: string;
+                                debit: string;
+                                credit: string;
+                                closing_debit: string;
+                                closing_credit: string;
+                                reason: string;
+                            }[];
                             totals: {
                                 mapped: {
-                                    opening_debit: string;
-                                    opening_credit: string;
-                                    debit: string;
-                                    credit: string;
-                                    closing: string;
-                                    closing_debit: string;
-                                    closing_credit: string;
+                                    [key: string]: string;
                                 };
                                 unmapped: {
-                                    opening_debit: string;
-                                    opening_credit: string;
-                                    debit: string;
-                                    credit: string;
-                                    closing: string;
-                                    closing_debit: string;
-                                    closing_credit: string;
+                                    [key: string]: string;
                                 };
                                 all: {
-                                    opening_debit: string;
-                                    opening_credit: string;
-                                    debit: string;
-                                    credit: string;
-                                    closing: string;
-                                    closing_debit: string;
-                                    closing_credit: string;
+                                    [key: string]: string;
                                 };
                             };
-                            /** @description Debit equals credit over everything the entities hold, mapped or not, and every package says so. */
-                            balanced: string;
+                            balanced: boolean;
                         };
                     };
                 };
@@ -13647,7 +13740,12 @@ export interface operations {
                             created_by: number | null;
                             created_at: string | null;
                             perimeter: {
-                                [key: string]: unknown;
+                                member_id: string;
+                                company_id: string;
+                                effective_from: string;
+                                effective_to: string | null;
+                                approved_by: number | null;
+                                approved_at: string | null;
                             }[];
                             entities: {
                                 company_id: string;
@@ -13663,39 +13761,59 @@ export interface operations {
                                     [key: string]: unknown;
                                 };
                             }[];
-                            lines: unknown[];
-                            exceptions: unknown[][];
+                            lines: {
+                                group_account_id: string;
+                                code: string;
+                                name: string;
+                                class: string;
+                                opening_debit: string;
+                                opening_credit: string;
+                                debit: string;
+                                credit: string;
+                                closing: string;
+                                closing_debit: string;
+                                closing_credit: string;
+                                sources: {
+                                    company_id: string;
+                                    account_id: string;
+                                    code: string;
+                                    name: string;
+                                    class: string;
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                    closing: string;
+                                }[];
+                            }[];
+                            exceptions: {
+                                company_id: string;
+                                account_id: string;
+                                code: string;
+                                name: string;
+                                class: string;
+                                opening_debit: string;
+                                opening_credit: string;
+                                debit: string;
+                                credit: string;
+                                closing_debit: string;
+                                closing_credit: string;
+                                reason: string;
+                            }[];
                             totals: {
                                 mapped: {
-                                    opening_debit: string;
-                                    opening_credit: string;
-                                    debit: string;
-                                    credit: string;
-                                    closing: string;
-                                    closing_debit: string;
-                                    closing_credit: string;
+                                    [key: string]: string;
                                 };
                                 unmapped: {
-                                    opening_debit: string;
-                                    opening_credit: string;
-                                    debit: string;
-                                    credit: string;
-                                    closing: string;
-                                    closing_debit: string;
-                                    closing_credit: string;
+                                    [key: string]: string;
                                 };
                                 all: {
-                                    opening_debit: string;
-                                    opening_credit: string;
-                                    debit: string;
-                                    credit: string;
-                                    closing: string;
-                                    closing_debit: string;
-                                    closing_credit: string;
+                                    [key: string]: string;
                                 };
                             };
-                            /** @description Debit equals credit over everything the entities hold, mapped or not, and every package says so. */
-                            balanced: string;
+                            balanced: boolean;
                         };
                     };
                 };

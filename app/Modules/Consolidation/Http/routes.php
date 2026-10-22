@@ -3,6 +3,7 @@
 use App\Modules\Consolidation\Http\GroupAccountController;
 use App\Modules\Consolidation\Http\GroupController;
 use App\Modules\Consolidation\Http\MappingController;
+use App\Modules\Consolidation\Http\MemberAccountController;
 use App\Modules\Consolidation\Http\PerimeterController;
 use App\Modules\Consolidation\Http\RunController;
 use App\Platform\Api\ApiServiceProvider;
@@ -24,6 +25,7 @@ Route::prefix('groups/{group}')->where(['group' => ApiServiceProvider::ULID, 'id
     Route::post('perimeter/{id}/approve', [PerimeterController::class, 'approve'])->middleware('group-access:approve')->name('groups.perimeter.approve');
     Route::post('perimeter/{id}/end', [PerimeterController::class, 'end'])->middleware('group-access:run')->name('groups.perimeter.end');
 
+    Route::get('member-accounts', [MemberAccountController::class, 'index'])->middleware('group-access:read')->name('groups.member-accounts.index');
     Route::get('account-mappings', [MappingController::class, 'show'])->middleware('group-access:read')->name('groups.account-mappings.show');
     Route::put('account-mappings', [MappingController::class, 'update'])->middleware('group-access:run')->name('groups.account-mappings.update');
 

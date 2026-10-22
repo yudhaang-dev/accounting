@@ -110,6 +110,7 @@ export const en: Widen<typeof id> = {
         pageTitle: 'Home',
         welcome: 'Hello, {{name}}',
         navHome: 'Home',
+        navGroups: 'Consolidation groups',
         navGroupAccounting: 'Accounting',
         navGroupMasterData: 'Master data',
         navGroupTransactions: 'Transactions',
@@ -3110,5 +3111,215 @@ export const en: Widen<typeof id> = {
         recordDescription:
             'This entry or journal does not exist in this company, or the address is wrong.',
         recordBack: 'Back to the company home',
+    },
+    consolidation: {
+        pageTitle: 'Consolidation groups',
+        title: 'Consolidation groups',
+        description:
+            'A group brings several companies together to be reported as one. Access to a group is a permission of its own; belonging to several workspaces does not open one.',
+        newGroup: 'New group',
+        empty: 'No groups yet',
+        emptyDescription:
+            'Create a group with one of your companies as the parent, then propose other companies as members.',
+        cannotCreate:
+            'You have not been given access to any group, and you may not include a company in one.',
+        access: 'Your access',
+        conflict:
+            'Someone else changed this. The view has been reloaded; check it and save again.',
+        ability: {
+            read: 'Read',
+            run: 'Run',
+            approve: 'Approve',
+        },
+        policy: {
+            draft: 'Incomplete packages: keep as draft',
+            reject: 'Incomplete packages: refuse',
+        },
+        classes: {
+            asset: 'Asset',
+            liability: 'Liability',
+            equity: 'Equity',
+            income: 'Income',
+            expense: 'Expense',
+        },
+        coverage: {
+            complete: 'Complete',
+            partial: 'Partial',
+            unavailable: 'Unavailable',
+        },
+        group: {
+            name: 'Group name',
+            parentCompany: 'Parent company',
+            parentHint:
+                'Only companies you may include in a group (the “include company in a group” permission) are listed.',
+            currency: 'Presentation currency',
+            currencyHint:
+                'ISO 4217 code, for example IDR. The results of the group are stated in it and it cannot be changed once the group exists.',
+            currencyInvalid: 'Enter three letters, for example IDR.',
+            effectiveFrom: 'Parent in the perimeter from',
+            effectiveFromHint:
+                'A run for a range before this date will not include the parent company.',
+            createTitle: 'New group',
+            createDescription:
+                'Creates a consolidation group with one parent company.',
+            create: 'Create group',
+            creating: 'Creating…',
+            created: 'Group {{name}} created.',
+        },
+        settings: {
+            open: 'Settings',
+            title: 'Group settings',
+            description:
+                'Changes the name and the package policy of the group.',
+            policy: 'Packages that are not closed or not complete',
+            policyHint:
+                'With “keep as draft” a run is still made and marked as a draft. With “refuse” it is refused and names the companies at fault.',
+            saved: 'Group settings saved.',
+        },
+        nav: {
+            label: 'Group sections',
+            perimeter: 'Perimeter',
+            accounts: 'Group accounts',
+            mapping: 'Account mapping',
+            runs: 'Runs',
+        },
+        perimeter: {
+            description:
+                'The companies in the perimeter of the group. Control is assessed and approved by the accountant: a proposed member counts only after someone other than the proposer approves it.',
+            propose: 'Propose member',
+            proposeTitle: 'Propose a company as a member',
+            proposeDescription:
+                'Proposes a company together with the basis of the assessment of control.',
+            proposed: 'Member proposed; waiting for approval.',
+            noCandidates:
+                'No company can be proposed: you may only propose companies that allow you to include them in a group.',
+            company: 'Company',
+            companyHint:
+                'The company is read by the group, so only companies you are authorised to include are listed.',
+            status: 'Status',
+            statuses: {
+                pending: 'Waiting for approval',
+                approved: 'Approved',
+                ended: 'Left',
+            },
+            period: 'In force',
+            open: 'onwards',
+            controlBasis: 'Basis of the assessment of control',
+            controlBasisHint:
+                'The accountant’s reasoning for why the group controls this company. It is not inferred from memberships or percentages.',
+            effectiveFrom: 'In force from',
+            effectiveTo: 'Leaves on',
+            parent: 'Parent',
+            approve: 'Approve',
+            approved: 'Control assessment approved.',
+            end: 'Remove',
+            endTitle: 'Remove {{name}} from the perimeter',
+            endDescription: 'Removes the member from the perimeter on a date.',
+            endHint:
+                'Its row stays, and a run for a range before this date still includes it.',
+            ended: 'Member removed from the perimeter.',
+        },
+        accounts: {
+            description:
+                'The chart of accounts of the group. Company accounts are mapped to these; an account keeps its class once created.',
+            new: 'New account',
+            newTitle: 'New group account',
+            editTitle: 'Edit group account',
+            dialogDescription:
+                'Creates or changes an account of the group chart.',
+            edit: 'Edit',
+            empty: 'No group accounts yet',
+            emptyDescription:
+                'Create group accounts, then map company accounts to them.',
+            code: 'Code',
+            name: 'Name',
+            class: 'Class',
+            classHint:
+                'A company account can only be mapped to a group account of the same class.',
+            status: 'Status',
+            active: 'Active',
+            activeStatus: 'Active',
+            inactiveStatus: 'Inactive',
+            saved: 'Account {{name}} saved.',
+            created: 'Account {{name}} created.',
+        },
+        mapping: {
+            description:
+                'The mapping of company accounts to the chart of the group. Each save becomes a new version with a date it takes effect; a run uses the version in force on its cutoff date. Accounts left unmapped show up as exceptions.',
+            company: 'Company',
+            noVersion: 'No version yet',
+            version: 'Version {{version}}',
+            count: '{{total}} accounts mapped',
+            effectiveDate: 'In force from',
+            save: 'Save new version',
+            saved: 'Mapping saved as version {{version}}.',
+            conflict:
+                'Someone else changed the mapping. The view has been reloaded; check your choices and save again.',
+            noMembers:
+                'There is no approved member yet, so no account can be mapped.',
+            noGroupAccounts:
+                'Create group accounts first, under Group accounts.',
+            groupAccount: 'Group account',
+            groupAccountFor: 'Group account for account {{code}}',
+            notMapped: '— not mapped —',
+        },
+        runs: {
+            description:
+                'Management roll-up: the packages of the members of the perimeter added up per group account. Each run is kept as it was; changing the perimeter, the mapping or the books makes a new run.',
+            run: 'Run roll-up',
+            runTitle: 'Run management roll-up',
+            runDescription: 'Runs the roll-up for a date range.',
+            from: 'From',
+            to: 'To',
+            toHint: 'The cutoff date: the books are read up to this date.',
+            running: 'Running…',
+            empty: 'No runs yet',
+            emptyDescription:
+                'Run the roll-up once the perimeter is approved and the accounts are mapped.',
+            range: 'Range',
+            status: 'Status',
+            statuses: {
+                draft: 'Draft',
+                complete: 'Complete',
+            },
+            mappingVersion: 'Mapping version',
+            coverage: 'Data coverage',
+            createdAt: 'Run at',
+        },
+        runPage: {
+            pageTitle: 'Run result',
+            rollup: 'Management roll-up',
+            meta: 'Presentation currency {{currency}} · mapping version {{version}}',
+            noMapping: 'none',
+            export: 'Export CSV',
+            notFormalTitle: 'Not a formal consolidated statement',
+            notFormal:
+                'This is only the members’ packages added up into the chart of the group. Nothing is translated, eliminated or adjusted yet, so it must not be presented as consolidated financial statements.',
+            draftTitle: 'Draft',
+            draft: 'Some package has books that are not closed or does not cover this range completely. The figures may change in a later run.',
+            unbalanced:
+                'Total debit and credit differ, or a package is out of balance. Check the books of the company concerned.',
+            entities: 'Companies taking part',
+            company: 'Company',
+            functionalCurrency: 'Functional currency',
+            books: 'Books',
+            bookStatuses: {
+                open: 'Open',
+                soft_closed: 'Soft closed',
+                closed: 'Closed',
+                no_periods: 'No periods',
+            },
+            lines: 'Group lines',
+            noLines: 'No account is mapped.',
+            debit: 'Debit',
+            credit: 'Credit',
+            closingDebit: 'Closing debit',
+            closingCredit: 'Closing credit',
+            total: 'Total',
+            sourcesOf: 'Company accounts behind {{name}}',
+            exceptions: 'Exceptions: accounts without a mapping',
+            exceptionsDescription:
+                'The balances of these accounts are still in the totals, but are not in any group account yet. Map them, then run the roll-up again.',
+        },
     },
 };

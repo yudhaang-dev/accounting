@@ -145,6 +145,19 @@ describe('group account mapping (CO-FR-04, P-04)', function () {
             ->assertUnprocessable()->assertJsonValidationErrors(['mappings.1.account_id']);
     });
 
+    it('lists the accounts of an approved member for the mapping, and of no other company', function () {
+        $accounts = $this->actingAs($this->admin)->getJson("/api/v1/groups/{$this->groupId}/member-accounts?company_id={$this->childId}")->assertOk()->json('data');
+
+        expect(array_column($accounts, 'code'))->toContain('1111', '4110')->and(array_column($accounts, 'id'))->toContain(coCompanyAccount($this->childId, '1111'));
+        expect($accounts[0])->toHaveKeys(['id', 'code', 'name', 'class']);
+
+        $stranger = User::factory()->create();
+        [$strangerCompany] = createWorkspaceAs($stranger, 'Asing');
+        $this->actingAs($this->admin)->getJson("/api/v1/groups/{$this->groupId}/member-accounts?company_id={$strangerCompany}")->assertUnprocessable()->assertJsonValidationErrors(['company_id']);
+        $this->actingAs($this->admin)->getJson("/api/v1/groups/{$this->groupId}/member-accounts")->assertUnprocessable();
+        $this->actingAs(User::factory()->create())->getJson("/api/v1/groups/{$this->groupId}/member-accounts?company_id={$this->childId}")->assertForbidden();
+    });
+
     it('is read with a read grant and changed only with a run grant', function () {
         $reader = User::factory()->create();
         app(GroupGrants::class)->grant($reader->id, $this->groupId, GroupAbility::Read);

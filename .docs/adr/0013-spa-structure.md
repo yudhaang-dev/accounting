@@ -20,7 +20,7 @@ SPA di `resources/js` mengikuti pembagian modul backend (peta di [README](../REA
 | `i18n/` | Kamus `id` dan `en` |
 | `test/` | `unit/` (logika murni), `flows/` (alur lewat router asli dan jaringan tiruan), `harness.tsx`, `setup.ts` |
 
-Nama folder modul memakai nama modul backend dalam kebab-case: `identity-access`, `master-data`, `general-ledger`, `transaction-entry`, `subledger`, `planning`, `reporting`.
+Nama folder modul memakai nama modul backend dalam kebab-case: `identity-access`, `master-data`, `general-ledger`, `transaction-entry`, `subledger`, `planning`, `reporting`, `consolidation`.
 
 Aturan impor:
 

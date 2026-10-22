@@ -47,6 +47,7 @@ describe('groups (CO-FR-02, IA-FR-07)', function () {
         $this->actingAs($this->admin)->getJson("/api/v1/groups/{$id}/perimeter")->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.company_id', $this->parentId)
+            ->assertJsonPath('data.0.company_name', 'PT Induk')
             ->assertJsonPath('data.0.status', 'approved');
     });
 
@@ -75,7 +76,12 @@ describe('groups (CO-FR-02, IA-FR-07)', function () {
         $theirs = coCreateGroup(['name' => 'Grup Lain', 'parent_company_id' => $otherCompany], $other)->assertCreated()->json('data.id');
 
         $this->actingAs($this->admin)->getJson('/api/v1/groups')->assertOk()
-            ->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $mine);
+            ->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $mine)
+            ->assertJsonPath('data.0.abilities', ['read', 'run', 'approve']);
+
+        $reader = User::factory()->create();
+        app(GroupGrants::class)->grant($reader->id, $mine, GroupAbility::Read);
+        $this->actingAs($reader)->getJson('/api/v1/groups')->assertJsonPath('data.0.abilities', ['read']);
 
         // Belonging to both workspaces opens neither group to a user without a grant.
         $this->actingAs($this->admin)->getJson("/api/v1/groups/{$theirs}")->assertForbidden();

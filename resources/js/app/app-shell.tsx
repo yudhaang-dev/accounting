@@ -23,6 +23,7 @@ import {
     ListTreeIcon,
     LockKeyholeIcon,
     LogOutIcon,
+    NetworkIcon,
     PlugIcon,
     RepeatIcon,
     ShapesIcon,
@@ -422,6 +423,28 @@ export function AppShell({
                     />
                 </SidebarHeader>
                 <SidebarContent>
+                    {/* Groups belong to no company, so they are offered whichever workspace is open (or none). */}
+                    <SidebarGroup>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton
+                                        isActive={Boolean(
+                                            matchRoute({
+                                                to: '/groups',
+                                                fuzzy: true,
+                                            }),
+                                        )}
+                                        render={<Link to="/groups" />}
+                                        tooltip={t('app.navGroups')}
+                                    >
+                                        <NetworkIcon />
+                                        <span>{t('app.navGroups')}</span>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
                     {active &&
                         NAV.map((group) => ({
                             ...group,

@@ -27,6 +27,14 @@ import {
     workspacesQuery,
     type Workspace,
 } from '@/modules/identity-access/workspaces';
+import { GroupAccountsPage } from '@/modules/consolidation/pages/group-accounts-page';
+import { GroupLayout } from '@/modules/consolidation/pages/group-layout';
+import { GroupsPage } from '@/modules/consolidation/pages/groups-page';
+import { MappingPage } from '@/modules/consolidation/pages/mapping-page';
+import { PerimeterPage } from '@/modules/consolidation/pages/perimeter-page';
+import { RunPage } from '@/modules/consolidation/pages/run-page';
+import { RunsPage } from '@/modules/consolidation/pages/runs-page';
+import { groupsQuery, runQuery } from '@/modules/consolidation/groups';
 import { journalQuery } from '@/modules/general-ledger/journals';
 import { JournalPage } from '@/modules/general-ledger/pages/journal-page';
 import {
@@ -1908,6 +1916,165 @@ const companyHomeRoute = createRoute({
     },
 });
 
+// Consolidation groups belong to no company, so they sit beside the companies, not under one: the API
+// lists the groups the user holds a grant on, and a group that is not in that list is "not found".
+const groupsRoute = createRoute({
+    getParentRoute: () => verifiedRoute,
+    path: '/groups',
+    staticData: {
+        crumbs: () => [{ labelKey: 'app.navGroups', href: '/groups' }],
+    },
+    loader: ({ context }) => context.queryClient.ensureQueryData(groupsQuery),
+    component: function Groups() {
+        const { workspaces } = groupsRoute.useRouteContext();
+
+        return <GroupsPage workspaces={workspaces} />;
+    },
+});
+
+const groupRoute = createRoute({
+    getParentRoute: () => verifiedRoute,
+    path: '/groups/$groupId',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navGroups', href: '/groups' },
+            {
+                label: (m.loaderData as { name: string } | undefined)?.name,
+                href: `/groups/${m.params.groupId}/perimeter`,
+            },
+        ],
+    },
+    loader: async ({ context, params }) => {
+        const groups = await context.queryClient.ensureQueryData(groupsQuery);
+        const group = groups.find((g) => g.id === params.groupId);
+
+        if (!group) {
+            throw notFound();
+        }
+
+        return group;
+    },
+    notFoundComponent: RecordNotFound,
+    component: function Group() {
+        return <GroupLayout groupId={groupRoute.useParams().groupId} />;
+    },
+});
+
+const groupIndexRoute = createRoute({
+    getParentRoute: () => groupRoute,
+    path: '/',
+    beforeLoad: ({ params }) => {
+        throw redirect({
+            to: '/groups/$groupId/perimeter',
+            params: { groupId: params.groupId },
+        });
+    },
+});
+
+const groupPerimeterRoute = createRoute({
+    getParentRoute: () => groupRoute,
+    path: '/perimeter',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'consolidation.nav.perimeter',
+                href: `/groups/${m.params.groupId}/perimeter`,
+            },
+        ],
+    },
+    component: function GroupPerimeter() {
+        const { workspaces } = groupPerimeterRoute.useRouteContext();
+
+        return (
+            <PerimeterPage
+                groupId={groupPerimeterRoute.useParams().groupId}
+                workspaces={workspaces}
+            />
+        );
+    },
+});
+
+const groupAccountsRoute = createRoute({
+    getParentRoute: () => groupRoute,
+    path: '/accounts',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'consolidation.nav.accounts',
+                href: `/groups/${m.params.groupId}/accounts`,
+            },
+        ],
+    },
+    component: function GroupAccounts() {
+        return (
+            <GroupAccountsPage
+                groupId={groupAccountsRoute.useParams().groupId}
+            />
+        );
+    },
+});
+
+const groupMappingRoute = createRoute({
+    getParentRoute: () => groupRoute,
+    path: '/mapping',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'consolidation.nav.mapping',
+                href: `/groups/${m.params.groupId}/mapping`,
+            },
+        ],
+    },
+    component: function GroupMapping() {
+        return <MappingPage groupId={groupMappingRoute.useParams().groupId} />;
+    },
+});
+
+const groupRunsRoute = createRoute({
+    getParentRoute: () => groupRoute,
+    path: '/runs',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'consolidation.nav.runs',
+                href: `/groups/${m.params.groupId}/runs`,
+            },
+        ],
+    },
+    component: function GroupRuns() {
+        return <RunsPage groupId={groupRunsRoute.useParams().groupId} />;
+    },
+});
+
+const groupRunRoute = createRoute({
+    getParentRoute: () => groupRoute,
+    path: '/runs/$runId',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'consolidation.nav.runs',
+                href: `/groups/${m.params.groupId}/runs`,
+            },
+            {
+                labelKey: 'consolidation.runPage.pageTitle',
+                href: `/groups/${m.params.groupId}/runs/${m.params.runId}`,
+            },
+        ],
+    },
+    loader: ({ context, params }) =>
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                runQuery(params.groupId, params.runId),
+            ),
+        ),
+    notFoundComponent: RecordNotFound,
+    component: function GroupRun() {
+        const { groupId, runId } = groupRunRoute.useParams();
+
+        return <RunPage groupId={groupId} runId={runId} />;
+    },
+});
+
 const routeTree = rootRoute.addChildren([
     guestRoute.addChildren([
         loginRoute,
@@ -1922,6 +2089,15 @@ const routeTree = rootRoute.addChildren([
             workspacesRoute,
             newWorkspaceRoute,
             acceptInvitationRoute,
+            groupsRoute,
+            groupRoute.addChildren([
+                groupIndexRoute,
+                groupPerimeterRoute,
+                groupAccountsRoute,
+                groupMappingRoute,
+                groupRunsRoute,
+                groupRunRoute,
+            ]),
             companyRoute.addChildren([
                 companyHomeRoute,
                 companySetupRoute,

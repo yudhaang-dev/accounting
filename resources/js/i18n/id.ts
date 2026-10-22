@@ -108,6 +108,7 @@ export const id = {
         pageTitle: 'Beranda',
         welcome: 'Halo, {{name}}',
         navHome: 'Beranda',
+        navGroups: 'Grup konsolidasi',
         navGroupAccounting: 'Pembukuan',
         navGroupMasterData: 'Data induk',
         navGroupTransactions: 'Transaksi',
@@ -3110,5 +3111,213 @@ export const id = {
         recordDescription:
             'Entri atau jurnal ini tidak ada di perusahaan ini, atau alamatnya salah.',
         recordBack: 'Ke beranda perusahaan',
+    },
+    consolidation: {
+        pageTitle: 'Grup konsolidasi',
+        title: 'Grup konsolidasi',
+        description:
+            'Grup mengumpulkan beberapa perusahaan untuk dilaporkan bersama. Akses ke grup adalah izin tersendiri; menjadi anggota beberapa ruang kerja tidak membuka grup.',
+        newGroup: 'Grup baru',
+        empty: 'Belum ada grup',
+        emptyDescription:
+            'Buat grup dengan salah satu perusahaan Anda sebagai induk, lalu ajukan perusahaan lain sebagai anggota.',
+        cannotCreate:
+            'Anda belum diberi akses ke grup mana pun, dan tidak memiliki izin untuk menyertakan perusahaan ke dalam grup.',
+        access: 'Akses Anda',
+        conflict:
+            'Data ini sudah diubah orang lain. Tampilan sudah dimuat ulang; periksa lalu simpan lagi.',
+        ability: {
+            read: 'Membaca',
+            run: 'Menjalankan',
+            approve: 'Menyetujui',
+        },
+        policy: {
+            draft: 'Paket belum lengkap: simpan sebagai draf',
+            reject: 'Paket belum lengkap: tolak',
+        },
+        classes: {
+            asset: 'Aset',
+            liability: 'Liabilitas',
+            equity: 'Ekuitas',
+            income: 'Pendapatan',
+            expense: 'Beban',
+        },
+        coverage: {
+            complete: 'Lengkap',
+            partial: 'Sebagian',
+            unavailable: 'Tidak tersedia',
+        },
+        group: {
+            name: 'Nama grup',
+            parentCompany: 'Perusahaan induk',
+            parentHint:
+                'Hanya perusahaan yang Anda izinkan masuk grup (izin “menyertakan perusahaan ke grup”) yang tampil.',
+            currency: 'Mata uang penyajian',
+            currencyHint:
+                'Kode ISO 4217, misalnya IDR. Hasil grup dinyatakan dalam mata uang ini dan tidak dapat diubah setelah grup dibuat.',
+            currencyInvalid: 'Isi dengan tiga huruf, misalnya IDR.',
+            effectiveFrom: 'Induk masuk perimeter sejak',
+            effectiveFromHint:
+                'Run untuk rentang sebelum tanggal ini tidak akan menyertakan perusahaan induk.',
+            createTitle: 'Grup baru',
+            createDescription:
+                'Membuat grup konsolidasi dengan satu perusahaan induk.',
+            create: 'Buat grup',
+            creating: 'Membuat…',
+            created: 'Grup {{name}} dibuat.',
+        },
+        settings: {
+            open: 'Pengaturan',
+            title: 'Pengaturan grup',
+            description: 'Mengubah nama grup dan kebijakan paket.',
+            policy: 'Paket yang belum ditutup atau belum lengkap',
+            policyHint:
+                'Dengan “simpan sebagai draf”, run tetap dibuat dan ditandai draf. Dengan “tolak”, run ditolak dan menyebut perusahaan yang bermasalah.',
+            saved: 'Pengaturan grup disimpan.',
+        },
+        nav: {
+            label: 'Bagian grup',
+            perimeter: 'Perimeter',
+            accounts: 'Akun grup',
+            mapping: 'Pemetaan akun',
+            runs: 'Run',
+        },
+        perimeter: {
+            description:
+                'Perusahaan yang masuk perimeter grup. Pengendalian dinilai dan disetujui akuntan: anggota yang diajukan baru dihitung setelah disetujui orang lain, bukan pengusulnya.',
+            propose: 'Ajukan anggota',
+            proposeTitle: 'Ajukan perusahaan sebagai anggota',
+            proposeDescription:
+                'Mengajukan perusahaan beserta dasar penilaian pengendalian.',
+            proposed: 'Anggota diajukan; menunggu persetujuan.',
+            noCandidates:
+                'Tidak ada perusahaan yang dapat diajukan: Anda hanya dapat mengajukan perusahaan yang memberi Anda izin menyertakannya ke grup.',
+            company: 'Perusahaan',
+            companyHint:
+                'Perusahaan ikut dibaca oleh grup, jadi hanya perusahaan yang Anda berwenang menyertakannya yang tampil.',
+            status: 'Status',
+            statuses: {
+                pending: 'Menunggu persetujuan',
+                approved: 'Disetujui',
+                ended: 'Keluar',
+            },
+            period: 'Berlaku',
+            open: 'seterusnya',
+            controlBasis: 'Dasar penilaian pengendalian',
+            controlBasisHint:
+                'Pertimbangan akuntan mengapa grup mengendalikan perusahaan ini. Tidak disimpulkan dari keanggotaan atau persentase.',
+            effectiveFrom: 'Berlaku sejak',
+            effectiveTo: 'Keluar pada',
+            parent: 'Induk',
+            approve: 'Setujui',
+            approved: 'Penilaian pengendalian disetujui.',
+            end: 'Keluarkan',
+            endTitle: 'Keluarkan {{name}} dari perimeter',
+            endDescription:
+                'Mengeluarkan anggota dari perimeter pada tanggal tertentu.',
+            endHint:
+                'Barisnya tetap tersimpan, dan run untuk rentang sebelum tanggal ini masih menyertakannya.',
+            ended: 'Anggota dikeluarkan dari perimeter.',
+        },
+        accounts: {
+            description:
+                'Bagan akun grup. Akun perusahaan dipetakan ke akun-akun ini; kelas akun tidak berubah setelah dibuat.',
+            new: 'Akun baru',
+            newTitle: 'Akun grup baru',
+            editTitle: 'Ubah akun grup',
+            dialogDescription: 'Mengisi atau mengubah akun bagan akun grup.',
+            edit: 'Ubah',
+            empty: 'Belum ada akun grup',
+            emptyDescription:
+                'Buat akun grup, lalu petakan akun perusahaan ke dalamnya.',
+            code: 'Kode',
+            name: 'Nama',
+            class: 'Kelas',
+            classHint:
+                'Akun perusahaan hanya dapat dipetakan ke akun grup berkelas sama.',
+            status: 'Status',
+            active: 'Aktif',
+            activeStatus: 'Aktif',
+            inactiveStatus: 'Nonaktif',
+            saved: 'Akun {{name}} disimpan.',
+            created: 'Akun {{name}} dibuat.',
+        },
+        mapping: {
+            description:
+                'Pemetaan akun perusahaan ke bagan akun grup. Setiap penyimpanan menjadi versi baru dengan tanggal berlaku; run memakai versi yang berlaku pada tanggal batasnya. Akun yang tidak dipetakan tampil sebagai pengecualian.',
+            company: 'Perusahaan',
+            noVersion: 'Belum ada versi',
+            version: 'Versi {{version}}',
+            count: '{{total}} akun dipetakan',
+            effectiveDate: 'Berlaku sejak',
+            save: 'Simpan versi baru',
+            saved: 'Pemetaan disimpan sebagai versi {{version}}.',
+            conflict:
+                'Pemetaan sudah diubah orang lain. Tampilan sudah dimuat ulang; periksa pilihan Anda lalu simpan lagi.',
+            noMembers:
+                'Belum ada anggota yang disetujui, jadi belum ada akun yang dapat dipetakan.',
+            noGroupAccounts: 'Buat akun grup lebih dulu di bagian Akun grup.',
+            groupAccount: 'Akun grup',
+            groupAccountFor: 'Akun grup untuk akun {{code}}',
+            notMapped: '— tidak dipetakan —',
+        },
+        runs: {
+            description:
+                'Roll-up manajemen: paket anggota perimeter dijumlahkan per akun grup. Setiap run disimpan apa adanya; mengubah perimeter, pemetaan, atau pembukuan membuat run baru.',
+            run: 'Jalankan roll-up',
+            runTitle: 'Jalankan roll-up manajemen',
+            runDescription: 'Menjalankan roll-up untuk satu rentang tanggal.',
+            from: 'Dari tanggal',
+            to: 'Sampai tanggal',
+            toHint: 'Tanggal batas: pembukuan dibaca sampai tanggal ini.',
+            running: 'Menjalankan…',
+            empty: 'Belum ada run',
+            emptyDescription:
+                'Jalankan roll-up setelah perimeter disetujui dan akun dipetakan.',
+            range: 'Rentang',
+            status: 'Status',
+            statuses: {
+                draft: 'Draf',
+                complete: 'Lengkap',
+            },
+            mappingVersion: 'Versi pemetaan',
+            coverage: 'Cakupan data',
+            createdAt: 'Dijalankan',
+        },
+        runPage: {
+            pageTitle: 'Hasil run',
+            rollup: 'Roll-up manajemen',
+            meta: 'Mata uang penyajian {{currency}} · pemetaan versi {{version}}',
+            noMapping: 'tidak ada',
+            export: 'Ekspor CSV',
+            notFormalTitle: 'Bukan laporan konsolidasian formal',
+            notFormal:
+                'Hasil ini hanya penjumlahan paket anggota ke bagan akun grup. Belum ada translasi, eliminasi, atau penyesuaian konsolidasi, sehingga tidak boleh disajikan sebagai laporan keuangan konsolidasian.',
+            draftTitle: 'Draf',
+            draft: 'Ada paket yang belum ditutup bukunya atau belum mencakup rentang ini sepenuhnya. Angkanya dapat berubah pada run berikutnya.',
+            unbalanced:
+                'Total debit dan kredit tidak sama, atau ada paket yang tidak seimbang. Periksa pembukuan perusahaan yang bersangkutan.',
+            entities: 'Perusahaan yang ikut',
+            company: 'Perusahaan',
+            functionalCurrency: 'Mata uang fungsional',
+            books: 'Pembukuan',
+            bookStatuses: {
+                open: 'Terbuka',
+                soft_closed: 'Ditutup sementara',
+                closed: 'Ditutup',
+                no_periods: 'Tanpa periode',
+            },
+            lines: 'Baris grup',
+            noLines: 'Tidak ada akun yang dipetakan.',
+            debit: 'Debit',
+            credit: 'Kredit',
+            closingDebit: 'Saldo akhir debit',
+            closingCredit: 'Saldo akhir kredit',
+            total: 'Total',
+            sourcesOf: 'Rincian akun perusahaan untuk {{name}}',
+            exceptions: 'Pengecualian: akun tanpa pemetaan',
+            exceptionsDescription:
+                'Saldo akun ini tetap dihitung dalam total, tetapi belum masuk ke akun grup mana pun. Petakan lalu jalankan roll-up lagi.',
+        },
     },
 };

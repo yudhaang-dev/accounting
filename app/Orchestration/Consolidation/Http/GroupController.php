@@ -3,23 +3,31 @@
 namespace App\Orchestration\Consolidation\Http;
 
 use App\Models\User;
+use App\Modules\Consolidation\Contracts\GroupData;
 use App\Modules\Consolidation\Contracts\Groups;
 use App\Modules\IdentityAccess\Contracts\GroupGrants;
 use App\Orchestration\Consolidation\CreateGroup;
 use App\Orchestration\Consolidation\ProposeGroupMember;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class GroupController
 {
-    /** The groups the user holds a grant on, by name. Membership of workspaces does not list a group (IA-FR-07). */
-    public function index(Request $request, Groups $groups, GroupGrants $grants): AnonymousResourceCollection
+    /**
+     * The groups the user holds a grant on, by name, each with what the user may do on it (`abilities`: `read`,
+     * `run`, `approve`). Membership of workspaces does not list a group (IA-FR-07).
+     *
+     * @response array{data: list<array{id: string, name: string, parent_company_id: string, presentation_currency: string, package_policy: string, lock_version: int, abilities: list<string>}>}
+     */
+    public function index(Request $request, Groups $groups, GroupGrants $grants): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
 
-        return GroupDataResource::collection($groups->findMany($grants->groupsOf($user->id)));
+        return response()->json(['data' => array_map(
+            fn (GroupData $group): array => [...(new GroupDataResource($group))->resolve($request), 'abilities' => $grants->abilitiesOf($user->id, $group->id)],
+            $groups->findMany($grants->groupsOf($user->id)),
+        )]);
     }
 
     /**
@@ -48,6 +56,6 @@ class GroupController
 
         $member = $propose($user->id, $group, $request->string('company_id')->toString(), $request->string('control_basis')->toString(), $request->string('effective_from')->toString());
 
-        return response()->json(['data' => ['id' => $member->id, 'company_id' => $member->companyId, 'status' => $member->status]], 201);
+        return (new PerimeterMemberDataResource($member))->response()->setStatusCode(201);
     }
 }
