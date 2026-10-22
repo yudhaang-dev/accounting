@@ -84,3 +84,20 @@ export function formatDecimal(value: string, locale: string): string {
         maximumFractionDigits: places,
     }).format(value as unknown as number);
 }
+
+/**
+ * Money as an amount is shown with two decimals at least and no padding zeros beyond that: the API keeps six
+ * places ("1500000.000000"), which is precision to keep, not to read.
+ */
+export function formatMoney(value: string, locale: string): string {
+    if (!isDecimal(value)) {
+        return formatDecimal(value, locale);
+    }
+
+    const [whole = '0', fraction = ''] = value.trim().split('.');
+
+    return formatDecimal(
+        `${whole}.${fraction.replace(/0+$/, '').padEnd(2, '0')}`,
+        locale,
+    );
+}

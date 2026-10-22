@@ -75,6 +75,9 @@ import { ExchangeRatesPage } from '@/modules/master-data/pages/exchange-rates-pa
 import { RateTypesPage } from '@/modules/master-data/pages/rate-types-page';
 import { CashAccountsPage } from '@/modules/subledger/pages/cash-accounts-page';
 import { CashTransactionsPage } from '@/modules/subledger/pages/cash-transactions-page';
+import { BankStatementPage } from '@/modules/subledger/pages/bank-statement-page';
+import { BankStatementsPage } from '@/modules/subledger/pages/bank-statements-page';
+import { bankStatementQuery } from '@/modules/subledger/bank-statements';
 import { AllocationsPage } from '@/modules/subledger/pages/allocations-page';
 import { DocumentsPage } from '@/modules/subledger/pages/documents-page';
 import { OpenItemsPage } from '@/modules/subledger/pages/open-items-page';
@@ -571,6 +574,70 @@ const cashTransactionsRoute = createRoute({
                 companyId={workspace.company_id}
                 canClear={can(workspace, 'cash-transactions.clear')}
                 canReadJournals={can(workspace, 'journals.read')}
+            />
+        );
+    },
+});
+
+const bankStatementsRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/bank-statements',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navBankStatements',
+                href: at(m, '/bank-statements'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('bank-statements.read'),
+    component: function BankStatements() {
+        const { workspace } = bankStatementsRoute.useRouteContext();
+
+        return (
+            <BankStatementsPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'bank-statements.manage')}
+            />
+        );
+    },
+});
+
+const bankStatementRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/bank-statements/$statementId',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navBankStatements',
+                href: at(m, '/bank-statements'),
+            },
+            {
+                labelKey: 'bankStatements.statementTitle',
+                href: at(m, `/bank-statements/${m.params.statementId}`),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('bank-statements.read'),
+    loader: ({ context, params }) =>
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                bankStatementQuery(params.companyId, params.statementId),
+            ),
+        ),
+    notFoundComponent: RecordNotFound,
+    component: function BankStatement() {
+        const { workspace } = bankStatementRoute.useRouteContext();
+        const { statementId } = bankStatementRoute.useParams();
+
+        return (
+            <BankStatementPage
+                companyId={workspace.company_id}
+                statementId={statementId}
+                canMatch={
+                    can(workspace, 'bank-statements.manage') &&
+                    can(workspace, 'cash-transactions.read')
+                }
             />
         );
     },
@@ -1848,6 +1915,8 @@ const routeTree = rootRoute.addChildren([
                 partiesRoute,
                 cashAccountsRoute,
                 cashTransactionsRoute,
+                bankStatementsRoute,
+                bankStatementRoute,
                 documentsRoute,
                 openItemsRoute,
                 allocationsRoute,

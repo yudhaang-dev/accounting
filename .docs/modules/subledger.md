@@ -15,6 +15,9 @@ Menyimpan rincian di balik akun kontrol piutang, utang, dan kas/bank, lalu memas
 | `CashAccount` | Kas atau rekening bank: nama, jenis (`cash`/`bank`), bank dan nomor rekening, mata uang, akun GL, status |
 | `OpenItem` | Pihak, jenis (piutang/utang), jenis dokumen, nomor dan tanggal dokumen, jatuh tempo, mata uang, nilai awal dan sisa (transaksi dan fungsional), kurs tercatat, status |
 | `CashTransaction` | Rekening, arah, nilai, tanggal, referensi, status `cleared` |
+| `BankImportMapping` | Pemetaan kolom CSV mutasi per rekening: pemisah, format tanggal, pemisah desimal, posisi kolom (`F2`) |
+| `BankStatement` | Satu impor rekening koran ke satu rekening: periode, tanggal dan saldo akhir menurut bank, jumlah baris (`F2`) |
+| `BankStatementLine` | Baris mutasi: tanggal, keterangan, referensi, arah, nilai, dan transaksi kas yang dicocokkan (`F2`) |
 | `Allocation` | Dokumen pelunas, open item yang dilunasi, nilai, tanggal, selisih kurs terealisasi |
 | `ReconciliationRun` | Akun kontrol, tanggal, saldo GL, total rincian, selisih, status, waiver |
 | `AgingPolicy` | Bucket umur dan dasar perhitungan (jatuh tempo atau tanggal dokumen) |
@@ -42,7 +45,7 @@ Jenis dokumen adalah mekanisme sistem: `invoice`, `credit_note`, `payment`, `adv
 - **SL-FR-10 Open item awal (cutover).** Impor open item per tanggal saldo konversi dengan pemetaan pihak sumber, mata uang, kurs, dan nilai sisa. Total per akun kontrol harus sama dengan baris akun kontrol pada batch saldo konversi (GL-FR-11). Impor idempoten per batch.
 - **SL-FR-11 Transaksi kas/bank.** Setiap penerimaan/pengeluaran tercatat per rekening dengan referensi dokumen dan status `cleared` (tanggal dan aktor) yang dapat diubah user berizin.
 - **SL-FR-12 Pembalikan dokumen.** Pembalikan yang dirutekan dari `TransactionEntry` membatalkan efek dokumen pada open item dan transaksi kas/bank, lalu memposting pembalikan lewat `GeneralLedger`. Dokumen yang masih memiliki alokasi aktif ditolak sampai alokasinya dibatalkan.
-- **SL-FR-13 Rekonsiliasi bank (`F2`).** Impor mutasi rekening dari CSV dengan pemetaan kolom per rekening, pencocokan (manual dan saran menurut nilai, tanggal, referensi), dan laporan rekonsiliasi (saldo buku vs saldo rekening koran beserta item outstanding).
+- **SL-FR-13 Rekonsiliasi bank (`F2`).** Impor mutasi rekening dari CSV dengan pemetaan kolom per rekening, pencocokan (manual dan saran menurut nilai, tanggal, referensi), dan laporan rekonsiliasi (saldo buku vs saldo rekening koran beserta item outstanding). Pemetaan memilih pemisah, format tanggal, pemisah desimal, dan satu kolom nilai bertanda atau sepasang kolom uang masuk dan uang keluar. Berkas ditolak seluruhnya dengan baris yang salah disebut, dan berkas yang sama tidak diimpor dua kali ke satu rekening. Satu baris dicocokkan ke paling banyak satu transaksi kas dengan arah dan nilai yang sama; pencocokan menandai transaksi `cleared` pada tanggal bank (tanggal transaksi bila bank lebih awal) dan pembatalannya hanya mencabut tanda yang dipasang pencocokan itu. Saran memeringkat transaksi yang belum dicocokkan menurut kesamaan referensi, lalu kedekatan tanggal dalam jendela hari. Saldo buku pada laporan adalah saldo akun GL rekening pada tanggal saldo akhir; transaksi kas yang belum dicocokkan pada tanggal itu adalah outstanding, dan baris bank yang belum dicocokkan adalah yang belum dibukukan.
 
 ## Kriteria penerimaan
 
@@ -53,4 +56,5 @@ Jenis dokumen adalah mekanisme sistem: `invoice`, `credit_note`, `payment`, `adv
 - **SL-AC-05** Jurnal override ke akun kontrol (GL-FR-07) muncul sebagai selisih rekonsiliasi dan memblokir tutup tahun sampai diselesaikan atau diberi waiver teraudit.
 - **SL-AC-06** Untuk kedua kebijakan revaluasi (dibalik otomatis atau tidak), jumlah selisih kurs belum terealisasi dan terealisasi sama dengan selisih dari kurs awal ke kurs pelunasan; tidak ada penghitungan ganda.
 - **SL-AC-07** Pembalikan invoice yang masih memiliki alokasi ditolak; setelah alokasi dibatalkan, pembalikan menghapus efek open item dan membalik jurnalnya.
+- **SL-AC-09** Rekening koran bersaldo akhir 2.485.000 memuat penerimaan 1.500.000 yang sudah dibukukan, biaya 25.000 dan bunga 10.000 yang belum dibukukan, sedangkan buku memuat pembayaran 100.000 yang belum tampil dan bersaldo 2.400.000: saldo bank disesuaikan 2.485.000 − 100.000 sama dengan saldo buku disesuaikan 2.400.000 + 10.000 − 25.000, yaitu 2.385.000, tanpa selisih; berkas dengan satu baris bertanggal salah ditolak seluruhnya; satu transaksi kas tidak dapat dicocokkan ke dua baris.
 - **SL-AC-08** Referensi pihak eksternal yang sama dari satu `source_system` selalu dipetakan ke `Party` yang sama; referensi yang sama dari `source_system` lain dianggap pihak berbeda.

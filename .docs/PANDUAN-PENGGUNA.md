@@ -51,7 +51,7 @@ Akuntan juga bisa memakai Jenis Transaksi **Baris bebas** (Jurnal Umum) untuk me
 | Pembukuan | Akun, Periode, Pengaturan buku besar, Saldo konversi, Jurnal |
 | Data induk | Dimensi, Mata uang, Kurs |
 | Transaksi | Entri, Kotak persetujuan, Jurnal berulang, Jenis transaksi, Kebijakan persetujuan |
-| Subledger | Pihak, Profil posting, Kas dan bank, Transaksi kas, Dokumen, Open item, Alokasi, Rekonsiliasi |
+| Subledger | Pihak, Profil posting, Kas dan bank, Transaksi kas, Rekening koran, Dokumen, Open item, Alokasi, Rekonsiliasi |
 | Pelaporan | Laporan, Neraca saldo, Buku besar, Umur piutang/utang |
 | Perencanaan | Anggaran |
 | Akses | Anggota, Role, Kebijakan keamanan, Klien integrasi |
@@ -315,6 +315,17 @@ Pelunasan faktur valas pada kurs berbeda dari kurs faktur membukukan selisih ke 
 
 *Pelaporan → Umur piutang/utang*. Pilih akun kontrol (Piutang atau Utang), tanggal **Per tanggal**, pihak, dan dasar umur (jatuh tempo atau tanggal dokumen), lalu **Tampilkan**. Hasilnya per pihak dan dokumen dalam bucket umur, dengan ekspor CSV. Klik **Bucket** untuk mengatur batas hari (mis. `30, 60, 90`); pengaturan berlaku untuk laporan berikutnya.
 
+### 6.8 Rekening koran
+
+*Subledger → Rekening koran* mencocokkan mutasi dari bank dengan transaksi kas dan menunjukkan apakah saldo bank dan saldo buku sudah sejalan.
+
+1. **Pemetaan kolom.** Pilih rekening, klik **Pemetaan kolom**, lalu isi pemisah (koma, titik koma, tab, atau garis tegak), format tanggal, pemisah desimal, apakah baris pertama judul, dan nomor kolom (dihitung dari 1) untuk tanggal, keterangan, referensi, serta jumlah. Jumlah bisa satu kolom bertanda (negatif berarti uang keluar) atau kolom uang masuk dan uang keluar terpisah. Cukup sekali per rekening.
+2. **Impor.** Klik **Impor rekening koran**, pilih rekening dan berkas CSV, isi **saldo akhir** yang tertera pada rekening koran, dan tanggalnya (kosong berarti tanggal baris terakhir). Bila ada baris yang salah, seluruh berkas ditolak dan tiap baris yang salah disebut; perbaiki berkasnya lalu impor lagi. Berkas yang sama tidak bisa diimpor dua kali ke rekening yang sama.
+3. **Mencocokkan.** Buka rekening koran, klik **Cocokkan** pada sebuah baris. Daftar menampilkan transaksi kas rekening itu dengan arah dan jumlah yang sama; yang **Disarankan** (referensi sama atau tanggal berdekatan) di atas. Pilih satu. Transaksi itu otomatis ditandai *cleared* pada tanggal bank. **Batalkan** mencabut kecocokan, dan tanda *cleared* yang dipasang kecocokan itu ikut dicabut.
+4. **Rekonsiliasi.** Bagian atas halaman rekening koran membandingkan saldo bank dengan saldo buku pada tanggal saldo akhir. Sisi bank: saldo rekening koran, ditambah penerimaan yang belum tampil di bank, dikurangi pembayaran yang belum tampil. Sisi buku: saldo buku, ditambah penerimaan bank yang belum dibukukan (misalnya bunga), dikurangi pembayaran bank yang belum dibukukan (misalnya biaya admin). Kedua hasilnya harus sama; bila ada **Selisih**, periksa daftar di bawahnya. Biaya dan bunga yang belum dibukukan perlu dicatat lewat entri, setelah itu transaksinya dicocokkan.
+
+Mengimpor dan mencocokkan memerlukan izin `bank-statements.manage` (dan `cash-transactions.read` untuk mencocokkan); melihat cukup `bank-statements.read`.
+
 ---
 
 ## 7. Melihat laporan
@@ -557,7 +568,7 @@ Pesan "diubah di tempat lain" muncul karena setiap data punya nomor versi; siste
 - **Label dan kunci Jenis Transaksi** tidak bisa diubah setelah dibuat.
 - **Sales order dan proses operasional lain** (persediaan, payroll, pajak, aset tetap) ada di sistem sumber, bukan di sini. Sistem ini mencatat dampak akuntansinya: faktur, pembayaran, dan jurnalnya.
 - **Basis akrual** saja; satu mata uang fungsional per perusahaan.
-- **Rekonsiliasi bank dari mutasi rekening** dan konsolidasi grup belum tersedia.
+- **Konsolidasi grup** belum tersedia. Rekonsiliasi bank mencocokkan satu baris dengan satu transaksi kas; pencocokan satu baris ke banyak transaksi dan pencocokan otomatis belum ada.
 
 ---
 

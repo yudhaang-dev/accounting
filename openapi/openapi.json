@@ -2031,6 +2031,1130 @@
                 }
             }
         },
+        "/companies/{companyId}/cash-accounts/{id}/import-mapping": {
+            "get": {
+                "operationId": "cash-accounts.import-mapping.show",
+                "summary": "The column mapping of the statement CSV of a cash account, or `null` data when none is saved yet",
+                "tags": [
+                    "BankStatement"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": [
+                                                "object",
+                                                "null"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "cash_account_id": {
+                                                    "type": "string"
+                                                },
+                                                "delimiter": {
+                                                    "type": "string"
+                                                },
+                                                "date_format": {
+                                                    "type": "string"
+                                                },
+                                                "decimal_separator": {
+                                                    "type": "string"
+                                                },
+                                                "has_header": {
+                                                    "type": "boolean"
+                                                },
+                                                "date_column": {
+                                                    "type": "integer"
+                                                },
+                                                "description_column": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "reference_column": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "amount_column": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "money_in_column": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "money_out_column": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "lock_version": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "cash_account_id",
+                                                "delimiter",
+                                                "date_format",
+                                                "decimal_separator",
+                                                "has_header",
+                                                "date_column",
+                                                "description_column",
+                                                "reference_column",
+                                                "amount_column",
+                                                "money_in_column",
+                                                "money_out_column",
+                                                "lock_version"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "cash-accounts.import-mapping.save",
+                "summary": "Saves where the columns of the bank's CSV are. The first save creates the mapping (201); later saves\nneed the `lock_version` that was read",
+                "tags": [
+                    "BankStatement"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveBankImportMappingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`BankImportMappingResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BankImportMappingResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "`BankImportMappingResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BankImportMappingResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/cash-accounts/{id}/bank-statements": {
+            "post": {
+                "operationId": "bank-statements.store",
+                "summary": "Imports a statement into a cash account with the mapping saved for it. The whole file is rejected\nwith the line of every problem when any line is wrong, and the same file is not imported twice\ninto one account",
+                "tags": [
+                    "BankStatement"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportBankStatementRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`BankStatementResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BankStatementResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/bank-statements": {
+            "get": {
+                "operationId": "bank-statements.index",
+                "summary": "Imported statements, newest closing date first. Filter: `filter[cash_account_id]`. `per_page`\ndefaults to 50, at most 200",
+                "tags": [
+                    "BankStatement"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[cash_account_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `BankStatementResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/BankStatementResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/bank-statements/{id}": {
+            "get": {
+                "operationId": "bank-statements.show",
+                "tags": [
+                    "BankStatement"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`BankStatementResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BankStatementResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/bank-statements/{id}/lines": {
+            "get": {
+                "operationId": "bank-statements.lines",
+                "summary": "The lines of a statement in file order. Filter: `filter[matched]`. `per_page` defaults to 100, at\nmost 200",
+                "tags": [
+                    "BankStatement"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[matched]",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `BankStatementLineResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/BankStatementLineResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/bank-statements/{id}/suggestions": {
+            "get": {
+                "operationId": "bank-statements.suggestions",
+                "summary": "Cash transactions that may belong to each unmatched line: the same account, direction and amount,\nwith a date within `window_days` (7 when left out). Best first; lines without a candidate are left out",
+                "tags": [
+                    "BankStatement"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "window_days",
+                        "in": "query",
+                        "description": "How many days the date of a transaction may differ from the date of the bank line.",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "line_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "candidates": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "cash_transaction_id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "score": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "date_difference_days": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "reference_match": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "cash_transaction_id",
+                                                                "score",
+                                                                "date_difference_days",
+                                                                "reference_match"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "line_id",
+                                                    "candidates"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/bank-statements/{id}/report": {
+            "get": {
+                "operationId": "bank-statements.report",
+                "summary": "Reconciles the book balance of the account with the balance of the statement on its closing date:\nwhat the bank has not shown, what the books do not hold, and the difference that remains",
+                "tags": [
+                    "BankStatement"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "statement_id": {
+                                                    "type": "string"
+                                                },
+                                                "cash_account_id": {
+                                                    "type": "string"
+                                                },
+                                                "currency": {
+                                                    "type": "string"
+                                                },
+                                                "closing_date": {
+                                                    "type": "string"
+                                                },
+                                                "statement_balance": {
+                                                    "type": "string"
+                                                },
+                                                "book_balance": {
+                                                    "type": "string"
+                                                },
+                                                "outstanding_in": {
+                                                    "type": "string"
+                                                },
+                                                "outstanding_out": {
+                                                    "type": "string"
+                                                },
+                                                "unrecorded_in": {
+                                                    "type": "string"
+                                                },
+                                                "unrecorded_out": {
+                                                    "type": "string"
+                                                },
+                                                "adjusted_statement_balance": {
+                                                    "type": "string"
+                                                },
+                                                "adjusted_book_balance": {
+                                                    "type": "string"
+                                                },
+                                                "difference": {
+                                                    "type": "string"
+                                                },
+                                                "reconciled": {
+                                                    "type": "boolean"
+                                                },
+                                                "outstanding_transactions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "cash_transaction_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "transaction_date": {
+                                                                "type": "string"
+                                                            },
+                                                            "direction": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "string"
+                                                            },
+                                                            "reference": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "cash_transaction_id",
+                                                            "transaction_date",
+                                                            "direction",
+                                                            "amount",
+                                                            "reference"
+                                                        ]
+                                                    }
+                                                },
+                                                "unrecorded_lines": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "line_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "statement_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "line_number": {
+                                                                "type": "integer"
+                                                            },
+                                                            "transaction_date": {
+                                                                "type": "string"
+                                                            },
+                                                            "direction": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "string"
+                                                            },
+                                                            "description": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "reference": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "line_id",
+                                                            "statement_id",
+                                                            "line_number",
+                                                            "transaction_date",
+                                                            "direction",
+                                                            "amount",
+                                                            "description",
+                                                            "reference"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "statement_id",
+                                                "cash_account_id",
+                                                "currency",
+                                                "closing_date",
+                                                "statement_balance",
+                                                "book_balance",
+                                                "outstanding_in",
+                                                "outstanding_out",
+                                                "unrecorded_in",
+                                                "unrecorded_out",
+                                                "adjusted_statement_balance",
+                                                "adjusted_book_balance",
+                                                "difference",
+                                                "reconciled",
+                                                "outstanding_transactions",
+                                                "unrecorded_lines"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/bank-statement-lines/{id}/match": {
+            "post": {
+                "operationId": "bank-statement-lines.match",
+                "summary": "Matches a line to a cash transaction of the same account, direction and amount that no other line\nholds. The transaction is marked cleared on the date of the bank line unless it already was",
+                "tags": [
+                    "BankStatement"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MatchBankStatementLineRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`BankStatementLineResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BankStatementLineResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/bank-statement-lines/{id}/unmatch": {
+            "post": {
+                "operationId": "bank-statement-lines.unmatch",
+                "summary": "Undoes a match. The cleared mark goes too when the match put it there",
+                "tags": [
+                    "BankStatement"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`BankStatementLineResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BankStatementLineResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/cash-accounts": {
             "get": {
                 "operationId": "cash-accounts.index",
@@ -19304,6 +20428,214 @@
                 ],
                 "title": "AttachmentResource"
             },
+            "BankImportMappingResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "cash_account_id": {
+                        "type": "string"
+                    },
+                    "delimiter": {
+                        "type": "string"
+                    },
+                    "date_format": {
+                        "type": "string"
+                    },
+                    "decimal_separator": {
+                        "type": "string"
+                    },
+                    "has_header": {
+                        "type": "boolean"
+                    },
+                    "date_column": {
+                        "type": "integer"
+                    },
+                    "description_column": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "reference_column": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "amount_column": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "money_in_column": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "money_out_column": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "cash_account_id",
+                    "delimiter",
+                    "date_format",
+                    "decimal_separator",
+                    "has_header",
+                    "date_column",
+                    "description_column",
+                    "reference_column",
+                    "amount_column",
+                    "money_in_column",
+                    "money_out_column",
+                    "lock_version"
+                ],
+                "title": "BankImportMappingResource"
+            },
+            "BankStatementLineResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "statement_id": {
+                        "type": "string"
+                    },
+                    "cash_account_id": {
+                        "type": "string"
+                    },
+                    "line_number": {
+                        "type": "integer"
+                    },
+                    "transaction_date": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "reference": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "direction": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "string"
+                    },
+                    "cash_transaction_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "matched_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "matched_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "statement_id",
+                    "cash_account_id",
+                    "line_number",
+                    "transaction_date",
+                    "description",
+                    "reference",
+                    "direction",
+                    "amount",
+                    "cash_transaction_id",
+                    "matched_at",
+                    "matched_by"
+                ],
+                "title": "BankStatementLineResource"
+            },
+            "BankStatementResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "cash_account_id": {
+                        "type": "string"
+                    },
+                    "file_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "period_from": {
+                        "type": "string"
+                    },
+                    "period_to": {
+                        "type": "string"
+                    },
+                    "closing_date": {
+                        "type": "string"
+                    },
+                    "closing_balance": {
+                        "type": "string"
+                    },
+                    "line_count": {
+                        "type": "integer"
+                    },
+                    "matched_count": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "imported_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "cash_account_id",
+                    "file_name",
+                    "period_from",
+                    "period_to",
+                    "closing_date",
+                    "closing_balance",
+                    "line_count",
+                    "matched_count",
+                    "imported_by",
+                    "created_at"
+                ],
+                "title": "BankStatementResource"
+            },
             "CalendarPattern": {
                 "type": "string",
                 "description": "How a fiscal year is cut into periods (GL-FR-03): calendar months, twelve periods of 4, 4 and 5 weeks per quarter, or periods the user gives explicitly.\n",
@@ -20148,6 +21480,8 @@
                                 "cash-accounts.manage",
                                 "cash-transactions.read",
                                 "cash-transactions.clear",
+                                "bank-statements.read",
+                                "bank-statements.manage",
                                 "plans.read",
                                 "plans.manage",
                                 "plans.publish",
@@ -21569,6 +22903,49 @@
                 ],
                 "title": "HistoryImportResource"
             },
+            "ImportBankStatementRequest": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "Maximum file size: 2048 kilobytes."
+                    },
+                    "csv": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2097152
+                    },
+                    "file_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "closing_balance": {
+                        "type": "string",
+                        "pattern": "^-?\\d{1,18}(\\.\\d{1,6})?$"
+                    },
+                    "closing_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    }
+                },
+                "required": [
+                    "closing_balance"
+                ],
+                "title": "ImportBankStatementRequest"
+            },
             "ImportHistoryRequest": {
                 "type": "object",
                 "properties": {
@@ -22650,6 +24027,20 @@
                     "account_id"
                 ],
                 "title": "MapControlAccountRequest"
+            },
+            "MatchBankStatementLineRequest": {
+                "type": "object",
+                "properties": {
+                    "cash_transaction_id": {
+                        "type": "string",
+                        "minLength": 26,
+                        "maxLength": 26
+                    }
+                },
+                "required": [
+                    "cash_transaction_id"
+                ],
+                "title": "MatchBankStatementLineRequest"
             },
             "MeResource": {
                 "type": "object",
@@ -24141,6 +25532,101 @@
                 ],
                 "title": "RunReconciliationRequest"
             },
+            "SaveBankImportMappingRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1
+                    },
+                    "delimiter": {
+                        "type": "string",
+                        "enum": [
+                            ",",
+                            ";",
+                            "\t",
+                            "|"
+                        ]
+                    },
+                    "date_format": {
+                        "type": "string",
+                        "enum": [
+                            "Y-m-d",
+                            "d/m/Y",
+                            "d-m-Y",
+                            "m/d/Y",
+                            "d.m.Y",
+                            "Ymd"
+                        ]
+                    },
+                    "decimal_separator": {
+                        "type": "string",
+                        "enum": [
+                            ".",
+                            ","
+                        ]
+                    },
+                    "has_header": {
+                        "type": "boolean"
+                    },
+                    "date_column": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 50
+                    },
+                    "description_column": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 50
+                    },
+                    "reference_column": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 50
+                    },
+                    "amount_column": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 50
+                    },
+                    "money_in_column": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 50
+                    },
+                    "money_out_column": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 50
+                    }
+                },
+                "required": [
+                    "delimiter",
+                    "date_format",
+                    "decimal_separator",
+                    "has_header",
+                    "date_column"
+                ],
+                "title": "SaveBankImportMappingRequest"
+            },
             "SaveMovementClassificationRequest": {
                 "type": "object",
                 "properties": {
@@ -25468,6 +26954,8 @@
                                 "cash-accounts.manage",
                                 "cash-transactions.read",
                                 "cash-transactions.clear",
+                                "bank-statements.read",
+                                "bank-statements.manage",
                                 "plans.read",
                                 "plans.manage",
                                 "plans.publish",
@@ -25558,6 +27046,8 @@
                                 "cash-accounts.manage",
                                 "cash-transactions.read",
                                 "cash-transactions.clear",
+                                "bank-statements.read",
+                                "bank-statements.manage",
                                 "plans.read",
                                 "plans.manage",
                                 "plans.publish",

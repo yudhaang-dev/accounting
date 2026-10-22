@@ -137,6 +137,8 @@ Subledger → Kas dan bank → **Tambah rekening**. Tiap rekening punya satu mat
 
 Syarat akun: aset daun aktif, hanya menerima sumber Subledger, menerima mata uang rekening, dan belum dipakai rekening lain. **Jenis, mata uang, dan akun buku besar tidak bisa diubah setelah dibuat.** Buat satu akun GL per rekening.
 
+Untuk rekening bank yang direkonsiliasi dari rekening koran, simpan juga **pemetaan kolom** CSV bank di *Subledger → Rekening koran → Pemetaan kolom* (lihat panduan pengguna 6.8). Pemetaan dibuat sekali per rekening; admin keuangan lalu mengimpor dan mencocokkan tiap bulan.
+
 ---
 
 ## 11. Jenis Transaksi

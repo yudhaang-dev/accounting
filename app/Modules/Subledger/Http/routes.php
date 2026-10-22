@@ -3,6 +3,7 @@
 use App\Modules\Subledger\Contracts\ControlRole;
 use App\Modules\Subledger\Http\AgingController;
 use App\Modules\Subledger\Http\AllocationController;
+use App\Modules\Subledger\Http\BankStatementController;
 use App\Modules\Subledger\Http\CashAccountController;
 use App\Modules\Subledger\Http\CashTransactionController;
 use App\Modules\Subledger\Http\DocumentController;
@@ -57,6 +58,24 @@ Route::companyScoped(function () {
     foreach (['clear', 'unclear'] as $action) {
         Route::post("cash-transactions/{id}/{$action}", [CashTransactionController::class, $action])
             ->middleware('permission:cash-transactions.clear')->where('id', ApiServiceProvider::ULID)->name("cash-transactions.{$action}");
+    }
+
+    Route::get('cash-accounts/{id}/import-mapping', [BankStatementController::class, 'mapping'])
+        ->middleware('permission:bank-statements.read')->where('id', ApiServiceProvider::ULID)->name('cash-accounts.import-mapping.show');
+    Route::put('cash-accounts/{id}/import-mapping', [BankStatementController::class, 'saveMapping'])
+        ->middleware('permission:bank-statements.manage')->where('id', ApiServiceProvider::ULID)->name('cash-accounts.import-mapping.save');
+    Route::post('cash-accounts/{id}/bank-statements', [BankStatementController::class, 'store'])
+        ->middleware('permission:bank-statements.manage')->where('id', ApiServiceProvider::ULID)->name('bank-statements.store');
+    Route::get('bank-statements', [BankStatementController::class, 'index'])->middleware('permission:bank-statements.read')->name('bank-statements.index');
+
+    foreach (['show' => '', 'lines' => '/lines', 'suggestions' => '/suggestions', 'report' => '/report'] as $action => $suffix) {
+        Route::get("bank-statements/{id}{$suffix}", [BankStatementController::class, $action])
+            ->middleware('permission:bank-statements.read')->where('id', ApiServiceProvider::ULID)->name("bank-statements.{$action}");
+    }
+
+    foreach (['match', 'unmatch'] as $action) {
+        Route::post("bank-statement-lines/{id}/{$action}", [BankStatementController::class, $action])
+            ->middleware('permission:bank-statements.manage')->where('id', ApiServiceProvider::ULID)->name("bank-statement-lines.{$action}");
     }
 
     Route::get('documents', [DocumentController::class, 'index'])->middleware('permission:documents.read')->name('documents.index');

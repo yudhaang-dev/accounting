@@ -393,6 +393,181 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/cash-accounts/{id}/import-mapping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The column mapping of the statement CSV of a cash account, or `null` data when none is saved yet */
+        get: operations["cash-accounts.import-mapping.show"];
+        /**
+         * Saves where the columns of the bank's CSV are. The first save creates the mapping (201); later saves
+         *     need the `lock_version` that was read
+         */
+        put: operations["cash-accounts.import-mapping.save"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/cash-accounts/{id}/bank-statements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Imports a statement into a cash account with the mapping saved for it. The whole file is rejected
+         *     with the line of every problem when any line is wrong, and the same file is not imported twice
+         *     into one account
+         */
+        post: operations["bank-statements.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/bank-statements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Imported statements, newest closing date first. Filter: `filter[cash_account_id]`. `per_page`
+         *     defaults to 50, at most 200
+         */
+        get: operations["bank-statements.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/bank-statements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["bank-statements.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/bank-statements/{id}/lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The lines of a statement in file order. Filter: `filter[matched]`. `per_page` defaults to 100, at
+         *     most 200
+         */
+        get: operations["bank-statements.lines"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/bank-statements/{id}/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cash transactions that may belong to each unmatched line: the same account, direction and amount,
+         *     with a date within `window_days` (7 when left out). Best first; lines without a candidate are left out
+         */
+        get: operations["bank-statements.suggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/bank-statements/{id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reconciles the book balance of the account with the balance of the statement on its closing date:
+         *     what the bank has not shown, what the books do not hold, and the difference that remains
+         */
+        get: operations["bank-statements.report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/bank-statement-lines/{id}/match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Matches a line to a cash transaction of the same account, direction and amount that no other line
+         *     holds. The transaction is marked cleared on the date of the bank line unless it already was
+         */
+        post: operations["bank-statement-lines.match"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/bank-statement-lines/{id}/unmatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Undoes a match. The cleared mark goes too when the match put it there */
+        post: operations["bank-statement-lines.unmatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/cash-accounts": {
         parameters: {
             query?: never;
@@ -3486,6 +3661,51 @@ export interface components {
             uploaded_by: number | null;
             created_at: string | null;
         };
+        /** BankImportMappingResource */
+        BankImportMappingResource: {
+            id: string;
+            cash_account_id: string;
+            delimiter: string;
+            date_format: string;
+            decimal_separator: string;
+            has_header: boolean;
+            date_column: number;
+            description_column: number | null;
+            reference_column: number | null;
+            amount_column: number | null;
+            money_in_column: number | null;
+            money_out_column: number | null;
+            lock_version: number;
+        };
+        /** BankStatementLineResource */
+        BankStatementLineResource: {
+            id: string;
+            statement_id: string;
+            cash_account_id: string;
+            line_number: number;
+            transaction_date: string;
+            description: string | null;
+            reference: string | null;
+            direction: string;
+            amount: string;
+            cash_transaction_id: string | null;
+            matched_at: string | null;
+            matched_by: number | null;
+        };
+        /** BankStatementResource */
+        BankStatementResource: {
+            id: string;
+            cash_account_id: string;
+            file_name: string | null;
+            period_from: string;
+            period_to: string;
+            closing_date: string;
+            closing_balance: string;
+            line_count: number;
+            matched_count: number;
+            imported_by: number | null;
+            created_at: string | null;
+        };
         /**
          * CalendarPattern
          * @description How a fiscal year is cut into periods (GL-FR-03): calendar months, twelve periods of 4, 4 and 5 weeks per quarter, or periods the user gives explicitly.
@@ -3719,7 +3939,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "bank-statements.read" | "bank-statements.manage" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -4068,6 +4288,19 @@ export interface components {
             journal_count: number;
             created_at: string;
         };
+        /** ImportBankStatementRequest */
+        ImportBankStatementRequest: {
+            /**
+             * Format: binary
+             * @description Maximum file size: 2048 kilobytes.
+             */
+            file?: string | null;
+            csv?: string | null;
+            file_name?: string | null;
+            closing_balance: string;
+            /** Format: date */
+            closing_date?: string | null;
+        };
         /** ImportHistoryRequest */
         ImportHistoryRequest: {
             source_key: string;
@@ -4311,6 +4544,10 @@ export interface components {
             account_id: string;
             /** Format: date */
             effective_date?: string | null;
+        };
+        /** MatchBankStatementLineRequest */
+        MatchBankStatementLineRequest: {
+            cash_transaction_id: string;
         };
         /** MeResource */
         MeResource: {
@@ -4689,6 +4926,23 @@ export interface components {
             /** Format: date */
             as_of: string;
         };
+        /** SaveBankImportMappingRequest */
+        SaveBankImportMappingRequest: {
+            lock_version?: number | null;
+            /** @enum {string} */
+            delimiter: "," | ";" | "\t" | "|";
+            /** @enum {string} */
+            date_format: "Y-m-d" | "d/m/Y" | "d-m-Y" | "m/d/Y" | "d.m.Y" | "Ymd";
+            /** @enum {string} */
+            decimal_separator: "." | ",";
+            has_header: boolean;
+            date_column: number;
+            description_column?: number | null;
+            reference_column?: number | null;
+            amount_column?: number | null;
+            money_in_column?: number | null;
+            money_out_column?: number | null;
+        };
         /** SaveMovementClassificationRequest */
         SaveMovementClassificationRequest: {
             key: string;
@@ -5001,13 +5255,13 @@ export interface components {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "bank-statements.read" | "bank-statements.manage" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "bank-statements.read" | "bank-statements.manage" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -5956,6 +6210,410 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "cash-accounts.import-mapping.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            cash_account_id: string;
+                            delimiter: string;
+                            date_format: string;
+                            decimal_separator: string;
+                            has_header: boolean;
+                            date_column: number;
+                            description_column: number | null;
+                            reference_column: number | null;
+                            amount_column: number | null;
+                            money_in_column: number | null;
+                            money_out_column: number | null;
+                            lock_version: number;
+                        } | null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "cash-accounts.import-mapping.save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveBankImportMappingRequest"];
+            };
+        };
+        responses: {
+            /** @description `BankImportMappingResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BankImportMappingResource"];
+                    };
+                };
+            };
+            /** @description `BankImportMappingResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BankImportMappingResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "bank-statements.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["ImportBankStatementRequest"];
+            };
+        };
+        responses: {
+            /** @description `BankStatementResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BankStatementResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "bank-statements.index": {
+        parameters: {
+            query?: {
+                "filter[cash_account_id]"?: string;
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `BankStatementResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BankStatementResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "bank-statements.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `BankStatementResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BankStatementResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "bank-statements.lines": {
+        parameters: {
+            query?: {
+                "filter[matched]"?: boolean;
+                per_page?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `BankStatementLineResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BankStatementLineResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "bank-statements.suggestions": {
+        parameters: {
+            query?: {
+                /** @description How many days the date of a transaction may differ from the date of the bank line. */
+                window_days?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            line_id: string;
+                            candidates: {
+                                cash_transaction_id: string;
+                                score: number;
+                                date_difference_days: number;
+                                reference_match: boolean;
+                            }[];
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "bank-statements.report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            statement_id: string;
+                            cash_account_id: string;
+                            currency: string;
+                            closing_date: string;
+                            statement_balance: string;
+                            book_balance: string;
+                            outstanding_in: string;
+                            outstanding_out: string;
+                            unrecorded_in: string;
+                            unrecorded_out: string;
+                            adjusted_statement_balance: string;
+                            adjusted_book_balance: string;
+                            difference: string;
+                            reconciled: boolean;
+                            outstanding_transactions: {
+                                cash_transaction_id: string;
+                                transaction_date: string;
+                                direction: string;
+                                amount: string;
+                                reference: string | null;
+                            }[];
+                            unrecorded_lines: {
+                                line_id: string;
+                                statement_id: string;
+                                line_number: number;
+                                transaction_date: string;
+                                direction: string;
+                                amount: string;
+                                description: string | null;
+                                reference: string | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "bank-statement-lines.match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MatchBankStatementLineRequest"];
+            };
+        };
+        responses: {
+            /** @description `BankStatementLineResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BankStatementLineResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "bank-statement-lines.unmatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `BankStatementLineResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BankStatementLineResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "cash-accounts.index": {

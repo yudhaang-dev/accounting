@@ -19,6 +19,7 @@ final class PermissionCatalog
         'posting-profiles' => ['read', 'manage'],
         'cash-accounts' => ['read', 'manage'],
         'cash-transactions' => ['read', 'clear'],
+        'bank-statements' => ['read', 'manage'],
         'plans' => ['read', 'manage', 'publish'],
         'planning-policy' => ['manage'],
         'documents' => ['read'],

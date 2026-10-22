@@ -145,6 +145,10 @@ Klik **Batalkan alokasi** pada baris alokasi, isi alasan. Item yang dilunasi ter
 
 Setelah bank mengonfirmasi (atau kas sudah dihitung): **Subledger → Transaksi kas**, klik **Tandai cleared** dan pilih tanggalnya. Tidak boleh di masa depan atau sebelum tanggal transaksi. **Batalkan tanda cleared** bila keliru.
 
+### Mencocokkan rekening koran
+
+Setelah akuntan menyimpan pemetaan kolom rekening: **Subledger → Rekening koran → Impor rekening koran**, pilih rekening dan berkas CSV dari bank, isi saldo akhir pada rekening koran. Buka hasilnya, klik **Cocokkan** pada tiap baris dan pilih transaksi kas yang sesuai (yang **Disarankan** ada di atas). Baris bank yang tidak punya transaksi, seperti biaya admin atau bunga, tampil di bagian *Ada di rekening koran, belum di pembukuan*; catat lewat entri, lalu cocokkan. Rekonsiliasi di bagian atas harus berakhir tanpa selisih.
+
 ### Laporan umur piutang dan utang
 
 **Pelaporan → Umur piutang/utang**: pilih Piutang atau Utang, tanggal, pihak, dan dasar umur (jatuh tempo atau tanggal dokumen), lalu **Tampilkan**. Klik **Ekspor CSV** untuk mengunduh. Dipakai untuk menagih pelanggan yang menunggak atau menjadwalkan pembayaran ke pemasok.
@@ -212,7 +216,7 @@ Sebelum akuntan menutup periode, bantu pastikan:
 
 - [ ] Semua transaksi bulan itu sudah dicatat dan **tidak ada entri Draf, Menunggu persetujuan, Disetujui, atau Ditolak** yang tertinggal. Filter daftar entri menurut status dan tanggal.
 - [ ] Penerimaan dan pembayaran sudah dialokasikan ke faktur atau tagihannya, bukan menggantung sebagai uang muka tanpa sebab.
-- [ ] Transaksi kas yang sudah dikonfirmasi bank sudah **ditandai cleared**.
+- [ ] Transaksi kas yang sudah dikonfirmasi bank sudah **ditandai cleared**, atau rekening koran bulan itu sudah diimpor dan dicocokkan tanpa selisih.
 - [ ] Neraca saldo dan **Umur piutang/utang** dilihat kewajarannya.
 - [ ] Pembalikan terjadwal yang gagal sudah dilaporkan.
 - [ ] Kurs penutup bulan itu sudah diminta dicatat (bila ada transaksi valas).
