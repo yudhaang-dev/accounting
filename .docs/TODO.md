@@ -178,4 +178,10 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 ### Post-MVP
 
-- [ ] **B-05** Modul konsolidasi: seluruh [CONSOLIDATION.md](CONSOLIDATION.md), grant grup, `counterparty_company_id`, `ReportPackage` — IA-FR-07, GL-FR-15
+- [ ] **B-05** Modul konsolidasi: seluruh [CONSOLIDATION.md](CONSOLIDATION.md), grant grup, `counterparty_company_id`, `ReportPackage` — IA-FR-07, GL-FR-15 — dibagi menurut [ADR-0014](adr/0014-consolidation-staging.md), yang masih berstatus diusulkan
+  - [ ] **B-05a** Fondasi: `counterparty_company_id` pada baris jurnal dan `Party`, grant grup dan permission `groups.read`/`groups.run` — IA-FR-07, GL-FR-15, IA-AC-01
+  - [ ] **B-05b** `ReportPackage` di Reporting (periode, tanggal batas, status tutup buku, mata uang fungsional, saldo, cakupan histori, versi pemetaan) — CO-FR-03
+  - [ ] **B-05c** Modul `Consolidation`: grup, perimeter dengan persetujuan, pemetaan akun grup berversi; deptrac dan ADR-0002 diperbarui — CO-FR-02
+  - [ ] **B-05d** Run roll-up manajemen: entitas efektif tepat sekali, akun tanpa pemetaan sebagai pengecualian, penolakan mata uang fungsional berbeda, run berversi, audit — CO-FR-01, CO-FR-04, CO-FR-09, CO-AC-01, CO-AC-02, CO-AC-03, CO-AC-04, CO-AC-05
+  - [ ] **B-05e** SPA: grup, perimeter, pemetaan, run dan hasil roll-up beserta ekspor CSV — CO-FR-10, X-FR-02
+  - [ ] **B-05f** Tahap B (translasi, eliminasi, penyesuaian, keluaran formal) — CO-FR-05 sampai CO-FR-08, CO-FR-10 — menunggu keputusan akuntan di ADR-0014

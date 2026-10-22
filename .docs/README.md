@@ -22,7 +22,7 @@ Kebutuhan produk sistem pembukuan *headless* (API-first) untuk SPA first-party d
 | `GL` | [modules/general-ledger.md](modules/general-ledger.md) | COA, kalender & periode, jurnal posted, valas & revaluasi, cutover, tutup buku |
 | `PL` | [modules/planning.md](modules/planning.md) | Versi anggaran & proyeksi |
 | `RP` | [modules/reporting.md](modules/reporting.md) | Definisi laporan, laporan keuangan, proyeksi vs realisasi |
-| `CO` | [CONSOLIDATION.md](CONSOLIDATION.md) | Konsolidasi grup (Post-MVP) |
+| `CO` | [CONSOLIDATION.md](CONSOLIDATION.md) | Konsolidasi grup (Post-MVP); tahapan di [ADR-0014](adr/0014-consolidation-staging.md) |
 | `API` | [API-CONTRACT.md](API-CONTRACT.md) | Kontrak REST, autentikasi, error, idempotensi |
 | — | [DOMAIN-DEPENDENCIES.md](DOMAIN-DEPENDENCIES.md) | Kepemilikan modul & graf dependensi |
 | — | [CHART-OF-ACCOUNTS.md](CHART-OF-ACCOUNTS.md) | Template COA & saran peran akun (data, bukan kode) |
