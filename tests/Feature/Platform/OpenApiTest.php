@@ -3,7 +3,8 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 
-// Scramble keeps what it analyses in memory, so these tests run in a process of their own (see composer test:suite).
+// Generating the spec analyses every route, which is slow and memory hungry, so these tests stay out of `composer test`
+// and CI. Run them with `composer test:openapi` after changing the API, together with `composer openapi:export`.
 pest()->group('openapi');
 
 function generatedSpec(): array

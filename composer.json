@@ -96,13 +96,14 @@
         ],
         "test:suite": [
             "Composer\\Config::disableProcessTimeout",
-            "@php artisan test --exclude-group=openapi",
+            "@php artisan test --exclude-group=openapi"
+        ],
+        "test:openapi": [
             "@php artisan test --group=openapi"
         ],
         "test:parallel": [
             "Composer\\Config::disableProcessTimeout",
-            "@php artisan test --parallel --exclude-group=openapi",
-            "@php artisan test --group=openapi"
+            "@php artisan test --parallel --exclude-group=openapi"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
