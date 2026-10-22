@@ -13,9 +13,9 @@ class GroupController
         return new GroupResource(Group::query()->findOrFail($group));
     }
 
-    /** Renames the group. The parent company and the presentation currency do not change after creation. */
+    /** Renames the group or sets its package policy. The parent company and the presentation currency do not change after creation. */
     public function update(UpdateGroupRequest $request, ManageGroups $groups, string $group): GroupResource
     {
-        return new GroupResource($groups->rename($group, $request->string('name')->toString(), $request->integer('lock_version')));
+        return new GroupResource($groups->update($group, $request->safe()->only(['name', 'package_policy']), $request->integer('lock_version')));
     }
 }

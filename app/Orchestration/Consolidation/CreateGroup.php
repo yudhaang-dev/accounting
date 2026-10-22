@@ -27,12 +27,12 @@ final class CreateGroup
     ) {}
 
     /** @throws AuthorizationException when the user may not join the parent company to a group */
-    public function __invoke(int $userId, string $name, string $parentCompanyId, string $presentationCurrency): GroupData
+    public function __invoke(int $userId, string $name, string $parentCompanyId, string $presentationCurrency, ?string $effectiveFrom = null): GroupData
     {
         $this->access->forUser($userId, $parentCompanyId)->requirePermission(self::JOIN_PERMISSION);
 
-        return DB::transaction(function () use ($userId, $name, $parentCompanyId, $presentationCurrency): GroupData {
-            $group = $this->groups->create($name, $parentCompanyId, $presentationCurrency, $userId);
+        return DB::transaction(function () use ($userId, $name, $parentCompanyId, $presentationCurrency, $effectiveFrom): GroupData {
+            $group = $this->groups->create($name, $parentCompanyId, $presentationCurrency, $userId, $effectiveFrom);
 
             // Running and approving both include reading; neither includes the other.
             $this->grants->grant($userId, $group->id, GroupAbility::Run, $userId);

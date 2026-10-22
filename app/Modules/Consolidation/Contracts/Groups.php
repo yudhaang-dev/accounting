@@ -12,9 +12,9 @@ interface Groups
     /**
      * Creates a group with its parent company as the first member, approved by its creator (CO-FR-02): the
      * parent needs no assessment of control over itself. A currency or company that does not exist fails
-     * validation.
+     * validation. The parent is in the perimeter from `$effectiveFrom`, today when null.
      */
-    public function create(string $name, string $parentCompanyId, string $presentationCurrency, int $createdBy): GroupData;
+    public function create(string $name, string $parentCompanyId, string $presentationCurrency, int $createdBy, ?string $effectiveFrom = null): GroupData;
 
     /** The group, or null when there is none with that ID. */
     public function find(string $groupId): ?GroupData;

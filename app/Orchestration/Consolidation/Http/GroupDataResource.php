@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class GroupDataResource extends JsonResource
 {
     /**
-     * @return array{id: string, name: string, parent_company_id: string, presentation_currency: string, lock_version: int}
+     * @return array{id: string, name: string, parent_company_id: string, presentation_currency: string, package_policy: string, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -21,6 +21,7 @@ class GroupDataResource extends JsonResource
             'name' => $this->resource->name,
             'parent_company_id' => $this->resource->parentCompanyId,
             'presentation_currency' => $this->resource->presentationCurrency,
+            'package_policy' => $this->resource->packagePolicy,
             'lock_version' => $this->resource->lockVersion,
         ];
     }

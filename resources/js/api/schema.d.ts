@@ -1650,7 +1650,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Renames the group. The parent company and the presentation currency do not change after creation */
+        /** Renames the group or sets its package policy. The parent company and the presentation currency do not change after creation */
         patch: operations["groups.update"];
         trace?: never;
     };
@@ -3461,6 +3461,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/groups/{group}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The runs of the group, newest first, without their lines. `per_page` defaults to 50, at most 200. Needs a
+         *     read grant on the group
+         */
+        get: operations["groups.runs.index"];
+        put?: never;
+        /**
+         * Runs the management roll-up of the group for `from`..`to` (CO-FR-04): the packages of the entities that
+         *     are in the perimeter for the whole range, added up per account of the group through the version of the
+         *     mapping in force on `to`. Needs a run grant on the group, not access to the companies (CO-FR-01)
+         * @description The result is labelled `management_rollup` and is never `formal`. It is refused (422) when an entity has
+         *     another functional currency than the presentation currency, when a member joined or left inside the range,
+         *     and, under the package policy `reject`, when a package is not closed or does not cover the range; under
+         *     `draft` such a run is kept with status `draft`.
+         */
+        post: operations["groups.runs.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{group}/runs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A run as it was computed: its lines per account of the group, each with the entity accounts behind it, the
+         *     entities and the state of their packages, and the exceptions (accounts without a mapping). It never changes
+         *     after the perimeter, the mapping or a ledger does (CO-FR-09)
+         */
+        get: operations["groups.runs.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/security-policy": {
         parameters: {
             query?: never;
@@ -4072,6 +4122,11 @@ export interface components {
             parent_company_id: string;
             /** @description ISO 4217; the results of the group are stated in it and it does not change afterwards. */
             presentation_currency: string;
+            /**
+             * Format: date
+             * @description From when the parent company is in the perimeter; today when left out.
+             */
+            effective_from?: string | null;
         };
         /** CreateIntegrationClientRequest */
         CreateIntegrationClientRequest: {
@@ -4139,6 +4194,16 @@ export interface components {
             description?: string | null;
             /** @description Keys of GET /permissions. */
             permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "bank-statements.read" | "bank-statements.manage" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage" | "consolidation.join")[];
+        };
+        /** CreateRunRequest */
+        CreateRunRequest: {
+            /**
+             * Format: date
+             * @description The range the packages stand for; `to` is the cutoff date.
+             */
+            from: string;
+            /** Format: date */
+            to: string;
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -4498,6 +4563,7 @@ export interface components {
             name: string;
             parent_company_id: string;
             presentation_currency: string;
+            package_policy: string;
             lock_version: number;
         };
         /** GroupResource */
@@ -4506,6 +4572,7 @@ export interface components {
             name: string;
             parent_company_id: string;
             presentation_currency: string;
+            package_policy: string;
             lock_version: number;
         };
         /** HistoryImportResource */
@@ -5428,7 +5495,12 @@ export interface components {
         /** UpdateGroupRequest */
         UpdateGroupRequest: {
             lock_version: number;
-            name: string;
+            name?: string;
+            /**
+             * @description What a run does with a package that is not closed or does not cover its range: keep it as a draft or refuse it.
+             * @enum {string}
+             */
+            package_policy?: "draft" | "reject";
         };
         /** UpdateIntegrationClientRequest */
         UpdateIntegrationClientRequest: {
@@ -13394,6 +13466,237 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["RoleResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.runs.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            group_id: string;
+                            from: string;
+                            to: string;
+                            cutoff_date: string;
+                            label: string;
+                            formal: boolean;
+                            status: string;
+                            presentation_currency: string;
+                            mapping_version: number | null;
+                            package_policy: string;
+                            coverage_status: string;
+                            created_by: number | null;
+                            created_at: string | null;
+                        }[];
+                        meta: {
+                            current_page: number;
+                            per_page: number;
+                            total: number;
+                            last_page: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.runs.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRunRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            group_id: string;
+                            from: string;
+                            to: string;
+                            cutoff_date: string;
+                            label: string;
+                            formal: boolean;
+                            status: string;
+                            presentation_currency: string;
+                            mapping_version: number | null;
+                            package_policy: string;
+                            coverage_status: string;
+                            created_by: number | null;
+                            created_at: string | null;
+                            perimeter: {
+                                [key: string]: unknown;
+                            }[];
+                            entities: {
+                                company_id: string;
+                                name: string;
+                                functional_currency: string;
+                                book_status: string;
+                                coverage_from: string | null;
+                                coverage_to: string | null;
+                                coverage_granularity: string;
+                                coverage_status: string;
+                                balanced: boolean;
+                                source: {
+                                    [key: string]: unknown;
+                                };
+                            }[];
+                            lines: unknown[];
+                            exceptions: unknown[][];
+                            totals: {
+                                mapped: {
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                };
+                                unmapped: {
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                };
+                                all: {
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                };
+                            };
+                            /** @description Debit equals credit over everything the entities hold, mapped or not, and every package says so. */
+                            balanced: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "groups.runs.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            group_id: string;
+                            from: string;
+                            to: string;
+                            cutoff_date: string;
+                            label: string;
+                            formal: boolean;
+                            status: string;
+                            presentation_currency: string;
+                            mapping_version: number | null;
+                            package_policy: string;
+                            coverage_status: string;
+                            created_by: number | null;
+                            created_at: string | null;
+                            perimeter: {
+                                [key: string]: unknown;
+                            }[];
+                            entities: {
+                                company_id: string;
+                                name: string;
+                                functional_currency: string;
+                                book_status: string;
+                                coverage_from: string | null;
+                                coverage_to: string | null;
+                                coverage_granularity: string;
+                                coverage_status: string;
+                                balanced: boolean;
+                                source: {
+                                    [key: string]: unknown;
+                                };
+                            }[];
+                            lines: unknown[];
+                            exceptions: unknown[][];
+                            totals: {
+                                mapped: {
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                };
+                                unmapped: {
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                };
+                                all: {
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                };
+                            };
+                            /** @description Debit equals credit over everything the entities hold, mapped or not, and every package says so. */
+                            balanced: string;
+                        };
                     };
                 };
             };

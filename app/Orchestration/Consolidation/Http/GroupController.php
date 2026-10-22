@@ -31,7 +31,7 @@ class GroupController
         /** @var User $user */
         $user = $request->user();
 
-        $group = $createGroup($user->id, $request->string('name')->toString(), $request->string('parent_company_id')->toString(), $request->string('presentation_currency')->toString());
+        $group = $createGroup($user->id, $request->string('name')->toString(), $request->string('parent_company_id')->toString(), $request->string('presentation_currency')->toString(), $request->filled('effective_from') ? $request->string('effective_from')->toString() : null);
 
         return (new GroupDataResource($group))->response()->setStatusCode(201);
     }

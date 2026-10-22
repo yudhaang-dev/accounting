@@ -58,14 +58,14 @@ final class ManagePerimeter
      * Adds the parent company as a member already approved: it needs no assessment of control over itself.
      * Called as part of creating the group, inside its transaction.
      */
-    public function seedParent(Group $group, int $createdBy): PerimeterMember
+    public function seedParent(Group $group, int $createdBy, ?string $effectiveFrom = null): PerimeterMember
     {
         $member = PerimeterMember::create([
             'group_id' => $group->id,
             'company_id' => $group->parent_company_id,
             'control_basis' => (string) __('consolidation.parent_basis'),
             'status' => PerimeterMember::APPROVED,
-            'effective_from' => now()->toDateString(),
+            'effective_from' => $effectiveFrom ?? now()->toDateString(),
             'proposed_by' => $createdBy,
             'approved_by' => $createdBy,
             'approved_at' => now(),

@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $parent_company_id
  * @property string $presentation_currency
+ * @property string $package_policy `draft` keeps a run over incomplete packages as a draft, `reject` refuses it
  * @property int $lock_version
  * @property int|null $created_by
  * @property Carbon|null $created_at
@@ -26,7 +27,7 @@ class Group extends UlidModel
 
     protected $table = 'co_groups';
 
-    protected $fillable = ['name', 'parent_company_id', 'presentation_currency', 'created_by'];
+    protected $fillable = ['name', 'parent_company_id', 'presentation_currency', 'package_policy', 'created_by'];
 
     /** @return HasMany<GroupAccount, $this> */
     public function accounts(): HasMany

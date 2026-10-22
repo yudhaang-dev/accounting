@@ -18,5 +18,10 @@ return [
     'mapping_group_account_unknown' => 'The group account does not exist in this group or is not active.',
     'mapping_class_mismatch' => 'The account is of class :account, the group account of class :group.',
     'mapping_duplicate' => 'This account is mapped more than once.',
+    'perimeter_changes_in_range' => 'The company joined or left the perimeter inside this range. Choose a range it belongs to entirely.',
+    'no_entity_in_range' => 'No approved member of the group is in the perimeter for this range.',
+    'translation_required' => 'The functional currency :currency differs from the presentation currency :presentation. Currencies are not added directly: translation needs a policy and rates, which are not supported yet.',
+    'package_not_closed' => 'The books of the company are not closed for this range (:status).',
+    'package_coverage' => 'The ledger of the company does not cover this range completely (:status).',
 
 ];

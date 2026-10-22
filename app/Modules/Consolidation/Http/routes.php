@@ -4,6 +4,7 @@ use App\Modules\Consolidation\Http\GroupAccountController;
 use App\Modules\Consolidation\Http\GroupController;
 use App\Modules\Consolidation\Http\MappingController;
 use App\Modules\Consolidation\Http\PerimeterController;
+use App\Modules\Consolidation\Http\RunController;
 use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
 
@@ -25,4 +26,8 @@ Route::prefix('groups/{group}')->where(['group' => ApiServiceProvider::ULID, 'id
 
     Route::get('account-mappings', [MappingController::class, 'show'])->middleware('group-access:read')->name('groups.account-mappings.show');
     Route::put('account-mappings', [MappingController::class, 'update'])->middleware('group-access:run')->name('groups.account-mappings.update');
+
+    Route::get('runs', [RunController::class, 'index'])->middleware('group-access:read')->name('groups.runs.index');
+    Route::post('runs', [RunController::class, 'store'])->middleware('group-access:run')->name('groups.runs.store');
+    Route::get('runs/{id}', [RunController::class, 'show'])->middleware('group-access:read')->name('groups.runs.show');
 });

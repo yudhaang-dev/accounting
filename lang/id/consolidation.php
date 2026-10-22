@@ -18,5 +18,10 @@ return [
     'mapping_group_account_unknown' => 'Akun grup tidak ada di grup ini atau tidak aktif.',
     'mapping_class_mismatch' => 'Akun berkelas :account, akun grup berkelas :group.',
     'mapping_duplicate' => 'Akun ini dipetakan lebih dari sekali.',
+    'perimeter_changes_in_range' => 'Perusahaan bergabung atau keluar dari perimeter di dalam rentang ini. Pilih rentang yang seluruhnya ia ikuti.',
+    'no_entity_in_range' => 'Tidak ada anggota grup yang sudah disetujui di perimeter untuk rentang ini.',
+    'translation_required' => 'Mata uang fungsional :currency berbeda dari mata uang penyajian :presentation. Mata uang tidak dijumlahkan langsung: translasi memerlukan kebijakan dan kurs, yang belum didukung.',
+    'package_not_closed' => 'Buku perusahaan belum ditutup untuk rentang ini (:status).',
+    'package_coverage' => 'Buku besar perusahaan tidak mencakup rentang ini seluruhnya (:status).',
 
 ];

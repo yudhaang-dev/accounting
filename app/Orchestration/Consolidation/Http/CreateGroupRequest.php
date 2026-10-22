@@ -16,6 +16,8 @@ class CreateGroupRequest extends FormRequest
             'parent_company_id' => ['required', 'string', 'ulid'],
             // ISO 4217; the results of the group are stated in it and it does not change afterwards.
             'presentation_currency' => ['required', 'string', 'size:3'],
+            // From when the parent company is in the perimeter; today when left out.
+            'effective_from' => ['nullable', 'date_format:Y-m-d'],
         ];
     }
 }

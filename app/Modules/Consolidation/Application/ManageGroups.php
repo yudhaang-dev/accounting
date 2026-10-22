@@ -26,7 +26,7 @@ final class ManageGroups implements Groups
         private readonly Audit $audit,
     ) {}
 
-    public function create(string $name, string $parentCompanyId, string $presentationCurrency, int $createdBy): GroupData
+    public function create(string $name, string $parentCompanyId, string $presentationCurrency, int $createdBy, ?string $effectiveFrom = null): GroupData
     {
         $currency = strtoupper($presentationCurrency);
 
@@ -38,7 +38,7 @@ final class ManageGroups implements Groups
             throw ValidationException::withMessages(['parent_company_id' => [__('consolidation.company_unknown')]]);
         }
 
-        return DB::transaction(function () use ($name, $parentCompanyId, $currency, $createdBy): GroupData {
+        return DB::transaction(function () use ($name, $parentCompanyId, $currency, $createdBy, $effectiveFrom): GroupData {
             $group = Group::create([
                 'name' => $name,
                 'parent_company_id' => $parentCompanyId,
@@ -46,7 +46,7 @@ final class ManageGroups implements Groups
                 'created_by' => $createdBy,
             ])->refresh();
 
-            $this->perimeter->seedParent($group, $createdBy);
+            $this->perimeter->seedParent($group, $createdBy, $effectiveFrom);
 
             $this->audit->record('group.created', "Consolidation group {$group->name} created.", $group, after: $this->snapshot($group), companyId: $parentCompanyId);
 
@@ -55,18 +55,20 @@ final class ManageGroups implements Groups
     }
 
     /**
+     * @param  array<string, mixed>  $changes  `name` and `package_policy`
+     *
      * @throws ApiException VERSION_CONFLICT
      */
-    public function rename(string $groupId, string $name, int $expectedVersion): Group
+    public function update(string $groupId, array $changes, int $expectedVersion): Group
     {
-        return DB::transaction(function () use ($groupId, $name, $expectedVersion): Group {
+        return DB::transaction(function () use ($groupId, $changes, $expectedVersion): Group {
             $group = Group::query()->lockForUpdate()->findOrFail($groupId);
             $before = $this->snapshot($group);
 
-            $group->updateLocked(['name' => $name], $expectedVersion);
+            $group->updateLocked(array_intersect_key($changes, array_flip(['name', 'package_policy'])), $expectedVersion);
 
             if ($before !== $this->snapshot($group)) {
-                $this->audit->record('group.updated', "Consolidation group {$group->name} renamed.", $group, before: $before, after: $this->snapshot($group), companyId: $group->parent_company_id);
+                $this->audit->record('group.updated', "Consolidation group {$group->name} updated.", $group, before: $before, after: $this->snapshot($group), companyId: $group->parent_company_id);
             }
 
             return $group->refresh();
@@ -92,12 +94,12 @@ final class ManageGroups implements Groups
 
     private function data(Group $group): GroupData
     {
-        return new GroupData($group->id, $group->name, $group->parent_company_id, $group->presentation_currency, $group->lock_version);
+        return new GroupData($group->id, $group->name, $group->parent_company_id, $group->presentation_currency, $group->lock_version, $group->package_policy);
     }
 
     /** @return array<string, mixed> */
     private function snapshot(Group $group): array
     {
-        return ['name' => $group->name, 'parent_company_id' => $group->parent_company_id, 'presentation_currency' => $group->presentation_currency];
+        return ['name' => $group->name, 'parent_company_id' => $group->parent_company_id, 'presentation_currency' => $group->presentation_currency, 'package_policy' => $group->package_policy];
     }
 }
