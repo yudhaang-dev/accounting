@@ -45,10 +45,10 @@ class IntegrationClientController
      */
     public function store(CreateIntegrationClientRequest $request, ManageIntegrationClients $clients, IntegrationClientDataScopes $dataScopes): JsonResponse
     {
-        /** @var array{name: string, source_system: string, scopes: list<string>, transaction_type_keys?: list<string>, data_scope?: list<string>} $data */
+        /** @var array{name: string, source_system: string, scopes: list<string>, transaction_type_keys?: list<string>, data_scope?: list<string>, webhook_url?: string|null} $data */
         $data = $request->validated();
 
-        $registered = $clients->register($data['name'], $data['source_system'], $data['scopes'], $data['transaction_type_keys'] ?? [], $this->userId($request), $data['data_scope'] ?? []);
+        $registered = $clients->register($data['name'], $data['source_system'], $data['scopes'], $data['transaction_type_keys'] ?? [], $this->userId($request), $data['data_scope'] ?? [], $data['webhook_url'] ?? null);
 
         return (new IntegrationClientWithSecretResource($this->withScope($dataScopes, $registered['client']), $registered['secret']))->response()->setStatusCode(201);
     }
@@ -73,6 +73,18 @@ class IntegrationClientController
         $rotated = $clients->rotateSecret($id);
 
         return new IntegrationClientWithSecretResource($this->withScope($dataScopes, $rotated['client']), $rotated['secret']);
+    }
+
+    /**
+     * Issues the secret that signs the webhooks of the client (API-TR-25), replacing the previous one at
+     * once. It is shown this once; every webhook carries `Webhook-Id`, `Webhook-Timestamp` and
+     * `Webhook-Signature` (`v1=` and the hex HMAC-SHA256 of `{id}.{timestamp}.{body}` with this secret).
+     */
+    public function rotateWebhookSecret(ManageIntegrationClients $clients, IntegrationClientDataScopes $dataScopes, string $companyId, string $id): IntegrationClientWithWebhookSecretResource
+    {
+        $rotated = $clients->rotateWebhookSecret($id);
+
+        return new IntegrationClientWithWebhookSecretResource($this->withScope($dataScopes, $rotated['client']), $rotated['secret']);
     }
 
     /**

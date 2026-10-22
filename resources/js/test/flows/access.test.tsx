@@ -578,6 +578,8 @@ describe('integration clients', () => {
         client_id: '01JPASSPORT000000000000001',
         scopes: ['financial-events:write'],
         transaction_type_keys: ['sales'],
+        webhook_url: null,
+        webhook_enabled: false,
         data_scope: [],
         status: 'active',
         secret_rotated_at: null,
@@ -755,6 +757,7 @@ describe('integration clients', () => {
             name: 'Kasir Toko',
             scopes: ['financial-events:write', 'exchange-rates:write'],
             transaction_type_keys: ['sales'],
+            webhook_url: null,
         });
     });
 
@@ -898,6 +901,171 @@ describe('integration clients', () => {
         expect(api.called(revoke)).toHaveLength(0);
         await confirmWith(typist, 'Cabut klien');
         await waitFor(() => expect(api.called(revoke)).toHaveLength(1));
+    });
+
+    it('sets the webhook URL when registering, and clears it when editing', async () => {
+        const create = `POST ${base}/integration-clients`;
+        const update = `PATCH ${base}/integration-clients/${client().id}`;
+        const api = mockApi({
+            ...routes,
+            [create]: () =>
+                json(
+                    { data: { ...client(), client_secret: 'shown-once' } },
+                    201,
+                ),
+            [update]: () => json({ data: client({ lock_version: 2 }) }),
+            [`GET ${base}/integration-clients`]: () =>
+                list([
+                    client({
+                        webhook_url: 'https://hooks.example.com/pos',
+                        webhook_enabled: true,
+                    }),
+                ]),
+        });
+
+        renderApp(path);
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('button', { name: 'Daftarkan klien' }),
+        );
+        const dialog = await screen.findByRole('dialog');
+
+        await typist.type(
+            within(dialog).getByLabelText('Nama klien'),
+            'Kasir Toko',
+        );
+        await typist.type(
+            within(dialog).getByLabelText('Sistem sumber'),
+            'pos-toko',
+        );
+        await typist.click(
+            within(dialog).getByRole('checkbox', {
+                name: 'financial-events:write',
+            }),
+        );
+        await typist.type(
+            within(dialog).getByLabelText('URL webhook'),
+            ' https://hooks.example.com/pos ',
+        );
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Daftarkan' }),
+        );
+
+        await waitFor(() => expect(api.called(create)).toHaveLength(1));
+        expect(api.called(create)[0]?.body).toMatchObject({
+            webhook_url: 'https://hooks.example.com/pos',
+        });
+        await typist.click(
+            await screen.findByRole('button', { name: 'Sudah saya simpan' }),
+        );
+
+        await rowAction(typist, 'Kasir Toko', 'Ubah');
+        const edit = await screen.findByRole('dialog');
+
+        expect(within(edit).getByLabelText('URL webhook')).toHaveValue(
+            'https://hooks.example.com/pos',
+        );
+        await typist.clear(within(edit).getByLabelText('URL webhook'));
+        await typist.click(
+            within(edit).getByRole('button', { name: 'Simpan' }),
+        );
+
+        await waitFor(() => expect(api.called(update)).toHaveLength(1));
+        expect(api.called(update)[0]?.body).toMatchObject({
+            webhook_url: null,
+        });
+    });
+
+    it('shows the state of the webhook of each client', async () => {
+        mockApi({
+            ...withPermissions(['integration-clients.manage']),
+            [`GET ${base}/integration-clients`]: () =>
+                list([
+                    client(),
+                    client({
+                        id: '01JCLIENT0000000000000000003',
+                        name: 'Tanpa Secret',
+                        source_system: 'nosecret',
+                        webhook_url: 'https://hooks.example.com/a',
+                    }),
+                    client({
+                        id: '01JCLIENT0000000000000000004',
+                        name: 'Siap',
+                        source_system: 'ready',
+                        webhook_url: 'https://hooks.example.com/b',
+                        webhook_enabled: true,
+                    }),
+                ]),
+        });
+        renderApp(path);
+
+        await screen.findByText('Tanpa Secret');
+
+        expect(screen.getByText('Mati')).toBeInTheDocument();
+        expect(screen.getByText('Perlu secret')).toBeInTheDocument();
+        expect(
+            screen.getByText('Aktif', { selector: '[title]' }),
+        ).toBeInTheDocument();
+    });
+
+    it('issues the webhook secret after confirmation, shows it once, and offers it only with a URL', async () => {
+        const issue = `POST ${base}/integration-clients/${client().id}/rotate-webhook-secret`;
+        const api = mockApi({
+            ...withPermissions(['integration-clients.manage']),
+            [`GET ${base}/integration-clients`]: () =>
+                list([
+                    client({ webhook_url: 'https://hooks.example.com/pos' }),
+                    client({
+                        id: '01JCLIENT0000000000000000005',
+                        name: 'Tanpa URL',
+                        source_system: 'nourl',
+                    }),
+                ]),
+            [issue]: () =>
+                json({
+                    data: {
+                        ...client({
+                            webhook_url: 'https://hooks.example.com/pos',
+                            webhook_enabled: true,
+                        }),
+                        webhook_secret: 'whsec_shown_once',
+                    },
+                }),
+        });
+
+        renderApp(path);
+        const typist = userEvent.setup();
+
+        await screen.findByText('Kasir Toko');
+        await typist.click(
+            screen.getByRole('button', { name: 'Aksi untuk Tanpa URL' }),
+        );
+        expect(
+            screen.queryByRole('menuitem', {
+                name: 'Terbitkan secret webhook',
+            }),
+        ).not.toBeInTheDocument();
+        await typist.keyboard('{Escape}');
+
+        await rowAction(typist, 'Kasir Toko', 'Terbitkan secret webhook');
+
+        expect(api.called(issue)).toHaveLength(0);
+        await confirmWith(typist, 'Terbitkan secret');
+
+        await waitFor(() => expect(api.called(issue)).toHaveLength(1));
+        expect(
+            await screen.findByLabelText('Secret penandatangan'),
+        ).toHaveValue('whsec_shown_once');
+
+        await typist.click(
+            screen.getByRole('button', { name: 'Sudah saya simpan' }),
+        );
+        await waitFor(() =>
+            expect(
+                screen.queryByDisplayValue('whsec_shown_once'),
+            ).not.toBeInTheDocument(),
+        );
     });
 });
 

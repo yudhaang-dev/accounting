@@ -9,6 +9,12 @@ namespace App\Modules\TransactionEntry\Contracts;
 interface FinancialEvents
 {
     /**
+     * The outbox topic (API-TR-25) under which every step of an event of a client is published, with the
+     * client as subject and the `seq` of the step, which is its cursor in `changes`, as payload.
+     */
+    public const CHANGED_TOPIC = 'financial_event.changed';
+
+    /**
      * Records the event as an entry from the source `integration`, submits it and returns its result.
      * An invalid event leaves nothing behind. The key is the company, the source system and the source
      * transaction ID (TE-FR-13): the same content again returns the original result as `replayed`, however

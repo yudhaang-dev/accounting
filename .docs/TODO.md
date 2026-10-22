@@ -172,7 +172,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 ### Fase 2
 
 - [ ] **B-01** Rekonsiliasi bank lewat impor mutasi — SL-FR-13
-- [ ] **B-02** Webhook bertanda tangan lewat outbox — API-TR-25
+- [x] **B-02** Webhook bertanda tangan lewat outbox — API-TR-25 — webhook per klien integrasi untuk setiap langkah event miliknya (isi sama dengan changes feed); host URL dinilai dari namanya saat didaftarkan, alamat hasil resolusi DNS saat pengiriman belum diperiksa; kegagalan akhir hanya tampil di audit (belum ada riwayat pengiriman per webhook di SPA); produksi perlu worker queue (`queue:work`, Horizon di Linux) dan scheduler untuk `outbox:relay` per menit. Deploy: migrasi, atur `WEBHOOK_QUEUE`, `WEBHOOK_TRIES`, `WEBHOOK_TIMEOUT_SECONDS` bila perlu
 - [x] **B-03** Endpoint batch event — TE-FR-17, API-TR-26
 - [ ] **B-04** Atribusi pembayaran ke akun biaya asal untuk metrik kas — RP-FR-11
 

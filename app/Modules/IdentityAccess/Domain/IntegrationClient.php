@@ -18,6 +18,8 @@ use Illuminate\Support\Carbon;
  * @property string $source_system
  * @property list<string> $scopes
  * @property list<string> $transaction_type_keys
+ * @property string|null $webhook_url where the client wants its webhooks (API-TR-25)
+ * @property string|null $webhook_secret signs them; encrypted at rest
  * @property IntegrationClientStatus $status
  * @property Carbon|null $secret_rotated_at
  * @property Carbon|null $revoked_at
@@ -33,9 +35,12 @@ class IntegrationClient extends VersionedCompanyModel implements Authenticatable
 
     protected $guarded = [];
 
+    protected $hidden = ['webhook_secret'];
+
     protected function casts(): array
     {
         return [
+            'webhook_secret' => 'encrypted',
             'scopes' => 'array',
             'transaction_type_keys' => 'array',
             'status' => IntegrationClientStatus::class,

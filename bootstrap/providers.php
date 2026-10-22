@@ -13,6 +13,7 @@ use App\Platform\Attachments\AttachmentsServiceProvider;
 use App\Platform\Audit\AuditServiceProvider;
 use App\Platform\Localization\LocalizationServiceProvider;
 use App\Platform\Numbering\NumberingServiceProvider;
+use App\Platform\Outbox\OutboxServiceProvider;
 use App\Platform\Retention\RetentionServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
@@ -26,6 +27,7 @@ return [
     AuditServiceProvider::class,
     AttachmentsServiceProvider::class,
     NumberingServiceProvider::class,
+    OutboxServiceProvider::class,
     RetentionServiceProvider::class,
     LocalizationServiceProvider::class,
     MasterDataServiceProvider::class,

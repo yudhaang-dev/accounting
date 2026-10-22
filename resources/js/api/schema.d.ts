@@ -1522,6 +1522,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/integration-clients/{id}/rotate-webhook-secret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Issues the secret that signs the webhooks of the client (API-TR-25), replacing the previous one at
+         *     once. It is shown this once; every webhook carries `Webhook-Id`, `Webhook-Timestamp` and
+         *     `Webhook-Signature` (`v1=` and the hex HMAC-SHA256 of `{id}.{timestamp}.{body}` with this secret)
+         */
+        post: operations["integration-clients.rotate-webhook-secret"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/integration-clients/{id}/revoke": {
         parameters: {
             query?: never;
@@ -3641,6 +3662,7 @@ export interface components {
             source_system: string;
             scopes: ("transaction-types:read" | "financial-events:write" | "financial-events:read:self" | "exchange-rates:write")[];
             transaction_type_keys?: string[];
+            webhook_url?: string | null;
             data_scope?: string[];
         };
         /** CreateInvitationRequest */
@@ -4152,6 +4174,9 @@ export interface components {
             client_id: string;
             scopes: string[];
             transaction_type_keys: string[];
+            webhook_url: string | null;
+            /** @description Webhooks go out only with a URL and a secret; the secret itself is never readable again. */
+            webhook_enabled: string;
             /** @description Dimension values the client is limited to, each with its descendants; empty means no limit. */
             data_scope: string;
             /** @description `active` or `revoked`. */
@@ -4170,6 +4195,9 @@ export interface components {
             client_id: string;
             scopes: string[];
             transaction_type_keys: string[];
+            webhook_url: string | null;
+            /** @description Webhooks go out only with a URL and a secret; the secret itself is never readable again. */
+            webhook_enabled: string;
             /** @description Dimension values the client is limited to, each with its descendants; empty means no limit. */
             data_scope: string;
             /** @description `active` or `revoked`. */
@@ -4180,6 +4208,29 @@ export interface components {
             lock_version: number;
             /** @description Shown once. Store it now; only a hash is kept. */
             client_secret: string;
+        };
+        /** IntegrationClientWithWebhookSecretResource */
+        IntegrationClientWithWebhookSecretResource: {
+            id: string;
+            name: string;
+            source_system: string;
+            /** @description OAuth client ID for the token request; the secret is never readable again. */
+            client_id: string;
+            scopes: string[];
+            transaction_type_keys: string[];
+            webhook_url: string | null;
+            /** @description Webhooks go out only with a URL and a secret; the secret itself is never readable again. */
+            webhook_enabled: string;
+            /** @description Dimension values the client is limited to, each with its descendants; empty means no limit. */
+            data_scope: string;
+            /** @description `active` or `revoked`. */
+            status: string;
+            secret_rotated_at: string | null;
+            revoked_at: string | null;
+            created_at: string | null;
+            lock_version: number;
+            /** @description Shown once. Store it now; the receiver verifies every webhook with it. */
+            webhook_secret: string;
         };
         /** InvitationResource */
         InvitationResource: {
@@ -4846,6 +4897,7 @@ export interface components {
             name?: string;
             scopes?: ("transaction-types:read" | "financial-events:write" | "financial-events:read:self" | "exchange-rates:write")[];
             transaction_type_keys?: string[];
+            webhook_url?: string | null;
             data_scope?: string[];
         };
         /** UpdateLedgerPolicyRequest */
@@ -8388,6 +8440,32 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["IntegrationClientWithSecretResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "integration-clients.rotate-webhook-secret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `IntegrationClientWithWebhookSecretResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["IntegrationClientWithWebhookSecretResource"];
                     };
                 };
             };

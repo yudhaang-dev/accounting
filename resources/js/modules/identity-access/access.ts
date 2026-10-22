@@ -22,17 +22,23 @@ export type Role = Omit<Schemas['RoleResource'], 'permissions'> & {
 export type Invitation = Schemas['InvitationResource'];
 export type PermissionEntry = { key: string; resource: string; action: string };
 export type SecurityPolicy = Schemas['SecurityPolicyResource'];
+// The generated types read `data_scope` as a string and `webhook_enabled` as a string; they are a list and a boolean.
+type ClientShape = { data_scope: string[]; webhook_enabled: boolean };
 export type IntegrationClient = Omit<
     Schemas['IntegrationClientResource'],
-    'data_scope'
-> & {
-    /** Dimension value ids the client is limited to, each standing for itself and its descendants. */
-    data_scope: string[];
-};
+    keyof ClientShape
+> &
+    ClientShape;
 export type IntegrationClientWithSecret = Omit<
     Schemas['IntegrationClientWithSecretResource'],
-    'data_scope'
-> & { data_scope: string[] };
+    keyof ClientShape
+> &
+    ClientShape;
+export type IntegrationClientWithWebhookSecret = Omit<
+    Schemas['IntegrationClientWithWebhookSecretResource'],
+    keyof ClientShape
+> &
+    ClientShape;
 export type IntegrationScope =
     Schemas['CreateIntegrationClientRequest']['scopes'][number];
 export type PermissionKey = NonNullable<
@@ -51,6 +57,8 @@ const asRole = (value: unknown) => value as Role;
 const asClient = (value: unknown) => value as IntegrationClient;
 const asClientWithSecret = (value: unknown) =>
     value as IntegrationClientWithSecret;
+const asClientWithWebhookSecret = (value: unknown) =>
+    value as IntegrationClientWithWebhookSecret;
 
 export const membershipsQuery = (companyId: string) =>
     queryOptions({
@@ -335,6 +343,23 @@ export async function rotateIntegrationSecret(
             await unwrap(
                 api.POST(
                     '/companies/{companyId}/integration-clients/{id}/rotate-secret',
+                    { params: { path: { companyId, id } } },
+                ),
+            )
+        ).data,
+    );
+}
+
+/** Issues the secret that signs the webhooks of the client, replacing the previous one; shown this once. */
+export async function rotateWebhookSecret(
+    companyId: string,
+    id: string,
+): Promise<IntegrationClientWithWebhookSecret> {
+    return asClientWithWebhookSecret(
+        (
+            await unwrap(
+                api.POST(
+                    '/companies/{companyId}/integration-clients/{id}/rotate-webhook-secret',
                     { params: { path: { companyId, id } } },
                 ),
             )

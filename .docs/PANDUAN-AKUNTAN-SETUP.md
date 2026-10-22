@@ -219,7 +219,7 @@ Untuk perusahaan yang sudah ada, izin baru (mis. menerbitkan snapshot laporan) p
 - Batas sesi idle.
 - Daftar IP klien integrasi.
 
-**Klien integrasi** (Akses → Klien integrasi): daftarkan sistem lain (mis. aplikasi penjualan), tentukan scope dan jenis transaksi yang diizinkan, lalu simpan Client secret saat itu juga karena tidak akan tampil lagi. Untuk klien yang hanya boleh menyentuh satu cabang atau proyek (misalnya kasir satu cabang), isi **cakupan data** dengan nilai dimensinya: klien hanya bisa mengirim dan membaca peristiwa dalam cakupan itu. Pastikan jenis transaksi yang dipakainya menerapkan dimensi pada **semua** aturan posting, karena baris tanpa dimensi dianggap di luar cakupan dan peristiwanya ditolak. Pengguna yang dibatasi tidak bisa mendaftarkan atau mengubah klien.
+**Klien integrasi** (Akses → Klien integrasi): daftarkan sistem lain (mis. aplikasi penjualan), tentukan scope dan jenis transaksi yang diizinkan, lalu simpan Client secret saat itu juga karena tidak akan tampil lagi. Untuk klien yang hanya boleh menyentuh satu cabang atau proyek (misalnya kasir satu cabang), isi **cakupan data** dengan nilai dimensinya: klien hanya bisa mengirim dan membaca peristiwa dalam cakupan itu. Pastikan jenis transaksi yang dipakainya menerapkan dimensi pada **semua** aturan posting, karena baris tanpa dimensi dianggap di luar cakupan dan peristiwanya ditolak. Pengguna yang dibatasi tidak bisa mendaftarkan atau mengubah klien. Bila sistem lain perlu diberi tahu saat peristiwanya berubah status, isi **URL webhook** (https) lalu terbitkan secret webhook dari menu aksi; berikan secret itu kepada penerima, karena hanya tampil sekali.
 
 ---
 

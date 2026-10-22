@@ -20,7 +20,7 @@ class IntegrationClientWithSecretResource extends JsonResource
     }
 
     /**
-     * @return array{id: string, name: string, source_system: string, client_id: string, scopes: list<string>, transaction_type_keys: list<string>, data_scope: list<string>, status: string, secret_rotated_at: string|null, revoked_at: string|null, created_at: string|null, lock_version: int, client_secret: string}
+     * @return array{id: string, name: string, source_system: string, client_id: string, scopes: list<string>, transaction_type_keys: list<string>, webhook_url: string|null, webhook_enabled: bool, data_scope: list<string>, status: string, secret_rotated_at: string|null, revoked_at: string|null, created_at: string|null, lock_version: int, client_secret: string}
      */
     public function toArray(Request $request): array
     {

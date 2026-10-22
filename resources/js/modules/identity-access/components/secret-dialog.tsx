@@ -7,7 +7,10 @@ import { DialogFooter } from '@/components/ui/dialog';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { FormDialog } from '@/components/form-dialog';
-import type { IntegrationClientWithSecret } from '@/modules/identity-access/access';
+import type {
+    IntegrationClientWithSecret,
+    IntegrationClientWithWebhookSecret,
+} from '@/modules/identity-access/access';
 
 function CopyField({
     id,
@@ -106,6 +109,54 @@ export function SecretDialog({
                         id="integration-client-secret"
                         label={t('integrations.secret.clientSecret')}
                         value={client.client_secret}
+                    />
+                    <DialogFooter>
+                        <Button type="button" onClick={onClose}>
+                            {t('integrations.secret.done')}
+                        </Button>
+                    </DialogFooter>
+                </div>
+            )}
+        </FormDialog>
+    );
+}
+
+/**
+ * Shows the secret that signs the webhooks of a client (API-TR-25). Like the client secret it is shown
+ * once, but here it is kept readable on the server: the receiver needs it to verify every webhook.
+ */
+export function WebhookSecretDialog({
+    client,
+    onClose,
+}: {
+    /** The client whose webhook secret was just issued; none keeps the dialog closed. */
+    client: IntegrationClientWithWebhookSecret | null;
+    onClose: () => void;
+}) {
+    const { t } = useTranslation();
+
+    return (
+        <FormDialog
+            open={client !== null}
+            onOpenChange={(open) => {
+                if (!open) {
+                    onClose();
+                }
+            }}
+            title={t('integrations.webhookSecret.title')}
+            description={t('integrations.webhookSecret.warning')}
+        >
+            {client && (
+                <div className="flex flex-col gap-4">
+                    <Alert>
+                        <AlertDescription>
+                            {t('integrations.webhookSecret.warning')}
+                        </AlertDescription>
+                    </Alert>
+                    <CopyField
+                        id="integration-webhook-secret"
+                        label={t('integrations.webhookSecret.label')}
+                        value={client.webhook_secret}
                     />
                     <DialogFooter>
                         <Button type="button" onClick={onClose}>

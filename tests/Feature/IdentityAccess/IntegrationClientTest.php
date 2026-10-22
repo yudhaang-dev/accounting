@@ -284,3 +284,76 @@ describe('changing, rotating and revoking (IA-AC-07)', function () {
             ->assertUnprocessable();
     });
 });
+
+describe('webhook endpoint (API-TR-25)', function () {
+    it('takes a URL on registration and on change, and reads it back without any secret', function () {
+        $client = registerClient(['webhook_url' => 'https://hooks.example.com/payroll']);
+
+        expect($client)->toMatchArray(['webhook_url' => 'https://hooks.example.com/payroll', 'webhook_enabled' => false]);
+
+        $changed = $this->actingAs($this->admin)->patchJson("{$this->url}/integration-clients/{$client['id']}", ['lock_version' => 1, 'webhook_url' => 'https://hooks.example.com/v2'])
+            ->assertOk()->assertJsonPath('data.webhook_url', 'https://hooks.example.com/v2')->json('data');
+
+        expect($changed)->not->toHaveKey('webhook_secret');
+        $audit = AuditEntry::where('company_id', $this->companyId)->where('event', 'integration_client.updated')->first()->attribute_changes;
+
+        expect($audit['old']['webhook_url'])->toBe('https://hooks.example.com/payroll')->and($audit['attributes']['webhook_url'])->toBe('https://hooks.example.com/v2');
+    });
+
+    it('refuses a URL that is not an https URL of a public host', function () {
+        foreach (['ftp://hooks.example.com/x', 'hooks.example.com/x', 'https://localhost/x', 'https://app.localhost/x', 'https://10.0.0.5/x', 'https://127.0.0.1/x', 'https://192.168.1.9/x', 'https://[::1]/x', 'https://intranet/x', 'https://user:secret@hooks.example.com/x', 'https:///x', 'javascript:alert(1)'] as $url) {
+            $this->actingAs($this->admin)->postJson("{$this->url}/integration-clients", [
+                'name' => 'X', 'source_system' => 'x', 'scopes' => ['transaction-types:read'], 'webhook_url' => $url,
+            ])->assertUnprocessable()->assertJsonValidationErrors(['webhook_url']);
+        }
+
+        $client = registerClient();
+        $this->actingAs($this->admin)->patchJson("{$this->url}/integration-clients/{$client['id']}", ['lock_version' => 1, 'webhook_url' => 'https://10.0.0.5/x'])
+            ->assertUnprocessable()->assertJsonValidationErrors(['webhook_url']);
+    });
+
+    it('issues the secret that signs the webhooks once, and replaces it on the next issue', function () {
+        $client = registerClient(['webhook_url' => 'https://hooks.example.com/payroll']);
+
+        $first = $this->actingAs($this->admin)->postJson("{$this->url}/integration-clients/{$client['id']}/rotate-webhook-secret")->assertOk()
+            ->assertJsonPath('data.webhook_enabled', true)->json('data');
+
+        expect($first['webhook_secret'])->toStartWith('whsec_')->and(strlen($first['webhook_secret']))->toBeGreaterThan(30);
+
+        $this->actingAs($this->admin)->getJson("{$this->url}/integration-clients/{$client['id']}")->assertOk()->assertJsonMissingPath('data.webhook_secret')->assertJsonPath('data.webhook_enabled', true);
+        $this->actingAs($this->admin)->getJson("{$this->url}/integration-clients")->assertOk()->assertJsonMissingPath('data.0.webhook_secret');
+
+        $second = $this->actingAs($this->admin)->postJson("{$this->url}/integration-clients/{$client['id']}/rotate-webhook-secret")->assertOk()->json('data');
+
+        expect($second['webhook_secret'])->not->toBe($first['webhook_secret'])->and($second['lock_version'])->toBe($first['lock_version'] + 1);
+        expect(AuditEntry::where('company_id', $this->companyId)->where('event', 'integration_client.webhook_secret_rotated')->count())->toBe(2)
+            ->and(json_encode(AuditEntry::where('company_id', $this->companyId)->get()->toArray()))->not->toContain($second['webhook_secret']);
+    });
+
+    it('keeps the secret encrypted in the database', function () {
+        $client = registerClient(['webhook_url' => 'https://hooks.example.com/payroll']);
+        $secret = $this->actingAs($this->admin)->postJson("{$this->url}/integration-clients/{$client['id']}/rotate-webhook-secret")->assertOk()->json('data.webhook_secret');
+
+        $stored = (string) DB::table('ia_integration_clients')->where('id', $client['id'])->value('webhook_secret');
+
+        expect($stored)->not->toBe('')->and($stored)->not->toContain($secret);
+    });
+
+    it('is not enabled by a URL alone, and stops with a null URL', function () {
+        $client = registerClient(['webhook_url' => 'https://hooks.example.com/payroll']);
+        $this->actingAs($this->admin)->postJson("{$this->url}/integration-clients/{$client['id']}/rotate-webhook-secret")->assertOk();
+
+        $this->actingAs($this->admin)->patchJson("{$this->url}/integration-clients/{$client['id']}", ['lock_version' => 2, 'webhook_url' => null])
+            ->assertOk()->assertJsonPath('data.webhook_url', null)->assertJsonPath('data.webhook_enabled', false);
+    });
+
+    it('refuses to issue a secret for a revoked client, and needs the permission', function () {
+        $client = registerClient();
+        $viewer = memberWithRoles($this->companyId, 'viewer');
+
+        $this->actingAs($viewer)->postJson("{$this->url}/integration-clients/{$client['id']}/rotate-webhook-secret")->assertForbidden();
+
+        $this->actingAs($this->admin)->postJson("{$this->url}/integration-clients/{$client['id']}/revoke")->assertOk();
+        $this->actingAs($this->admin)->postJson("{$this->url}/integration-clients/{$client['id']}/rotate-webhook-secret")->assertStatus(409);
+    });
+});

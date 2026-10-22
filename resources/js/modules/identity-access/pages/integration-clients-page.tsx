@@ -32,11 +32,16 @@ import {
     integrationClientsQuery,
     revokeIntegrationClient,
     rotateIntegrationSecret,
+    rotateWebhookSecret,
     type IntegrationClient,
     type IntegrationClientWithSecret,
+    type IntegrationClientWithWebhookSecret,
 } from '@/modules/identity-access/access';
 import { IntegrationClientDialog } from '@/modules/identity-access/components/integration-client-dialog';
-import { SecretDialog } from '@/modules/identity-access/components/secret-dialog';
+import {
+    SecretDialog,
+    WebhookSecretDialog,
+} from '@/modules/identity-access/components/secret-dialog';
 
 /**
  * Integration clients of the company (IA-FR-06): the systems that call the API with their own
@@ -56,11 +61,15 @@ export function IntegrationClientsPage({
     const [editing, setEditing] = useState<IntegrationClient | null>(null);
     const [rotating, setRotating] = useState<IntegrationClient | null>(null);
     const [revoking, setRevoking] = useState<IntegrationClient | null>(null);
+    const [issuing, setIssuing] = useState<IntegrationClient | null>(null);
     const [secret, setSecret] = useState<{
         client: IntegrationClientWithSecret;
         rotated: boolean;
     } | null>(null);
+    const [webhookSecret, setWebhookSecret] =
+        useState<IntegrationClientWithWebhookSecret | null>(null);
     const askingRotate = useLastDefined(rotating);
+    const askingIssue = useLastDefined(issuing);
     const askingRevoke = useLastDefined(revoking);
 
     useDocumentTitle(t('integrations.pageTitle'));
@@ -81,6 +90,17 @@ export function IntegrationClientsPage({
         },
         onError: (error) => toast.error(actionErrorMessage(error, t)),
         onSettled: () => setRotating(null),
+    });
+
+    const issueWebhookSecret = useMutation({
+        mutationFn: (client: IntegrationClient) =>
+            rotateWebhookSecret(companyId, client.id),
+        onSuccess: async (client) => {
+            await refresh();
+            setWebhookSecret(client);
+        },
+        onError: (error) => toast.error(actionErrorMessage(error, t)),
+        onSettled: () => setIssuing(null),
     });
 
     const revoke = useMutation({
@@ -146,6 +166,9 @@ export function IntegrationClientsPage({
                                     {t('integrations.dataScope')}
                                 </TableHead>
                                 <TableHead>
+                                    {t('integrations.webhook.title')}
+                                </TableHead>
+                                <TableHead>
                                     {t('integrations.status')}
                                 </TableHead>
                                 <TableHead className="w-12">
@@ -208,6 +231,30 @@ export function IntegrationClientsPage({
                                                   )}
                                         </TableCell>
                                         <TableCell>
+                                            {client.webhook_url === null ? (
+                                                <span className="text-muted-foreground">
+                                                    {t(
+                                                        'integrations.webhook.off',
+                                                    )}
+                                                </span>
+                                            ) : (
+                                                <Badge
+                                                    variant={
+                                                        client.webhook_enabled
+                                                            ? 'secondary'
+                                                            : 'outline'
+                                                    }
+                                                    title={client.webhook_url}
+                                                >
+                                                    {t(
+                                                        client.webhook_enabled
+                                                            ? 'integrations.webhook.on'
+                                                            : 'integrations.webhook.needsSecret',
+                                                    )}
+                                                </Badge>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
                                             <Badge
                                                 variant={
                                                     active
@@ -243,6 +290,20 @@ export function IntegrationClientsPage({
                                                             'integrations.rotateAction',
                                                         )}
                                                     </DropdownMenuItem>
+                                                    {client.webhook_url !==
+                                                        null && (
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                setIssuing(
+                                                                    client,
+                                                                )
+                                                            }
+                                                        >
+                                                            {t(
+                                                                'integrations.webhook.issueAction',
+                                                            )}
+                                                        </DropdownMenuItem>
+                                                    )}
                                                     <DropdownMenuItem
                                                         variant="destructive"
                                                         onClick={() =>
@@ -287,6 +348,30 @@ export function IntegrationClientsPage({
                 client={secret?.client ?? null}
                 rotated={secret?.rotated ?? false}
                 onClose={() => setSecret(null)}
+            />
+            <WebhookSecretDialog
+                client={webhookSecret}
+                onClose={() => setWebhookSecret(null)}
+            />
+            <ConfirmDialog
+                open={issuing !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setIssuing(null);
+                    }
+                }}
+                title={t('confirm.issueWebhookSecret.title', {
+                    name: askingIssue?.name ?? '',
+                })}
+                description={t(
+                    askingIssue?.webhook_enabled
+                        ? 'confirm.issueWebhookSecret.replace'
+                        : 'confirm.issueWebhookSecret.first',
+                )}
+                confirmLabel={t('confirm.issueWebhookSecret.action')}
+                pending={issueWebhookSecret.isPending}
+                destructive={askingIssue?.webhook_enabled === true}
+                onConfirm={() => issuing && issueWebhookSecret.mutate(issuing)}
             />
             <ConfirmDialog
                 open={rotating !== null}

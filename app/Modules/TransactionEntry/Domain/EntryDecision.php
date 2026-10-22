@@ -2,6 +2,8 @@
 
 namespace App\Modules\TransactionEntry\Domain;
 
+use App\Modules\TransactionEntry\Contracts\FinancialEvents;
+use App\Platform\Outbox\Outbox;
 use App\Support\Company\CompanyScopedModel;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -40,9 +42,17 @@ class EntryDecision extends CompanyScopedModel
             [$entry->company_id],
         );
 
-        return self::create([
+        $step = self::create([
             'entry_id' => $entry->id, 'action' => $action, 'actor_id' => $actorId, 'client_id' => $clientId, 'reason' => $reason,
             'seq' => (int) $counter->last, 'status' => $entry->status->value,
         ]);
+
+        // The owner of an event hears of every step it takes, whoever took it (API-TR-25); what is sent is read
+        // when it is, from the changes feed, by the number of the step.
+        if ($entry->integration_client_id !== null) {
+            app(Outbox::class)->publish(FinancialEvents::CHANGED_TOPIC, $entry->company_id, $entry->integration_client_id, ['seq' => $step->seq]);
+        }
+
+        return $step;
     }
 }

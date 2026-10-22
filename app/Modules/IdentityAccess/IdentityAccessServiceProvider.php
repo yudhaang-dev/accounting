@@ -4,11 +4,13 @@ namespace App\Modules\IdentityAccess;
 
 use App\Modules\IdentityAccess\Application\CatalogPermissions;
 use App\Modules\IdentityAccess\Application\EffectiveAccessContexts;
+use App\Modules\IdentityAccess\Application\EloquentIntegrationWebhooks;
 use App\Modules\IdentityAccess\Application\EloquentWorkspaces;
 use App\Modules\IdentityAccess\Application\IntegrationClientAuthenticator;
 use App\Modules\IdentityAccess\Application\WorkspaceCompanyAccessGate;
 use App\Modules\IdentityAccess\Console\SyncPermissionsCommand;
 use App\Modules\IdentityAccess\Contracts\AccessContexts;
+use App\Modules\IdentityAccess\Contracts\IntegrationWebhooks;
 use App\Modules\IdentityAccess\Contracts\Permissions;
 use App\Modules\IdentityAccess\Contracts\Workspaces;
 use App\Modules\IdentityAccess\Domain\IntegrationScopes;
@@ -32,6 +34,7 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
         $this->app->bind(Workspaces::class, EloquentWorkspaces::class);
         $this->app->bind(AccessContexts::class, EffectiveAccessContexts::class);
         $this->app->bind(Permissions::class, CatalogPermissions::class);
+        $this->app->bind(IntegrationWebhooks::class, EloquentIntegrationWebhooks::class);
         // Replaces the fail-closed default bound by the API platform capability.
         $this->app->bind(CompanyAccessGate::class, WorkspaceCompanyAccessGate::class);
 

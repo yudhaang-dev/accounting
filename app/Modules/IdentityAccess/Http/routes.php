@@ -45,6 +45,8 @@ Route::companyScoped(function () {
         ->middleware('permission:integration-clients.manage')->where('id', $ulid)->name('integration-clients.update');
     Route::post('integration-clients/{id}/rotate-secret', [IntegrationClientController::class, 'rotateSecret'])
         ->middleware('permission:integration-clients.manage')->where('id', $ulid)->name('integration-clients.rotate-secret');
+    Route::post('integration-clients/{id}/rotate-webhook-secret', [IntegrationClientController::class, 'rotateWebhookSecret'])
+        ->middleware('permission:integration-clients.manage')->where('id', $ulid)->name('integration-clients.rotate-webhook-secret');
     Route::post('integration-clients/{id}/revoke', [IntegrationClientController::class, 'revoke'])
         ->middleware('permission:integration-clients.manage')->where('id', $ulid)->name('integration-clients.revoke');
 

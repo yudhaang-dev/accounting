@@ -50,6 +50,8 @@ type Values = {
     scopes: IntegrationScope[];
     /** Keys separated by spaces, commas or new lines. */
     type_keys: string;
+    /** Empty means no webhooks. */
+    webhook_url: string;
     data_scope: string[];
 };
 
@@ -86,6 +88,7 @@ function ClientForm({
             source_system: client?.source_system ?? '',
             scopes: (client?.scopes ?? []) as IntegrationScope[],
             type_keys: (client?.transaction_type_keys ?? []).join('\n'),
+            webhook_url: client?.webhook_url ?? '',
             data_scope: initialScope,
         },
     });
@@ -108,9 +111,12 @@ function ClientForm({
                 transaction_type_keys: keys(values.type_keys),
             };
 
+            const webhookUrl = values.webhook_url.trim();
+
             if (client) {
                 await updateIntegrationClient(companyId, client.id, {
                     ...body,
+                    webhook_url: webhookUrl === '' ? null : webhookUrl,
                     lock_version: client.lock_version,
                     // Only a change is sent: a user who is limited themselves may not set a scope at all.
                     ...(canReadDimensions &&
@@ -125,6 +131,7 @@ function ClientForm({
             return createIntegrationClient(companyId, {
                 ...body,
                 source_system: values.source_system.trim(),
+                ...(webhookUrl !== '' && { webhook_url: webhookUrl }),
                 ...(values.data_scope.length > 0 && {
                     data_scope: values.data_scope,
                 }),
@@ -288,6 +295,28 @@ function ClientForm({
                     </FieldDescription>
                     {errors.type_keys && (
                         <FieldError>{errors.type_keys.message}</FieldError>
+                    )}
+                </Field>
+
+                <Field data-invalid={errors.webhook_url ? true : undefined}>
+                    <FieldLabel htmlFor="integration-webhook">
+                        {t('integrations.form.webhookUrl')}
+                    </FieldLabel>
+                    <Input
+                        id="integration-webhook"
+                        type="url"
+                        inputMode="url"
+                        maxLength={500}
+                        placeholder="https://"
+                        className="font-mono text-xs"
+                        aria-invalid={errors.webhook_url ? true : undefined}
+                        {...register('webhook_url')}
+                    />
+                    <FieldDescription>
+                        {t('integrations.form.webhookUrlHint')}
+                    </FieldDescription>
+                    {errors.webhook_url && (
+                        <FieldError>{errors.webhook_url.message}</FieldError>
                     )}
                 </Field>
 

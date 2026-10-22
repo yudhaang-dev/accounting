@@ -2651,6 +2651,13 @@ export const en: Widen<typeof id> = {
             unrestricted: 'No limit',
             restricted: 'Limited ({{total}} values)',
         },
+        webhook: {
+            title: 'Webhook',
+            off: 'Off',
+            on: 'Active',
+            needsSecret: 'Needs a secret',
+            issueAction: 'Issue webhook secret',
+        },
         status: 'Status',
         actions: 'Actions',
         editAction: 'Edit',
@@ -2679,6 +2686,9 @@ export const en: Widen<typeof id> = {
             typeKeysHint:
                 'Transaction type keys, separated by new lines, spaces or commas. Empty allows none.',
             typeKeysInvalid: 'A key has an invalid format.',
+            webhookUrl: 'Webhook URL',
+            webhookUrlHint:
+                'Optional. Every step an event of this client takes is sent here as a signed request (https only, public host). Webhooks start once you issue the secret that signs them from the actions menu.',
             register: 'Register',
             saved: 'Client saved.',
             conflict:
@@ -2694,8 +2704,21 @@ export const en: Widen<typeof id> = {
             copy: 'Copy {{name}}',
             done: 'I have stored it',
         },
+        webhookSecret: {
+            title: 'Webhook secret',
+            warning:
+                'Give this secret to the receiver now. It signs every webhook, and it is not shown again; issuing a new one replaces it at once.',
+            label: 'Signing secret',
+        },
     },
     confirm: {
+        issueWebhookSecret: {
+            title: 'Issue a webhook secret for {{name}}?',
+            first: 'Webhooks to this client start once the secret exists. The receiver needs it to verify them.',
+            replace:
+                'The current secret stops signing at once. Webhooks signed with the new one will be refused by a receiver that still has the old secret.',
+            action: 'Issue secret',
+        },
         revokeMember: {
             title: 'Revoke access for {{name}}?',
             description:

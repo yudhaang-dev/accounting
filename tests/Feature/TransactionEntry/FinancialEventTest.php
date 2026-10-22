@@ -2,9 +2,17 @@
 
 use App\Models\User;
 use App\Modules\GeneralLedger\Domain\Account;
+use App\Modules\TransactionEntry\Contracts\FinancialEvents;
+use App\Orchestration\Webhooks\DeliverFinancialEventWebhook;
+use App\Orchestration\Webhooks\SignedWebhookJob;
+use App\Platform\Audit\AuditEntry;
+use App\Platform\Outbox\Outbox;
+use App\Platform\Outbox\OutboxMessage;
 use App\Support\Company\CompanyScope;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 // Financial events from integration clients (TE-FR-12, API-TR-16 to API-TR-20, API-AC-03, API-AC-05, API-AC-06).
@@ -557,5 +565,192 @@ describe('batch of events (TE-FR-17, API-TR-26)', function () {
         [$otherCompany] = createWorkspaceAs($other, 'Other');
 
         evSend('POST', "/api/v1/companies/{$otherCompany}/financial-events/batch", ['events' => [evItem('a')]], $this->token)->assertForbidden();
+    });
+});
+
+describe('webhooks (API-TR-25)', function () {
+    /** Points the client at the URL and issues the secret that signs what is sent; returns the secret. */
+    function evWebhook(array $client, string $url = 'https://hooks.example.com/payroll'): string
+    {
+        $base = test()->url."/integration-clients/{$client['id']}";
+        $version = test()->actingAs(test()->admin)->getJson($base)->assertOk()->json('data.lock_version');
+
+        test()->actingAs(test()->admin)->patchJson($base, ['lock_version' => $version, 'webhook_url' => $url])->assertOk();
+
+        return test()->actingAs(test()->admin)->postJson("{$base}/rotate-webhook-secret")->assertOk()->json('data.webhook_secret');
+    }
+
+    /** @return list<Request> the webhooks sent to the host, oldest first */
+    function evSentWebhooks(string $host = 'hooks.example.com'): array
+    {
+        return Http::recorded()
+            ->map(fn (array $pair) => $pair[0])
+            ->filter(fn (Request $request) => parse_url($request->url(), PHP_URL_HOST) === $host)
+            ->values()->all();
+    }
+
+    beforeEach(function () {
+        // What the receivers answer; a test sets it to make them fail.
+        $this->receiverStatus = 200;
+        Http::fake(fn () => Http::response('', $this->receiverStatus));
+        $this->secret = evWebhook($this->payroll);
+    });
+
+    it('sends a signed webhook for the step an event takes, with the same content as the changes feed', function () {
+        $event = evSendEvent()->assertCreated()->json('data.event_id');
+
+        $sent = evSentWebhooks();
+        expect($sent)->toHaveCount(1);
+
+        $request = $sent[0];
+        $body = $request->body();
+        $webhook = json_decode($body, true);
+        $id = $request->header('Webhook-Id')[0];
+        $timestamp = $request->header('Webhook-Timestamp')[0];
+
+        expect($request->method())->toBe('POST')
+            ->and($webhook)->toMatchArray(['id' => $id, 'type' => 'financial_event.changed'])
+            ->and($webhook['data'])->toMatchArray(['event_id' => $event, 'action' => 'submit', 'status' => 'submitted', 'journal_id' => null, 'journal_number' => null])
+            ->and($request->header('Webhook-Signature')[0])->toBe('v1='.hash_hmac('sha256', "{$id}.{$timestamp}.{$body}", $this->secret))
+            ->and(abs((int) $timestamp - now()->timestamp))->toBeLessThan(60);
+
+        $feed = evChanges()->assertOk()->json('data.0');
+        expect($webhook['data'])->toBe($feed);
+    });
+
+    it('names each step with an ID of its own, and follows the event to its posting by whoever takes the step', function () {
+        $event = evSendEvent()->assertCreated()->json('data.event_id');
+        $this->actingAs($this->approver)->postJson("{$this->url}/entries/{$event}/approve")->assertOk();
+        $this->actingAs($this->approver)->postJson("{$this->url}/entries/{$event}/post")->assertOk();
+
+        $webhooks = array_map(fn ($request) => json_decode($request->body(), true), evSentWebhooks());
+
+        expect(array_column(array_column($webhooks, 'data'), 'action'))->toBe(['submit', 'approve', 'post'])
+            ->and(array_column(array_column($webhooks, 'data'), 'status'))->toBe(['submitted', 'approved', 'posted'])
+            ->and(array_unique(array_column($webhooks, 'id')))->toHaveCount(3)
+            ->and($webhooks[2]['data']['journal_number'])->not->toBeNull();
+    });
+
+    it('sends nothing to a client without a URL or without a secret', function () {
+        $noSecret = evClient(['name' => 'Plain', 'source_system' => 'plain', 'webhook_url' => 'https://hooks.example.com/plain']);
+        evSendEvent([], evToken($noSecret))->assertCreated();
+
+        $this->actingAs($this->admin)->patchJson("{$this->url}/integration-clients/{$this->payroll['id']}", ['lock_version' => 3, 'webhook_url' => null])->assertOk();
+        evSendEvent()->assertCreated();
+
+        expect(evSentWebhooks())->toBe([]);
+    });
+
+    it('sends the webhooks of a client to that client only', function () {
+        $other = evClient(['name' => 'Other', 'source_system' => 'other']);
+        evWebhook($other, 'https://other.example.com/hook');
+
+        evSendEvent([], evToken($other))->assertCreated();
+
+        expect(evSentWebhooks())->toBe([])->and(evSentWebhooks('other.example.com'))->toHaveCount(1);
+    });
+
+    it('names the company in every webhook, inside what is signed', function () {
+        evSendEvent()->assertCreated();
+
+        expect(json_decode(evSentWebhooks()[0]->body(), true)['company_id'])->toBe($this->companyId);
+    });
+
+    it('never reaches the client of another company, whatever a row of the outbox says', function () {
+        $other = User::factory()->create();
+        [$otherCompany] = createWorkspaceAs($other, 'Other');
+        $theirs = $this->actingAs($other)->postJson("/api/v1/companies/{$otherCompany}/integration-clients", [
+            'name' => 'Theirs', 'source_system' => 'theirs', 'scopes' => ['financial-events:write'], 'webhook_url' => 'https://other.example.com/hook',
+        ])->assertCreated()->json('data');
+        $this->actingAs($other)->postJson("/api/v1/companies/{$otherCompany}/integration-clients/{$theirs['id']}/rotate-webhook-secret")->assertOk();
+
+        $deliver = app(DeliverFinancialEventWebhook::class);
+        $message = fn (string $company, string $client) => new OutboxMessage((string) Str::ulid(), $company, 'financial_event.changed', $client, ['seq' => 1], 0);
+
+        // Their client named under our company, and ours under theirs: each is unknown where it is looked up.
+        $deliver($message($this->companyId, $theirs['id']));
+        $deliver($message($otherCompany, $this->payroll['id']));
+
+        expect(Http::recorded())->toHaveCount(0);
+    });
+
+    it('sends nothing to a client that was revoked', function () {
+        $event = evSendEvent()->assertCreated()->json('data.event_id');
+        $this->actingAs($this->admin)->postJson("{$this->url}/integration-clients/{$this->payroll['id']}/revoke")->assertOk();
+
+        $this->actingAs($this->approver)->postJson("{$this->url}/entries/{$event}/approve")->assertOk();
+
+        expect(evSentWebhooks())->toHaveCount(1);
+    });
+
+    it('sends nothing for an entry that no client sent', function () {
+        $this->actingAs($this->admin)->postJson("{$this->url}/entries", [
+            'transaction_type_key' => 'payroll_summary', 'accounting_date' => '2026-03-31',
+            'values' => ['salary_expense' => '1', 'net_payable' => '1', 'withholding_payable' => '0'],
+        ]);
+
+        expect(evSentWebhooks())->toBe([]);
+    });
+
+    it('keeps the event when the receiver is down, and records the webhook that never got through', function () {
+        config(['webhook-server.tries' => 1]);
+        $this->receiverStatus = 503;
+
+        $event = evSendEvent()->assertCreated()->json('data.event_id');
+
+        $failure = AuditEntry::where('company_id', $this->companyId)->where('event', 'integration_client.webhook_failed')->first();
+
+        expect($failure)->not->toBeNull()->and($failure->outcome)->toBe('failed')
+            ->and($failure->properties['client_id'])->toBe($this->payroll['id'])->and($failure->properties['status'])->toBe(503)
+            ->and($failure->properties['url'])->toBe('https://hooks.example.com/payroll')
+            ->and(evChanges()->assertOk()->json('data.0.event_id'))->toBe($event);
+    });
+
+    it('tries again later when the relay fails, with the same webhook ID', function () {
+        $failing = true;
+        app(Outbox::class)->handle(
+            FinancialEvents::CHANGED_TOPIC,
+            function (OutboxMessage $message) use (&$failing) {
+                if ($failing) {
+                    throw new RuntimeException('queue down');
+                }
+
+                app(DeliverFinancialEventWebhook::class)($message);
+            },
+        );
+
+        evSendEvent()->assertCreated();
+        expect(evSentWebhooks())->toBe([]);
+
+        $failing = false;
+        $this->travel(11)->seconds();
+        app(Outbox::class)->relay();
+        $this->travelBack();
+
+        $id = DB::table('pf_outbox')->where('company_id', $this->companyId)->value('id');
+        expect(evSentWebhooks())->toHaveCount(1)->and(evSentWebhooks()[0]->header('Webhook-Id')[0])->toBe($id);
+    });
+
+    it('signs again on each attempt, so that a late retry carries a fresh timestamp the signature covers', function () {
+        $job = new SignedWebhookJob;
+        $job->uuid = 'whk-1';
+        $job->secret = 'whsec_test';
+        $job->payload = ['a' => 1];
+
+        (function () {
+            $this->addTimestampToHeaders();
+        })->call($job);
+        $first = $job->headers;
+
+        $this->travel(2)->hours();
+        (function () {
+            $this->addTimestampToHeaders();
+        })->call($job);
+        $second = $job->headers;
+        $this->travelBack();
+
+        expect($second['Webhook-Timestamp'])->not->toBe($first['Webhook-Timestamp'])
+            ->and($second['Webhook-Signature'])->not->toBe($first['Webhook-Signature'])
+            ->and($second['Webhook-Signature'])->toBe('v1='.hash_hmac('sha256', "whk-1.{$second['Webhook-Timestamp']}.".json_encode(['a' => 1]), 'whsec_test'));
     });
 });

@@ -522,6 +522,7 @@ Setiap penyimpanan menjadi versi baru dan tercatat di audit.
 1. **Daftarkan klien**: nama, *sistem sumber* (tidak bisa diubah, unik per perusahaan), **scope**, *jenis transaksi yang diizinkan*, dan bila perlu **cakupan data** (nilai dimensi yang boleh dikirimnya, misalnya satu cabang). Tanpa centang, klien tidak dibatasi.
 2. **Salin Client ID dan Client secret saat itu juga.** Secret hanya tampil sekali dan tidak bisa ditampilkan lagi.
 3. **Rotasi secret** membatalkan token lama seketika. **Cabut klien** menghentikan akses.
+4. **Webhook** (opsional): isi **URL webhook** (https, host publik) agar sistem lain diberi tahu setiap kali peristiwanya berubah status (terkirim, disetujui, diposting, dan seterusnya), lalu pilih **Terbitkan secret webhook** dari menu aksi dan berikan secret itu kepada penerima. Secret tampil sekali dan menggantikan yang lama seketika, jadi penerima harus segera diberi yang baru. Kolom *Webhook* di daftar menunjukkan *Mati*, *Perlu secret*, atau *Aktif*. Webhook yang tetap gagal setelah semua percobaan tercatat di audit (`integration_client.webhook_failed`); sistem lain tetap bisa membaca perubahan lewat daftar perubahan peristiwa.
 
 Klien tidak bisa menyetujui entri. Peristiwa yang dikirim klien masuk ke alur entri dan persetujuan yang sama.
 
@@ -556,7 +557,7 @@ Pesan "diubah di tempat lain" muncul karena setiap data punya nomor versi; siste
 - **Label dan kunci Jenis Transaksi** tidak bisa diubah setelah dibuat.
 - **Sales order dan proses operasional lain** (persediaan, payroll, pajak, aset tetap) ada di sistem sumber, bukan di sini. Sistem ini mencatat dampak akuntansinya: faktur, pembayaran, dan jurnalnya.
 - **Basis akrual** saja; satu mata uang fungsional per perusahaan.
-- **Rekonsiliasi bank dari mutasi rekening**, webhook, dan konsolidasi grup belum tersedia.
+- **Rekonsiliasi bank dari mutasi rekening** dan konsolidasi grup belum tersedia.
 
 ---
 

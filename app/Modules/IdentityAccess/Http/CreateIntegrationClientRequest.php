@@ -14,8 +14,9 @@ class CreateIntegrationClientRequest extends FormRequest
      * `source_system` names the calling system and is unique per company; it cannot change later.
      * `scopes` are the OAuth scopes the client may request. `transaction_type_keys` is the allowlist
      * of transaction types it may use; empty allows none. `data_scope` limits the client to dimension
-     * values, each standing for itself and its descendants (IA-FR-03); empty means no limit. Only a
-     * user without a limit may register a client.
+     * values, each standing for itself and its descendants (IA-FR-03); empty means no limit. `webhook_url`
+     * is where the client wants its webhooks (API-TR-25); they are sent once the secret that signs them is
+     * issued with `rotate-webhook-secret`. Only a user without a limit may register a client.
      *
      * @return array<string, array<int, mixed>>
      */
@@ -28,6 +29,7 @@ class CreateIntegrationClientRequest extends FormRequest
             'scopes.*' => ['string', 'distinct', Rule::in(IntegrationScopes::all())],
             'transaction_type_keys' => ['sometimes', 'array', 'max:200'],
             'transaction_type_keys.*' => ['string', 'distinct', 'regex:'.self::TYPE_KEY],
+            'webhook_url' => ['sometimes', 'nullable', 'string', 'max:500', new WebhookUrl],
             'data_scope' => ['sometimes', 'array', 'max:200'],
             'data_scope.*' => ['string', 'distinct'],
         ];

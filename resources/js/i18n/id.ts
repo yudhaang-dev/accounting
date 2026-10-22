@@ -2648,6 +2648,13 @@ export const id = {
             unrestricted: 'Tanpa batas',
             restricted: 'Dibatasi ({{total}} nilai)',
         },
+        webhook: {
+            title: 'Webhook',
+            off: 'Mati',
+            on: 'Aktif',
+            needsSecret: 'Perlu secret',
+            issueAction: 'Terbitkan secret webhook',
+        },
         status: 'Status',
         actions: 'Aksi',
         editAction: 'Ubah',
@@ -2677,6 +2684,9 @@ export const id = {
             typeKeysHint:
                 'Key jenis transaksi, dipisah baris baru, spasi, atau koma. Kosong berarti tidak ada yang diizinkan.',
             typeKeysInvalid: 'Ada key yang formatnya tidak valid.',
+            webhookUrl: 'URL webhook',
+            webhookUrlHint:
+                'Opsional. Setiap langkah yang dialami peristiwa klien ini dikirim ke sini sebagai permintaan bertanda tangan (hanya https, host publik). Webhook mulai berjalan setelah Anda menerbitkan secret penandatangan dari menu aksi.',
             register: 'Daftarkan',
             saved: 'Klien disimpan.',
             conflict:
@@ -2692,8 +2702,21 @@ export const id = {
             copy: 'Salin {{name}}',
             done: 'Sudah saya simpan',
         },
+        webhookSecret: {
+            title: 'Secret webhook',
+            warning:
+                'Berikan secret ini kepada penerima sekarang. Secret menandatangani setiap webhook dan tidak ditampilkan lagi; menerbitkan yang baru langsung menggantikannya.',
+            label: 'Secret penandatangan',
+        },
     },
     confirm: {
+        issueWebhookSecret: {
+            title: 'Terbitkan secret webhook untuk {{name}}?',
+            first: 'Webhook ke klien ini mulai berjalan setelah secret ada. Penerima memerlukannya untuk memverifikasi webhook.',
+            replace:
+                'Secret saat ini langsung berhenti dipakai menandatangani. Webhook yang ditandatangani secret baru akan ditolak penerima yang masih memegang secret lama.',
+            action: 'Terbitkan secret',
+        },
         revokeMember: {
             title: 'Cabut akses {{name}}?',
             description:

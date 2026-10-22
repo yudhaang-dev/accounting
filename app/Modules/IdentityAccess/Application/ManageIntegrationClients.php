@@ -39,16 +39,17 @@ final class ManageIntegrationClients
      * @param  list<string>  $scopes
      * @param  list<string>  $transactionTypeKeys
      * @param  list<string>  $dataScope  dimension value IDs the client is limited to; empty for no limit
+     * @param  string|null  $webhookUrl  where the client wants its webhooks (API-TR-25); the secret that signs them is issued by `rotateWebhookSecret`
      * @return array{client: IntegrationClient, secret: string} `secret` is shown to the caller this once
      *
      * @throws ValidationException when the source system is already used in the company
      * @throws ApiException FORBIDDEN for a user who is limited, DIMENSION_INVALID for a value that is not the company's
      */
-    public function register(string $name, string $sourceSystem, array $scopes, array $transactionTypeKeys, int $actorId, array $dataScope = []): array
+    public function register(string $name, string $sourceSystem, array $scopes, array $transactionTypeKeys, int $actorId, array $dataScope = [], ?string $webhookUrl = null): array
     {
         $this->actorLimits->assertActorUnrestricted();
 
-        return DB::transaction(function () use ($name, $sourceSystem, $scopes, $transactionTypeKeys, $actorId, $dataScope): array {
+        return DB::transaction(function () use ($name, $sourceSystem, $scopes, $transactionTypeKeys, $actorId, $dataScope, $webhookUrl): array {
             $companyId = $this->company->require();
 
             $taken = IntegrationClient::query()->where('source_system', $sourceSystem)->exists();
@@ -65,6 +66,7 @@ final class ManageIntegrationClients
                 'source_system' => $sourceSystem,
                 'scopes' => $this->unique($scopes),
                 'transaction_type_keys' => $this->unique($transactionTypeKeys),
+                'webhook_url' => $webhookUrl,
                 'created_by' => $actorId,
             ])->refresh();
 
@@ -83,7 +85,7 @@ final class ManageIntegrationClients
     }
 
     /**
-     * @param  array{name?: string, scopes?: list<string>, transaction_type_keys?: list<string>, data_scope?: list<string>}  $data
+     * @param  array{name?: string, scopes?: list<string>, transaction_type_keys?: list<string>, data_scope?: list<string>, webhook_url?: string|null}  $data
      *
      * @throws ApiException VERSION_CONFLICT, INVALID_STATE_TRANSITION when revoked, FORBIDDEN for a user who is limited
      */
@@ -95,7 +97,7 @@ final class ManageIntegrationClients
             $client = $this->lock($id);
             $before = $this->snapshot($client);
 
-            $changes = array_intersect_key($data, array_flip(['name', 'scopes', 'transaction_type_keys']));
+            $changes = array_intersect_key($data, array_flip(['name', 'scopes', 'transaction_type_keys', 'webhook_url']));
 
             foreach (['scopes', 'transaction_type_keys'] as $list) {
                 if (isset($changes[$list])) {
@@ -159,6 +161,35 @@ final class ManageIntegrationClients
             );
 
             return ['client' => $client->refresh(), 'secret' => (string) $oauth->getAttribute('plain_secret')];
+        });
+    }
+
+    /**
+     * Issues the secret that signs the webhooks of the client, replacing the previous one at once. It is
+     * shown to the caller this once; the webhooks go out only when the client has both a URL and a secret.
+     *
+     * @return array{client: IntegrationClient, secret: string}
+     *
+     * @throws ApiException INVALID_STATE_TRANSITION when revoked, FORBIDDEN for a user who is limited
+     */
+    public function rotateWebhookSecret(string $id): array
+    {
+        $this->actorLimits->assertActorUnrestricted();
+
+        return DB::transaction(function () use ($id): array {
+            $client = $this->lock($id);
+            $secret = 'whsec_'.Str::random(40);
+
+            $client->forceFill(['webhook_secret' => $secret, 'lock_version' => $client->lock_version + 1])->save();
+
+            $this->audit->record(
+                'integration_client.webhook_secret_rotated',
+                "Webhook secret of integration client {$client->name} rotated.",
+                $client,
+                companyId: $client->company_id,
+            );
+
+            return ['client' => $client->refresh(), 'secret' => $secret];
         });
     }
 
@@ -233,7 +264,7 @@ final class ManageIntegrationClients
         return $values;
     }
 
-    /** @return array{name: string, source_system: string, scopes: list<string>, transaction_type_keys: list<string>, data_scope: list<string>, status: string} */
+    /** @return array{name: string, source_system: string, scopes: list<string>, transaction_type_keys: list<string>, webhook_url: string|null, data_scope: list<string>, status: string} */
     private function snapshot(IntegrationClient $client): array
     {
         return [
@@ -241,6 +272,7 @@ final class ManageIntegrationClients
             'source_system' => $client->source_system,
             'scopes' => $client->scopes,
             'transaction_type_keys' => $client->transaction_type_keys,
+            'webhook_url' => $client->webhook_url,
             'data_scope' => $this->dataScopes->valueIds([$client->id])[$client->id],
             'status' => $client->status->value,
         ];

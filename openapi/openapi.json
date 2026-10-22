@@ -8004,6 +8004,56 @@
                 }
             }
         },
+        "/companies/{companyId}/integration-clients/{id}/rotate-webhook-secret": {
+            "post": {
+                "operationId": "integration-clients.rotate-webhook-secret",
+                "summary": "Issues the secret that signs the webhooks of the client (API-TR-25), replacing the previous one at\nonce. It is shown this once; every webhook carries `Webhook-Id`, `Webhook-Timestamp` and\n`Webhook-Signature` (`v1=` and the hex HMAC-SHA256 of `{id}.{timestamp}.{body}` with this secret)",
+                "tags": [
+                    "IntegrationClient"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`IntegrationClientWithWebhookSecretResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/IntegrationClientWithWebhookSecretResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/integration-clients/{id}/revoke": {
             "post": {
                 "operationId": "integration-clients.revoke",
@@ -19856,6 +19906,13 @@
                         "maxItems": 200,
                         "uniqueItems": true
                     },
+                    "webhook_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    },
                     "data_scope": {
                         "type": "array",
                         "items": {
@@ -22042,6 +22099,16 @@
                             "type": "string"
                         }
                     },
+                    "webhook_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "webhook_enabled": {
+                        "type": "string",
+                        "description": "Webhooks go out only with a URL and a secret; the secret itself is never readable again."
+                    },
                     "data_scope": {
                         "type": "string",
                         "description": "Dimension values the client is limited to, each with its descendants; empty means no limit."
@@ -22079,6 +22146,8 @@
                     "client_id",
                     "scopes",
                     "transaction_type_keys",
+                    "webhook_url",
+                    "webhook_enabled",
                     "data_scope",
                     "status",
                     "secret_rotated_at",
@@ -22115,6 +22184,16 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    "webhook_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "webhook_enabled": {
+                        "type": "string",
+                        "description": "Webhooks go out only with a URL and a secret; the secret itself is never readable again."
                     },
                     "data_scope": {
                         "type": "string",
@@ -22157,6 +22236,8 @@
                     "client_id",
                     "scopes",
                     "transaction_type_keys",
+                    "webhook_url",
+                    "webhook_enabled",
                     "data_scope",
                     "status",
                     "secret_rotated_at",
@@ -22166,6 +22247,97 @@
                     "client_secret"
                 ],
                 "title": "IntegrationClientWithSecretResource"
+            },
+            "IntegrationClientWithWebhookSecretResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "source_system": {
+                        "type": "string"
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "description": "OAuth client ID for the token request; the secret is never readable again."
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "transaction_type_keys": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "webhook_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "webhook_enabled": {
+                        "type": "string",
+                        "description": "Webhooks go out only with a URL and a secret; the secret itself is never readable again."
+                    },
+                    "data_scope": {
+                        "type": "string",
+                        "description": "Dimension values the client is limited to, each with its descendants; empty means no limit."
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "`active` or `revoked`."
+                    },
+                    "secret_rotated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "revoked_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    },
+                    "webhook_secret": {
+                        "type": "string",
+                        "description": "Shown once. Store it now; the receiver verifies every webhook with it."
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "source_system",
+                    "client_id",
+                    "scopes",
+                    "transaction_type_keys",
+                    "webhook_url",
+                    "webhook_enabled",
+                    "data_scope",
+                    "status",
+                    "secret_rotated_at",
+                    "revoked_at",
+                    "created_at",
+                    "lock_version",
+                    "webhook_secret"
+                ],
+                "title": "IntegrationClientWithWebhookSecretResource"
             },
             "InvitationResource": {
                 "type": "object",
@@ -24798,6 +24970,13 @@
                         },
                         "maxItems": 200,
                         "uniqueItems": true
+                    },
+                    "webhook_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
                     },
                     "data_scope": {
                         "type": "array",

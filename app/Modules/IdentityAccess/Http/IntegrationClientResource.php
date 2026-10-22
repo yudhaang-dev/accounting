@@ -14,7 +14,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class IntegrationClientResource extends JsonResource
 {
     /**
-     * @return array{id: string, name: string, source_system: string, client_id: string, scopes: list<string>, transaction_type_keys: list<string>, data_scope: list<string>, status: string, secret_rotated_at: string|null, revoked_at: string|null, created_at: string|null, lock_version: int}
+     * @return array{id: string, name: string, source_system: string, client_id: string, scopes: list<string>, transaction_type_keys: list<string>, webhook_url: string|null, webhook_enabled: bool, data_scope: list<string>, status: string, secret_rotated_at: string|null, revoked_at: string|null, created_at: string|null, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -26,6 +26,9 @@ class IntegrationClientResource extends JsonResource
             'client_id' => $this->resource->oauth_client_id,
             'scopes' => $this->resource->scopes,
             'transaction_type_keys' => $this->resource->transaction_type_keys,
+            'webhook_url' => $this->resource->webhook_url,
+            // Webhooks go out only with a URL and a secret; the secret itself is never readable again.
+            'webhook_enabled' => $this->resource->webhook_url !== null && $this->resource->webhook_secret !== null,
             // Dimension values the client is limited to, each with its descendants; empty means no limit.
             'data_scope' => $this->resource->getRelation('data_scope')->all(),
             // `active` or `revoked`.
