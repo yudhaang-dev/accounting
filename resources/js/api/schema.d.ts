@@ -1734,6 +1734,33 @@ export interface paths {
         patch: operations["groups.accounts.update"];
         trace?: never;
     };
+    "/groups/{group}/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Rates of the group, newest effective date first. By default only the current version of each rate is
+         *     listed. Filters: `filter[rate_type_id]`, `filter[currency]`, `filter[from]` and `filter[to]` (effective
+         *     date), and `filter[include_superseded]=1` to list every version. `per_page` defaults to 50, at most 200
+         */
+        get: operations["groups.rates.index"];
+        put?: never;
+        /**
+         * Records the rate of a currency for a rate type and an effective date, as presentation currency per 1
+         *     unit. A different rate for the same type, currency and date is recorded as a new version (a
+         *     correction); the same rate again changes nothing and answers 200 with the existing version. The
+         *     presentation currency itself needs no rate and is refused
+         */
+        post: operations["groups.rates.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/history-imports": {
         parameters: {
             query?: never;
@@ -3015,6 +3042,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/groups/{group}/rate-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The rate types of the group, by code, inactive ones included */
+        get: operations["groups.rate-types.index"];
+        put?: never;
+        post: operations["groups.rate-types.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{group}/rate-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Renames or deactivates a type; its code never changes. A type the current translation policy names stays active */
+        patch: operations["groups.rate-types.update"];
+        trace?: never;
+    };
     "/companies/{companyId}/reconciliations": {
         parameters: {
             query?: never;
@@ -3749,6 +3810,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/groups/{group}/translation-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The latest version of the translation policy of the group; `version` 0 with no rate types when it has none */
+        get: operations["groups.translation-policy.show"];
+        /**
+         * Saves the policy as a new version (P-04). `lock_version` is the version read; another saver in between
+         *     is VERSION_CONFLICT
+         */
+        put: operations["groups.translation-policy.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/reports/trial-balance": {
         parameters: {
             query?: never;
@@ -3881,6 +3963,25 @@ export interface components {
             cancelled_on: string | null;
             cancelled_by: number | null;
             cancel_reason: string | null;
+        };
+        /** App.Modules.Consolidation.Http.CreateRateTypeRequest */
+        "App.Modules.Consolidation.Http.CreateRateTypeRequest": {
+            code: string;
+            name: string;
+        };
+        /** App.Modules.Consolidation.Http.RateTypeResource */
+        "App.Modules.Consolidation.Http.RateTypeResource": {
+            id: string;
+            code: string;
+            name: string;
+            is_active: boolean;
+            lock_version: number;
+        };
+        /** App.Modules.Consolidation.Http.UpdateRateTypeRequest */
+        "App.Modules.Consolidation.Http.UpdateRateTypeRequest": {
+            lock_version: number;
+            name?: string;
+            is_active?: boolean;
         };
         /** ApprovalPolicyResource */
         ApprovalPolicyResource: {
@@ -4590,6 +4691,18 @@ export interface components {
             package_policy: string;
             lock_version: number;
         };
+        /** GroupRateResource */
+        GroupRateResource: {
+            id: string;
+            rate_type_id: string;
+            currency: string;
+            effective_date: string;
+            rate: string;
+            version: number;
+            source: string;
+            created_by: number | null;
+            created_at: string | null;
+        };
         /** GroupResource */
         GroupResource: {
             id: string;
@@ -5152,6 +5265,15 @@ export interface components {
             /** @description Up to 12 integer and 12 decimal digits, greater than zero, as a decimal string (API-TR-05). */
             rate: string;
         };
+        /** RecordGroupRateRequest */
+        RecordGroupRateRequest: {
+            rate_type_id: string;
+            currency: string;
+            /** Format: date */
+            effective_date: string;
+            /** @description Up to 12 integer and 12 decimal digits, greater than zero, as a decimal string (API-TR-05). */
+            rate: string;
+        };
         /**
          * RecurringScheduleRequest
          * @description A recurring schedule (TE-FR-14). The template carries what an entry carries except its date, which
@@ -5341,6 +5463,21 @@ export interface components {
             };
             lock_version?: number;
         };
+        /** SaveTranslationPolicyRequest */
+        SaveTranslationPolicyRequest: {
+            /** @description The version the client read; 0 when the group has no policy yet. */
+            lock_version: number;
+            /** Format: date */
+            effective_date?: string | null;
+            /** @description Assets and liabilities. */
+            closing_rate_type_id: string;
+            /** @description Income and expenses. */
+            average_rate_type_id: string;
+            /** @description Equity. */
+            historical_rate_type_id: string;
+            /** @description The equity account of the group chart that takes the translation difference. */
+            difference_account_id: string;
+        };
         /** SecurityPolicyResource */
         SecurityPolicyResource: {
             /** @description 0 while the company has never set a policy. */
@@ -5388,6 +5525,16 @@ export interface components {
                 subledger_route: string;
             }[];
             lock_version: number;
+        };
+        /** TranslationPolicyResource */
+        TranslationPolicyResource: {
+            version: number;
+            effective_date: string;
+            closing_rate_type_id: string;
+            average_rate_type_id: string;
+            historical_rate_type_id: string;
+            difference_account_id: string;
+            created_by: number | null;
         };
         /** UpdateAccountRequest */
         UpdateAccountRequest: {
@@ -9574,6 +9721,95 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "groups.rates.index": {
+        parameters: {
+            query?: {
+                "filter[rate_type_id]"?: string;
+                "filter[currency]"?: string;
+                "filter[from]"?: string;
+                "filter[to]"?: string;
+                "filter[include_superseded]"?: boolean;
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `GroupRateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["GroupRateResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "groups.rates.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordGroupRateRequest"];
+            };
+        };
+        responses: {
+            /** @description `GroupRateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["GroupRateResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "history-imports.show": {
         parameters: {
             query?: never;
@@ -12524,6 +12760,93 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "groups.rate-types.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `App.Modules.Consolidation.Http.RateTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["App.Modules.Consolidation.Http.RateTypeResource"][];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "groups.rate-types.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["App.Modules.Consolidation.Http.CreateRateTypeRequest"];
+            };
+        };
+        responses: {
+            /** @description `App.Modules.Consolidation.Http.RateTypeResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["App.Modules.Consolidation.Http.RateTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "groups.rate-types.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["App.Modules.Consolidation.Http.UpdateRateTypeRequest"];
+            };
+        };
+        responses: {
+            /** @description `App.Modules.Consolidation.Http.RateTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["App.Modules.Consolidation.Http.RateTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "reconciliations.index": {
         parameters: {
             query?: {
@@ -14244,6 +14567,68 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.translation-policy.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            version: number;
+                            effective_date: string | null;
+                            closing_rate_type_id: string | null;
+                            average_rate_type_id: string | null;
+                            historical_rate_type_id: string | null;
+                            difference_account_id: string | null;
+                            created_by: number | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.translation-policy.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveTranslationPolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description `TranslationPolicyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TranslationPolicyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "reports.trial-balance": {

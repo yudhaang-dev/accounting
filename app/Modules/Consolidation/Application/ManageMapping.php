@@ -7,6 +7,7 @@ use App\Modules\Consolidation\Domain\GroupAccount;
 use App\Modules\Consolidation\Domain\MappingRow;
 use App\Modules\Consolidation\Domain\MappingVersion;
 use App\Modules\Consolidation\Domain\PerimeterMember;
+use App\Modules\Consolidation\Domain\TranslationPolicy;
 use App\Modules\Reporting\Contracts\ReportPackageAccount;
 use App\Modules\Reporting\Contracts\ReportPackages;
 use App\Platform\Api\ApiException;
@@ -89,6 +90,8 @@ final class ManageMapping
     {
         $members = PerimeterMember::query()->where('group_id', $groupId)->where('status', PerimeterMember::APPROVED)->pluck('company_id')->all();
         $groupAccounts = GroupAccount::query()->where('group_id', $groupId)->where('is_active', true)->get()->keyBy('id');
+        // The account that takes the translation difference is filled by translation alone (CO-FR-06).
+        $differenceAccount = TranslationPolicy::query()->where('group_id', $groupId)->orderByDesc('version')->value('difference_account_id');
         /** @var array<string, array<string, ReportPackageAccount>> $accounts */
         $accounts = [];
         $codes = [];
@@ -115,6 +118,10 @@ final class ManageMapping
 
             if ($groupAccount === null) {
                 $errors["mappings.{$index}.group_account_id"] = [__('consolidation.mapping_group_account_unknown')];
+            }
+
+            if ($groupAccount !== null && $groupAccount->id === $differenceAccount) {
+                $errors["mappings.{$index}.group_account_id"] = [__('consolidation.mapping_difference_account')];
             }
 
             if ($account !== null && $groupAccount !== null && $account->class !== $groupAccount->class) {

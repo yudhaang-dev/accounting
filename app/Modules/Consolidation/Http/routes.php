@@ -2,10 +2,13 @@
 
 use App\Modules\Consolidation\Http\GroupAccountController;
 use App\Modules\Consolidation\Http\GroupController;
+use App\Modules\Consolidation\Http\GroupRateController;
 use App\Modules\Consolidation\Http\MappingController;
 use App\Modules\Consolidation\Http\MemberAccountController;
 use App\Modules\Consolidation\Http\PerimeterController;
+use App\Modules\Consolidation\Http\RateTypeController;
 use App\Modules\Consolidation\Http\RunController;
+use App\Modules\Consolidation\Http\TranslationPolicyController;
 use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +31,14 @@ Route::prefix('groups/{group}')->where(['group' => ApiServiceProvider::ULID, 'id
     Route::get('member-accounts', [MemberAccountController::class, 'index'])->middleware('group-access:read')->name('groups.member-accounts.index');
     Route::get('account-mappings', [MappingController::class, 'show'])->middleware('group-access:read')->name('groups.account-mappings.show');
     Route::put('account-mappings', [MappingController::class, 'update'])->middleware('group-access:run')->name('groups.account-mappings.update');
+
+    Route::get('rate-types', [RateTypeController::class, 'index'])->middleware('group-access:read')->name('groups.rate-types.index');
+    Route::post('rate-types', [RateTypeController::class, 'store'])->middleware('group-access:run')->name('groups.rate-types.store');
+    Route::patch('rate-types/{id}', [RateTypeController::class, 'update'])->middleware('group-access:run')->name('groups.rate-types.update');
+    Route::get('rates', [GroupRateController::class, 'index'])->middleware('group-access:read')->name('groups.rates.index');
+    Route::post('rates', [GroupRateController::class, 'store'])->middleware('group-access:run')->name('groups.rates.store');
+    Route::get('translation-policy', [TranslationPolicyController::class, 'show'])->middleware('group-access:read')->name('groups.translation-policy.show');
+    Route::put('translation-policy', [TranslationPolicyController::class, 'update'])->middleware('group-access:run')->name('groups.translation-policy.update');
 
     Route::get('runs', [RunController::class, 'index'])->middleware('group-access:read')->name('groups.runs.index');
     Route::post('runs', [RunController::class, 'store'])->middleware('group-access:run')->name('groups.runs.store');

@@ -4,6 +4,7 @@ namespace App\Modules\Consolidation\Application;
 
 use App\Modules\Consolidation\Domain\Group;
 use App\Modules\Consolidation\Domain\GroupAccount;
+use App\Modules\Consolidation\Domain\TranslationPolicy;
 use App\Platform\Api\ApiException;
 use App\Platform\Audit\Audit;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -46,6 +47,10 @@ final class ManageGroupAccounts
         return DB::transaction(function () use ($groupId, $accountId, $changes, $expectedVersion): GroupAccount {
             $account = GroupAccount::query()->where('group_id', $groupId)->lockForUpdate()->findOrFail($accountId);
             $before = $this->snapshot($account);
+
+            if (($changes['is_active'] ?? true) === false && TranslationPolicy::query()->where('group_id', $groupId)->orderByDesc('version')->value('difference_account_id') === $account->id) {
+                throw ValidationException::withMessages(['is_active' => [__('consolidation.group_account_in_policy')]]);
+            }
 
             $account->updateLocked(array_intersect_key($changes, array_flip(['name', 'is_active'])), $expectedVersion);
 

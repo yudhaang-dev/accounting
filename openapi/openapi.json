@@ -9241,6 +9241,275 @@
                 }
             }
         },
+        "/groups/{group}/rates": {
+            "get": {
+                "operationId": "groups.rates.index",
+                "summary": "Rates of the group, newest effective date first. By default only the current version of each rate is\nlisted. Filters: `filter[rate_type_id]`, `filter[currency]`, `filter[from]` and `filter[to]` (effective\ndate), and `filter[include_superseded]=1` to list every version. `per_page` defaults to 50, at most 200",
+                "tags": [
+                    "GroupRate"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[rate_type_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[currency]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                        }
+                    },
+                    {
+                        "name": "filter[from]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[to]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[include_superseded]",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `GroupRateResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/GroupRateResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "groups.rates.store",
+                "summary": "Records the rate of a currency for a rate type and an effective date, as presentation currency per 1\nunit. A different rate for the same type, currency and date is recorded as a new version (a\ncorrection); the same rate again changes nothing and answers 200 with the existing version. The\npresentation currency itself needs no rate and is refused",
+                "tags": [
+                    "GroupRate"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RecordGroupRateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`GroupRateResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/GroupRateResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/history-imports": {
             "get": {
                 "operationId": "history-imports.show",
@@ -16952,6 +17221,169 @@
                 }
             }
         },
+        "/groups/{group}/rate-types": {
+            "get": {
+                "operationId": "groups.rate-types.index",
+                "summary": "The rate types of the group, by code, inactive ones included",
+                "tags": [
+                    "RateType"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `App.Modules.Consolidation.Http.RateTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/App.Modules.Consolidation.Http.RateTypeResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "groups.rate-types.store",
+                "tags": [
+                    "RateType"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/App.Modules.Consolidation.Http.CreateRateTypeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`App.Modules.Consolidation.Http.RateTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/App.Modules.Consolidation.Http.RateTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/groups/{group}/rate-types/{id}": {
+            "patch": {
+                "operationId": "groups.rate-types.update",
+                "summary": "Renames or deactivates a type; its code never changes. A type the current translation policy names stays active",
+                "tags": [
+                    "RateType"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/App.Modules.Consolidation.Http.UpdateRateTypeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`App.Modules.Consolidation.Http.RateTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/App.Modules.Consolidation.Http.RateTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/reconciliations": {
             "get": {
                 "operationId": "reconciliations.index",
@@ -21509,6 +21941,151 @@
                 }
             }
         },
+        "/groups/{group}/translation-policy": {
+            "get": {
+                "operationId": "groups.translation-policy.show",
+                "summary": "The latest version of the translation policy of the group; `version` 0 with no rate types when it has none",
+                "tags": [
+                    "TranslationPolicy"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "version": {
+                                                    "type": "integer"
+                                                },
+                                                "effective_date": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "closing_rate_type_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "average_rate_type_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "historical_rate_type_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "difference_account_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_by": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "version",
+                                                "effective_date",
+                                                "closing_rate_type_id",
+                                                "average_rate_type_id",
+                                                "historical_rate_type_id",
+                                                "difference_account_id",
+                                                "created_by"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "groups.translation-policy.update",
+                "summary": "Saves the policy as a new version (P-04). `lock_version` is the version read; another saver in between\nis VERSION_CONFLICT",
+                "tags": [
+                    "TranslationPolicy"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveTranslationPolicyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`TranslationPolicyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/TranslationPolicyResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/reports/trial-balance": {
             "get": {
                 "operationId": "reports.trial-balance",
@@ -22256,6 +22833,73 @@
                     "cancel_reason"
                 ],
                 "title": "AllocationResource"
+            },
+            "App.Modules.Consolidation.Http.CreateRateTypeRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9_]*$",
+                        "maxLength": 32
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "code",
+                    "name"
+                ],
+                "title": "App.Modules.Consolidation.Http.CreateRateTypeRequest"
+            },
+            "App.Modules.Consolidation.Http.RateTypeResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "is_active",
+                    "lock_version"
+                ],
+                "title": "App.Modules.Consolidation.Http.RateTypeResource"
+            },
+            "App.Modules.Consolidation.Http.UpdateRateTypeRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "lock_version"
+                ],
+                "title": "App.Modules.Consolidation.Http.UpdateRateTypeRequest"
             },
             "ApprovalPolicyResource": {
                 "type": "object",
@@ -24976,6 +25620,56 @@
                 ],
                 "title": "GroupDataResource"
             },
+            "GroupRateResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "rate_type_id": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "effective_date": {
+                        "type": "string"
+                    },
+                    "rate": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "integer"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "created_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "rate_type_id",
+                    "currency",
+                    "effective_date",
+                    "rate",
+                    "version",
+                    "source",
+                    "created_by",
+                    "created_at"
+                ],
+                "title": "GroupRateResource"
+            },
             "GroupResource": {
                 "type": "object",
                 "properties": {
@@ -27273,6 +27967,34 @@
                 ],
                 "title": "RecordExchangeRateRequest"
             },
+            "RecordGroupRateRequest": {
+                "type": "object",
+                "properties": {
+                    "rate_type_id": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$"
+                    },
+                    "effective_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "rate": {
+                        "type": "string",
+                        "description": "Up to 12 integer and 12 decimal digits, greater than zero, as a decimal string (API-TR-05).",
+                        "pattern": "^\\d{1,12}(\\.\\d{1,12})?$"
+                    }
+                },
+                "required": [
+                    "rate_type_id",
+                    "currency",
+                    "effective_date",
+                    "rate"
+                ],
+                "title": "RecordGroupRateRequest"
+            },
             "RecurringScheduleRequest": {
                 "type": "object",
                 "description": "A recurring schedule (TE-FR-14). The template carries what an entry carries except its date, which\nis the date of the occurrence: fixed values only, no formulas.",
@@ -28073,6 +28795,47 @@
                 ],
                 "title": "SaveReportDefinitionRequest"
             },
+            "SaveTranslationPolicyRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "description": "The version the client read; 0 when the group has no policy yet.",
+                        "minimum": 0
+                    },
+                    "effective_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    },
+                    "closing_rate_type_id": {
+                        "type": "string",
+                        "description": "Assets and liabilities."
+                    },
+                    "average_rate_type_id": {
+                        "type": "string",
+                        "description": "Income and expenses."
+                    },
+                    "historical_rate_type_id": {
+                        "type": "string",
+                        "description": "Equity."
+                    },
+                    "difference_account_id": {
+                        "type": "string",
+                        "description": "The equity account of the group chart that takes the translation difference."
+                    }
+                },
+                "required": [
+                    "lock_version",
+                    "closing_rate_type_id",
+                    "average_rate_type_id",
+                    "historical_rate_type_id",
+                    "difference_account_id"
+                ],
+                "title": "SaveTranslationPolicyRequest"
+            },
             "SecurityPolicyResource": {
                 "type": "object",
                 "properties": {
@@ -28222,6 +28985,45 @@
                     "lock_version"
                 ],
                 "title": "TransactionTypeResource"
+            },
+            "TranslationPolicyResource": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "integer"
+                    },
+                    "effective_date": {
+                        "type": "string"
+                    },
+                    "closing_rate_type_id": {
+                        "type": "string"
+                    },
+                    "average_rate_type_id": {
+                        "type": "string"
+                    },
+                    "historical_rate_type_id": {
+                        "type": "string"
+                    },
+                    "difference_account_id": {
+                        "type": "string"
+                    },
+                    "created_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "version",
+                    "effective_date",
+                    "closing_rate_type_id",
+                    "average_rate_type_id",
+                    "historical_rate_type_id",
+                    "difference_account_id",
+                    "created_by"
+                ],
+                "title": "TranslationPolicyResource"
             },
             "UpdateAccountRequest": {
                 "type": "object",
