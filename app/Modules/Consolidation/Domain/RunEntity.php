@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string $coverage_status
  * @property bool $balanced
  * @property array<string, mixed> $source
+ * @property array<string, mixed>|null $translation the policy version and the rates it was translated by; null when not translated
  */
 class RunEntity extends UlidModel
 {
@@ -31,6 +32,6 @@ class RunEntity extends UlidModel
 
     protected function casts(): array
     {
-        return ['coverage_from' => 'date', 'coverage_to' => 'date', 'balanced' => 'boolean', 'source' => 'array'];
+        return ['coverage_from' => 'date', 'coverage_to' => 'date', 'balanced' => 'boolean', 'source' => 'array', 'translation' => 'array'];
     }
 }

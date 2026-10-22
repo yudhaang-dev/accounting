@@ -14,6 +14,10 @@ use Brick\Math\RoundingMode;
  * accounts without a mapping. All of it comes from the rows stored with the run, never from the ledgers, so
  * it reads the same whatever has changed since (CO-FR-09).
  *
+ * An entity in another currency is translated before it is added (CO-FR-06): its rows carry the amounts in the
+ * functional currency and the rates they came from, and the difference that translation leaves is a row of its
+ * own, of kind `translation_difference`, on the equity account of the policy.
+ *
  * A group line adds the movements and the balances of its sources; the closing balance is stated as one
  * signed figure, debit minus credit, and split into the side it falls on. The result says `management_rollup`
  * and not `formal`: it is not a consolidated statement (CO-FR-05).
@@ -38,6 +42,7 @@ final class RunResult
             'status' => $run->status,
             'presentation_currency' => $run->presentation_currency,
             'mapping_version' => $run->mapping_version,
+            'translation_policy_version' => $run->translation_policy_version,
             'package_policy' => $run->package_policy,
             'coverage_status' => $run->coverage_status,
             'created_by' => $run->created_by,
@@ -97,6 +102,7 @@ final class RunResult
                 'coverage_status' => $entity->coverage_status,
                 'balanced' => $entity->balanced,
                 'source' => $entity->source,
+                'translation' => $entity->translation,
             ])->values()->all(),
             'lines' => array_values(array_map(fn (array $line): array => [
                 'group_account_id' => $line['group_account_id'],
@@ -164,7 +170,7 @@ final class RunResult
 
     /**
      * @param  int<0, max>  $scale
-     * @return array<string, string>
+     * @return array<string, array<string, mixed>|string|null>
      */
     private function source(RunBalance $balance, int $scale): array
     {
@@ -180,6 +186,8 @@ final class RunResult
             'credit' => $this->money(BigDecimal::of($balance->credit), $scale),
             'closing_debit' => $this->money(BigDecimal::of($balance->closing_debit), $scale),
             'closing_credit' => $this->money(BigDecimal::of($balance->closing_credit), $scale),
+            'kind' => $balance->kind,
+            'translation' => $balance->translation,
         ];
     }
 

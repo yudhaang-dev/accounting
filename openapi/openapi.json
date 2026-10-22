@@ -20105,6 +20105,12 @@
                                                             "null"
                                                         ]
                                                     },
+                                                    "translation_policy_version": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
                                                     "package_policy": {
                                                         "type": "string"
                                                     },
@@ -20135,6 +20141,7 @@
                                                     "status",
                                                     "presentation_currency",
                                                     "mapping_version",
+                                                    "translation_policy_version",
                                                     "package_policy",
                                                     "coverage_status",
                                                     "created_by",
@@ -20181,7 +20188,7 @@
             },
             "post": {
                 "operationId": "groups.runs.store",
-                "description": "The result is labelled `management_rollup` and is never `formal`. It is refused (422) when an entity has\nanother functional currency than the presentation currency, when a member joined or left inside the range,\nand, under the package policy `reject`, when a package is not closed or does not cover the range; under\n`draft` such a run is kept with status `draft`.",
+                "description": "The result is labelled `management_rollup` and is never `formal`. An entity in another functional currency\nis translated by the translation policy and the rates of the group, and the run is refused (422) when the group\nhas no policy or a rate it needs is missing. It is also refused when a member joined or left inside the range,\nand, under the package policy `reject`, when a package is not closed or does not cover the range; under\n`draft` such a run is kept with status `draft`.",
                 "summary": "Runs the management roll-up of the group for `from`..`to` (CO-FR-04): the packages of the entities that\nare in the perimeter for the whole range, added up per account of the group through the version of the\nmapping in force on `to`. Needs a run grant on the group, not access to the companies (CO-FR-01)",
                 "tags": [
                     "Run"
@@ -20245,6 +20252,12 @@
                                                     "type": "string"
                                                 },
                                                 "mapping_version": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "translation_policy_version": {
                                                     "type": [
                                                         "integer",
                                                         "null"
@@ -20352,6 +20365,13 @@
                                                             "source": {
                                                                 "type": "object",
                                                                 "additionalProperties": {}
+                                                            },
+                                                            "translation": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "additionalProperties": {}
                                                             }
                                                         },
                                                         "required": [
@@ -20364,7 +20384,8 @@
                                                             "coverage_granularity",
                                                             "coverage_status",
                                                             "balanced",
-                                                            "source"
+                                                            "source",
+                                                            "translation"
                                                         ]
                                                     }
                                                 },
@@ -20446,6 +20467,16 @@
                                                                         },
                                                                         "closing": {
                                                                             "type": "string"
+                                                                        },
+                                                                        "kind": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "translation": {
+                                                                            "type": [
+                                                                                "object",
+                                                                                "null"
+                                                                            ],
+                                                                            "additionalProperties": {}
                                                                         }
                                                                     },
                                                                     "required": [
@@ -20460,7 +20491,9 @@
                                                                         "credit",
                                                                         "closing_debit",
                                                                         "closing_credit",
-                                                                        "closing"
+                                                                        "closing",
+                                                                        "kind",
+                                                                        "translation"
                                                                     ]
                                                                 }
                                                             }
@@ -20519,6 +20552,16 @@
                                                             "closing_credit": {
                                                                 "type": "string"
                                                             },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "translation": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "additionalProperties": {}
+                                                            },
                                                             "reason": {
                                                                 "type": "string"
                                                             }
@@ -20535,6 +20578,8 @@
                                                             "credit",
                                                             "closing_debit",
                                                             "closing_credit",
+                                                            "kind",
+                                                            "translation",
                                                             "reason"
                                                         ]
                                                     }
@@ -20582,6 +20627,7 @@
                                                 "status",
                                                 "presentation_currency",
                                                 "mapping_version",
+                                                "translation_policy_version",
                                                 "package_policy",
                                                 "coverage_status",
                                                 "created_by",
@@ -20680,6 +20726,12 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "translation_policy_version": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "package_policy": {
                                                     "type": "string"
                                                 },
@@ -20782,6 +20834,13 @@
                                                             "source": {
                                                                 "type": "object",
                                                                 "additionalProperties": {}
+                                                            },
+                                                            "translation": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "additionalProperties": {}
                                                             }
                                                         },
                                                         "required": [
@@ -20794,7 +20853,8 @@
                                                             "coverage_granularity",
                                                             "coverage_status",
                                                             "balanced",
-                                                            "source"
+                                                            "source",
+                                                            "translation"
                                                         ]
                                                     }
                                                 },
@@ -20876,6 +20936,16 @@
                                                                         },
                                                                         "closing": {
                                                                             "type": "string"
+                                                                        },
+                                                                        "kind": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "translation": {
+                                                                            "type": [
+                                                                                "object",
+                                                                                "null"
+                                                                            ],
+                                                                            "additionalProperties": {}
                                                                         }
                                                                     },
                                                                     "required": [
@@ -20890,7 +20960,9 @@
                                                                         "credit",
                                                                         "closing_debit",
                                                                         "closing_credit",
-                                                                        "closing"
+                                                                        "closing",
+                                                                        "kind",
+                                                                        "translation"
                                                                     ]
                                                                 }
                                                             }
@@ -20949,6 +21021,16 @@
                                                             "closing_credit": {
                                                                 "type": "string"
                                                             },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "translation": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "additionalProperties": {}
+                                                            },
                                                             "reason": {
                                                                 "type": "string"
                                                             }
@@ -20965,6 +21047,8 @@
                                                             "credit",
                                                             "closing_debit",
                                                             "closing_credit",
+                                                            "kind",
+                                                            "translation",
                                                             "reason"
                                                         ]
                                                     }
@@ -21012,6 +21096,7 @@
                                                 "status",
                                                 "presentation_currency",
                                                 "mapping_version",
+                                                "translation_policy_version",
                                                 "package_policy",
                                                 "coverage_status",
                                                 "created_by",

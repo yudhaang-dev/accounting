@@ -3562,8 +3562,9 @@ export interface paths {
          * Runs the management roll-up of the group for `from`..`to` (CO-FR-04): the packages of the entities that
          *     are in the perimeter for the whole range, added up per account of the group through the version of the
          *     mapping in force on `to`. Needs a run grant on the group, not access to the companies (CO-FR-01)
-         * @description The result is labelled `management_rollup` and is never `formal`. It is refused (422) when an entity has
-         *     another functional currency than the presentation currency, when a member joined or left inside the range,
+         * @description The result is labelled `management_rollup` and is never `formal`. An entity in another functional currency
+         *     is translated by the translation policy and the rates of the group, and the run is refused (422) when the group
+         *     has no policy or a rate it needs is missing. It is also refused when a member joined or left inside the range,
          *     and, under the package policy `reject`, when a package is not closed or does not cover the range; under
          *     `draft` such a run is kept with status `draft`.
          */
@@ -13893,6 +13894,7 @@ export interface operations {
                             status: string;
                             presentation_currency: string;
                             mapping_version: number | null;
+                            translation_policy_version: number | null;
                             package_policy: string;
                             coverage_status: string;
                             created_by: number | null;
@@ -13942,6 +13944,7 @@ export interface operations {
                             status: string;
                             presentation_currency: string;
                             mapping_version: number | null;
+                            translation_policy_version: number | null;
                             package_policy: string;
                             coverage_status: string;
                             created_by: number | null;
@@ -13967,6 +13970,9 @@ export interface operations {
                                 source: {
                                     [key: string]: unknown;
                                 };
+                                translation: {
+                                    [key: string]: unknown;
+                                } | null;
                             }[];
                             lines: {
                                 group_account_id: string;
@@ -13993,6 +13999,10 @@ export interface operations {
                                     closing_debit: string;
                                     closing_credit: string;
                                     closing: string;
+                                    kind: string;
+                                    translation: {
+                                        [key: string]: unknown;
+                                    } | null;
                                 }[];
                             }[];
                             exceptions: {
@@ -14007,6 +14017,10 @@ export interface operations {
                                 credit: string;
                                 closing_debit: string;
                                 closing_credit: string;
+                                kind: string;
+                                translation: {
+                                    [key: string]: unknown;
+                                } | null;
                                 reason: string;
                             }[];
                             totals: {
@@ -14058,6 +14072,7 @@ export interface operations {
                             status: string;
                             presentation_currency: string;
                             mapping_version: number | null;
+                            translation_policy_version: number | null;
                             package_policy: string;
                             coverage_status: string;
                             created_by: number | null;
@@ -14083,6 +14098,9 @@ export interface operations {
                                 source: {
                                     [key: string]: unknown;
                                 };
+                                translation: {
+                                    [key: string]: unknown;
+                                } | null;
                             }[];
                             lines: {
                                 group_account_id: string;
@@ -14109,6 +14127,10 @@ export interface operations {
                                     closing_debit: string;
                                     closing_credit: string;
                                     closing: string;
+                                    kind: string;
+                                    translation: {
+                                        [key: string]: unknown;
+                                    } | null;
                                 }[];
                             }[];
                             exceptions: {
@@ -14123,6 +14145,10 @@ export interface operations {
                                 credit: string;
                                 closing_debit: string;
                                 closing_credit: string;
+                                kind: string;
+                                translation: {
+                                    [key: string]: unknown;
+                                } | null;
                                 reason: string;
                             }[];
                             totals: {

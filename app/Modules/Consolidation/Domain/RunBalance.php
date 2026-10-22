@@ -25,12 +25,21 @@ use App\Support\Eloquent\UlidModel;
  * @property string $credit
  * @property string $closing_debit
  * @property string $closing_credit
+ * @property string $kind `account`, or `translation_difference` for the row that takes the difference of a translated entity
+ * @property array<string, mixed>|null $translation the amounts in the functional currency and the rates they were translated by
  */
 class RunBalance extends UlidModel
 {
+    public const TRANSLATION_DIFFERENCE = 'translation_difference';
+
     public $timestamps = false;
 
     protected $table = 'co_run_balances';
 
     protected $guarded = [];
+
+    protected function casts(): array
+    {
+        return ['translation' => 'array'];
+    }
 }

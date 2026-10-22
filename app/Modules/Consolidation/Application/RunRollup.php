@@ -9,6 +9,7 @@ use App\Modules\Consolidation\Domain\PerimeterMember;
 use App\Modules\Consolidation\Domain\Run;
 use App\Modules\Consolidation\Domain\RunBalance;
 use App\Modules\Consolidation\Domain\RunEntity;
+use App\Modules\Consolidation\Domain\TranslationPolicy;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\Reporting\Contracts\ReportPackage;
 use App\Modules\Reporting\Contracts\ReportPackages;
@@ -22,13 +23,14 @@ use Illuminate\Validation\ValidationException;
 /**
  * The first stage of consolidation, the management roll-up (CO-FR-04): the packages of the entities of the
  * perimeter for one range, added up per account of the group through the version of the mapping in force at the
- * cutoff date. It is labelled a roll-up and never a consolidated statement, because nothing is translated,
- * eliminated or adjusted yet (CO-FR-05).
+ * cutoff date. It is labelled a roll-up and never a consolidated statement, because nothing is eliminated or
+ * adjusted yet (CO-FR-05).
  *
  * - Each effective entity takes part exactly once. A member who joined or left inside the range makes the
  *   perimeter ambiguous, which is not supported yet, so the run is refused (CO-AC-02).
- * - Currencies are never added across: an entity whose functional currency is not the presentation currency
- *   refuses the run until translation exists (CO-FR-06, CO-AC-03).
+ * - Currencies are never added across: an entity whose functional currency is not the presentation currency is
+ *   translated by the policy and the rates of the group, or the run is refused for lack of them (CO-FR-06,
+ *   CO-AC-03). Its translation difference is a row of its own on the equity account of the policy.
  * - An account with no mapping is kept as an exception with its balance, so the totals still add up (CO-AC-02).
  * - A package that is not closed, or does not cover the range, is flagged. The group's package policy decides
  *   whether the run is kept as a draft or refused (CO-FR-03); data that is not there is never counted as zero.
@@ -39,6 +41,7 @@ final class RunRollup
     public function __construct(
         private readonly ReportPackages $packages,
         private readonly CompanyDirectory $companies,
+        private readonly TranslatePackage $translate,
         private readonly Audit $audit,
     ) {}
 
@@ -51,7 +54,7 @@ final class RunRollup
         $members = $this->effectiveMembers($group, $from, $to);
         $packages = $this->packagesOf($members, $from, $to);
 
-        $this->assertCurrencies($group, $packages);
+        [$policy, $translated] = $this->translations($group, $members, $packages, $from, $to);
         $draft = $this->assertPolicy($group, $packages);
 
         $mapping = MappingVersion::query()->where('group_id', $group->id)->where('effective_date', '<=', $to)->orderByDesc('version')->first();
@@ -59,7 +62,7 @@ final class RunRollup
         $groupAccounts = GroupAccount::query()->where('group_id', $group->id)->get()->keyBy('id');
         $names = collect($this->companies->findMany(array_keys($packages)))->keyBy('id');
 
-        return DB::transaction(function () use ($group, $from, $to, $userId, $members, $packages, $draft, $mapping, $rows, $groupAccounts, $names): Run {
+        return DB::transaction(function () use ($group, $from, $to, $userId, $members, $packages, $draft, $mapping, $rows, $groupAccounts, $names, $policy, $translated): Run {
             $coverage = $draft ? $this->weakestCoverage($packages) : 'complete';
 
             $run = Run::create([
@@ -70,6 +73,7 @@ final class RunRollup
                 'status' => $draft ? Run::DRAFT : Run::COMPLETE,
                 'presentation_currency' => $group->presentation_currency,
                 'mapping_version' => $mapping?->version,
+                'translation_policy_version' => $policy?->version,
                 'perimeter' => array_map(fn (PerimeterMember $member): array => [
                     'member_id' => $member->id,
                     'company_id' => $member->company_id,
@@ -102,35 +106,24 @@ final class RunRollup
                     'coverage_status' => $package->coverageStatus,
                     'balanced' => $package->balanced,
                     'source' => ['references' => $package->sourceReferences, 'mapping_versions' => $package->mappingVersions],
+                    'translation' => $translated[$companyId]['translation'] ?? null,
                 ]);
 
-                // An entity with no data for the range has no balances here: nothing is invented for it.
-                $balances = $package->coverageStatus === 'unavailable' ? [] : $package->balances;
-
-                foreach (array_chunk($balances, 500) as $chunk) {
-                    RunBalance::query()->insert(array_map(function ($balance) use ($run, $companyId, $mapped): array {
+                foreach (array_chunk($this->balanceRows($package, $companyId, $translated[$companyId]['rows'] ?? null), 500) as $chunk) {
+                    RunBalance::query()->insert(array_map(function (array $balance) use ($run, $mapped, $groupAccounts, $policy): array {
                         /** @var GroupAccount|null $target */
-                        $target = $mapped["{$companyId}:{$balance->accountId}"] ?? null;
+                        $target = $balance['kind'] === RunBalance::TRANSLATION_DIFFERENCE
+                            ? $groupAccounts[$policy?->difference_account_id] ?? null
+                            : $mapped["{$balance['company_id']}:{$balance['account_id']}"] ?? null;
 
                         return [
                             'id' => (string) Str::ulid(),
                             'run_id' => $run->id,
-                            'company_id' => $companyId,
-                            'account_id' => $balance->accountId,
-                            'account_code' => $balance->code,
-                            'account_name' => $balance->name,
-                            'account_class' => $balance->class,
                             'group_account_id' => $target?->id,
                             'group_account_code' => $target?->code,
                             'group_account_name' => $target?->name,
                             'group_account_class' => $target?->class,
-                            'opening_debit' => $balance->openingDebit,
-                            'opening_credit' => $balance->openingCredit,
-                            'debit' => $balance->debit,
-                            'credit' => $balance->credit,
-                            'closing_debit' => $balance->closingDebit,
-                            'closing_credit' => $balance->closingCredit,
-                        ];
+                        ] + $balance;
                     }, $chunk));
                 }
             }
@@ -139,7 +132,7 @@ final class RunRollup
                 'group_run.created',
                 "Management roll-up of group {$group->name} for {$from}..{$to} ({$run->status}).",
                 $run,
-                after: ['status' => $run->status, 'mapping_version' => $run->mapping_version, 'entities' => array_keys($packages), 'coverage_status' => $coverage],
+                after: ['status' => $run->status, 'mapping_version' => $run->mapping_version, 'translation_policy_version' => $run->translation_policy_version, 'entities' => array_keys($packages), 'coverage_status' => $coverage],
                 properties: ['group_id' => $group->id, 'from' => $from, 'to' => $to],
                 companyId: $group->parent_company_id,
             );
@@ -202,23 +195,86 @@ final class RunRollup
     }
 
     /**
+     * The balance rows of one entity to store: as the package has them when it is in the presentation currency,
+     * or as translated. An entity with no data for the range has none: nothing is invented for it.
+     *
+     * @param  list<array<string, mixed>>|null  $translated
+     * @return list<array<string, mixed>>
+     */
+    private function balanceRows(ReportPackage $package, string $companyId, ?array $translated): array
+    {
+        if ($translated !== null) {
+            return $translated;
+        }
+
+        if ($package->coverageStatus === 'unavailable') {
+            return [];
+        }
+
+        return array_map(fn ($balance): array => [
+            'company_id' => $companyId,
+            'account_id' => $balance->accountId,
+            'account_code' => $balance->code,
+            'account_name' => $balance->name,
+            'account_class' => $balance->class,
+            'kind' => 'account',
+            'translation' => null,
+            'opening_debit' => $balance->openingDebit,
+            'opening_credit' => $balance->openingCredit,
+            'debit' => $balance->debit,
+            'credit' => $balance->credit,
+            'closing_debit' => $balance->closingDebit,
+            'closing_credit' => $balance->closingCredit,
+        ], $package->balances);
+    }
+
+    /**
+     * Translates the entities whose functional currency is not the presentation currency, by the version of the
+     * policy in force on the cutoff date. Without a policy, or without a rate it needs, the run is refused
+     * (CO-AC-03); every entity that cannot be translated is named. An entity with no data is not translated.
+     *
+     * @param  list<PerimeterMember>  $members
      * @param  array<string, ReportPackage>  $packages
+     * @return array{0: TranslationPolicy|null, 1: array<string, array{rows: list<array<string, mixed>>, translation: array<string, mixed>}>}
      *
      * @throws ValidationException
      */
-    private function assertCurrencies(Group $group, array $packages): void
+    private function translations(Group $group, array $members, array $packages, string $from, string $to): array
     {
+        $foreign = array_filter($packages, fn (ReportPackage $package): bool => $package->functionalCurrency !== $group->presentation_currency && $package->coverageStatus !== 'unavailable');
+
+        if ($foreign === []) {
+            return [null, []];
+        }
+
+        $policy = TranslationPolicy::query()->where('group_id', $group->id)->where('effective_date', '<=', $to)->orderByDesc('version')->first();
         $errors = [];
 
-        foreach ($packages as $companyId => $package) {
-            if ($package->functionalCurrency !== $group->presentation_currency) {
+        if ($policy === null) {
+            foreach ($foreign as $companyId => $package) {
                 $errors["entities.{$companyId}"] = [__('consolidation.translation_required', ['currency' => $package->functionalCurrency, 'presentation' => $group->presentation_currency])];
+            }
+
+            throw ValidationException::withMessages($errors);
+        }
+
+        $difference = GroupAccount::query()->findOrFail($policy->difference_account_id);
+        $byCompany = collect($members)->keyBy('company_id');
+        $translated = [];
+
+        foreach ($foreign as $companyId => $package) {
+            try {
+                $translated[$companyId] = ($this->translate)($group, $policy, $difference, $byCompany[$companyId], $package, $from, $to);
+            } catch (ValidationException $exception) {
+                $errors = array_merge_recursive($errors, $exception->errors());
             }
         }
 
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
+
+        return [$policy, $translated];
     }
 
     /**

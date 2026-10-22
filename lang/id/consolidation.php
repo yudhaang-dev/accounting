@@ -28,7 +28,8 @@ return [
     'rate_presentation_currency' => 'Mata uang :code adalah mata uang penyajian grup dan tidak memerlukan kurs.',
     'perimeter_changes_in_range' => 'Perusahaan bergabung atau keluar dari perimeter di dalam rentang ini. Pilih rentang yang seluruhnya ia ikuti.',
     'no_entity_in_range' => 'Tidak ada anggota grup yang sudah disetujui di perimeter untuk rentang ini.',
-    'translation_required' => 'Mata uang fungsional :currency berbeda dari mata uang penyajian :presentation. Mata uang tidak dijumlahkan langsung: translasi memerlukan kebijakan dan kurs, yang belum didukung.',
+    'translation_required' => 'Mata uang fungsional :currency berbeda dari mata uang penyajian :presentation. Mata uang tidak dijumlahkan langsung: simpan kebijakan translasi grup sebelum menjalankan.',
+    'translation_rate_missing' => 'Grup belum memiliki kurs jenis :type untuk :currency pada atau sebelum :date. Catat kurs itu sebelum menjalankan.',
     'package_not_closed' => 'Buku perusahaan belum ditutup untuk rentang ini (:status).',
     'package_coverage' => 'Buku besar perusahaan tidak mencakup rentang ini seluruhnya (:status).',
 

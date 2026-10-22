@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string $status `complete` when every package is closed and covers the range, otherwise `draft`
  * @property string $presentation_currency
  * @property int|null $mapping_version
+ * @property int|null $translation_policy_version the version of the translation policy, null when nothing was translated
  * @property list<array<string, mixed>> $perimeter
  * @property string $package_policy
  * @property string $coverage_status
@@ -40,7 +41,7 @@ class Run extends UlidModel
 
     protected function casts(): array
     {
-        return ['from_date' => 'date', 'to_date' => 'date', 'perimeter' => 'array', 'mapping_version' => 'integer'];
+        return ['from_date' => 'date', 'to_date' => 'date', 'perimeter' => 'array', 'mapping_version' => 'integer', 'translation_policy_version' => 'integer'];
     }
 
     /** @return HasMany<RunEntity, $this> */

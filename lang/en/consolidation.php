@@ -28,7 +28,8 @@ return [
     'rate_presentation_currency' => 'The currency :code is the presentation currency of the group and needs no rate.',
     'perimeter_changes_in_range' => 'The company joined or left the perimeter inside this range. Choose a range it belongs to entirely.',
     'no_entity_in_range' => 'No approved member of the group is in the perimeter for this range.',
-    'translation_required' => 'The functional currency :currency differs from the presentation currency :presentation. Currencies are not added directly: translation needs a policy and rates, which are not supported yet.',
+    'translation_required' => 'The functional currency :currency differs from the presentation currency :presentation. Currencies are not added directly: save a translation policy for the group before running.',
+    'translation_rate_missing' => 'The group has no rate of type :type for :currency on or before :date. Record it before running.',
     'package_not_closed' => 'The books of the company are not closed for this range (:status).',
     'package_coverage' => 'The ledger of the company does not cover this range completely (:status).',
 
