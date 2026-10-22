@@ -311,6 +311,10 @@ Pelunasan faktur valas pada kurs berbeda dari kurs faktur membukukan selisih ke 
 
 *Subledger → Transaksi kas* menampilkan penerimaan dan pengeluaran per rekening. Setelah bank atau perhitungan kas mengonfirmasinya, klik **Tandai cleared** dan pilih tanggalnya (tidak boleh di masa depan atau sebelum tanggal transaksi). **Batalkan tanda cleared** untuk mengembalikan.
 
+### 6.6a Kas dibayar per akun biaya
+
+*Pelaporan → Kas dibayar per biaya*. Pilih rentang tanggal lalu **Tampilkan**. Hasilnya kas yang dibayarkan kepada pemasok pada rentang itu, dipecah ke akun biaya dari tagihan yang dilunasinya sesuai proporsi barisnya; baris bukan biaya (mis. PPN masukan) tampil terpisah. Uang muka dihitung saat dialokasikan ke tagihan. Ada ekspor CSV. User yang dibatasi pada nilai dimensi tertentu tidak dapat membukanya.
+
 ### 6.7 Umur piutang dan utang
 
 *Pelaporan → Umur piutang/utang*. Pilih akun kontrol (Piutang atau Utang), tanggal **Per tanggal**, pihak, dan dasar umur (jatuh tempo atau tanggal dokumen), lalu **Tampilkan**. Hasilnya per pihak dan dokumen dalam bucket umur, dengan ekspor CSV. Klik **Bucket** untuk mengatur batas hari (mis. `30, 60, 90`); pengaturan berlaku untuk laporan berikutnya.

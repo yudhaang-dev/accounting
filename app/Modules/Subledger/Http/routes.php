@@ -5,6 +5,7 @@ use App\Modules\Subledger\Http\AgingController;
 use App\Modules\Subledger\Http\AllocationController;
 use App\Modules\Subledger\Http\BankStatementController;
 use App\Modules\Subledger\Http\CashAccountController;
+use App\Modules\Subledger\Http\CashBasisExpensesController;
 use App\Modules\Subledger\Http\CashTransactionController;
 use App\Modules\Subledger\Http\DocumentController;
 use App\Modules\Subledger\Http\OpenItemController;
@@ -94,6 +95,7 @@ Route::companyScoped(function () {
     Route::get('allocations/{id}', [AllocationController::class, 'show'])
         ->middleware('permission:allocations.read')->where('id', ApiServiceProvider::ULID)->name('allocations.show');
     Route::get('reports/aging', [AgingController::class, 'show'])->middleware('permission:reports.read')->name('reports.aging');
+    Route::get('reports/cash-basis-expenses', [CashBasisExpensesController::class, 'show'])->middleware('permission:reports.read')->name('reports.cash-basis-expenses');
     Route::get('aging-policy', [AgingController::class, 'showPolicy'])->middleware('permission:reports.read')->name('aging-policy.show');
     Route::put('aging-policy', [AgingController::class, 'updatePolicy'])->middleware('permission:aging-policy.manage')->name('aging-policy.update');
 

@@ -57,4 +57,5 @@ return [
     'opening_currency_inactive' => 'The currency :currency is not active in this company.',
     'opening_rate_required' => 'An open item in :currency needs an exchange rate.',
     'aging_buckets_ascending' => 'The buckets must be days in strictly ascending order.',
+    'cash_basis_scope_restricted' => 'A bill is not split by dimension value, so a user limited to some dimension values cannot read the cash paid on bills.',
 ];

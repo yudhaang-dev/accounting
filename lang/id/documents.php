@@ -57,4 +57,5 @@ return [
     'opening_currency_inactive' => 'Mata uang :currency tidak aktif di perusahaan ini.',
     'opening_rate_required' => 'Open item dalam :currency memerlukan kurs.',
     'aging_buckets_ascending' => 'Bucket harus berupa jumlah hari yang berurutan naik tanpa duplikat.',
+    'cash_basis_scope_restricted' => 'Tagihan tidak dipecah per nilai dimensi, sehingga user yang dibatasi pada nilai dimensi tertentu tidak dapat membaca kas yang dibayarkan atas tagihan.',
 ];

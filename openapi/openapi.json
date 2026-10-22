@@ -3618,6 +3618,136 @@
                 }
             }
         },
+        "/companies/{companyId}/reports/cash-basis-expenses": {
+            "get": {
+                "operationId": "reports.cash-basis-expenses",
+                "summary": "Cash paid to suppliers from `from` to `to`, attributed to the expense accounts of the bills it settled (RP-FR-11):\neach allocation of a payment to a payables bill dated in the range is spread over the lines of the bill's\njournal in proportion to their amounts. `accounts` are the expense accounts per dimension set; `other_accounts`\nis what went to lines that are not expenses (input tax, prepaid assets) and `unattributed` what settled a bill\nwith no lines to follow, such as an open item of the conversion date, so `total` is the cash paid on bills.\nAdvances count when they are applied. This is the cash counterpart of the accrual figures of the plan\ncomparison; payments that settle no bill and expenses paid straight from a cash account are in the direct cash\nflow instead. A user limited to some dimension values is refused, since a bill is not split by dimension value.\nWith `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)",
+                "tags": [
+                    "CashBasisExpenses"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "parameters": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "from": {
+                                                            "type": "string"
+                                                        },
+                                                        "to": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "from",
+                                                        "to"
+                                                    ]
+                                                },
+                                                "functional_currency": {
+                                                    "type": "string"
+                                                },
+                                                "accounts": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "account_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "account_code": {
+                                                                "type": "string"
+                                                            },
+                                                            "account_name": {
+                                                                "type": "string"
+                                                            },
+                                                            "dimension_set_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "cash_paid": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "account_id",
+                                                            "account_code",
+                                                            "account_name",
+                                                            "dimension_set_id",
+                                                            "cash_paid"
+                                                        ]
+                                                    }
+                                                },
+                                                "other_accounts": {
+                                                    "type": "string"
+                                                },
+                                                "unattributed": {
+                                                    "type": "string"
+                                                },
+                                                "total": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "parameters",
+                                                "functional_currency",
+                                                "accounts",
+                                                "other_accounts",
+                                                "unattributed",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/cash-transactions": {
             "get": {
                 "operationId": "cash-transactions.index",

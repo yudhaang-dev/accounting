@@ -648,6 +648,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/reports/cash-basis-expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cash paid to suppliers from `from` to `to`, attributed to the expense accounts of the bills it settled (RP-FR-11):
+         *     each allocation of a payment to a payables bill dated in the range is spread over the lines of the bill's
+         *     journal in proportion to their amounts. `accounts` are the expense accounts per dimension set; `other_accounts`
+         *     is what went to lines that are not expenses (input tax, prepaid assets) and `unattributed` what settled a bill
+         *     with no lines to follow, such as an open item of the conversion date, so `total` is the cash paid on bills.
+         *     Advances count when they are applied. This is the cash counterpart of the accrual figures of the plan
+         *     comparison; payments that settle no bill and expenses paid straight from a cash account are in the direct cash
+         *     flow instead. A user limited to some dimension values is refused, since a bill is not split by dimension value.
+         *     With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)
+         */
+        get: operations["reports.cash-basis-expenses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/cash-transactions": {
         parameters: {
             query?: never;
@@ -6810,6 +6837,50 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "reports.cash-basis-expenses": {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            parameters: {
+                                from: string;
+                                to: string;
+                            };
+                            functional_currency: string;
+                            accounts: {
+                                account_id: string;
+                                account_code: string;
+                                account_name: string;
+                                dimension_set_id: string;
+                                cash_paid: string;
+                            }[];
+                            other_accounts: string;
+                            unattributed: string;
+                            total: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "cash-transactions.index": {

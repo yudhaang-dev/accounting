@@ -86,6 +86,7 @@ import { PlanVersionPage } from '@/modules/planning/pages/plan-version-page';
 import { PlansPage } from '@/modules/planning/pages/plans-page';
 import { versionQuery } from '@/modules/planning/plans';
 import { AgingPage } from '@/modules/subledger/pages/aging-page';
+import { CashBasisPage } from '@/modules/subledger/pages/cash-basis-page';
 import { ReconciliationsPage } from '@/modules/subledger/pages/reconciliations-page';
 import { PostingProfilesPage } from '@/modules/subledger/pages/posting-profiles-page';
 import { ForgotPasswordPage } from '@/modules/identity-access/pages/forgot-password-page';
@@ -1690,6 +1691,26 @@ const agingRoute = createRoute({
     },
 });
 
+const cashBasisRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/reports/cash-basis-expenses',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'breadcrumb.reports' },
+            {
+                labelKey: 'app.navCashBasis',
+                href: at(m, '/reports/cash-basis-expenses'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('reports.read'),
+    component: function CashBasisScreen() {
+        const { workspace } = cashBasisRoute.useRouteContext();
+
+        return <CashBasisPage companyId={workspace.company_id} />;
+    },
+});
+
 const plansRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/plans',
@@ -1949,6 +1970,7 @@ const routeTree = rootRoute.addChildren([
                 cashFlowRoute,
                 equityChangesRoute,
                 agingRoute,
+                cashBasisRoute,
                 plansRoute,
                 planVersionRoute,
                 membersRoute,
