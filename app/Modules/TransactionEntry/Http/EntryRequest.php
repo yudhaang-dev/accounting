@@ -38,6 +38,8 @@ class EntryRequest extends FormRequest
             'exchange_rate' => ['nullable', 'string', 'max:40'],
             'lines.*.currency' => ['nullable', 'string', 'regex:/^[A-Z]{3}$/'],
             'lines.*.exchange_rate' => ['nullable', 'string', 'max:40'],
+            // The other group company of an intragroup line, for the elimination of a consolidation (GL-FR-15).
+            'lines.*.counterparty_company_id' => ['nullable', 'string', 'size:26'],
             // Field name => value, by the field schema of the version (TE-FR-04).
             'values' => ['sometimes', 'array'],
         ];

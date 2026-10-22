@@ -265,6 +265,7 @@ final class EntryWorkflow
                 dimensions: $line['dimensions'] ?? [],
                 exchangeRate: $line['exchange_rate'] ?? null,
                 rateTypeKey: $line['rate_type_key'] ?? null,
+                counterpartyCompanyId: $line['counterparty_company_id'] ?? null,
             ), $entry->lines),
             documentDate: $entry->document_date?->toDateString(),
             transactionTypeKey: $entry->transaction_type_key,

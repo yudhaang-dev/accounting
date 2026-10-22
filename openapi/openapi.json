@@ -24826,6 +24826,15 @@
                                         "null"
                                     ],
                                     "maxLength": 40
+                                },
+                                "counterparty_company_id": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "description": "The other group company of an intragroup line, for the elimination of a consolidation (GL-FR-15).",
+                                    "minLength": 26,
+                                    "maxLength": 26
                                 }
                             },
                             "required": [
@@ -24956,6 +24965,12 @@
                                         "string",
                                         "null"
                                     ]
+                                },
+                                "counterparty_company_id": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
                                 }
                             },
                             "required": [
@@ -24966,7 +24981,8 @@
                                 "dimensions",
                                 "currency",
                                 "exchange_rate",
-                                "applied_rate"
+                                "applied_rate",
+                                "counterparty_company_id"
                             ]
                         }
                     },
@@ -29579,6 +29595,15 @@
                                         "null"
                                     ],
                                     "maxLength": 40
+                                },
+                                "counterparty_company_id": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "description": "The other group company of an intragroup line, for the elimination of a consolidation (GL-FR-15).",
+                                    "minLength": 26,
+                                    "maxLength": 26
                                 }
                             },
                             "required": [
@@ -30551,6 +30576,14 @@
                                 },
                                 "reuses_field": {
                                     "type": "boolean"
+                                },
+                                "counterparty_party_field": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "description": "The party field whose group company the line carries as its counterparty (GL-FR-15).",
+                                    "maxLength": 64
                                 }
                             },
                             "required": [

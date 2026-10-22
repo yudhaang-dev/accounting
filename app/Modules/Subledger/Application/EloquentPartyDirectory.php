@@ -17,6 +17,6 @@ final class EloquentPartyDirectory implements PartyDirectory
         $party = Party::query()->withoutGlobalScope(CompanyScope::class)
             ->where('company_id', $companyId)->whereKey($partyId)->first();
 
-        return $party === null ? null : new PartyData($party->id, $party->name, $party->is_customer, $party->is_supplier, $party->isActive());
+        return $party === null ? null : new PartyData($party->id, $party->name, $party->is_customer, $party->is_supplier, $party->isActive(), $party->counterparty_company_id);
     }
 }

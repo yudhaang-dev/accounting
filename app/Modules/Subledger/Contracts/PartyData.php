@@ -10,5 +10,6 @@ final readonly class PartyData
         public bool $isCustomer,
         public bool $isSupplier,
         public bool $isActive,
+        public ?string $counterpartyCompanyId = null,
     ) {}
 }

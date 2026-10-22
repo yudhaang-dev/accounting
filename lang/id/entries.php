@@ -56,6 +56,7 @@ return [
     'schedule_nothing_to_skip' => 'Jadwal tidak memiliki tanggal yang tersisa untuk dilewati.',
     'schedule_end_before_start' => 'Tanggal akhir tidak boleh sebelum tanggal mulai.',
     'rule_party_field_unknown' => 'Field pihak pada aturan harus berupa field pihak dari versi ini.',
+    'rule_counterparty_field_unknown' => 'Field lawan transaksi pada aturan harus berupa field pihak dari versi ini.',
     'rule_cash_field_unknown' => 'Field rekening kas pada aturan harus berupa field rekening kas dari versi ini.',
     'rule_route_required' => 'Aturan yang memposting ke akun kontrol atau rekening kas memerlukan rute subledger pada versi.',
     'rule_party_field_route' => 'Aturan akun kontrol memakai field pihak dari rute, :field.',

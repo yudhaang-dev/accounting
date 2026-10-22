@@ -21,7 +21,7 @@ use Illuminate\Validation\ValidationException;
  * Creates and edits draft entries (TE-FR-07). A draft is only checked for shape; the full validation
  * of accounts, period and balance happens on submit and again on posting (TE-FR-08).
  *
- * @phpstan-type LineInput array{account_id: string, debit?: string|null, credit?: string|null, description?: string|null, dimensions?: array<string, string|null>|null, currency?: string|null, exchange_rate?: string|null}
+ * @phpstan-type LineInput array{account_id: string, debit?: string|null, credit?: string|null, description?: string|null, dimensions?: array<string, string|null>|null, currency?: string|null, exchange_rate?: string|null, counterparty_company_id?: string|null}
  * @phpstan-type EntryInput array{accounting_date: string, document_date?: string|null, description: string, currency?: string|null, exchange_rate?: string|null, auto_reverse_on?: string|null, replaces_entry_id?: string|null, lines?: list<LineInput>, values?: array<string, mixed>}
  */
 final class EntryDrafts
@@ -255,6 +255,6 @@ final class EntryDrafts
             'dimensions' => array_filter($line['dimensions'] ?? [], fn (?string $valueId): bool => $valueId !== null),
             'currency' => $this->rates->foreign($line['currency'] ?? null),
             'exchange_rate' => $this->rates->foreign($line['currency'] ?? null) === null ? null : ($line['exchange_rate'] ?? null),
-        ], $lines);
+        ] + (($line['counterparty_company_id'] ?? null) === null ? [] : ['counterparty_company_id' => $line['counterparty_company_id']]), $lines);
     }
 }

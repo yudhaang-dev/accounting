@@ -4484,6 +4484,8 @@ export interface components {
                 dimensions?: (string | null)[];
                 currency?: string | null;
                 exchange_rate?: string | null;
+                /** @description The other group company of an intragroup line, for the elimination of a consolidation (GL-FR-15). */
+                counterparty_company_id?: string | null;
             }[];
             /**
              * Format: date
@@ -4519,6 +4521,7 @@ export interface components {
                 currency: string | null;
                 exchange_rate: string | null;
                 applied_rate: string | null;
+                counterparty_company_id: string | null;
             }[];
             values: {
                 [key: string]: unknown;
@@ -5647,6 +5650,8 @@ export interface components {
                 dimensions?: (string | null)[];
                 currency?: string | null;
                 exchange_rate?: string | null;
+                /** @description The other group company of an intragroup line, for the elimination of a consolidation (GL-FR-15). */
+                counterparty_company_id?: string | null;
             }[];
             /**
              * Format: date
@@ -5838,6 +5843,8 @@ export interface components {
                 } | null;
                 apply_dimensions?: boolean;
                 reuses_field?: boolean;
+                /** @description The party field whose group company the line carries as its counterparty (GL-FR-15). */
+                counterparty_party_field?: string | null;
             }[];
             /** @description The document an entry of the version records in the subledger (TE-FR-10); how it fits the fields and rules is checked by the application layer. */
             subledger_route?: {

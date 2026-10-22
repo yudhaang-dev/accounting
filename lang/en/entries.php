@@ -56,6 +56,7 @@ return [
     'schedule_nothing_to_skip' => 'The schedule has no date left to skip.',
     'schedule_end_before_start' => 'The end date cannot be before the start date.',
     'rule_party_field_unknown' => 'The party field of a rule must be a party field of this version.',
+    'rule_counterparty_field_unknown' => 'The counterparty field of a rule must be a party field of this version.',
     'rule_cash_field_unknown' => 'The cash account field of a rule must be a cash account field of this version.',
     'rule_route_required' => 'A rule that posts to a control account or a cash account needs the subledger route of the version.',
     'rule_party_field_route' => 'A control account rule uses the party field of the route, :field.',

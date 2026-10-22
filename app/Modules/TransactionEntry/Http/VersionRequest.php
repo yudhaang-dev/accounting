@@ -46,6 +46,8 @@ class VersionRequest extends FormRequest
             'posting_rules.*.account.party_field' => ['sometimes', 'string', 'max:64'],
             'posting_rules.*.apply_dimensions' => ['sometimes', 'boolean'],
             'posting_rules.*.reuses_field' => ['sometimes', 'boolean'],
+            // The party field whose group company the line carries as its counterparty (GL-FR-15).
+            'posting_rules.*.counterparty_party_field' => ['sometimes', 'nullable', 'string', 'max:64'],
             // The document an entry of the version records in the subledger (TE-FR-10); how it fits the fields and rules is checked by the application layer.
             'subledger_route' => ['sometimes', 'nullable', 'array'],
             'subledger_route.kind' => ['required_with:subledger_route', 'string', 'max:32'],

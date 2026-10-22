@@ -11,8 +11,12 @@ namespace App\Modules\TransactionEntry\Domain;
  * account of the party in a `party` field (which needs the subledger route of the version), or from the
  * ledger account of the cash account in a `cash_account` field (TE-FR-05).
  *
+ * A line carries the group company of a party as its counterparty (GL-FR-15): the control account line always
+ * does, and any other line does when its rule names the `party` field in `counterparty_party_field`. A party
+ * without a group company leaves the line without one.
+ *
  * @phpstan-type AccountSource array{source: string, account_id?: string, field?: string, party_field?: string}
- * @phpstan-type RuleLine array{type: string, side?: string, amount_field?: string, account?: AccountSource, apply_dimensions: bool, reuses_field: bool}
+ * @phpstan-type RuleLine array{type: string, side?: string, amount_field?: string, account?: AccountSource, apply_dimensions: bool, reuses_field: bool, counterparty_party_field?: string}
  */
 final class PostingRules
 {

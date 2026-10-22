@@ -21,7 +21,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $accounting_date
  * @property Carbon|null $document_date
  * @property string $description
- * @property list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions?: array<string, string>, currency?: string|null, exchange_rate?: string|null, applied_rate?: string|null, rate_type_key?: string|null}> $lines
+ * @property list<array{account_id: string, debit: string, credit: string, description: string|null, dimensions?: array<string, string>, currency?: string|null, exchange_rate?: string|null, applied_rate?: string|null, rate_type_key?: string|null, counterparty_company_id?: string|null}> $lines
  * @property array<string, mixed>|null $field_values values of the fields of a `structured` version; null for `free_lines`
  * @property string|null $currency currency of a structured entry; null for the functional currency
  * @property string|null $exchange_rate the rate a structured entry brought, if it did

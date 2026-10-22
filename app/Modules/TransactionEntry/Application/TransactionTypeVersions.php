@@ -301,6 +301,12 @@ final class TransactionTypeVersions
                 $errors["posting_rules.{$index}.account"] = [__('entries.rule_account_required')];
             }
 
+            $counterpartyField = $rule['counterparty_party_field'] ?? null;
+
+            if ($counterpartyField !== null && (! is_string($counterpartyField) || ($typeOf[$counterpartyField] ?? null) !== FieldType::Party->value)) {
+                $errors["posting_rules.{$index}.counterparty_party_field"] = [__('entries.rule_counterparty_field_unknown')];
+            }
+
             $stored[] = [
                 'type' => PostingRules::AMOUNT,
                 'side' => (string) $side,
@@ -308,7 +314,7 @@ final class TransactionTypeVersions
                 'account' => $storedAccount ?? ['source' => ''],
                 'apply_dimensions' => $applyDimensions,
                 'reuses_field' => $reuses,
-            ];
+            ] + (is_string($counterpartyField) ? ['counterparty_party_field' => $counterpartyField] : []);
         }
 
         if ($errors !== []) {

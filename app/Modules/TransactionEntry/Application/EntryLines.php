@@ -30,7 +30,7 @@ use LogicException;
  *
  * @phpstan-import-type RuleLine from PostingRules
  *
- * @phpstan-type Line array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>, currency?: string|null, exchange_rate?: string|null, applied_rate?: string|null, rate_type_key?: string|null}
+ * @phpstan-type Line array{account_id: string, debit: string, credit: string, description: string|null, dimensions: array<string, string>, currency?: string|null, exchange_rate?: string|null, applied_rate?: string|null, rate_type_key?: string|null, counterparty_company_id?: string|null}
  */
 final class EntryLines
 {
@@ -93,7 +93,7 @@ final class EntryLines
             $functional = $lineApplied === null ? $amount : $this->rates->toFunctional($amount, $lineApplied['rate']);
             $balance = $debit ? $balance->plus($functional) : $balance->minus($functional);
 
-            $lines[$index] = $this->line($accountId, $amount, $debit, $dimensionsOf)
+            $lines[$index] = $this->line($accountId, $amount, $debit, $dimensionsOf, $this->counterpartyOf($rule, $values))
                 + ($lineCurrency === null ? [] : ['currency' => $lineCurrency, 'exchange_rate' => $lineInput, 'applied_rate' => $lineApplied['rate'] ?? null, 'rate_type_key' => $lineApplied['rate_type_key'] ?? null]);
         }
 
@@ -238,10 +238,30 @@ final class EntryLines
     }
 
     /**
+     * The group company of the party the line is about (GL-FR-15): the party of the control account of the rule,
+     * or the one its `counterparty_party_field` names. Null when there is no such party or it has no group company.
+     *
+     * @param  RuleLine  $rule
+     * @param  array<string, mixed>  $values
+     */
+    private function counterpartyOf(array $rule, array $values): ?string
+    {
+        $source = $rule['account'] ?? [];
+        $field = ($source['source'] ?? null) === PostingRules::CONTROL_ACCOUNT ? ($source['party_field'] ?? null) : ($rule['counterparty_party_field'] ?? null);
+        $partyId = $field === null ? null : ($values[$field] ?? null);
+
+        if (! is_string($partyId) || $partyId === '') {
+            return null;
+        }
+
+        return $this->parties->find($this->company->require(), $partyId)?->counterpartyCompanyId;
+    }
+
+    /**
      * @param  array<string, string>  $dimensions
      * @return Line
      */
-    private function line(string $accountId, BigDecimal $amount, bool $debit, array $dimensions): array
+    private function line(string $accountId, BigDecimal $amount, bool $debit, array $dimensions, ?string $counterparty = null): array
     {
         return [
             'account_id' => $accountId,
@@ -249,6 +269,6 @@ final class EntryLines
             'credit' => $debit ? '0' : (string) $amount,
             'description' => null,
             'dimensions' => $dimensions,
-        ];
+        ] + ($counterparty === null ? [] : ['counterparty_company_id' => $counterparty]);
     }
 }
