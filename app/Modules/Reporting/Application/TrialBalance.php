@@ -41,7 +41,7 @@ final class TrialBalance
      * balance batch the ledger started from, if any.
      *
      * @param  list<string>  $adjustmentKeys
-     * @return array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, balanced: bool, totals: array<string, string>, rows: list<array<string, string>>, conversion_batch: array<string, string|null>|null, workpaper?: array<string, mixed>}
+     * @return array{parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, balanced: bool, coverage_from: string|null, coverage_to: string|null, coverage_granularity: string, coverage_status: string, totals: array<string, string>, rows: list<array<string, string>>, conversion_batch: array<string, string|null>|null, workpaper?: array<string, mixed>}
      */
     public function __invoke(string $companyId, string $from, string $to, ?ReportFilter $filter = null, ?DataScope $scope = null, array $adjustmentKeys = []): array
     {
