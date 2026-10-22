@@ -21,12 +21,14 @@ Konsolidasi dikerjakan dalam tiga tahap yang dapat dikirim terpisah. Tiap tahap 
 - Penyesuaian dan eliminasi hanya ada di tabel `co_`; tidak ada jalur ke `GeneralLedger` (CO-AC-04, diuji dengan arch test dan test hitung baris jurnal).
 - Run tidak pernah dimutasi. Perubahan perimeter, pemetaan, atau sumber membuat run baru yang mencatat versi paket, pemetaan, dan perimeter (CO-FR-09, X-FR-03).
 
-### Keputusan terbuka untuk akuntan
+### Keputusan Tahap B (2026-10-22)
 
-- Kebijakan translasi: kurs penutup, kurs rata-rata, dan akun ekuitas historis; perlakuan selisih translasi.
-- Toleransi pencocokan eliminasi dan perlakuan selisih pasangan.
-- Apakah struktur bertingkat dan kepentingan nonpengendali masuk Tahap B atau tetap di luar cakupan.
-- Kebijakan grup untuk paket berstatus periode belum ditutup atau cakupan histori parsial: `draft` saja atau ditolak (CO-FR-03).
+Diputuskan pemilik produk atas empat pertanyaan yang diajukan sebagai keputusan akuntan. Akuntan perusahaan tetap meninjaunya sebelum hasil Tahap B dipakai sebagai laporan formal; perubahan atasnya memerlukan ADR baru.
+
+- **Translasi (CO-FR-06).** Aset dan liabilitas memakai kurs penutup, pendapatan dan beban kurs rata-rata periode, ekuitas kurs historis. Selisih translasi masuk akun ekuitas khusus di bagan akun grup. Kebijakan, jenis kurs, kurs, dan versinya disimpan agar hasil dapat direproduksi.
+- **Eliminasi (CO-FR-07).** Toleransi nominal per grup, dalam mata uang penyajian. Pasangan yang selisihnya di dalam toleransi dianggap cocok; di atasnya menjadi pengecualian. Selisih tidak pernah dihapus otomatis. Perlakuan sisa selisih di dalam toleransi belum diputuskan; diusulkan tampil sebagai baris selisih eliminasi di laporan eliminasi, ditetapkan saat B-05f3.
+- **Struktur kepemilikan (CO-FR-05).** Satu induk dengan kendali penuh. Struktur bertingkat dan kepentingan nonpengendali tetap di luar cakupan; grup yang membutuhkannya tidak diberi label laporan formal.
+- **Paket belum ditutup atau parsial (CO-FR-03).** Run formal boleh dibuat dengan penanda draf, tetapi tidak boleh dipublikasikan sebagai laporan formal sebelum semua paketnya tertutup dan lengkap. Ini lebih longgar daripada usulan semula (hanya paket tertutup dan lengkap); kebijakan `package_policy` per grup tetap berlaku di atasnya.
 
 ## Konsekuensi
 
