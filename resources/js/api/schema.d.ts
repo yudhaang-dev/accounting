@@ -3930,6 +3930,8 @@ export interface components {
             tax_id?: string | null;
             /** @description The profile deciding its control accounts; empty means the default profile (SL-FR-02). */
             posting_profile_id?: string | null;
+            /** @description The group company this party is, for intragroup elimination (GL-FR-15); stored as given. */
+            counterparty_company_id?: string | null;
             /** @description How source systems refer to this party; one reference belongs to one party per source system. */
             external_refs?: {
                 source_system: string;
@@ -4544,6 +4546,7 @@ export interface components {
                     [key: string]: string;
                 };
                 description: string | null;
+                counterparty_company_id: string | null;
             }[];
         };
         /**
@@ -4677,6 +4680,7 @@ export interface components {
             is_supplier: boolean;
             tax_id: string | null;
             posting_profile_id: string | null;
+            counterparty_company_id: string | null;
             status: string;
             external_refs: {
                 source_system: string;
@@ -5208,6 +5212,7 @@ export interface components {
             tax_id?: string | null;
             /** @description The profile deciding its control accounts; empty means the default profile (SL-FR-02). */
             posting_profile_id?: string | null;
+            counterparty_company_id?: string | null;
             external_refs?: {
                 source_system: string;
                 external_ref: string;

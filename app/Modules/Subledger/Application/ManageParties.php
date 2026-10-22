@@ -19,7 +19,7 @@ use Illuminate\Validation\ValidationException;
  */
 final class ManageParties
 {
-    private const FIELDS = ['name', 'is_customer', 'is_supplier', 'tax_id', 'posting_profile_id'];
+    private const FIELDS = ['name', 'is_customer', 'is_supplier', 'tax_id', 'posting_profile_id', 'counterparty_company_id'];
 
     public function __construct(private readonly Audit $audit) {}
 

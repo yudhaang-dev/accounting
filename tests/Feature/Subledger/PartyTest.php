@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Platform\Audit\AuditEntry;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 
 beforeEach(function () {
@@ -31,6 +32,20 @@ describe('parties (SL-FR-01)', function () {
             ->and($both->json('data.is_customer'))->toBeTrue()->and($both->json('data.is_supplier'))->toBeTrue()
             ->and($supplier->json('data.is_customer'))->toBeFalse()->and($supplier->json('data.is_supplier'))->toBeTrue()
             ->and(AuditEntry::where('event', 'party.created')->where('company_id', $this->companyId)->count())->toBe(3);
+    });
+
+    it('keeps the group company a party stands for as an opaque reference (GL-FR-15)', function () {
+        $other = (string) Str::ulid();
+
+        $party = createParty(['counterparty_company_id' => $other])->assertCreated();
+
+        expect($party->json('data.counterparty_company_id'))->toBe($other);
+
+        $this->actingAs($this->admin)->patchJson("{$this->url}/parties/{$party->json('data.id')}", ['lock_version' => 1, 'counterparty_company_id' => null])
+            ->assertOk()
+            ->assertJsonPath('data.counterparty_company_id', null);
+
+        createParty(['counterparty_company_id' => 'abc'])->assertUnprocessable()->assertJsonValidationErrors(['counterparty_company_id']);
     });
 
     it('rejects a party without a role', function () {

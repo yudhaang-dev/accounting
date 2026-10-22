@@ -31,6 +31,7 @@ use Brick\Math\RoundingMode;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
@@ -95,6 +96,7 @@ final class EloquentPostingValidator implements PostingValidator
         $this->currencies($command, $accounts, $company->functionalCurrency);
         $setIds = $this->dimensions($command);
         $this->dimensionRequirements($command, $accounts, $setIds);
+        $this->counterparties($command);
 
         $lines = [];
 
@@ -103,12 +105,36 @@ final class EloquentPostingValidator implements PostingValidator
                 'account_id' => $line->accountId,
                 'description' => $line->description,
                 'dimension_set_id' => $setIds[$index],
+                'counterparty_company_id' => $line->counterpartyCompanyId,
             ];
         }
 
         $lines = $this->balance($command, $lines, $company->functionalCurrency);
 
         return new ResolvedPosting($periodId, $company->functionalCurrency, $lines, $overridden === [] ? null : trim((string) $command->sourceOverrideReason), $overridden);
+    }
+
+    /**
+     * The counterparty of a line must look like a company ID and not be this company (GL-FR-15). Whether it
+     * is a company of the same group is not the ledger's to say: it is stored as given.
+     *
+     * @throws ValidationException
+     */
+    private function counterparties(PostJournal $command): void
+    {
+        $errors = [];
+
+        foreach ($command->lines as $index => $line) {
+            $id = $line->counterpartyCompanyId;
+
+            if ($id !== null && (! Str::isUlid($id) || strcasecmp($id, $command->companyId) === 0)) {
+                $errors["lines.{$index}.counterparty_company_id"] = [__('ledger.counterparty_invalid')];
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
     }
 
     /**

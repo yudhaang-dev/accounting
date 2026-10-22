@@ -21458,6 +21458,13 @@
                         "minLength": 26,
                         "maxLength": 26
                     },
+                    "counterparty_company_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The group company this party is, for intragroup elimination (GL-FR-15); stored as given."
+                    },
                     "external_refs": {
                         "type": "array",
                         "description": "How source systems refer to this party; one reference belongs to one party per source system.",
@@ -24030,6 +24037,12 @@
                                         "string",
                                         "null"
                                     ]
+                                },
+                                "counterparty_company_id": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
                                 }
                             },
                             "required": [
@@ -24042,7 +24055,8 @@
                                 "exchange_rate",
                                 "dimension_set_id",
                                 "dimensions",
-                                "description"
+                                "description",
+                                "counterparty_company_id"
                             ]
                         }
                     }
@@ -24546,6 +24560,12 @@
                             "null"
                         ]
                     },
+                    "counterparty_company_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "status": {
                         "type": "string"
                     },
@@ -24578,6 +24598,7 @@
                     "is_supplier",
                     "tax_id",
                     "posting_profile_id",
+                    "counterparty_company_id",
                     "status",
                     "external_refs",
                     "lock_version"
@@ -26730,6 +26751,12 @@
                         "description": "The profile deciding its control accounts; empty means the default profile (SL-FR-02).",
                         "minLength": 26,
                         "maxLength": 26
+                    },
+                    "counterparty_company_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "external_refs": {
                         "type": "array",

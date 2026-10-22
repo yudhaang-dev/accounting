@@ -20,6 +20,7 @@ return [
     'dimension_required' => 'Akun :account mewajibkan nilai untuk dimensi :type.',
     'dimension_forbidden' => 'Akun :account tidak mengizinkan dimensi :type.',
     'dimension_set_unknown' => 'Set dimensi tidak ada di perusahaan ini.',
+    'counterparty_invalid' => 'Pihak lawan harus berupa ID perusahaan lain, bukan perusahaan ini.',
     'currency_inactive' => 'Mata uang :currency belum diaktifkan untuk perusahaan ini.',
     'rate_invalid' => 'Kurs harus berupa bilangan desimal positif dengan paling banyak 12 desimal.',
     'rate_required' => 'Baris dalam :currency memerlukan exchange_rate atau rate_type_key.',

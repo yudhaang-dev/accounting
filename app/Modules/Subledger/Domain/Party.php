@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property bool $is_supplier
  * @property string|null $tax_id
  * @property string|null $posting_profile_id
+ * @property string|null $counterparty_company_id
  * @property PartyStatus $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -27,7 +28,7 @@ class Party extends VersionedCompanyModel
 
     protected $attributes = ['status' => 'active', 'is_customer' => false, 'is_supplier' => false];
 
-    protected $fillable = ['name', 'is_customer', 'is_supplier', 'tax_id', 'posting_profile_id', 'status'];
+    protected $fillable = ['name', 'is_customer', 'is_supplier', 'tax_id', 'posting_profile_id', 'counterparty_company_id', 'status'];
 
     protected function casts(): array
     {

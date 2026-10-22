@@ -106,6 +106,7 @@ final class EloquentPostingService implements PostingService
                     'rate_date' => $line['rate_date'],
                     'dimension_set_id' => $line['dimension_set_id'],
                     'description' => $line['description'],
+                    'counterparty_company_id' => $line['counterparty_company_id'] ?? null,
                 ]);
 
                 $movements[] = [
@@ -220,6 +221,7 @@ final class EloquentPostingService implements PostingService
                     'rate_date' => $line->rate_date,
                     'dimension_set_id' => $line->dimension_set_id,
                     'description' => $line->description,
+                    'counterparty_company_id' => $line->counterparty_company_id,
                 ]);
 
                 $movements[] = [

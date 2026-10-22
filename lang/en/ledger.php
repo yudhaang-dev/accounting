@@ -20,6 +20,7 @@ return [
     'dimension_required' => 'Account :account requires a value for the dimension :type.',
     'dimension_forbidden' => 'Account :account does not allow the dimension :type.',
     'dimension_set_unknown' => 'The dimension set does not exist in this company.',
+    'counterparty_invalid' => 'The counterparty must be the ID of another company, not this one.',
     'currency_inactive' => 'The currency :currency is not activated for this company.',
     'rate_invalid' => 'The exchange rate must be a positive decimal number with at most 12 decimals.',
     'rate_required' => 'A line in :currency needs an exchange_rate or a rate_type_key.',

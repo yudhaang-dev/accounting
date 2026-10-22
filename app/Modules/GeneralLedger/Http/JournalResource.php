@@ -15,7 +15,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class JournalResource extends JsonResource
 {
     /**
-     * @return array{id: string, number: string, accounting_date: string, period_id: string, document_date: string|null, description: string, source: string, transaction_type_key: string|null, transaction_type_version: int|null, references: array<string, mixed>|null, reverses_journal_id: string|null, entry_id: string|null, posted_by: int|null, source_override_reason: string|null, posted_at: string, scope_restricted: bool, lines: list<array{line_number: int, account_id: string, debit: string, credit: string, currency: string, transaction_amount: string, exchange_rate: string, dimension_set_id: string, dimensions: array<string, string>, description: string|null}>}
+     * @return array{id: string, number: string, accounting_date: string, period_id: string, document_date: string|null, description: string, source: string, transaction_type_key: string|null, transaction_type_version: int|null, references: array<string, mixed>|null, reverses_journal_id: string|null, entry_id: string|null, posted_by: int|null, source_override_reason: string|null, posted_at: string, scope_restricted: bool, lines: list<array{line_number: int, account_id: string, debit: string, credit: string, currency: string, transaction_amount: string, exchange_rate: string, dimension_set_id: string, dimensions: array<string, string>, description: string|null, counterparty_company_id: string|null}>}
      */
     public function toArray(Request $request): array
     {
@@ -44,7 +44,7 @@ class JournalResource extends JsonResource
     }
 
     /**
-     * @return list<array{line_number: int, account_id: string, debit: string, credit: string, currency: string, transaction_amount: string, exchange_rate: string, dimension_set_id: string, dimensions: array<string, string>, description: string|null}>
+     * @return list<array{line_number: int, account_id: string, debit: string, credit: string, currency: string, transaction_amount: string, exchange_rate: string, dimension_set_id: string, dimensions: array<string, string>, description: string|null, counterparty_company_id: string|null}>
      */
     private function lines(): array
     {
@@ -62,6 +62,7 @@ class JournalResource extends JsonResource
                 'dimension_set_id' => (string) $line->dimension_set_id,
                 'dimensions' => JsonMap::of($line->getAttribute('dimensions') ?? []),
                 'description' => $line->description === null ? null : (string) $line->description,
+                'counterparty_company_id' => $line->counterparty_company_id === null ? null : (string) $line->counterparty_company_id,
             ];
         }
 

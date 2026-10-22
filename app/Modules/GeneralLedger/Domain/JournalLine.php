@@ -29,6 +29,7 @@ use LogicException;
  * @property string|null $rate_date
  * @property string $dimension_set_id
  * @property string|null $description
+ * @property string|null $counterparty_company_id
  */
 class JournalLine extends RetainedCompanyModel
 {
