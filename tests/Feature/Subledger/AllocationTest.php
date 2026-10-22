@@ -41,34 +41,6 @@ beforeEach(function () {
     docType('receipt', docSettlingBody());
 });
 
-/** A receipt that names the open items it settles. */
-function docSettlingBody(array $overrides = []): array
-{
-    return docPaymentBody(array_replace_recursive([
-        'fields' => [4 => ['name' => 'allocs', 'type' => 'allocations', 'label' => 'Alokasi', 'required' => false]],
-        'subledger_route' => ['allocations_field' => 'allocs'],
-    ], $overrides));
-}
-
-/** Posts an invoice of the customer and returns the ID of its open item. */
-function docOpenInvoice(string $total = '1000000', ?string $party = null): string
-{
-    $id = docEntry('credit_sale', ['party' => $party ?? test()->customer, 'total' => $total])->assertCreated()->json('data.id');
-    docPosted($id);
-
-    return (string) DB::table('sl_open_items')->where('kind', 'invoice')->orderByDesc('id')->value('id');
-}
-
-function docReceipt(string $total, array $allocations = [], ?string $party = null)
-{
-    return docEntry('receipt', array_filter(['party' => $party ?? test()->customer, 'bank' => test()->cashAccount, 'total' => $total, 'allocs' => $allocations ?: null]));
-}
-
-function docItem(string $id): object
-{
-    return DB::table('sl_open_items')->where('id', $id)->first();
-}
-
 describe('allocations made by a document (SL-FR-05)', function () {
     it('settles part of an invoice with a payment and leaves the rest open', function () {
         $invoice = docOpenInvoice();

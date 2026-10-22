@@ -22,6 +22,11 @@ use Tests\TestCase;
 |
 */
 
+// Helpers shared by several test files; loaded up front so no file depends on another being loaded first.
+foreach (glob(__DIR__.'/Helpers/*.php') as $helpers) {
+    require_once $helpers;
+}
+
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
@@ -148,4 +153,18 @@ function mapRoleTo(string $role, string $accountId): void
     $current = app(AccountRoles::class)->current(test()->companyId, AccountRole::from($role));
 
     test()->actingAs(test()->admin)->putJson(test()->url."/account-roles/{$role}", ['lock_version' => $current->version ?? 0, 'account_id' => $accountId, 'effective_date' => '1970-01-01'])->assertOk();
+}
+
+/** The ID of the account with this code in the current test company. */
+function docAccountId(string $code): string
+{
+    return (string) Account::withoutGlobalScope(CompanyScope::class)->where('company_id', test()->companyId)->where('code', $code)->value('id');
+}
+
+/** The ID of a seeded dimension type, as listed under the company at `$url`. */
+function scopeSeededType(string $url, string $key, ?User $user = null): string
+{
+    $types = test()->actingAs($user ?? test()->admin)->getJson("{$url}/dimension-types")->assertOk()->json('data');
+
+    return collect($types)->firstWhere('key', $key)['id'];
 }

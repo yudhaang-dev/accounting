@@ -50,37 +50,6 @@ beforeEach(function () {
     docType('usd_receipt', docSettlingBody($usd));
 });
 
-/** The gain account is revenue and the loss account an expense, as the roles need. */
-function mapFxRoles(): void
-{
-    foreach (['fx_realized_gain' => test()->gain, 'fx_realized_loss' => test()->loss] as $role => $account) {
-        mapRoleTo("{$role}", $account);
-    }
-}
-
-function usdInvoice(string $total, string $rate)
-{
-    return docEntry('usd_sale', ['party' => test()->customer, 'total' => $total], ['currency' => 'USD', 'exchange_rate' => $rate]);
-}
-
-function usdReceipt(string $total, string $rate, array $allocations = [])
-{
-    return docEntry('usd_receipt', array_filter(['party' => test()->customer, 'bank' => test()->usdBank, 'total' => $total, 'allocs' => $allocations ?: null]), ['currency' => 'USD', 'exchange_rate' => $rate]);
-}
-
-function openUsdInvoice(string $total = '1000', string $rate = '15000'): string
-{
-    docPosted(usdInvoice($total, $rate)->assertCreated()->json('data.id'));
-
-    return (string) DB::table('sl_open_items')->where('kind', 'invoice')->orderByDesc('id')->value('id');
-}
-
-/** Functional balance of an account over all journals, debit less credit. */
-function functionalBalance(string $accountId): float
-{
-    return (float) DB::table('gl_journal_lines')->where('account_id', $accountId)->selectRaw('COALESCE(SUM(debit) - SUM(credit), 0) as balance')->value('balance');
-}
-
 describe('a payment at another rate than the invoice (SL-AC-02)', function () {
     beforeEach(fn () => mapFxRoles());
 

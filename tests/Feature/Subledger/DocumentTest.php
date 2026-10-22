@@ -3,7 +3,6 @@
 use App\Models\User;
 use App\Modules\GeneralLedger\Domain\Account;
 use App\Platform\Audit\AuditEntry;
-use App\Support\Company\CompanyScope;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
@@ -42,107 +41,9 @@ beforeEach(function () {
     ])->assertCreated()->json('data.id');
 });
 
-function docAccountId(string $code): string
-{
-    return (string) Account::withoutGlobalScope(CompanyScope::class)->where('company_id', test()->companyId)->where('code', $code)->value('id');
-}
-
-function docParty(array $overrides = []): string
-{
-    return (string) test()->actingAs(test()->admin)->postJson(test()->url.'/parties', array_merge(['name' => 'PT Maju Jaya', 'is_customer' => true], $overrides))->assertCreated()->json('data.id');
-}
-
 function docMapPayables(): void
 {
     test()->actingAs(test()->admin)->putJson(test()->url.'/posting-profiles/'.test()->profileId.'/accounts/payables_control', ['lock_version' => 0, 'account_id' => test()->payables])->assertOk();
-}
-
-function docFixed(string $accountId): array
-{
-    return ['source' => 'fixed', 'account_id' => $accountId];
-}
-
-function docControl(string $partyField = 'party'): array
-{
-    return ['source' => 'control_account', 'party_field' => $partyField];
-}
-
-/** An invoice to a customer: the receivable against revenue. */
-function docInvoiceBody(array $overrides = []): array
-{
-    return array_replace_recursive([
-        'mode' => 'structured',
-        'fields' => [
-            ['name' => 'party', 'type' => 'party', 'label' => 'Pelanggan'],
-            ['name' => 'number', 'type' => 'reference', 'label' => 'Nomor', 'required' => false],
-            ['name' => 'due', 'type' => 'date', 'label' => 'Jatuh tempo', 'required' => false],
-            ['name' => 'total', 'type' => 'amount', 'label' => 'Total'],
-        ],
-        'posting_rules' => [
-            ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => docControl(), 'apply_dimensions' => false, 'reuses_field' => true],
-            ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => docFixed(test()->sales), 'apply_dimensions' => false, 'reuses_field' => true],
-        ],
-        'subledger_route' => ['kind' => 'invoice', 'control_role' => 'receivables_control', 'party_field' => 'party', 'document_number_field' => 'number', 'due_date_field' => 'due', 'cash_account_field' => null],
-    ], $overrides);
-}
-
-/** A receipt from a customer: cash against the receivable. */
-function docPaymentBody(array $overrides = []): array
-{
-    return array_replace_recursive([
-        'mode' => 'structured',
-        'fields' => [
-            ['name' => 'party', 'type' => 'party', 'label' => 'Pelanggan'],
-            ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Rekening'],
-            ['name' => 'number', 'type' => 'reference', 'label' => 'Nomor', 'required' => false],
-            ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah'],
-        ],
-        'posting_rules' => [
-            ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
-            ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => docControl(), 'apply_dimensions' => false, 'reuses_field' => true],
-        ],
-        'subledger_route' => ['kind' => 'payment', 'control_role' => 'receivables_control', 'party_field' => 'party', 'document_number_field' => 'number', 'due_date_field' => null, 'cash_account_field' => 'bank'],
-    ], $overrides);
-}
-
-/** Creates a type of the key and publishes a version of the body; returns the response of the draft when it is refused. */
-function docType(string $key, array $body)
-{
-    $typeId = test()->actingAs(test()->admin)->postJson(test()->url.'/transaction-types', ['key' => $key, 'label' => ucfirst($key)])->assertCreated()->json('data.id');
-    $draft = test()->actingAs(test()->admin)->postJson(test()->url."/transaction-types/{$typeId}/versions", $body);
-
-    if ($draft->status() !== 201) {
-        return $draft;
-    }
-
-    $number = (int) collect($draft->json('data.versions'))->max('version');
-    test()->actingAs(test()->admin)->postJson(test()->url."/transaction-types/{$typeId}/versions/{$number}/publish")->assertOk();
-
-    return $draft;
-}
-
-function docEntry(string $key, array $values, array $overrides = [])
-{
-    return test()->actingAs(test()->preparer)->postJson(test()->url.'/entries', array_merge([
-        'transaction_type_key' => $key,
-        'accounting_date' => '2026-03-15',
-        'description' => 'Dokumen subledger',
-        'values' => $values,
-    ], $overrides));
-}
-
-function docAct(User $user, string $id, string $action)
-{
-    return test()->actingAs($user)->postJson(test()->url."/entries/{$id}/{$action}");
-}
-
-/** Submits, approves and posts an entry; returns the posted entry. */
-function docPosted(string $entryId): array
-{
-    docAct(test()->preparer, $entryId, 'submit')->assertOk();
-    docAct(test()->approver, $entryId, 'approve')->assertOk();
-
-    return docAct(test()->approver, $entryId, 'post')->assertOk()->assertJsonPath('data.status', 'posted')->json('data');
 }
 
 describe('an invoice (SL-FR-04)', function () {

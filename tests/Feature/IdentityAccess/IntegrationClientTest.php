@@ -11,17 +11,6 @@ beforeEach(function () {
     $this->url = "/api/v1/companies/{$this->companyId}";
 });
 
-/** Registers a client as the admin; returns the response data, which carries the secret once. */
-function registerClient(array $overrides = []): array
-{
-    return test()->actingAs(test()->admin)->postJson(test()->url.'/integration-clients', array_merge([
-        'name' => 'Payroll',
-        'source_system' => 'payroll',
-        'scopes' => ['transaction-types:read'],
-        'transaction_type_keys' => ['payroll_summary'],
-    ], $overrides))->assertCreated()->json('data');
-}
-
 /** Asks for a token the way a machine does: form-encoded body, `client_secret_basic`. */
 function requestToken(array $client, ?string $scope = null, ?string $secret = null)
 {

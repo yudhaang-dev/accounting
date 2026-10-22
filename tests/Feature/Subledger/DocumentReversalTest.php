@@ -55,25 +55,6 @@ beforeEach(function () {
     docType('usd_receipt', docSettlingBody($usd));
 });
 
-/** Asks for the reversal of a journal and returns the response of the request. */
-function reverseRequest(string $journalId, array $body = [])
-{
-    return test()->actingAs(test()->preparer)->postJson(test()->url."/journals/{$journalId}/reverse", array_merge(['reversal_date' => '2026-03-20', 'reason' => 'Salah catat'], $body));
-}
-
-/** Carries a reversal entry through approval and posting; returns the posted entry. */
-function reversePosted(string $journalId, array $body = []): array
-{
-    $id = reverseRequest($journalId, $body)->assertCreated()->json('data.id');
-
-    return docPosted($id);
-}
-
-function journalOfDocument(string $itemId): string
-{
-    return (string) DB::table('sl_documents')->where('id', DB::table('sl_open_items')->where('id', $itemId)->value('document_id'))->value('journal_id');
-}
-
 describe('an invoice (SL-AC-07, TE-AC-07)', function () {
     it('removes its open item and posts the mirror image of its journal', function () {
         $invoice = docOpenInvoice('1000000');

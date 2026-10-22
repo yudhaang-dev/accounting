@@ -5,13 +5,11 @@ use App\Modules\GeneralLedger\Contracts\JournalSource;
 use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\GeneralLedger\Contracts\PostJournalLine;
-use App\Modules\GeneralLedger\Domain\Account;
 use App\Modules\IdentityAccess\Application\EffectiveAccessContexts;
 use App\Modules\IdentityAccess\Application\WorkspaceInvitationNotification;
 use App\Modules\IdentityAccess\Domain\Membership;
 use App\Modules\IdentityAccess\Domain\Role;
 use App\Platform\Audit\AuditEntry;
-use App\Support\Company\CompanyScope;
 use Illuminate\Support\Facades\Notification;
 
 /*
@@ -58,23 +56,6 @@ beforeEach(function () {
     $this->viewer = memberWithRoles($this->companyId, 'viewer');
 });
 
-function scopeAccountId(string $companyId, string $code): string
-{
-    return (string) Account::withoutGlobalScope(CompanyScope::class)->where('company_id', $companyId)->where('code', $code)->value('id');
-}
-
-function scopeSeededType(string $url, string $key, ?User $user = null): string
-{
-    $types = test()->actingAs($user ?? test()->admin)->getJson("{$url}/dimension-types")->assertOk()->json('data');
-
-    return collect($types)->firstWhere('key', $key)['id'];
-}
-
-function scopeDimension(string $resource, array $body): string
-{
-    return test()->actingAs(test()->admin)->postJson(test()->url."/{$resource}", $body)->assertCreated()->json('data.id');
-}
-
 /** A balanced journal where both lines carry the same dimensions. */
 function scopePost(string $companyId, string $date, string $amount, array $dimensions): void
 {
@@ -90,28 +71,9 @@ function scopePost(string $companyId, string $date, string $amount, array $dimen
     ));
 }
 
-/** Limits the member to the given dimension values; returns the response. */
-function limitTo(User $member, array $valueIds, ?User $actor = null)
-{
-    $membership = Membership::where('user_id', $member->id)->firstOrFail();
-
-    return test()->actingAs($actor ?? test()->admin)->patchJson(test()->url."/memberships/{$membership->id}", [
-        'lock_version' => $membership->lock_version,
-        'data_scope' => $valueIds,
-    ]);
-}
-
 function scopeRoleId(string $companyId, string $name): string
 {
     return Role::where('company_id', $companyId)->where('name', $name)->value('id');
-}
-
-function scopedMember(string $role, array $valueIds): User
-{
-    $member = memberWithRoles(test()->companyId, $role);
-    limitTo($member, $valueIds)->assertOk();
-
-    return $member;
 }
 
 describe('assigning a data scope (IA-FR-03)', function () {
