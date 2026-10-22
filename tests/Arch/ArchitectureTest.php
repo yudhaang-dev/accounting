@@ -21,6 +21,7 @@ $modules = [
     'GeneralLedger' => 'gl_',
     'Planning' => 'pl_',
     'Reporting' => 'rp_',
+    'Consolidation' => 'co_',
 ];
 
 foreach (array_keys($modules) as $module) {

@@ -1636,6 +1636,101 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/groups/{group}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The group with its `lock_version`. Needs a read grant on the group (IA-FR-07) */
+        get: operations["groups.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Renames the group. The parent company and the presentation currency do not change after creation */
+        patch: operations["groups.update"];
+        trace?: never;
+    };
+    "/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The groups the user holds a grant on, by name. Membership of workspaces does not list a group (IA-FR-07) */
+        get: operations["groups.index"];
+        put?: never;
+        /**
+         * Creates a group with its parent company as the first member, and gives the creator the grants to run
+         *     it and approve its perimeter. 403 unless the user holds `consolidation.join` in the parent company
+         */
+        post: operations["groups.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{group}/perimeter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every member of the group with its status, oldest first; members that left stay listed */
+        get: operations["groups.perimeter.index"];
+        put?: never;
+        /**
+         * Proposes a company as a member, with the reasoning behind the assessment of control. It counts once
+         *     someone with the approval ability, other than the proposer, approves it. 403 unless the user holds
+         *     `consolidation.join` in that company
+         */
+        post: operations["groups.perimeter.propose"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{group}/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The chart of accounts of the group, by code, inactive accounts included */
+        get: operations["groups.accounts.index"];
+        put?: never;
+        post: operations["groups.accounts.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{group}/accounts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Renames or deactivates an account; its class never changes */
+        patch: operations["groups.accounts.update"];
+        trace?: never;
+    };
     "/companies/{companyId}/history-imports": {
         parameters: {
             query?: never;
@@ -1924,6 +2019,27 @@ export interface paths {
          *     key or permission that does not exist. `lock_version` is required
          */
         put: operations["ledger-policy.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{group}/account-mappings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The latest version of the account mapping of the group; `version` 0 with no rows when it has none */
+        get: operations["groups.account-mappings.show"];
+        /**
+         * Saves the whole mapping as a new version (P-04). `lock_version` is the version read; another saver in
+         *     between is VERSION_CONFLICT
+         */
+        put: operations["groups.account-mappings.update"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2309,6 +2425,43 @@ export interface paths {
         put?: never;
         /** Reactivates the party */
         post: operations["parties.reactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{group}/perimeter/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approves the control assessment of a proposed member (CO-FR-02). Needs the approval ability on the group,
+         *     and the approver cannot be who proposed the member (SEGREGATION_OF_DUTIES)
+         */
+        post: operations["groups.perimeter.approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{group}/perimeter/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The member leaves the perimeter as of `effective_to`. The parent company cannot leave */
+        post: operations["groups.perimeter.end"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3903,6 +4056,23 @@ export interface components {
                 end_date: string;
             }[];
         };
+        /** CreateGroupAccountRequest */
+        CreateGroupAccountRequest: {
+            code: string;
+            name: string;
+            /**
+             * @description The element of the statement the account belongs to; fixed once created.
+             * @enum {string}
+             */
+            class: "asset" | "liability" | "equity" | "income" | "expense";
+        };
+        /** CreateGroupRequest */
+        CreateGroupRequest: {
+            name: string;
+            parent_company_id: string;
+            /** @description ISO 4217; the results of the group are stated in it and it does not change afterwards. */
+            presentation_currency: string;
+        };
         /** CreateIntegrationClientRequest */
         CreateIntegrationClientRequest: {
             name: string;
@@ -3968,7 +4138,7 @@ export interface components {
             name: string;
             description?: string | null;
             /** @description Keys of GET /permissions. */
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "bank-statements.read" | "bank-statements.manage" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "bank-statements.read" | "bank-statements.manage" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage" | "consolidation.join")[];
         };
         /** CreateTransactionTypeRequest */
         CreateTransactionTypeRequest: {
@@ -4079,6 +4249,11 @@ export interface components {
             is_opening: boolean;
             reversal_journal_id: string;
             reversal_date: string;
+        };
+        /** EndPerimeterMemberRequest */
+        EndPerimeterMemberRequest: {
+            /** Format: date */
+            effective_to: string;
         };
         /** EnterPlanLinesRequest */
         EnterPlanLinesRequest: {
@@ -4307,6 +4482,31 @@ export interface components {
             end_date: string;
             period_count: string | number;
             periods?: components["schemas"]["PeriodResource"][];
+        };
+        /** GroupAccountResource */
+        GroupAccountResource: {
+            id: string;
+            code: string;
+            name: string;
+            class: string;
+            is_active: boolean;
+            lock_version: number;
+        };
+        /** GroupDataResource */
+        GroupDataResource: {
+            id: string;
+            name: string;
+            parent_company_id: string;
+            presentation_currency: string;
+            lock_version: number;
+        };
+        /** GroupResource */
+        GroupResource: {
+            id: string;
+            name: string;
+            parent_company_id: string;
+            presentation_currency: string;
+            lock_version: number;
         };
         /** HistoryImportResource */
         HistoryImportResource: {
@@ -4575,6 +4775,13 @@ export interface components {
             /** Format: date */
             effective_date?: string | null;
         };
+        /** MappingVersionResource */
+        MappingVersionResource: {
+            version: number;
+            effective_date: string;
+            created_by: number | null;
+            mappings: unknown[];
+        };
         /** MatchBankStatementLineRequest */
         MatchBankStatementLineRequest: {
             cash_transaction_id: string;
@@ -4693,6 +4900,21 @@ export interface components {
          * @enum {string}
          */
         PartyStatus: "active" | "inactive";
+        /** PerimeterMemberResource */
+        PerimeterMemberResource: {
+            id: string;
+            company_id: string;
+            control_basis: string;
+            treatment: string;
+            status: string;
+            effective_from: string;
+            effective_to: string | null;
+            proposed_by: number | null;
+            approved_by: number | null;
+            approved_at: string | null;
+            ended_by: number | null;
+            ended_at: string | null;
+        };
         /** PeriodResource */
         PeriodResource: {
             id: string;
@@ -4746,6 +4968,14 @@ export interface components {
          * @enum {string}
          */
         PlanVersionStatus: "draft" | "published" | "archived";
+        /** ProposeMemberRequest */
+        ProposeMemberRequest: {
+            company_id: string;
+            /** @description The accountant's reasoning for the assessment that the group controls the company (CO-FR-02). */
+            control_basis: string;
+            /** Format: date */
+            effective_from: string;
+        };
         /** PublishPlanVersionRequest */
         PublishPlanVersionRequest: {
             lock_version: number;
@@ -4974,6 +5204,19 @@ export interface components {
             money_in_column?: number | null;
             money_out_column?: number | null;
         };
+        /** SaveMappingRequest */
+        SaveMappingRequest: {
+            /** @description The version the client read; 0 when the group has no mapping yet. */
+            lock_version: number;
+            /** Format: date */
+            effective_date?: string | null;
+            /** @description The whole mapping as it should be from now on: rows left out are no longer mapped. */
+            mappings: {
+                company_id: string;
+                account_id: string;
+                group_account_id: string;
+            }[];
+        };
         /** SaveMovementClassificationRequest */
         SaveMovementClassificationRequest: {
             key: string;
@@ -5176,6 +5419,17 @@ export interface components {
             pattern?: components["schemas"]["CalendarPattern"];
             start_month?: number | null;
         };
+        /** UpdateGroupAccountRequest */
+        UpdateGroupAccountRequest: {
+            lock_version: number;
+            name?: string;
+            is_active?: boolean;
+        };
+        /** UpdateGroupRequest */
+        UpdateGroupRequest: {
+            lock_version: number;
+            name: string;
+        };
         /** UpdateIntegrationClientRequest */
         UpdateIntegrationClientRequest: {
             lock_version: number;
@@ -5287,13 +5541,13 @@ export interface components {
             lock_version: number;
             name?: string;
             description?: string | null;
-            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "bank-statements.read" | "bank-statements.manage" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            permissions?: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "bank-statements.read" | "bank-statements.manage" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage" | "consolidation.join")[];
         };
         /** UpdateSecurityPolicyRequest */
         UpdateSecurityPolicyRequest: {
             lock_version: number;
             /** @description Keys of GET /permissions. */
-            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "bank-statements.read" | "bank-statements.manage" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage")[];
+            two_factor_permissions: ("company.read" | "company.update" | "company.activate" | "company.deactivate" | "accounts.read" | "accounts.manage" | "dimensions.read" | "dimensions.manage" | "currencies.read" | "currencies.manage" | "parties.read" | "parties.manage" | "posting-profiles.read" | "posting-profiles.manage" | "cash-accounts.read" | "cash-accounts.manage" | "cash-transactions.read" | "cash-transactions.clear" | "bank-statements.read" | "bank-statements.manage" | "plans.read" | "plans.manage" | "plans.publish" | "planning-policy.manage" | "documents.read" | "open-items.read" | "allocations.read" | "allocations.manage" | "reconciliations.read" | "reconciliations.run" | "reconciliations.waive" | "aging-policy.manage" | "exchange-rates.read" | "exchange-rates.manage" | "periods.read" | "periods.manage" | "periods.close" | "periods.reopen" | "periods.revalue" | "transaction-types.read" | "entries.read" | "entries.create" | "entries.submit" | "entries.approve" | "entries.reject" | "entries.post" | "entries.reverse" | "financial-events.create" | "financial-events.read" | "financial-events.read-own" | "recurring-schedules.read" | "recurring-schedules.manage" | "journals.read" | "journals.post-soft-closed" | "journals.override-source" | "opening-balances.import" | "fiscal-years.close" | "fiscal-years.reopen" | "reports.read" | "reports.export" | "reports.publish" | "report-definitions.manage" | "audit.read" | "memberships.read" | "memberships.manage" | "roles.read" | "roles.manage" | "integration-clients.manage" | "policies.manage" | "consolidation.join")[];
             idle_timeout_minutes: number | null;
             client_ip_allowlist: string[];
         };
@@ -8960,6 +9214,258 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "groups.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `GroupResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["GroupResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "groups.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGroupRequest"];
+            };
+        };
+        responses: {
+            /** @description `GroupResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["GroupResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "groups.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `GroupDataResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["GroupDataResource"][];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGroupRequest"];
+            };
+        };
+        responses: {
+            /** @description `GroupDataResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["GroupDataResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "groups.perimeter.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `PerimeterMemberResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PerimeterMemberResource"][];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.perimeter.propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposeMemberRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            company_id: string;
+                            status: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "groups.accounts.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `GroupAccountResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["GroupAccountResource"][];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "groups.accounts.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGroupAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description `GroupAccountResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["GroupAccountResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "groups.accounts.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGroupAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description `GroupAccountResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["GroupAccountResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "history-imports.show": {
         parameters: {
             query?: never;
@@ -9592,6 +10098,70 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["LedgerPolicyResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "groups.account-mappings.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            version: number;
+                            effective_date: string | null;
+                            created_by: number | null;
+                            mappings: {
+                                company_id: string;
+                                account_id: string;
+                                account_code: string;
+                                group_account_id: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.account-mappings.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveMappingRequest"];
+            };
+        };
+        responses: {
+            /** @description `MappingVersionResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MappingVersionResource"];
                     };
                 };
             };
@@ -10536,6 +11106,63 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.perimeter.approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `PerimeterMemberResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PerimeterMemberResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.perimeter.end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndPerimeterMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description `PerimeterMemberResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PerimeterMemberResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "periods.index": {

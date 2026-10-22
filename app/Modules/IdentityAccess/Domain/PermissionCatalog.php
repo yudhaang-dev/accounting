@@ -43,6 +43,7 @@ final class PermissionCatalog
         'roles' => ['read', 'manage'],
         'integration-clients' => ['manage'],
         'policies' => ['manage'],
+        'consolidation' => ['join'],
     ];
 
     /** @return list<string> */

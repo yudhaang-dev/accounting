@@ -60,6 +60,14 @@ deptrac:
       collectors:
         - type: classNameRegex
           value: '#^App\\Modules\\Reporting\\Contracts\\.*#'
+    - name: Consolidation
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\Consolidation\\(?!Contracts\\).*#'
+    - name: ConsolidationContracts
+      collectors:
+        - type: classNameRegex
+          value: '#^App\\Modules\\Consolidation\\Contracts\\.*#'
     - name: Orchestration
       collectors:
         - type: classNameRegex
@@ -129,6 +137,14 @@ deptrac:
       - MasterDataContracts
     ReportingContracts:
       - Support
+    Consolidation:
+      - ConsolidationContracts
+      - Platform
+      - Support
+      - ReportingContracts
+      - MasterDataContracts
+    ConsolidationContracts:
+      - Support
     Orchestration:
       - MasterDataContracts
       - IdentityAccessContracts
@@ -137,6 +153,7 @@ deptrac:
       - GeneralLedgerContracts
       - PlanningContracts
       - ReportingContracts
+      - ConsolidationContracts
       - Platform
       - Support
     Platform:

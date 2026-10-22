@@ -14,4 +14,11 @@ interface ReportPackages
      * date range fails validation, and a company that does not exist is NOT_FOUND.
      */
     public function build(string $companyId, string $from, string $to): ReportPackage;
+
+    /**
+     * The accounts of the company, active and postable (a leaf), ordered by code: what a group chart can map.
+     *
+     * @return list<ReportPackageAccount>
+     */
+    public function accounts(string $companyId): array;
 }

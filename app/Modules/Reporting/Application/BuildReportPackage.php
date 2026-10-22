@@ -2,9 +2,12 @@
 
 namespace App\Modules\Reporting\Application;
 
+use App\Modules\GeneralLedger\Contracts\AccountData;
+use App\Modules\GeneralLedger\Contracts\AccountDirectory;
 use App\Modules\GeneralLedger\Contracts\PeriodData;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\Reporting\Contracts\ReportPackage;
+use App\Modules\Reporting\Contracts\ReportPackageAccount;
 use App\Modules\Reporting\Contracts\ReportPackageBalance;
 use App\Modules\Reporting\Contracts\ReportPackagePeriod;
 use App\Modules\Reporting\Contracts\ReportPackages;
@@ -24,6 +27,7 @@ final class BuildReportPackage implements ReportPackages
     public function __construct(
         private readonly TrialBalance $trialBalance,
         private readonly PeriodDirectory $periods,
+        private readonly AccountDirectory $accounts,
         private readonly CashEquivalents $cash,
         private readonly CompanyContext $company,
     ) {}
@@ -61,6 +65,14 @@ final class BuildReportPackage implements ReportPackages
                 ],
             );
         });
+    }
+
+    public function accounts(string $companyId): array
+    {
+        return array_values(array_map(
+            fn (AccountData $account): ReportPackageAccount => new ReportPackageAccount($account->id, $account->code, $account->name, $account->class->value, true),
+            array_filter($this->accounts->all($companyId), fn (AccountData $account): bool => $account->isLeaf && $account->isActive),
+        ));
     }
 
     /**

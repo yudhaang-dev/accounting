@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Consolidation\ConsolidationServiceProvider;
 use App\Modules\GeneralLedger\GeneralLedgerServiceProvider;
 use App\Modules\IdentityAccess\IdentityAccessServiceProvider;
 use App\Modules\MasterData\MasterDataServiceProvider;
@@ -37,5 +38,6 @@ return [
     GeneralLedgerServiceProvider::class,
     PlanningServiceProvider::class,
     ReportingServiceProvider::class,
+    ConsolidationServiceProvider::class,
     OrchestrationServiceProvider::class,
 ];

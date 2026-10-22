@@ -2,6 +2,7 @@
 
 use App\Orchestration\Approval\Http\ApprovalPolicyController;
 use App\Orchestration\Company\Http\CompanyActivationController;
+use App\Orchestration\Consolidation\Http\GroupController;
 use App\Orchestration\FinancialEvents\Http\FinancialEventController;
 use App\Orchestration\Ledger\Http\FiscalYearClosingController;
 use App\Orchestration\Ledger\Http\HistoryImportController;
@@ -14,6 +15,12 @@ use Illuminate\Support\Facades\Route;
 // Cross-module use case routes, mounted under /api/v1 (see OrchestrationServiceProvider).
 
 Route::post('workspaces', [WorkspaceController::class, 'store'])->middleware(['auth', 'idempotent'])->name('workspaces.store');
+
+// Groups belong to no company; reaching one takes a grant on it (IA-FR-07), and putting a company into one its consent.
+Route::get('groups', [GroupController::class, 'index'])->middleware('auth')->name('groups.index');
+Route::post('groups', [GroupController::class, 'store'])->middleware(['auth', 'idempotent'])->name('groups.store');
+Route::post('groups/{group}/perimeter', [GroupController::class, 'propose'])
+    ->middleware(['auth', 'idempotent', 'group-access:run'])->where('group', ApiServiceProvider::ULID)->name('groups.perimeter.propose');
 
 Route::companyScoped(function () {
     Route::post('activate', [CompanyActivationController::class, 'activate'])

@@ -21,6 +21,6 @@ return [
     'unprotected_tables' => [],
 
     /* Table prefixes of financial data that must be protected against hard delete. */
-    'protected_prefixes' => ['gl_', 'sl_', 'te_'],
+    'protected_prefixes' => ['gl_', 'sl_', 'te_', 'co_'],
 
 ];

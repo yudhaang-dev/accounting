@@ -18,8 +18,13 @@ final class EloquentGroupGrants implements GroupGrants
         return GroupGrant::query()
             ->where('group_id', $groupId)
             ->where('user_id', $userId)
-            ->whereIn('ability', $this->covering($ability))
+            ->whereIn('ability', $ability->coveredBy())
             ->exists();
+    }
+
+    public function groupsOf(int $userId): array
+    {
+        return array_values(array_map(strval(...), GroupGrant::query()->where('user_id', $userId)->distinct()->orderBy('group_id')->pluck('group_id')->all()));
     }
 
     public function grant(int $userId, string $groupId, GroupAbility $ability, ?int $grantedBy = null): void
@@ -48,7 +53,7 @@ final class EloquentGroupGrants implements GroupGrants
             GroupGrant::query()
                 ->where('group_id', $groupId)
                 ->where('user_id', $userId)
-                ->whereIn('ability', $this->covering($ability))
+                ->whereIn('ability', $ability->coveredBy())
                 ->get()
                 ->each(function (GroupGrant $grant): void {
                     $grant->delete();
@@ -61,15 +66,5 @@ final class EloquentGroupGrants implements GroupGrants
                     );
                 });
         });
-    }
-
-    /**
-     * The stored abilities that include the asked one: running includes reading.
-     *
-     * @return list<string>
-     */
-    private function covering(GroupAbility $ability): array
-    {
-        return $ability === GroupAbility::Read ? ['read', 'run'] : ['run'];
     }
 }

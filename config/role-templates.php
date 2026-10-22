@@ -24,7 +24,7 @@ return [
                 'memberships.read', 'memberships.manage',
                 'roles.read', 'roles.manage',
                 'integration-clients.manage',
-                'policies.manage', 'recurring-schedules.manage',
+                'policies.manage', 'recurring-schedules.manage', 'consolidation.join',
                 'reports.export', 'reports.publish', 'report-definitions.manage',
             ],
         ],

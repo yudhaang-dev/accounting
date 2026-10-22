@@ -8769,6 +8769,459 @@
                 }
             }
         },
+        "/groups/{group}": {
+            "get": {
+                "operationId": "groups.show",
+                "summary": "The group with its `lock_version`. Needs a read grant on the group (IA-FR-07)",
+                "tags": [
+                    "Group"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`GroupResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/GroupResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "groups.update",
+                "summary": "Renames the group. The parent company and the presentation currency do not change after creation",
+                "tags": [
+                    "Group"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateGroupRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`GroupResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/GroupResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/groups": {
+            "get": {
+                "operationId": "groups.index",
+                "summary": "The groups the user holds a grant on, by name. Membership of workspaces does not list a group (IA-FR-07)",
+                "tags": [
+                    "Group"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `GroupDataResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/GroupDataResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "groups.store",
+                "summary": "Creates a group with its parent company as the first member, and gives the creator the grants to run\nit and approve its perimeter. 403 unless the user holds `consolidation.join` in the parent company",
+                "tags": [
+                    "Group"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateGroupRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`GroupDataResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/GroupDataResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/groups/{group}/perimeter": {
+            "post": {
+                "operationId": "groups.perimeter.propose",
+                "summary": "Proposes a company as a member, with the reasoning behind the assessment of control. It counts once\nsomeone with the approval ability, other than the proposer, approves it. 403 unless the user holds\n`consolidation.join` in that company",
+                "tags": [
+                    "Group"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProposeMemberRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "company_id": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "company_id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "get": {
+                "operationId": "groups.perimeter.index",
+                "summary": "Every member of the group with its status, oldest first; members that left stay listed",
+                "tags": [
+                    "Perimeter"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `PerimeterMemberResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PerimeterMemberResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/groups/{group}/accounts": {
+            "get": {
+                "operationId": "groups.accounts.index",
+                "summary": "The chart of accounts of the group, by code, inactive accounts included",
+                "tags": [
+                    "GroupAccount"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `GroupAccountResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/GroupAccountResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "groups.accounts.store",
+                "tags": [
+                    "GroupAccount"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateGroupAccountRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`GroupAccountResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/GroupAccountResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/groups/{group}/accounts/{id}": {
+            "patch": {
+                "operationId": "groups.accounts.update",
+                "summary": "Renames or deactivates an account; its class never changes",
+                "tags": [
+                    "GroupAccount"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateGroupAccountRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`GroupAccountResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/GroupAccountResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/history-imports": {
             "get": {
                 "operationId": "history-imports.show",
@@ -10326,6 +10779,150 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/groups/{group}/account-mappings": {
+            "get": {
+                "operationId": "groups.account-mappings.show",
+                "summary": "The latest version of the account mapping of the group; `version` 0 with no rows when it has none",
+                "tags": [
+                    "Mapping"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "version": {
+                                                    "type": "integer"
+                                                },
+                                                "effective_date": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_by": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "mappings": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "company_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "account_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "account_code": {
+                                                                "type": "string"
+                                                            },
+                                                            "group_account_id": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "company_id",
+                                                            "account_id",
+                                                            "account_code",
+                                                            "group_account_id"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "version",
+                                                "effective_date",
+                                                "created_by",
+                                                "mappings"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "groups.account-mappings.update",
+                "summary": "Saves the whole mapping as a new version (P-04). `lock_version` is the version read; another saver in\nbetween is VERSION_CONFLICT",
+                "tags": [
+                    "Mapping"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveMappingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`MappingVersionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MappingVersionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -13084,6 +13681,119 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/groups/{group}/perimeter/{id}/approve": {
+            "post": {
+                "operationId": "groups.perimeter.approve",
+                "summary": "Approves the control assessment of a proposed member (CO-FR-02). Needs the approval ability on the group,\nand the approver cannot be who proposed the member (SEGREGATION_OF_DUTIES)",
+                "tags": [
+                    "Perimeter"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`PerimeterMemberResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PerimeterMemberResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/groups/{group}/perimeter/{id}/end": {
+            "post": {
+                "operationId": "groups.perimeter.end",
+                "summary": "The member leaves the perimeter as of `effective_to`. The parent company cannot leave",
+                "tags": [
+                    "Perimeter"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EndPerimeterMemberRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`PerimeterMemberResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PerimeterMemberResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -21334,6 +22044,60 @@
                 },
                 "title": "CreateFiscalYearsRequest"
             },
+            "CreateGroupAccountRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "maxLength": 32
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "class": {
+                        "type": "string",
+                        "description": "The element of the statement the account belongs to; fixed once created.",
+                        "enum": [
+                            "asset",
+                            "liability",
+                            "equity",
+                            "income",
+                            "expense"
+                        ]
+                    }
+                },
+                "required": [
+                    "code",
+                    "name",
+                    "class"
+                ],
+                "title": "CreateGroupAccountRequest"
+            },
+            "CreateGroupRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "parent_company_id": {
+                        "type": "string"
+                    },
+                    "presentation_currency": {
+                        "type": "string",
+                        "description": "ISO 4217; the results of the group are stated in it and it does not change afterwards.",
+                        "minLength": 3,
+                        "maxLength": 3
+                    }
+                },
+                "required": [
+                    "name",
+                    "parent_company_id",
+                    "presentation_currency"
+                ],
+                "title": "CreateGroupRequest"
+            },
             "CreateIntegrationClientRequest": {
                 "type": "object",
                 "properties": {
@@ -21667,7 +22431,8 @@
                                 "roles.read",
                                 "roles.manage",
                                 "integration-clients.manage",
-                                "policies.manage"
+                                "policies.manage",
+                                "consolidation.join"
                             ]
                         },
                         "uniqueItems": true
@@ -22044,6 +22809,19 @@
                     "reversal_date"
                 ],
                 "title": "DocumentResource"
+            },
+            "EndPerimeterMemberRequest": {
+                "type": "object",
+                "properties": {
+                    "effective_to": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                },
+                "required": [
+                    "effective_to"
+                ],
+                "title": "EndPerimeterMemberRequest"
             },
             "EnterPlanLinesRequest": {
                 "type": "object",
@@ -23007,6 +23785,94 @@
                     "period_count"
                 ],
                 "title": "FiscalYearResource"
+            },
+            "GroupAccountResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "class": {
+                        "type": "string"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "class",
+                    "is_active",
+                    "lock_version"
+                ],
+                "title": "GroupAccountResource"
+            },
+            "GroupDataResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "parent_company_id": {
+                        "type": "string"
+                    },
+                    "presentation_currency": {
+                        "type": "string"
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "parent_company_id",
+                    "presentation_currency",
+                    "lock_version"
+                ],
+                "title": "GroupDataResource"
+            },
+            "GroupResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "parent_company_id": {
+                        "type": "string"
+                    },
+                    "presentation_currency": {
+                        "type": "string"
+                    },
+                    "lock_version": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "parent_company_id",
+                    "presentation_currency",
+                    "lock_version"
+                ],
+                "title": "GroupResource"
             },
             "HistoryImportResource": {
                 "type": "object",
@@ -24172,6 +25038,34 @@
                 ],
                 "title": "MapControlAccountRequest"
             },
+            "MappingVersionResource": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "integer"
+                    },
+                    "effective_date": {
+                        "type": "string"
+                    },
+                    "created_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "mappings": {
+                        "type": "array",
+                        "items": {}
+                    }
+                },
+                "required": [
+                    "version",
+                    "effective_date",
+                    "created_by",
+                    "mappings"
+                ],
+                "title": "MappingVersionResource"
+            },
             "MatchBankStatementLineRequest": {
                 "type": "object",
                 "properties": {
@@ -24613,6 +25507,80 @@
                 ],
                 "title": "PartyStatus"
             },
+            "PerimeterMemberResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "company_id": {
+                        "type": "string"
+                    },
+                    "control_basis": {
+                        "type": "string"
+                    },
+                    "treatment": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "effective_from": {
+                        "type": "string"
+                    },
+                    "effective_to": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "proposed_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "approved_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "approved_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "ended_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "ended_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "company_id",
+                    "control_basis",
+                    "treatment",
+                    "status",
+                    "effective_from",
+                    "effective_to",
+                    "proposed_by",
+                    "approved_by",
+                    "approved_at",
+                    "ended_by",
+                    "ended_at"
+                ],
+                "title": "PerimeterMemberResource"
+            },
             "PeriodResource": {
                 "type": "object",
                 "properties": {
@@ -24795,6 +25763,29 @@
                     "archived"
                 ],
                 "title": "PlanVersionStatus"
+            },
+            "ProposeMemberRequest": {
+                "type": "object",
+                "properties": {
+                    "company_id": {
+                        "type": "string"
+                    },
+                    "control_basis": {
+                        "type": "string",
+                        "description": "The accountant's reasoning for the assessment that the group controls the company (CO-FR-02).",
+                        "maxLength": 2000
+                    },
+                    "effective_from": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                },
+                "required": [
+                    "company_id",
+                    "control_basis",
+                    "effective_from"
+                ],
+                "title": "ProposeMemberRequest"
             },
             "PublishPlanVersionRequest": {
                 "type": "object",
@@ -25778,6 +26769,52 @@
                 ],
                 "title": "SaveBankImportMappingRequest"
             },
+            "SaveMappingRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "description": "The version the client read; 0 when the group has no mapping yet.",
+                        "minimum": 0
+                    },
+                    "effective_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    },
+                    "mappings": {
+                        "type": "array",
+                        "description": "The whole mapping as it should be from now on: rows left out are no longer mapped.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "company_id": {
+                                    "type": "string"
+                                },
+                                "account_id": {
+                                    "type": "string"
+                                },
+                                "group_account_id": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "company_id",
+                                "account_id",
+                                "group_account_id"
+                            ]
+                        },
+                        "maxItems": 5000
+                    }
+                },
+                "required": [
+                    "lock_version",
+                    "mappings"
+                ],
+                "title": "SaveMappingRequest"
+            },
             "SaveMovementClassificationRequest": {
                 "type": "object",
                 "properties": {
@@ -26574,6 +27611,44 @@
                 ],
                 "title": "UpdateFiscalCalendarRequest"
             },
+            "UpdateGroupAccountRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "lock_version"
+                ],
+                "title": "UpdateGroupAccountRequest"
+            },
+            "UpdateGroupRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "lock_version",
+                    "name"
+                ],
+                "title": "UpdateGroupRequest"
+            },
             "UpdateIntegrationClientRequest": {
                 "type": "object",
                 "properties": {
@@ -27161,7 +28236,8 @@
                                 "roles.read",
                                 "roles.manage",
                                 "integration-clients.manage",
-                                "policies.manage"
+                                "policies.manage",
+                                "consolidation.join"
                             ]
                         },
                         "uniqueItems": true
@@ -27253,7 +28329,8 @@
                                 "roles.read",
                                 "roles.manage",
                                 "integration-clients.manage",
-                                "policies.manage"
+                                "policies.manage",
+                                "consolidation.join"
                             ]
                         },
                         "uniqueItems": true

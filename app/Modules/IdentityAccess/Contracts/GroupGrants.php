@@ -8,12 +8,19 @@ namespace App\Modules\IdentityAccess\Contracts;
  */
 interface GroupGrants
 {
-    /** Running includes reading. */
+    /** Running and approving include reading. */
     public function can(int $userId, string $groupId, GroupAbility $ability): bool;
 
     /** Idempotent. */
     public function grant(int $userId, string $groupId, GroupAbility $ability, ?int $grantedBy = null): void;
 
-    /** Revoking `Read` also revokes `Run`. Idempotent. */
+    /** Revoking `Read` revokes every ability, as they all include it. Idempotent. */
     public function revoke(int $userId, string $groupId, GroupAbility $ability): void;
+
+    /**
+     * The groups the user may read, which is every group they hold a grant on.
+     *
+     * @return list<string>
+     */
+    public function groupsOf(int $userId): array;
 }
