@@ -4,6 +4,8 @@
 
 **Definisi selesai:** kode + test Pest untuk setiap AC yang dirujuk + spesifikasi OpenAPI terbarui + layar SPA terkait (bila ada) + CI lulus (Pint, Larastan, Pest, deptrac).
 
+**Spesifikasi OpenAPI** tidak diperiksa oleh `composer test` maupun CI. Setelah API berubah, jalankan `composer openapi:export` dan `pnpm run api:types`, lalu commit keduanya; `composer test:openapi` menjalankan testnya sesuai kebutuhan. **Menjalankan test:** selama bekerja cukup test modul yang disentuh (`php artisan test --compact tests/Feature/<Modul>`); suite penuh sekali di akhir lewat `composer test:parallel`, yang butuh `max_locks_per_transaction` ≥ 256 di PostgreSQL lokal.
+
 **Urutan:** M0 menyiapkan fondasi; M1 membangun irisan end-to-end tipis untuk menguji arsitektur; M2–M8 memperdalam modul sesuai graf dependensi. Requirement yang sebagian dikerjakan lebih awal dilengkapi di milestone berikutnya.
 
 ## M0 — Fondasi
