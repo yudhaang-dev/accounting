@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { FormAlert } from '@/components/form-alert';
@@ -29,6 +29,8 @@ import { actionErrorMessage } from '@/lib/errors';
 import { applyApiErrors } from '@/lib/forms';
 import { isApiError } from '@/lib/http';
 import {
+    cashFlowClassesFor,
+    type CashFlowClass,
     createGroupAccount,
     GROUP_ACCOUNT_CLASSES,
     updateGroupAccount,
@@ -41,6 +43,7 @@ type Values = {
     name: string;
     class: GroupAccountClass;
     is_active: boolean;
+    cash_flow_class: CashFlowClass | '';
 };
 
 function AccountForm({
@@ -62,6 +65,8 @@ function AccountForm({
             name: account?.name ?? '',
             class: (account?.class as GroupAccountClass | undefined) ?? 'asset',
             is_active: account?.is_active ?? true,
+            cash_flow_class:
+                (account?.cash_flow_class as CashFlowClass | null) ?? '',
         },
     });
     const {
@@ -69,6 +74,15 @@ function AccountForm({
         register,
         formState: { errors },
     } = form;
+    const selectedClass = useWatch({ control, name: 'class' });
+    const flowClasses = cashFlowClassesFor(selectedClass);
+    const flowItems = [
+        { value: '', label: t('consolidation.accounts.cashFlowNone') },
+        ...flowClasses.map((value) => ({
+            value,
+            label: t(`consolidation.cashFlowClasses.${value}`),
+        })),
+    ];
     const classes = GROUP_ACCOUNT_CLASSES.map((value) => ({
         value,
         label: t(`consolidation.classes.${value}`),
@@ -86,11 +100,13 @@ function AccountForm({
                       lock_version: account.lock_version,
                       name: values.name.trim(),
                       is_active: values.is_active,
+                      cash_flow_class: values.cash_flow_class || null,
                   })
                 : createGroupAccount(groupId, {
                       code: values.code.trim(),
                       name: values.name.trim(),
                       class: values.class,
+                      cash_flow_class: values.cash_flow_class || undefined,
                   }),
         onSuccess: async (saved) => {
             await refresh();
@@ -217,6 +233,46 @@ function AccountForm({
                         <FieldError>{errors.class.message}</FieldError>
                     )}
                 </Field>
+
+                {flowClasses.length > 0 && (
+                    <Field>
+                        <FieldLabel htmlFor="group-account-flow">
+                            {t('consolidation.accounts.cashFlowClass')}
+                        </FieldLabel>
+                        <Controller
+                            control={control}
+                            name="cash_flow_class"
+                            render={({ field }) => (
+                                <Select
+                                    value={field.value}
+                                    items={flowItems}
+                                    onValueChange={(value) =>
+                                        field.onChange(value ?? '')
+                                    }
+                                >
+                                    <SelectTrigger id="group-account-flow">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            {flowItems.map((item) => (
+                                                <SelectItem
+                                                    key={item.value}
+                                                    value={item.value}
+                                                >
+                                                    {item.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        />
+                        <FieldDescription>
+                            {t('consolidation.accounts.cashFlowClassHint')}
+                        </FieldDescription>
+                    </Field>
+                )}
 
                 {editing && (
                     <Field orientation="horizontal">

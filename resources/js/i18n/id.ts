@@ -3167,6 +3167,9 @@ export const id = {
             created: 'Grup {{name}} dibuat.',
         },
         settings: {
+            tolerance: 'Toleransi eliminasi ({{currency}})',
+            toleranceHint:
+                'Selisih terbesar sebuah pasangan intragrup yang masih dianggap cocok dan dieliminasi. Di atasnya pasangan menjadi pengecualian.',
             open: 'Pengaturan',
             title: 'Pengaturan grup',
             description: 'Mengubah nama grup dan kebijakan paket.',
@@ -3174,6 +3177,12 @@ export const id = {
             policyHint:
                 'Dengan “simpan sebagai draf”, run tetap dibuat dan ditandai draf. Dengan “tolak”, run ditolak dan menyebut perusahaan yang bermasalah.',
             saved: 'Pengaturan grup disimpan.',
+        },
+        cashFlowClasses: {
+            cash: 'Kas',
+            operating: 'Operasi',
+            investing: 'Investasi',
+            financing: 'Pendanaan',
         },
         nav: {
             label: 'Bagian grup',
@@ -3221,6 +3230,10 @@ export const id = {
             ended: 'Anggota dikeluarkan dari perimeter.',
         },
         accounts: {
+            cashFlowClass: 'Kelas arus kas',
+            cashFlowNone: 'Tanpa kelas',
+            cashFlowClassHint:
+                'Untuk arus kas tidak langsung. Aset atau liabilitas tanpa kelas membuat arus kas tidak rekonsiliasi dan menolak run formal; ekuitas tanpa kelas dianggap pendanaan.',
             description:
                 'Bagan akun grup. Akun perusahaan dipetakan ke akun-akun ini; kelas akun tidak berubah setelah dibuat.',
             new: 'Akun baru',
@@ -3263,6 +3276,9 @@ export const id = {
             notMapped: '— tidak dipetakan —',
         },
         runs: {
+            formal: 'Run formal (konsolidasi)',
+            formalHint:
+                'Ditolak dengan menyebut penyebabnya bila ada akun tanpa pemetaan, pasangan intragrup yang selisih, atau paket tidak seimbang. Hasilnya berstatus draf selama ada paket yang belum tertutup atau lengkap.',
             description:
                 'Roll-up manajemen: paket anggota perimeter dijumlahkan per akun grup. Setiap run disimpan apa adanya; mengubah perimeter, pemetaan, atau pembukuan membuat run baru.',
             run: 'Jalankan roll-up',

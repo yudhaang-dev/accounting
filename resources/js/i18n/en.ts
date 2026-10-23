@@ -3167,6 +3167,9 @@ export const en: Widen<typeof id> = {
             created: 'Group {{name}} created.',
         },
         settings: {
+            tolerance: 'Elimination tolerance ({{currency}})',
+            toleranceHint:
+                'The largest difference an intragroup pair may leave and still be eliminated. Above it the pair becomes an exception.',
             open: 'Settings',
             title: 'Group settings',
             description:
@@ -3175,6 +3178,12 @@ export const en: Widen<typeof id> = {
             policyHint:
                 'With “keep as draft” a run is still made and marked as a draft. With “refuse” it is refused and names the companies at fault.',
             saved: 'Group settings saved.',
+        },
+        cashFlowClasses: {
+            cash: 'Cash',
+            operating: 'Operating',
+            investing: 'Investing',
+            financing: 'Financing',
         },
         nav: {
             label: 'Group sections',
@@ -3221,6 +3230,10 @@ export const en: Widen<typeof id> = {
             ended: 'Member removed from the perimeter.',
         },
         accounts: {
+            cashFlowClass: 'Cash flow class',
+            cashFlowNone: 'No class',
+            cashFlowClassHint:
+                'For the indirect cash flow. An asset or liability without a class leaves the cash flow unreconciled and refuses a formal run; equity without a class counts as financing.',
             description:
                 'The chart of accounts of the group. Company accounts are mapped to these; an account keeps its class once created.',
             new: 'New account',
@@ -3265,6 +3278,9 @@ export const en: Widen<typeof id> = {
             notMapped: '— not mapped —',
         },
         runs: {
+            formal: 'Formal run (consolidation)',
+            formalHint:
+                'Refused, naming the cause, when an account has no mapping, an intragroup pair differs, or a package is unbalanced. The result is a draft while any package is not closed or complete.',
             description:
                 'Management roll-up: the packages of the members of the perimeter added up per group account. Each run is kept as it was; changing the perimeter, the mapping or the books makes a new run.',
             run: 'Run roll-up',

@@ -6,6 +6,7 @@ import { FormAlert } from '@/components/form-alert';
 import { FormDialog } from '@/components/form-dialog';
 import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DialogFooter } from '@/components/ui/dialog';
 import {
     Field,
@@ -32,10 +33,11 @@ function RunForm({
     const today = todayIso();
     const [from, setFrom] = useState(`${today.slice(0, 4)}-01-01`);
     const [to, setTo] = useState(today);
+    const [formal, setFormal] = useState(false);
     const [problems, setProblems] = useState<string[]>([]);
 
     const run = useMutation({
-        mutationFn: () => createRun(groupId, from, to),
+        mutationFn: () => createRun(groupId, from, to, formal),
         onSuccess: async (created) => {
             await queryClient.invalidateQueries({
                 queryKey: ['groups', groupId, 'runs'],
@@ -94,6 +96,25 @@ function RunForm({
                     <FieldDescription>
                         {t('consolidation.runs.toHint')}
                     </FieldDescription>
+                </Field>
+
+                <Field orientation="horizontal">
+                    <Checkbox
+                        id="run-formal"
+                        checked={formal}
+                        onCheckedChange={(next) => setFormal(next === true)}
+                    />
+                    <div className="flex flex-col gap-1">
+                        <FieldLabel
+                            htmlFor="run-formal"
+                            className="font-normal"
+                        >
+                            {t('consolidation.runs.formal')}
+                        </FieldLabel>
+                        <FieldDescription>
+                            {t('consolidation.runs.formalHint')}
+                        </FieldDescription>
+                    </div>
                 </Field>
 
                 <DialogFooter>

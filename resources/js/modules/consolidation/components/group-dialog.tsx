@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { DatePicker } from '@/components/date-picker';
 import { FormAlert } from '@/components/form-alert';
 import { FormDialog } from '@/components/form-dialog';
+import { MoneyInput } from '@/components/money-input';
 import { SearchableSelect } from '@/components/searchable-select';
 import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
@@ -277,7 +278,11 @@ export function CreateGroupDialog({
     );
 }
 
-type SettingsValues = { name: string; package_policy: PackagePolicy };
+type SettingsValues = {
+    name: string;
+    package_policy: PackagePolicy;
+    elimination_tolerance: string;
+};
 
 function SettingsForm({ group, onDone }: { group: Group; onDone: () => void }) {
     const { t } = useTranslation();
@@ -287,6 +292,7 @@ function SettingsForm({ group, onDone }: { group: Group; onDone: () => void }) {
         defaultValues: {
             name: group.name,
             package_policy: group.package_policy as PackagePolicy,
+            elimination_tolerance: group.elimination_tolerance,
         },
     });
     const {
@@ -308,6 +314,9 @@ function SettingsForm({ group, onDone }: { group: Group; onDone: () => void }) {
                 lock_version: group.lock_version,
                 name: values.name.trim(),
                 package_policy: values.package_policy,
+                // The API takes it as a decimal string; the generated type says number.
+                elimination_tolerance: (values.elimination_tolerance ||
+                    '0') as unknown as number,
             }),
         onSuccess: async () => {
             await refresh();
@@ -398,6 +407,39 @@ function SettingsForm({ group, onDone }: { group: Group; onDone: () => void }) {
                     <FieldDescription>
                         {t('consolidation.settings.policyHint')}
                     </FieldDescription>
+                </Field>
+
+                <Field
+                    data-invalid={
+                        errors.elimination_tolerance ? true : undefined
+                    }
+                >
+                    <FieldLabel htmlFor="settings-tolerance">
+                        {t('consolidation.settings.tolerance', {
+                            currency: group.presentation_currency,
+                        })}
+                    </FieldLabel>
+                    <Controller
+                        control={control}
+                        name="elimination_tolerance"
+                        render={({ field }) => (
+                            <MoneyInput
+                                id="settings-tolerance"
+                                maxDecimals={6}
+                                value={field.value}
+                                onBlur={field.onBlur}
+                                onChange={field.onChange}
+                            />
+                        )}
+                    />
+                    <FieldDescription>
+                        {t('consolidation.settings.toleranceHint')}
+                    </FieldDescription>
+                    {errors.elimination_tolerance && (
+                        <FieldError>
+                            {errors.elimination_tolerance.message}
+                        </FieldError>
+                    )}
                 </Field>
 
                 <DialogFooter>

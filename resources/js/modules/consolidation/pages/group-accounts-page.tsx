@@ -87,6 +87,9 @@ export function GroupAccountsPage({ groupId }: { groupId: string }) {
                                     {t('consolidation.accounts.class')}
                                 </TableHead>
                                 <TableHead>
+                                    {t('consolidation.accounts.cashFlowClass')}
+                                </TableHead>
+                                <TableHead>
                                     {t('consolidation.accounts.status')}
                                 </TableHead>
                                 <TableHead className="w-0" />
@@ -105,6 +108,13 @@ export function GroupAccountsPage({ groupId }: { groupId: string }) {
                                         {t(
                                             `consolidation.classes.${account.class as 'asset'}`,
                                         )}
+                                    </TableCell>
+                                    <TableCell>
+                                        {account.cash_flow_class
+                                            ? t(
+                                                  `consolidation.cashFlowClasses.${account.cash_flow_class as 'cash'}`,
+                                              )
+                                            : '—'}
                                     </TableCell>
                                     <TableCell>
                                         <Badge

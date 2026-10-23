@@ -54,6 +54,25 @@ export type GroupAccountClass = (typeof GROUP_ACCOUNT_CLASSES)[number];
 
 export type PackagePolicy = 'draft' | 'reject';
 
+export const CASH_FLOW_CLASSES = [
+    'cash',
+    'operating',
+    'investing',
+    'financing',
+] as const;
+export type CashFlowClass = (typeof CASH_FLOW_CLASSES)[number];
+
+/** The classes a group account of a class may take: balance sheet accounts only, and `cash` only for assets. */
+export function cashFlowClassesFor(accountClass: string): CashFlowClass[] {
+    if (accountClass === 'asset') {
+        return [...CASH_FLOW_CLASSES];
+    }
+
+    return accountClass === 'liability' || accountClass === 'equity'
+        ? CASH_FLOW_CLASSES.filter((value) => value !== 'cash')
+        : [];
+}
+
 /** Whether a group's abilities include one; reading is included in running and approving. */
 export function groupCan(
     group: Pick<Group, 'abilities'> | undefined,
@@ -378,12 +397,13 @@ export async function createRun(
     groupId: string,
     from: string,
     to: string,
+    formal = false,
 ): Promise<Run> {
     return (
         await unwrap(
             api.POST('/groups/{group}/runs', {
                 params: { path: { group: groupId } },
-                body: { from, to },
+                body: { from, to, formal },
             }),
         )
     ).data;

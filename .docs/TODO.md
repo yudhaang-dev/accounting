@@ -199,7 +199,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
       - [x] **B-05f5b** Keluaran grup dari hasil run: neraca saldo (sudah ada), neraca, laba rugi, laporan eliminasi dan penyesuaian, rekonsiliasi per entitas, ekspor CSV — CO-FR-10 — `GET /groups/{group}/runs/{id}/statements` (JSON dan CSV) dibaca dari hasil run sehingga membawa label dan `formal`-nya; neraca memakai saldo akhir dan laba tahun berjalan dari akun pendapatan/beban, laba rugi memakai mutasi rentang; arus kas tidak langsung ada di `cash_flow` (lihat B-05f5c)
     - [ ] **B-05f6** SPA untuk kebijakan translasi, kurs, eliminasi, penyesuaian, dan hasil formal
       - [x] **B-05f6a** Translasi: kebijakan berversi, jenis kurs, dan kurs grup — CO-FR-06 — layar `/groups/$groupId/translation`; hasil translasi per entitas di halaman run menyusul di B-05f6c
-      - [ ] **B-05f6b** Run formal dan toleransi eliminasi: pilihan `formal` pada dialog run, `elimination_tolerance` pada pengaturan grup, `cash_flow_class` pada form akun grup, penolakan run formal yang menyebut penyebabnya — CO-FR-05, CO-FR-07, CO-FR-10
+      - [x] **B-05f6b** Run formal dan toleransi eliminasi: pilihan `formal` pada dialog run, `elimination_tolerance` pada pengaturan grup, `cash_flow_class` pada form akun grup, penolakan run formal yang menyebut penyebabnya — CO-FR-05, CO-FR-07, CO-FR-10
       - [ ] **B-05f6c** Halaman run: label dan penanda draf, kurs dan translasi per entitas, eliminasi dan pengecualian selisih — CO-FR-05, CO-FR-06, CO-FR-07
       - [ ] **B-05f6d** Penyesuaian konsolidasi: usul, setujui, tolak — CO-FR-08, CO-AC-04
       - [ ] **B-05f6e** Keluaran formal: neraca, laba rugi, arus kas, laporan eliminasi dan penyesuaian, rekonsiliasi per entitas, ekspor CSV — CO-FR-10
