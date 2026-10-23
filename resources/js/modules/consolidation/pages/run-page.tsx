@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import {
     ChevronDownIcon,
     ChevronRightIcon,
@@ -117,18 +118,31 @@ export function RunPage({
                             ` · ${t('consolidation.runPage.translationVersion', { version: result.translation_policy_version })}`}
                     </p>
                 </div>
-                <Button
-                    variant="outline"
-                    disabled={download.isPending}
-                    onClick={() => download.mutate()}
-                >
-                    {download.isPending ? (
-                        <Spinner data-icon="inline-start" />
-                    ) : (
-                        <DownloadIcon data-icon="inline-start" />
-                    )}
-                    {t('consolidation.runPage.export')}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                    <Button
+                        variant="outline"
+                        render={
+                            <Link
+                                to="/groups/$groupId/runs/$runId/statements"
+                                params={{ groupId, runId }}
+                            />
+                        }
+                    >
+                        {t('consolidation.statements.open')}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        disabled={download.isPending}
+                        onClick={() => download.mutate()}
+                    >
+                        {download.isPending ? (
+                            <Spinner data-icon="inline-start" />
+                        ) : (
+                            <DownloadIcon data-icon="inline-start" />
+                        )}
+                        {t('consolidation.runPage.export')}
+                    </Button>
+                </div>
             </div>
 
             {download.isError && (

@@ -14810,13 +14810,57 @@ export interface operations {
                             };
                             eliminations: {
                                 pairs: {
-                                    [key: string]: unknown;
+                                    id: string;
+                                    kind: string;
+                                    company_a_id: string;
+                                    company_b_id: string;
+                                    amount_a: string;
+                                    amount_b: string;
+                                    difference: string;
+                                    status: string;
+                                    reason: string | null;
+                                    positions: {
+                                        [key: string]: unknown;
+                                    }[];
                                 }[];
                                 eliminations: {
-                                    [key: string]: unknown;
+                                    match_id: string;
+                                    kind: string;
+                                    company_id: string | null;
+                                    counterparty_company_id: string | null;
+                                    account_id: string | null;
+                                    code: string | null;
+                                    name: string | null;
+                                    class: string | null;
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                    closing: string;
+                                    group_account_id?: string;
+                                    group_account_code?: string;
                                 }[];
                                 adjustments: {
-                                    [key: string]: unknown;
+                                    id: string;
+                                    run_id: string;
+                                    source: string;
+                                    reason: string;
+                                    status: string;
+                                    proposed_by: number;
+                                    decided_by: number | null;
+                                    decided_at: string | null;
+                                    rejection_reason: string | null;
+                                    created_at: string | null;
+                                    lines: {
+                                        group_account_id: string;
+                                        code: string;
+                                        name: string;
+                                        class: string;
+                                        debit: string;
+                                        credit: string;
+                                    }[];
                                 }[];
                                 total_eliminated: {
                                     [key: string]: string;

@@ -30,6 +30,7 @@ export type RunLine = Run['lines'][number];
 export type RunSource = RunLine['sources'][number];
 export type RunEntity = Run['entities'][number];
 export type RunException = Run['exceptions'][number];
+export type Statements = DataOf<Json<'groups.runs.statements', 200>>;
 export type Adjustment = DataOf<
     Json<'groups.runs.adjustments.index', 200>
 >[number];
@@ -178,6 +179,19 @@ export const runQuery = (groupId: string, runId: string) =>
             (
                 await unwrap(
                     api.GET('/groups/{group}/runs/{id}', {
+                        params: { path: { group: groupId, id: runId } },
+                    }),
+                )
+            ).data,
+    });
+
+export const statementsQuery = (groupId: string, runId: string) =>
+    queryOptions({
+        queryKey: [...everything, groupId, 'runs', runId, 'statements'],
+        queryFn: async (): Promise<Statements> =>
+            (
+                await unwrap(
+                    api.GET('/groups/{group}/runs/{id}/statements', {
                         params: { path: { group: groupId, id: runId } },
                     }),
                 )
@@ -475,6 +489,18 @@ export async function createRun(
             }),
         )
     ).data;
+}
+
+/** Downloads the result of a run as CSV, with the same permission as reading it (X-FR-02). */
+export function exportStatements(
+    groupId: string,
+    runId: string,
+): Promise<void> {
+    return downloadFile(
+        `/api/v1/groups/${groupId}/runs/${runId}/statements`,
+        'text/csv',
+        `group_statements_${runId}.csv`,
+    );
 }
 
 /** Downloads the result of a run as CSV, with the same permission as reading it (X-FR-02). */

@@ -29,6 +29,7 @@ import {
 } from '@/modules/identity-access/workspaces';
 import { GroupAccountsPage } from '@/modules/consolidation/pages/group-accounts-page';
 import { GroupLayout } from '@/modules/consolidation/pages/group-layout';
+import { StatementsPage } from '@/modules/consolidation/pages/statements-page';
 import { TranslationPage } from '@/modules/consolidation/pages/translation-page';
 import { GroupsPage } from '@/modules/consolidation/pages/groups-page';
 import { MappingPage } from '@/modules/consolidation/pages/mapping-page';
@@ -2096,6 +2097,32 @@ const groupRunRoute = createRoute({
     },
 });
 
+const groupStatementsRoute = createRoute({
+    getParentRoute: () => groupRoute,
+    path: '/runs/$runId/statements',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'consolidation.nav.runs',
+                href: `/groups/${m.params.groupId}/runs`,
+            },
+            {
+                labelKey: 'consolidation.runPage.pageTitle',
+                href: `/groups/${m.params.groupId}/runs/${m.params.runId}`,
+            },
+            {
+                labelKey: 'consolidation.statements.pageTitle',
+                href: `/groups/${m.params.groupId}/runs/${m.params.runId}/statements`,
+            },
+        ],
+    },
+    component: function GroupStatements() {
+        const { groupId, runId } = groupStatementsRoute.useParams();
+
+        return <StatementsPage groupId={groupId} runId={runId} />;
+    },
+});
+
 const routeTree = rootRoute.addChildren([
     guestRoute.addChildren([
         loginRoute,
@@ -2119,6 +2146,7 @@ const routeTree = rootRoute.addChildren([
                 groupTranslationRoute,
                 groupRunsRoute,
                 groupRunRoute,
+                groupStatementsRoute,
             ]),
             companyRoute.addChildren([
                 companyHomeRoute,

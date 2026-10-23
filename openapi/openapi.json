@@ -23094,21 +23094,248 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "object",
-                                                                "additionalProperties": {}
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "kind": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "company_a_id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "company_b_id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "amount_a": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "amount_b": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "difference": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "status": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "reason": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "positions": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "additionalProperties": {}
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "kind",
+                                                                    "company_a_id",
+                                                                    "company_b_id",
+                                                                    "amount_a",
+                                                                    "amount_b",
+                                                                    "difference",
+                                                                    "status",
+                                                                    "reason",
+                                                                    "positions"
+                                                                ]
                                                             }
                                                         },
                                                         "eliminations": {
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "object",
-                                                                "additionalProperties": {}
+                                                                "properties": {
+                                                                    "match_id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "kind": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "company_id": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "counterparty_company_id": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "account_id": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "code": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "name": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "class": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "opening_debit": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "opening_credit": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "debit": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "credit": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "closing_debit": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "closing_credit": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "closing": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "group_account_id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "group_account_code": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "match_id",
+                                                                    "kind",
+                                                                    "company_id",
+                                                                    "counterparty_company_id",
+                                                                    "account_id",
+                                                                    "code",
+                                                                    "name",
+                                                                    "class",
+                                                                    "opening_debit",
+                                                                    "opening_credit",
+                                                                    "debit",
+                                                                    "credit",
+                                                                    "closing_debit",
+                                                                    "closing_credit",
+                                                                    "closing"
+                                                                ]
                                                             }
                                                         },
                                                         "adjustments": {
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "object",
-                                                                "additionalProperties": {}
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "run_id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "source": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "reason": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "status": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "proposed_by": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "decided_by": {
+                                                                        "type": [
+                                                                            "integer",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "decided_at": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "rejection_reason": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "created_at": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "lines": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "group_account_id": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "code": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "name": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "class": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "debit": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "credit": {
+                                                                                    "type": "string"
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "group_account_id",
+                                                                                "code",
+                                                                                "name",
+                                                                                "class",
+                                                                                "debit",
+                                                                                "credit"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "run_id",
+                                                                    "source",
+                                                                    "reason",
+                                                                    "status",
+                                                                    "proposed_by",
+                                                                    "decided_by",
+                                                                    "decided_at",
+                                                                    "rejection_reason",
+                                                                    "created_at",
+                                                                    "lines"
+                                                                ]
                                                             }
                                                         },
                                                         "total_eliminated": {
