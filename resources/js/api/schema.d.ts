@@ -2546,6 +2546,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/reports/party-balances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Receivable and payable balance of each party on `as_of` (a past date is allowed), in the functional
+         *     currency. The figures are the totals of the aging report, so they agree with it. Parties with nothing
+         *     outstanding are not listed
+         */
+        get: operations["reports.party-balances"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/groups/{group}/perimeter/{id}/approve": {
         parameters: {
             query?: never;
@@ -11805,6 +11826,41 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "reports.party-balances": {
+        parameters: {
+            query: {
+                as_of: string;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            as_of: string;
+                            functional_currency: string;
+                            parties: {
+                                party_id: string;
+                                receivable: string;
+                                payable: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "groups.perimeter.approve": {

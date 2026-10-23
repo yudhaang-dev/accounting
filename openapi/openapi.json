@@ -14647,6 +14647,95 @@
                 }
             }
         },
+        "/companies/{companyId}/reports/party-balances": {
+            "get": {
+                "operationId": "reports.party-balances",
+                "summary": "Receivable and payable balance of each party on `as_of` (a past date is allowed), in the functional\ncurrency. The figures are the totals of the aging report, so they agree with it. Parties with nothing\noutstanding are not listed",
+                "tags": [
+                    "PartyBalances"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "as_of",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "as_of": {
+                                                    "type": "string"
+                                                },
+                                                "functional_currency": {
+                                                    "type": "string"
+                                                },
+                                                "parties": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "party_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "receivable": {
+                                                                "type": "string"
+                                                            },
+                                                            "payable": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "party_id",
+                                                            "receivable",
+                                                            "payable"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "as_of",
+                                                "functional_currency",
+                                                "parties"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/groups/{group}/perimeter/{id}/approve": {
             "post": {
                 "operationId": "groups.perimeter.approve",

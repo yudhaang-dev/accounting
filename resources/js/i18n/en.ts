@@ -1058,6 +1058,12 @@ export const en: Widen<typeof id> = {
         },
     },
     parties: {
+        balances: {
+            asOf: 'Balance as of',
+            aging: 'See aging of receivables/payables',
+            receivable: 'Receivable',
+            payable: 'Payable',
+        },
         pageTitle: 'Parties',
         title: 'Parties',
         description:

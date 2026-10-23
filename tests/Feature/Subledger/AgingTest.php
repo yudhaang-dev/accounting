@@ -235,3 +235,48 @@ describe('the report as a download and its access', function () {
         $this->actingAs($this->viewer)->getJson("{$this->url}/reports/aging?as_of=2026-05-31")->assertUnprocessable();
     });
 });
+
+describe('the balance of each party (SL-FR-08)', function () {
+    function partyBalances(string $asOf, ?User $as = null)
+    {
+        return test()->actingAs($as ?? test()->viewer)->getJson(test()->url.'/reports/party-balances?as_of='.$asOf);
+    }
+
+    it('gives what is owed to the company and what it owes per party, as the aging totals do', function () {
+        $supplier = docParty(['name' => 'UD Pemasok', 'is_customer' => false, 'is_supplier' => true]);
+        docType('credit_purchase', docInvoiceBody([
+            'posting_rules' => [
+                ['side' => 'credit', 'account' => docControl()],
+                ['side' => 'debit', 'account' => docFixed($this->expense)],
+            ],
+            'subledger_route' => ['kind' => 'invoice', 'control_role' => 'payables_control'],
+        ]));
+        docPosted(docEntry('credit_purchase', ['party' => $supplier, 'number' => 'BILL-1', 'due' => '2026-04-30', 'total' => '800000'])->assertCreated()->json('data.id'));
+        agingInvoice('INV-1', '1000000', '2026-04-30');
+        agingInvoice('INV-2', '200000', '2026-04-30', $this->other);
+
+        $balances = partyBalances('2026-05-31')->assertOk()->json('data');
+        $byParty = collect($balances['parties'])->keyBy('party_id');
+
+        expect($balances['as_of'])->toBe('2026-05-31')
+            ->and($balances['functional_currency'])->toBe('IDR')
+            ->and($byParty)->toHaveCount(3)
+            ->and($byParty[$this->customer])->toMatchArray(['receivable' => '1000000.000000', 'payable' => '0.000000'])
+            ->and($byParty[$this->other])->toMatchArray(['receivable' => '200000.000000', 'payable' => '0.000000'])
+            ->and($byParty[$supplier])->toMatchArray(['receivable' => '0.000000', 'payable' => '800000.000000'])
+            ->and($byParty[$this->customer]['receivable'])->toBe(agingReport('2026-05-31', ['party_id' => $this->customer])->json('data.totals.total'));
+    });
+
+    it('reads a past date and leaves out a party that has been settled by then', function () {
+        $invoice = agingInvoice('INV-1', '1000000', '2026-04-14');
+        docPosted(docEntry('receipt', ['party' => $this->customer, 'bank' => $this->cashAccount, 'total' => '1000000', 'allocs' => [['open_item_id' => $invoice, 'amount' => '1000000']]], ['accounting_date' => '2026-05-10'])->assertCreated()->json('data.id'));
+
+        expect(collect(partyBalances('2026-05-01')->json('data.parties'))->pluck('receivable', 'party_id')->all())->toBe([$this->customer => '1000000.000000'])
+            ->and(partyBalances('2026-05-31')->json('data.parties'))->toBe([]);
+    });
+
+    it('needs a date and the permission to read reports', function () {
+        $this->actingAs($this->viewer)->getJson("{$this->url}/reports/party-balances")->assertUnprocessable();
+        $this->actingAs(User::factory()->create())->getJson("{$this->url}/reports/party-balances?as_of=2026-05-31")->assertForbidden();
+    });
+});

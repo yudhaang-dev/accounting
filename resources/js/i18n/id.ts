@@ -1054,6 +1054,12 @@ export const id = {
         },
     },
     parties: {
+        balances: {
+            asOf: 'Saldo per tanggal',
+            aging: 'Lihat umur piutang/utang',
+            receivable: 'Piutang',
+            payable: 'Utang',
+        },
         pageTitle: 'Pihak',
         title: 'Pihak',
         description:

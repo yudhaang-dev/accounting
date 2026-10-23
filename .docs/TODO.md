@@ -203,3 +203,4 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
       - [x] **B-05f6c** Halaman run: label dan penanda draf, kurs dan translasi per entitas, eliminasi dan pengecualian selisih — CO-FR-05, CO-FR-06, CO-FR-07
       - [x] **B-05f6d** Penyesuaian konsolidasi: usul, setujui, tolak — CO-FR-08, CO-AC-04
       - [x] **B-05f6e** Keluaran formal: neraca, laba rugi, arus kas, laporan eliminasi dan penyesuaian, rekonsiliasi per entitas, ekspor CSV — CO-FR-10
+- [x] **B-06** Saldo piutang dan utang per pihak — SL-FR-08 — `GET /reports/party-balances?as_of=` menjumlahkan laporan umur tiap peran akun kontrol (mata uang fungsional, tanggal lampau boleh), sehingga angkanya sama dengan laporan umur; pihak tanpa saldo tidak dimuat; layar `/parties` menampilkan kolom Piutang dan Utang bagi pemegang `reports.read`; belum memisahkan per mata uang transaksi atau per akun kontrol (ada di laporan umur)

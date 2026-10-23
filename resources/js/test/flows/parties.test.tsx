@@ -392,3 +392,89 @@ describe('parties', () => {
         ).toBeInTheDocument();
     });
 });
+
+describe('balance of each party (SL-FR-08)', () => {
+    const balances = (asOf: string) =>
+        json({
+            data: {
+                as_of: asOf,
+                functional_currency: 'IDR',
+                parties: [
+                    {
+                        party_id: partyId,
+                        receivable: '1500000.000000',
+                        payable: '0.000000',
+                    },
+                    {
+                        party_id: '01JPARTY00000000000000002',
+                        receivable: '0.000000',
+                        payable: '800000.000000',
+                    },
+                ],
+            },
+        });
+    const twoParties = () =>
+        list([
+            party(),
+            party({
+                id: '01JPARTY00000000000000002',
+                name: 'CV Sentosa',
+                is_customer: false,
+                is_supplier: true,
+                external_refs: [],
+            }),
+            party({
+                id: '01JPARTY00000000000000003',
+                name: 'UD Tanpa Saldo',
+                external_refs: [],
+            }),
+        ]);
+
+    it('shows what is owed and what is owed to the company next to each party', async () => {
+        const api = mockApi({
+            ...withPermissions([...manager, 'reports.read']),
+            [`GET ${base}/parties`]: twoParties,
+            [`GET ${base}/reports/party-balances`]: (call) =>
+                balances(call.query.as_of ?? ''),
+        });
+
+        renderApp(path);
+
+        const maju = (await screen.findByText('PT Maju Jaya')).closest('tr')!;
+        const sentosa = screen.getByText('CV Sentosa').closest('tr')!;
+        const none = screen.getByText('UD Tanpa Saldo').closest('tr')!;
+
+        await waitFor(() =>
+            expect(
+                maju.querySelector('[data-side="receivable"]')?.textContent,
+            ).toBe('1.500.000,00'),
+        );
+        expect(maju.querySelector('[data-side="payable"]')?.textContent).toBe(
+            '—',
+        );
+        expect(
+            sentosa.querySelector('[data-side="payable"]')?.textContent,
+        ).toBe('800.000,00');
+        expect(
+            none.querySelector('[data-side="receivable"]')?.textContent,
+        ).toBe('—');
+        expect(
+            api.called(`GET ${base}/reports/party-balances`)[0]?.query.as_of,
+        ).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it('does not ask for balances, or show the columns, without permission to read reports', async () => {
+        const api = mockApi({
+            ...withPermissions(manager),
+            [`GET ${base}/parties`]: twoParties,
+        });
+
+        renderApp(path);
+
+        await screen.findByText('PT Maju Jaya');
+        expect(screen.queryByText('Piutang')).toBeNull();
+        expect(api.called(`GET ${base}/reports/party-balances`)).toHaveLength(
+            0,
+        );
+    });
+});

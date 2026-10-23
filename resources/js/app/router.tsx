@@ -799,6 +799,7 @@ const partiesRoute = createRoute({
                 companyId={workspace.company_id}
                 canManage={can(workspace, 'parties.manage')}
                 canReadProfiles={can(workspace, 'posting-profiles.read')}
+                canReadReports={can(workspace, 'reports.read')}
             />
         );
     },

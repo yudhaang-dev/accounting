@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { PlusIcon, UsersRoundIcon } from 'lucide-react';
 import { useDeferredValue, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { DatePicker } from '@/components/date-picker';
 import { FormAlert } from '@/components/form-alert';
 import { RowActions } from '@/components/row-actions';
 import { TablePagination } from '@/components/table-pagination';
@@ -38,6 +40,8 @@ import {
 } from '@/components/ui/table';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { useLastDefined } from '@/hooks/use-last-defined';
+import { todayIso } from '@/lib/date';
+import { compareDecimals, formatMoney, isDecimal } from '@/lib/decimal';
 import { actionErrorMessage, genericErrorMessage } from '@/lib/errors';
 import { usePageSize } from '@/lib/page-size';
 import { PartyDialog } from '@/modules/subledger/components/party-dialog';
@@ -46,6 +50,7 @@ import {
     setPartyStatus,
     type Party,
 } from '@/modules/subledger/parties';
+import { partyBalancesQuery } from '@/modules/subledger/party-balances';
 import { postingProfilesQuery } from '@/modules/subledger/posting-profiles';
 
 const ANY = '__any';
@@ -59,19 +64,23 @@ export function PartiesPage({
     companyId,
     canManage,
     canReadProfiles,
+    canReadReports,
 }: {
     companyId: string;
     canManage: boolean;
     /** Whether the user may list posting profiles, to name each party's profile and choose one. */
     canReadProfiles: boolean;
+    /** Whether the user may read reports, which is what the balance of each party comes from. */
+    canReadReports: boolean;
 }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
     const [role, setRole] = useState<'customer' | 'supplier' | undefined>();
     const [status, setStatus] = useState<'active' | 'inactive' | undefined>();
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = usePageSize('parties');
+    const [asOf, setAsOf] = useState(todayIso());
     const [creating, setCreating] = useState(false);
     const [editing, setEditing] = useState<Party | null>(null);
     const [deactivating, setDeactivating] = useState<Party | null>(null);
@@ -88,6 +97,15 @@ export function PartiesPage({
             page,
             perPage: pageSize,
         }),
+    );
+    const balances = useQuery(
+        partyBalancesQuery(companyId, asOf, canReadReports && asOf !== ''),
+    );
+    const balanceOf = new Map(
+        (balances.data?.parties ?? []).map((balance) => [
+            balance.party_id,
+            balance,
+        ]),
     );
     const profiles = useQuery({
         ...postingProfilesQuery(companyId),
@@ -167,6 +185,28 @@ export function PartiesPage({
                         setPage(1);
                     }}
                 />
+                {canReadReports && (
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span
+                            id="parties-as-of-label"
+                            className="text-sm text-muted-foreground"
+                        >
+                            {t('parties.balances.asOf')}
+                        </span>
+                        <DatePicker
+                            labelledBy="parties-as-of-label"
+                            value={asOf}
+                            onChange={setAsOf}
+                        />
+                        <Link
+                            to="/w/$companyId/reports/aging"
+                            params={{ companyId }}
+                            className="text-sm underline underline-offset-2"
+                        >
+                            {t('parties.balances.aging')}
+                        </Link>
+                    </div>
+                )}
                 <Select
                     value={role ?? ANY}
                     items={roleItems}
@@ -262,6 +302,18 @@ export function PartiesPage({
                                     <TableHead>
                                         {t('parties.refs.title')}
                                     </TableHead>
+                                    {canReadReports && (
+                                        <>
+                                            <TableHead className="text-end">
+                                                {t(
+                                                    'parties.balances.receivable',
+                                                )}
+                                            </TableHead>
+                                            <TableHead className="text-end">
+                                                {t('parties.balances.payable')}
+                                            </TableHead>
+                                        </>
+                                    )}
                                     {canReadProfiles && (
                                         <TableHead>
                                             {t('parties.profile')}
@@ -333,6 +385,39 @@ export function PartiesPage({
                                                 </ul>
                                             )}
                                         </TableCell>
+                                        {canReadReports && (
+                                            <>
+                                                {(
+                                                    [
+                                                        'receivable',
+                                                        'payable',
+                                                    ] as const
+                                                ).map((side) => {
+                                                    const value = balanceOf.get(
+                                                        party.id,
+                                                    )?.[side];
+
+                                                    return (
+                                                        <TableCell
+                                                            key={side}
+                                                            className="text-end tabular-nums"
+                                                            data-side={side}
+                                                        >
+                                                            {isDecimal(value) &&
+                                                            compareDecimals(
+                                                                value,
+                                                                '0',
+                                                            ) !== 0
+                                                                ? formatMoney(
+                                                                      value,
+                                                                      i18n.language,
+                                                                  )
+                                                                : '—'}
+                                                        </TableCell>
+                                                    );
+                                                })}
+                                            </>
+                                        )}
                                         {canReadProfiles && (
                                             <TableCell>
                                                 {party.posting_profile_id ===
