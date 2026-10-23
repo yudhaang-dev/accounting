@@ -6608,7 +6608,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": 201;
+                    "application/json": {
+                        data: {
+                            id: string;
+                            run_id: string;
+                            source: string;
+                            reason: string;
+                            status: string;
+                            proposed_by: number;
+                            decided_by: number | null;
+                            decided_at: string | null;
+                            rejection_reason: string | null;
+                            created_at: string | null;
+                            lines: {
+                                group_account_id: string;
+                                code: string;
+                                name: string;
+                                class: string;
+                                debit: string;
+                                credit: string;
+                            }[];
+                        };
+                    };
                 };
             };
             401: components["responses"]["AuthenticationException"];

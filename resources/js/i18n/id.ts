@@ -3301,6 +3301,47 @@ export const id = {
             coverage: 'Cakupan data',
             createdAt: 'Dijalankan',
         },
+        adjustments: {
+            title: 'Penyesuaian konsolidasi',
+            description:
+                'Penyesuaian manual hanya mengubah hasil grup, tidak pernah dibukukan ke buku perusahaan mana pun. Yang masuk ke hasil run hanya yang sudah disetujui, dan penyetuju harus orang lain dari pengusulnya.',
+            new: 'Usulkan penyesuaian',
+            empty: 'Belum ada penyesuaian pada run ini.',
+            statuses: {
+                pending: 'Menunggu persetujuan',
+                approved: 'Disetujui',
+                rejected: 'Ditolak',
+            },
+            source: 'Sumber',
+            sourceHint:
+                'Dokumen, perhitungan, atau instruksi yang mendasarinya.',
+            reason: 'Alasan',
+            lines: 'Baris ({{currency}}), satu sisi per baris',
+            accountN: 'Akun grup baris {{n}}',
+            debitN: 'Debit baris {{n}}',
+            creditN: 'Kredit baris {{n}}',
+            removeN: 'Hapus baris {{n}}',
+            addLine: 'Tambah baris',
+            balanced: 'Seimbang: {{total}}',
+            unbalanced: 'Belum seimbang, selisih {{difference}}',
+            propose: 'Usulkan',
+            proposeTitle: 'Usulkan penyesuaian',
+            proposeDescription: 'Form penyesuaian konsolidasi pada akun grup.',
+            proposed: 'Penyesuaian diusulkan.',
+            approve: 'Setujui',
+            approveTitle: 'Setujui penyesuaian?',
+            approveDescription:
+                'Penyesuaian ini akan masuk ke hasil run dan tidak dapat dibatalkan.',
+            approved: 'Penyesuaian disetujui.',
+            reject: 'Tolak',
+            rejectTitle: 'Tolak penyesuaian',
+            rejectDescription:
+                'Penyesuaian tetap tercatat tetapi tidak masuk ke hasil.',
+            rejectReason: 'Alasan penolakan',
+            rejected: 'Penyesuaian ditolak.',
+            rejectedFor: 'Ditolak: {{reason}}',
+            ownHint: 'Anda yang mengusulkannya; orang lain harus memutuskan.',
+        },
         runPage: {
             labels: {
                 management_rollup: 'Roll-up manajemen',

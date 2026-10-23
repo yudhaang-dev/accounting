@@ -25,6 +25,7 @@ import { useDocumentTitle } from '@/hooks/use-document-title';
 import { formatIsoDate } from '@/lib/date';
 import { formatMoney } from '@/lib/decimal';
 import { actionErrorMessage, genericErrorMessage } from '@/lib/errors';
+import { AdjustmentsSection } from '@/modules/consolidation/components/adjustments-section';
 import {
     IntercompanySection,
     TranslationSection,
@@ -468,6 +469,12 @@ export function RunPage({
             </section>
 
             <IntercompanySection run={result} />
+
+            <AdjustmentsSection
+                groupId={groupId}
+                runId={runId}
+                currency={result.presentation_currency}
+            />
 
             {result.exceptions.length > 0 && (
                 <section

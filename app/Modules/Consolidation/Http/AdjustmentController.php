@@ -30,7 +30,9 @@ class AdjustmentController
      * lines of one side each in the presentation currency. It changes nothing until someone other than the
      * proposer approves it, and it is never posted to a ledger of an entity. Needs a run grant on the group.
      *
-     * @response 201 array{data: array{id: string, run_id: string, source: string, reason: string, status: string, proposed_by: int, decided_by: int|null, decided_at: string|null, rejection_reason: string|null, created_at: string|null, lines: list<array{group_account_id: string, code: string, name: string, class: string, debit: string, credit: string}>}}
+     * @status 201
+     *
+     * @response array{data: array{id: string, run_id: string, source: string, reason: string, status: string, proposed_by: int, decided_by: int|null, decided_at: string|null, rejection_reason: string|null, created_at: string|null, lines: list<array{group_account_id: string, code: string, name: string, class: string, debit: string, credit: string}>}}
      */
     public function store(CreateAdjustmentRequest $request, ManageAdjustments $adjustments, RunResult $result, string $group, string $run): JsonResponse
     {

@@ -30,6 +30,18 @@ export type RunLine = Run['lines'][number];
 export type RunSource = RunLine['sources'][number];
 export type RunEntity = Run['entities'][number];
 export type RunException = Run['exceptions'][number];
+export type Adjustment = DataOf<
+    Json<'groups.runs.adjustments.index', 200>
+>[number];
+type AdjustmentRequest = components['schemas']['CreateAdjustmentRequest'];
+export type AdjustmentInput = Omit<AdjustmentRequest, 'lines'> & {
+    /** Amounts are decimal strings (API-TR-05); the generated type reads the `decimal` rule as a number. */
+    lines: {
+        group_account_id: string;
+        debit: string;
+        credit: string;
+    }[];
+};
 export type RateType =
     components['schemas']['App.Modules.Consolidation.Http.RateTypeResource'];
 export type GroupRate = components['schemas']['GroupRateResource'];
@@ -171,6 +183,62 @@ export const runQuery = (groupId: string, runId: string) =>
                 )
             ).data,
     });
+
+export const adjustmentsQuery = (groupId: string, runId: string) =>
+    queryOptions({
+        queryKey: [...everything, groupId, 'runs', runId, 'adjustments'],
+        queryFn: async (): Promise<Adjustment[]> =>
+            (
+                await unwrap(
+                    api.GET('/groups/{group}/runs/{run}/adjustments', {
+                        params: { path: { group: groupId, run: runId } },
+                    }),
+                )
+            ).data,
+    });
+
+export async function proposeAdjustment(
+    groupId: string,
+    runId: string,
+    body: AdjustmentInput,
+): Promise<Adjustment> {
+    return (
+        await unwrap(
+            api.POST('/groups/{group}/runs/{run}/adjustments', {
+                params: { path: { group: groupId, run: runId } },
+                body: body as unknown as AdjustmentRequest,
+            }),
+        )
+    ).data;
+}
+
+export async function approveAdjustment(
+    groupId: string,
+    id: string,
+): Promise<Adjustment> {
+    return (
+        await unwrap(
+            api.POST('/groups/{group}/adjustments/{id}/approve', {
+                params: { path: { group: groupId, id } },
+            }),
+        )
+    ).data;
+}
+
+export async function rejectAdjustment(
+    groupId: string,
+    id: string,
+    reason: string,
+): Promise<Adjustment> {
+    return (
+        await unwrap(
+            api.POST('/groups/{group}/adjustments/{id}/reject', {
+                params: { path: { group: groupId, id } },
+                body: { reason },
+            }),
+        )
+    ).data;
+}
 
 export const rateTypesQuery = (groupId: string) =>
     queryOptions({

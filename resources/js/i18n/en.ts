@@ -3303,6 +3303,47 @@ export const en: Widen<typeof id> = {
             coverage: 'Data coverage',
             createdAt: 'Run at',
         },
+        adjustments: {
+            title: 'Consolidation adjustments',
+            description:
+                'A manual adjustment only changes the result of the group and is never posted to the books of any company. Only approved ones are part of the result of the run, and the approver must be someone other than who proposed it.',
+            new: 'Propose an adjustment',
+            empty: 'No adjustments on this run yet.',
+            statuses: {
+                pending: 'Pending approval',
+                approved: 'Approved',
+                rejected: 'Rejected',
+            },
+            source: 'Source',
+            sourceHint: 'The document, calculation or instruction behind it.',
+            reason: 'Reason',
+            lines: 'Lines ({{currency}}), one side per line',
+            accountN: 'Group account of line {{n}}',
+            debitN: 'Debit of line {{n}}',
+            creditN: 'Credit of line {{n}}',
+            removeN: 'Remove line {{n}}',
+            addLine: 'Add a line',
+            balanced: 'Balanced: {{total}}',
+            unbalanced: 'Not balanced, difference {{difference}}',
+            propose: 'Propose',
+            proposeTitle: 'Propose an adjustment',
+            proposeDescription:
+                'Form for a consolidation adjustment on group accounts.',
+            proposed: 'Adjustment proposed.',
+            approve: 'Approve',
+            approveTitle: 'Approve the adjustment?',
+            approveDescription:
+                'This adjustment becomes part of the result of the run and cannot be undone.',
+            approved: 'Adjustment approved.',
+            reject: 'Reject',
+            rejectTitle: 'Reject the adjustment',
+            rejectDescription:
+                'The adjustment stays on record but is not part of the result.',
+            rejectReason: 'Reason for rejecting',
+            rejected: 'Adjustment rejected.',
+            rejectedFor: 'Rejected: {{reason}}',
+            ownHint: 'You proposed it; someone else has to decide.',
+        },
         runPage: {
             labels: {
                 management_rollup: 'Management roll-up',

@@ -201,5 +201,5 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
       - [x] **B-05f6a** Translasi: kebijakan berversi, jenis kurs, dan kurs grup — CO-FR-06 — layar `/groups/$groupId/translation`; hasil translasi per entitas di halaman run menyusul di B-05f6c
       - [x] **B-05f6b** Run formal dan toleransi eliminasi: pilihan `formal` pada dialog run, `elimination_tolerance` pada pengaturan grup, `cash_flow_class` pada form akun grup, penolakan run formal yang menyebut penyebabnya — CO-FR-05, CO-FR-07, CO-FR-10
       - [x] **B-05f6c** Halaman run: label dan penanda draf, kurs dan translasi per entitas, eliminasi dan pengecualian selisih — CO-FR-05, CO-FR-06, CO-FR-07
-      - [ ] **B-05f6d** Penyesuaian konsolidasi: usul, setujui, tolak — CO-FR-08, CO-AC-04
+      - [x] **B-05f6d** Penyesuaian konsolidasi: usul, setujui, tolak — CO-FR-08, CO-AC-04
       - [ ] **B-05f6e** Keluaran formal: neraca, laba rugi, arus kas, laporan eliminasi dan penyesuaian, rekonsiliasi per entitas, ekspor CSV — CO-FR-10
