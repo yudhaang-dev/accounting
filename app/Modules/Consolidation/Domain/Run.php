@@ -14,7 +14,7 @@ use Illuminate\Support\Carbon;
  * @property string $group_id
  * @property Carbon $from_date
  * @property Carbon $to_date
- * @property string $label `management_rollup` while only the first stage exists (CO-FR-04)
+ * @property string $label `management_rollup` (CO-FR-04), or `consolidated` for a run that was asked to be formal and met every condition for it (CO-FR-05)
  * @property string $status `complete` when every package is closed and covers the range, otherwise `draft`
  * @property string $presentation_currency
  * @property int|null $mapping_version
@@ -32,6 +32,8 @@ class Run extends UlidModel
 
     public const MANAGEMENT_ROLLUP = 'management_rollup';
 
+    public const CONSOLIDATED = 'consolidated';
+
     public const COMPLETE = 'complete';
 
     public const DRAFT = 'draft';
@@ -39,6 +41,15 @@ class Run extends UlidModel
     protected $table = 'co_runs';
 
     protected $guarded = [];
+
+    /**
+     * Whether the result may be called a formal consolidated statement: it was asked for and met the conditions,
+     * and every package is closed and complete. While any is not, the run is a draft and not formal (ADR-0014).
+     */
+    public function isFormal(): bool
+    {
+        return $this->label === self::CONSOLIDATED && $this->status === self::COMPLETE;
+    }
 
     protected function casts(): array
     {

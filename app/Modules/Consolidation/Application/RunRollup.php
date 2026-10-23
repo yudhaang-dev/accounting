@@ -51,7 +51,7 @@ final class RunRollup
     ) {}
 
     /** @throws ValidationException */
-    public function __invoke(string $groupId, string $from, string $to, int $userId): Run
+    public function __invoke(string $groupId, string $from, string $to, int $userId, bool $formal = false): Run
     {
         $this->assertRange($from, $to);
 
@@ -67,14 +67,14 @@ final class RunRollup
         $groupAccounts = GroupAccount::query()->where('group_id', $group->id)->get()->keyBy('id');
         $names = collect($this->companies->findMany(array_keys($packages)))->keyBy('id');
 
-        return DB::transaction(function () use ($group, $from, $to, $userId, $members, $packages, $draft, $mapping, $rows, $groupAccounts, $names, $policy, $translated): Run {
+        return DB::transaction(function () use ($formal, $group, $from, $to, $userId, $members, $packages, $draft, $mapping, $rows, $groupAccounts, $names, $policy, $translated): Run {
             $coverage = $draft ? $this->weakestCoverage($packages) : 'complete';
 
             $run = Run::create([
                 'group_id' => $group->id,
                 'from_date' => $from,
                 'to_date' => $to,
-                'label' => Run::MANAGEMENT_ROLLUP,
+                'label' => $formal ? Run::CONSOLIDATED : Run::MANAGEMENT_ROLLUP,
                 'status' => $draft ? Run::DRAFT : Run::COMPLETE,
                 'presentation_currency' => $group->presentation_currency,
                 'mapping_version' => $mapping?->version,
@@ -136,6 +136,10 @@ final class RunRollup
 
             $this->storeEliminations($run, $group, $members, $packages, $translated, $mapped);
 
+            if ($formal) {
+                $this->assertFormal($run, $packages);
+            }
+
             $this->audit->record(
                 'group_run.created',
                 "Management roll-up of group {$group->name} for {$from}..{$to} ({$run->status}).",
@@ -147,6 +151,49 @@ final class RunRollup
 
             return $run;
         });
+    }
+
+    /**
+     * What stands between this run and a formal statement (CO-FR-05): an account with a balance and no mapping, an
+     * intragroup pair that is an exception, a package that does not balance, a range without a mapping. Every
+     * member is fully controlled by the one parent (the only treatment there is), so that is not in question.
+     * Throwing rolls the run back: a run is never stored with a label it does not earn.
+     *
+     * @param  array<string, ReportPackage>  $packages
+     *
+     * @throws ValidationException
+     */
+    private function assertFormal(Run $run, array $packages): void
+    {
+        $blockers = [];
+
+        if ($run->mapping_version === null) {
+            $blockers[] = __('consolidation.formal_no_mapping');
+        }
+
+        $unmapped = RunBalance::query()->where('run_id', $run->id)->whereNull('group_account_id')
+            ->where(fn ($query) => $query->where('opening_debit', '<>', 0)->orWhere('opening_credit', '<>', 0)->orWhere('debit', '<>', 0)->orWhere('credit', '<>', 0)->orWhere('closing_debit', '<>', 0)->orWhere('closing_credit', '<>', 0))
+            ->count();
+
+        if ($unmapped > 0) {
+            $blockers[] = __('consolidation.formal_unmapped', ['count' => $unmapped]);
+        }
+
+        $exceptions = RunMatch::query()->where('run_id', $run->id)->where('status', RunMatch::EXCEPTION)->count();
+
+        if ($exceptions > 0) {
+            $blockers[] = __('consolidation.formal_intragroup_exceptions', ['count' => $exceptions]);
+        }
+
+        foreach ($packages as $companyId => $package) {
+            if (! $package->balanced && $package->coverageStatus !== 'unavailable') {
+                $blockers[] = __('consolidation.formal_unbalanced', ['company' => $companyId]);
+            }
+        }
+
+        if ($blockers !== []) {
+            throw ValidationException::withMessages(['formal' => $blockers]);
+        }
     }
 
     /**

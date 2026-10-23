@@ -20689,7 +20689,7 @@
             },
             "post": {
                 "operationId": "groups.runs.store",
-                "description": "The result is labelled `management_rollup` and is never `formal`. An entity in another functional currency\nis translated by the translation policy and the rates of the group, and the run is refused (422) when the group\nhas no policy or a rate it needs is missing. It is also refused when a member joined or left inside the range,\nand, under the package policy `reject`, when a package is not closed or does not cover the range; under\n`draft` such a run is kept with status `draft`.\n\nWhat the entities hold against each other (lines that name another company of the group as counterparty) is\nmatched pair by pair (CO-FR-07): the pairs whose positions differ by no more than the `elimination_tolerance` of\nthe group are eliminated, the others are listed in `intercompany` as exceptions and nothing of them is eliminated.\nWhat a matched pair still leaves is kept in `unassigned_eliminations`, never removed silently.",
+                "description": "The result is labelled `management_rollup` and is not `formal`, unless `formal` is asked for: the run is then\nrefused (422, under `formal`) while an account has no mapping, an intragroup pair is an exception or a package\ndoes not balance, and it is `formal` only when every package is also closed and complete; otherwise it is a draft. An entity in another functional currency\nis translated by the translation policy and the rates of the group, and the run is refused (422) when the group\nhas no policy or a rate it needs is missing. It is also refused when a member joined or left inside the range,\nand, under the package policy `reject`, when a package is not closed or does not cover the range; under\n`draft` such a run is kept with status `draft`.\n\nWhat the entities hold against each other (lines that name another company of the group as counterparty) is\nmatched pair by pair (CO-FR-07): the pairs whose positions differ by no more than the `elimination_tolerance` of\nthe group are eliminated, the others are listed in `intercompany` as exceptions and nothing of them is eliminated.\nWhat a matched pair still leaves is kept in `unassigned_eliminations`, never removed silently.",
                 "summary": "Runs the management roll-up of the group for `from`..`to` (CO-FR-04): the packages of the entities that\nare in the perimeter for the whole range, added up per account of the group through the version of the\nmapping in force on `to`. Needs a run grant on the group, not access to the companies (CO-FR-01)",
                 "tags": [
                     "Run"
@@ -25332,6 +25332,10 @@
                     "to": {
                         "type": "string",
                         "format": "date"
+                    },
+                    "formal": {
+                        "type": "boolean",
+                        "description": "Asks for a formal consolidated statement; refused, naming what stands in the way, when the group cannot give one."
                     }
                 },
                 "required": [

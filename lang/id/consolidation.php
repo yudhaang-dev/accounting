@@ -37,5 +37,9 @@ return [
     'adjustment_unbalanced' => 'Debit dan kredit penyesuaian harus sama.',
     'adjustment_not_pending' => 'Hanya penyesuaian yang menunggu persetujuan yang dapat disetujui atau ditolak.',
     'adjustment_approver_must_differ' => 'Penyesuaian harus diputuskan oleh orang selain yang mengusulkannya.',
+    'formal_no_mapping' => 'Grup belum memiliki pemetaan akun yang berlaku pada tanggal batas.',
+    'formal_unmapped' => ':count saldo akun belum dipetakan ke bagan akun grup.',
+    'formal_intragroup_exceptions' => ':count pasangan intragrup tidak cocok dalam toleransi atau tidak memiliki lawan di dalam perimeter.',
+    'formal_unbalanced' => 'Paket perusahaan :company tidak seimbang.',
 
 ];

@@ -37,5 +37,9 @@ return [
     'adjustment_unbalanced' => 'The debits and credits of the adjustment must be equal.',
     'adjustment_not_pending' => 'Only an adjustment waiting for approval can be approved or rejected.',
     'adjustment_approver_must_differ' => 'An adjustment must be decided by someone other than who proposed it.',
+    'formal_no_mapping' => 'The group has no account mapping in force on the cutoff date.',
+    'formal_unmapped' => ':count account balance(s) have no mapping to the group chart of accounts.',
+    'formal_intragroup_exceptions' => ':count intragroup pair(s) do not match within the tolerance or have no counterparty in the perimeter.',
+    'formal_unbalanced' => 'The package of company :company does not balance.',
 
 ];

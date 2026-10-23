@@ -34,7 +34,9 @@ class RunController
      * are in the perimeter for the whole range, added up per account of the group through the version of the
      * mapping in force on `to`. Needs a run grant on the group, not access to the companies (CO-FR-01).
      *
-     * The result is labelled `management_rollup` and is never `formal`. An entity in another functional currency
+     * The result is labelled `management_rollup` and is not `formal`, unless `formal` is asked for: the run is then
+     * refused (422, under `formal`) while an account has no mapping, an intragroup pair is an exception or a package
+     * does not balance, and it is `formal` only when every package is also closed and complete; otherwise it is a draft. An entity in another functional currency
      * is translated by the translation policy and the rates of the group, and the run is refused (422) when the group
      * has no policy or a rate it needs is missing. It is also refused when a member joined or left inside the range,
      * and, under the package policy `reject`, when a package is not closed or does not cover the range; under
@@ -51,7 +53,7 @@ class RunController
     {
         /** @var User $user */
         $user = $request->user();
-        $run = $rollup($request->route('group'), $request->string('from')->toString(), $request->string('to')->toString(), $user->id);
+        $run = $rollup($request->route('group'), $request->string('from')->toString(), $request->string('to')->toString(), $user->id, $request->boolean('formal'));
 
         return response()->json(['data' => $result($run)], 201);
     }

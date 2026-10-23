@@ -34,7 +34,8 @@ use Brick\Math\RoundingMode;
  *
  * A group line adds the movements and the balances of its sources; the closing balance is stated as one
  * signed figure, debit minus credit, and split into the side it falls on. The result says `management_rollup`
- * and not `formal`: it is not a consolidated statement (CO-FR-05).
+ * unless the run was asked to be formal, met every condition for it and has all its packages closed and complete
+ * (CO-FR-05); a formal run over packages that are not is a draft.
  */
 final class RunResult
 {
@@ -52,7 +53,7 @@ final class RunResult
             'to' => $run->to_date->toDateString(),
             'cutoff_date' => $run->to_date->toDateString(),
             'label' => $run->label,
-            'formal' => false,
+            'formal' => $run->isFormal(),
             'status' => $run->status,
             'presentation_currency' => $run->presentation_currency,
             'mapping_version' => $run->mapping_version,
