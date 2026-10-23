@@ -3669,6 +3669,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/groups/{group}/runs/{id}/statements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The group statements of a run (CO-FR-10): the balance sheet and the income statement over the accounts of the
+         *     group, the report of eliminations and adjustments, and the reconciliation of each entity to the group total.
+         *     They are read from the run, so they carry its label and say whether it is `formal`; a draft is never taken for
+         *     a formal statement. `cash_flow` is null: there is no cash flow classification at group level. With
+         *     `Accept: text/csv` the rows are downloaded instead (X-FR-02). Needs a read grant on the group
+         */
+        get: operations["groups.runs.statements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/security-policy": {
         parameters: {
             query?: never;
@@ -14535,6 +14558,137 @@ export interface operations {
                                 };
                             };
                             balanced: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.runs.statements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            group_id: string;
+                            from: string;
+                            to: string;
+                            cutoff_date: string;
+                            label: string;
+                            formal: boolean;
+                            status: string;
+                            presentation_currency: string;
+                            mapping_version: number | null;
+                            translation_policy_version: number | null;
+                            package_policy: string;
+                            elimination_tolerance: string;
+                            coverage_status: string;
+                            created_by: number | null;
+                            created_at: string | null;
+                            balance_sheet: {
+                                assets: {
+                                    lines: {
+                                        group_account_id: string;
+                                        code: string;
+                                        name: string;
+                                        amount: string;
+                                    }[];
+                                    total: string;
+                                };
+                                liabilities: {
+                                    lines: {
+                                        group_account_id: string;
+                                        code: string;
+                                        name: string;
+                                        amount: string;
+                                    }[];
+                                    total: string;
+                                };
+                                equity: {
+                                    lines: {
+                                        group_account_id: string;
+                                        code: string;
+                                        name: string;
+                                        amount: string;
+                                    }[];
+                                    total: string;
+                                };
+                                current_year_earnings: string;
+                                total_liabilities_and_equity: string;
+                                difference: string;
+                                balanced: boolean;
+                            };
+                            income_statement: {
+                                income: {
+                                    lines: {
+                                        group_account_id: string;
+                                        code: string;
+                                        name: string;
+                                        amount: string;
+                                    }[];
+                                    total: string;
+                                };
+                                expenses: {
+                                    lines: {
+                                        group_account_id: string;
+                                        code: string;
+                                        name: string;
+                                        amount: string;
+                                    }[];
+                                    total: string;
+                                };
+                                net_result: string;
+                            };
+                            eliminations: {
+                                pairs: {
+                                    [key: string]: unknown;
+                                }[];
+                                eliminations: {
+                                    [key: string]: unknown;
+                                }[];
+                                adjustments: {
+                                    [key: string]: unknown;
+                                }[];
+                                total_eliminated: {
+                                    [key: string]: string;
+                                };
+                                total_adjusted: {
+                                    [key: string]: string;
+                                };
+                            };
+                            reconciliation: {
+                                entities: {
+                                    company_id: string;
+                                    name: string;
+                                    functional_currency: string;
+                                    book_status: string;
+                                    coverage_status: string;
+                                    accounts: string;
+                                    translation_difference: string;
+                                    eliminations: string;
+                                    contribution: string;
+                                }[];
+                                elimination_differences: string;
+                                adjustments: string;
+                                total: string;
+                                run_total: string;
+                            };
+                            cash_flow: null;
                         };
                     };
                 };

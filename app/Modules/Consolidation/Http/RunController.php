@@ -5,6 +5,7 @@ namespace App\Modules\Consolidation\Http;
 use App\Models\User;
 use App\Modules\Consolidation\Application\RunResult;
 use App\Modules\Consolidation\Application\RunRollup;
+use App\Modules\Consolidation\Application\RunStatements;
 use App\Modules\Consolidation\Domain\Run;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -71,5 +72,21 @@ class RunController
         $data = $result(Run::query()->where('group_id', $group)->findOrFail($id));
 
         return RunCsv::wanted($request) ? RunCsv::download($data) : response()->json(['data' => $data]);
+    }
+
+    /**
+     * The group statements of a run (CO-FR-10): the balance sheet and the income statement over the accounts of the
+     * group, the report of eliminations and adjustments, and the reconciliation of each entity to the group total.
+     * They are read from the run, so they carry its label and say whether it is `formal`; a draft is never taken for
+     * a formal statement. `cash_flow` is null: there is no cash flow classification at group level. With
+     * `Accept: text/csv` the rows are downloaded instead (X-FR-02). Needs a read grant on the group.
+     *
+     * @response array{data: array{id: string, group_id: string, from: string, to: string, cutoff_date: string, label: string, formal: bool, status: string, presentation_currency: string, mapping_version: int|null, translation_policy_version: int|null, package_policy: string, elimination_tolerance: string, coverage_status: string, created_by: int|null, created_at: string|null, balance_sheet: array{assets: array{lines: list<array{group_account_id: string, code: string, name: string, amount: string}>, total: string}, liabilities: array{lines: list<array{group_account_id: string, code: string, name: string, amount: string}>, total: string}, equity: array{lines: list<array{group_account_id: string, code: string, name: string, amount: string}>, total: string}, current_year_earnings: string, total_liabilities_and_equity: string, difference: string, balanced: bool}, income_statement: array{income: array{lines: list<array{group_account_id: string, code: string, name: string, amount: string}>, total: string}, expenses: array{lines: list<array{group_account_id: string, code: string, name: string, amount: string}>, total: string}, net_result: string}, eliminations: array{pairs: list<array<string, mixed>>, eliminations: list<array<string, mixed>>, adjustments: list<array<string, mixed>>, total_eliminated: array<string, string>, total_adjusted: array<string, string>}, reconciliation: array{entities: list<array{company_id: string, name: string, functional_currency: string, book_status: string, coverage_status: string, accounts: string, translation_difference: string, eliminations: string, contribution: string}>, elimination_differences: string, adjustments: string, total: string, run_total: string}, cash_flow: null}}
+     */
+    public function statements(Request $request, RunStatements $statements, string $group, string $id): JsonResponse|StreamedResponse
+    {
+        $data = $statements(Run::query()->where('group_id', $group)->findOrFail($id));
+
+        return RunCsv::wanted($request) ? StatementsCsv::download($data) : response()->json(['data' => $data]);
     }
 }

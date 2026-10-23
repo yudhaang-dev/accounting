@@ -22118,6 +22118,488 @@
                 }
             }
         },
+        "/groups/{group}/runs/{id}/statements": {
+            "get": {
+                "operationId": "groups.runs.statements",
+                "summary": "The group statements of a run (CO-FR-10): the balance sheet and the income statement over the accounts of the\ngroup, the report of eliminations and adjustments, and the reconciliation of each entity to the group total.\nThey are read from the run, so they carry its label and say whether it is `formal`; a draft is never taken for\na formal statement. `cash_flow` is null: there is no cash flow classification at group level. With\n`Accept: text/csv` the rows are downloaded instead (X-FR-02). Needs a read grant on the group",
+                "tags": [
+                    "Run"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "group_id": {
+                                                    "type": "string"
+                                                },
+                                                "from": {
+                                                    "type": "string"
+                                                },
+                                                "to": {
+                                                    "type": "string"
+                                                },
+                                                "cutoff_date": {
+                                                    "type": "string"
+                                                },
+                                                "label": {
+                                                    "type": "string"
+                                                },
+                                                "formal": {
+                                                    "type": "boolean"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "presentation_currency": {
+                                                    "type": "string"
+                                                },
+                                                "mapping_version": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "translation_policy_version": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "package_policy": {
+                                                    "type": "string"
+                                                },
+                                                "elimination_tolerance": {
+                                                    "type": "string"
+                                                },
+                                                "coverage_status": {
+                                                    "type": "string"
+                                                },
+                                                "created_by": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "balance_sheet": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "assets": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "lines": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "group_account_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "code": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "amount": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "group_account_id",
+                                                                            "code",
+                                                                            "name",
+                                                                            "amount"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "total": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "lines",
+                                                                "total"
+                                                            ]
+                                                        },
+                                                        "liabilities": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "lines": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "group_account_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "code": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "amount": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "group_account_id",
+                                                                            "code",
+                                                                            "name",
+                                                                            "amount"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "total": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "lines",
+                                                                "total"
+                                                            ]
+                                                        },
+                                                        "equity": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "lines": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "group_account_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "code": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "amount": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "group_account_id",
+                                                                            "code",
+                                                                            "name",
+                                                                            "amount"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "total": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "lines",
+                                                                "total"
+                                                            ]
+                                                        },
+                                                        "current_year_earnings": {
+                                                            "type": "string"
+                                                        },
+                                                        "total_liabilities_and_equity": {
+                                                            "type": "string"
+                                                        },
+                                                        "difference": {
+                                                            "type": "string"
+                                                        },
+                                                        "balanced": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "assets",
+                                                        "liabilities",
+                                                        "equity",
+                                                        "current_year_earnings",
+                                                        "total_liabilities_and_equity",
+                                                        "difference",
+                                                        "balanced"
+                                                    ]
+                                                },
+                                                "income_statement": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "income": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "lines": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "group_account_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "code": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "amount": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "group_account_id",
+                                                                            "code",
+                                                                            "name",
+                                                                            "amount"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "total": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "lines",
+                                                                "total"
+                                                            ]
+                                                        },
+                                                        "expenses": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "lines": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "group_account_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "code": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "amount": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "group_account_id",
+                                                                            "code",
+                                                                            "name",
+                                                                            "amount"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "total": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "lines",
+                                                                "total"
+                                                            ]
+                                                        },
+                                                        "net_result": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "income",
+                                                        "expenses",
+                                                        "net_result"
+                                                    ]
+                                                },
+                                                "eliminations": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "pairs": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "additionalProperties": {}
+                                                            }
+                                                        },
+                                                        "eliminations": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "additionalProperties": {}
+                                                            }
+                                                        },
+                                                        "adjustments": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "additionalProperties": {}
+                                                            }
+                                                        },
+                                                        "total_eliminated": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "total_adjusted": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "pairs",
+                                                        "eliminations",
+                                                        "adjustments",
+                                                        "total_eliminated",
+                                                        "total_adjusted"
+                                                    ]
+                                                },
+                                                "reconciliation": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "entities": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "company_id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "functional_currency": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "book_status": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "coverage_status": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "accounts": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "translation_difference": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "eliminations": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "contribution": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "company_id",
+                                                                    "name",
+                                                                    "functional_currency",
+                                                                    "book_status",
+                                                                    "coverage_status",
+                                                                    "accounts",
+                                                                    "translation_difference",
+                                                                    "eliminations",
+                                                                    "contribution"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "elimination_differences": {
+                                                            "type": "string"
+                                                        },
+                                                        "adjustments": {
+                                                            "type": "string"
+                                                        },
+                                                        "total": {
+                                                            "type": "string"
+                                                        },
+                                                        "run_total": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "entities",
+                                                        "elimination_differences",
+                                                        "adjustments",
+                                                        "total",
+                                                        "run_total"
+                                                    ]
+                                                },
+                                                "cash_flow": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "group_id",
+                                                "from",
+                                                "to",
+                                                "cutoff_date",
+                                                "label",
+                                                "formal",
+                                                "status",
+                                                "presentation_currency",
+                                                "mapping_version",
+                                                "translation_policy_version",
+                                                "package_policy",
+                                                "elimination_tolerance",
+                                                "coverage_status",
+                                                "created_by",
+                                                "created_at",
+                                                "balance_sheet",
+                                                "income_statement",
+                                                "eliminations",
+                                                "reconciliation",
+                                                "cash_flow"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/security-policy": {
             "get": {
                 "operationId": "security-policy.show",

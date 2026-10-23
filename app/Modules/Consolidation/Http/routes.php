@@ -44,6 +44,7 @@ Route::prefix('groups/{group}')->where(['group' => ApiServiceProvider::ULID, 'id
     Route::get('runs', [RunController::class, 'index'])->middleware('group-access:read')->name('groups.runs.index');
     Route::post('runs', [RunController::class, 'store'])->middleware('group-access:run')->name('groups.runs.store');
     Route::get('runs/{id}', [RunController::class, 'show'])->middleware('group-access:read')->name('groups.runs.show');
+    Route::get('runs/{id}/statements', [RunController::class, 'statements'])->middleware('group-access:read')->name('groups.runs.statements');
 
     Route::get('runs/{run}/adjustments', [AdjustmentController::class, 'index'])->middleware('group-access:read')->name('groups.runs.adjustments.index');
     Route::post('runs/{run}/adjustments', [AdjustmentController::class, 'store'])->middleware('group-access:run')->name('groups.runs.adjustments.store');
