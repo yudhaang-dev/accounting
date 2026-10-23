@@ -22,7 +22,7 @@ import { useLastDefined } from '@/hooks/use-last-defined';
 import { todayIso } from '@/lib/date';
 import {
     compareDecimals,
-    formatDecimal,
+    formatMoney,
     isDecimal,
     isPositive,
 } from '@/lib/decimal';
@@ -99,7 +99,7 @@ function AllocateForm({
             : undefined;
 
     const describe = (item: OpenItem) =>
-        `${item.document_number} · ${formatDecimal(item.remaining_amount, i18n.language)} ${item.currency}`;
+        `${item.document_number} · ${formatMoney(item.remaining_amount, i18n.language)} ${item.currency}`;
 
     const save = useMutation({
         mutationFn: () =>
@@ -149,7 +149,7 @@ function AllocateForm({
             errors.amount = t('allocations.amountInvalid');
         } else if (limit !== undefined && compareDecimals(amount, limit) > 0) {
             errors.amount = t('allocations.amountTooHigh', {
-                max: formatDecimal(limit, i18n.language),
+                max: formatMoney(limit, i18n.language),
             });
         }
 
@@ -286,7 +286,7 @@ function AllocateForm({
                     {limit !== undefined && (
                         <FieldDescription>
                             {t('allocations.amountHint', {
-                                max: formatDecimal(limit, i18n.language),
+                                max: formatMoney(limit, i18n.language),
                                 currency: debit?.currency,
                             })}
                         </FieldDescription>

@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/table';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { todayIso } from '@/lib/date';
-import { formatDecimal } from '@/lib/decimal';
+import { formatMoney } from '@/lib/decimal';
 import { actionErrorMessage, genericErrorMessage } from '@/lib/errors';
 import { usePageSize } from '@/lib/page-size';
 import { FilterSelect } from '@/modules/subledger/components/filter-select';
@@ -268,19 +268,19 @@ export function ReconciliationsPage({
                                                 {item.currency}
                                             </TableCell>
                                             <TableCell className="text-end tabular-nums">
-                                                {formatDecimal(
+                                                {formatMoney(
                                                     item.ledger_balance,
                                                     i18n.language,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-end tabular-nums">
-                                                {formatDecimal(
+                                                {formatMoney(
                                                     item.detail_total,
                                                     i18n.language,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-end tabular-nums">
-                                                {formatDecimal(
+                                                {formatMoney(
                                                     item.difference,
                                                     i18n.language,
                                                 )}

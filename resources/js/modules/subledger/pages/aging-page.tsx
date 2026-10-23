@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { todayIso } from '@/lib/date';
-import { formatDecimal } from '@/lib/decimal';
+import { formatMoney } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
 import {
@@ -82,7 +82,7 @@ export function AgingPage({
             ),
     });
 
-    const money = (value: string) => formatDecimal(value, i18n.language);
+    const money = (value: string) => formatMoney(value, i18n.language);
     const bucketLabel = (bucket: AgingBucket) =>
         bucket.key === 'current'
             ? t('aging.bucketCurrent')

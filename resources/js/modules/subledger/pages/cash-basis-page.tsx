@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { todayIso } from '@/lib/date';
-import { formatDecimal, sumDecimals } from '@/lib/decimal';
+import { formatMoney, sumDecimals } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
 import {
@@ -51,7 +51,7 @@ export function CashBasisPage({ companyId }: { companyId: string }) {
             ),
     });
 
-    const money = (value: string) => formatDecimal(value, i18n.language);
+    const money = (value: string) => formatMoney(value, i18n.language);
     const data = report.data;
     // A dimension set is not a column here, so an account that was spread over several shows once.
     const accounts = useMemo(() => {

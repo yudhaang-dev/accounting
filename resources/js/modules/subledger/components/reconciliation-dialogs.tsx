@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { useLastDefined } from '@/hooks/use-last-defined';
-import { formatDecimal } from '@/lib/decimal';
+import { formatMoney } from '@/lib/decimal';
 import { actionErrorMessage } from '@/lib/errors';
 import {
     waiveReconciliation,
@@ -114,13 +114,13 @@ export function CausesDialog({
                                         </TableCell>
                                         <TableCell>{cause.source}</TableCell>
                                         <TableCell className="text-end tabular-nums">
-                                            {formatDecimal(
+                                            {formatMoney(
                                                 cause.debit,
                                                 i18n.language,
                                             )}
                                         </TableCell>
                                         <TableCell className="text-end tabular-nums">
-                                            {formatDecimal(
+                                            {formatMoney(
                                                 cause.credit,
                                                 i18n.language,
                                             )}

@@ -27,7 +27,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useDocumentTitle } from '@/hooks/use-document-title';
-import { compareDecimals, formatDecimal } from '@/lib/decimal';
+import { compareDecimals, formatMoney } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
 import { usePageSize } from '@/lib/page-size';
 import {
@@ -235,7 +235,7 @@ export function AllocationsPage({
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="text-end tabular-nums">
-                                                    {formatDecimal(
+                                                    {formatMoney(
                                                         allocation.amount,
                                                         i18n.language,
                                                     )}
@@ -243,7 +243,7 @@ export function AllocationsPage({
                                                 <TableCell className="text-end tabular-nums">
                                                     {hasDifference ? (
                                                         <>
-                                                            {formatDecimal(
+                                                            {formatMoney(
                                                                 allocation.realized_difference,
                                                                 i18n.language,
                                                             )}

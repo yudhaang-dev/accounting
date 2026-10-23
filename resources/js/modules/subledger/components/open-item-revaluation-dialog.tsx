@@ -22,7 +22,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useLastDefined } from '@/hooks/use-last-defined';
-import { formatDecimal, isPositive } from '@/lib/decimal';
+import { formatMoney, isPositive } from '@/lib/decimal';
 import { actionErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
 import type { Period } from '@/modules/general-ledger/periods';
@@ -100,23 +100,20 @@ function Result({
                                 </TableCell>
                                 <TableCell>{row.currency}</TableCell>
                                 <TableCell className="text-end tabular-nums">
-                                    {formatDecimal(
+                                    {formatMoney(
                                         row.remaining_amount,
                                         i18n.language,
                                     )}
                                 </TableCell>
                                 <TableCell className="text-end tabular-nums">
-                                    {formatDecimal(row.carried, i18n.language)}
+                                    {formatMoney(row.carried, i18n.language)}
                                 </TableCell>
                                 <TableCell className="text-end tabular-nums">
-                                    {formatDecimal(row.revalued, i18n.language)}
+                                    {formatMoney(row.revalued, i18n.language)}
                                 </TableCell>
                                 <TableCell className="text-end tabular-nums">
                                     {isPositive(row.adjustment) ? '+' : ''}
-                                    {formatDecimal(
-                                        row.adjustment,
-                                        i18n.language,
-                                    )}
+                                    {formatMoney(row.adjustment, i18n.language)}
                                 </TableCell>
                             </TableRow>
                         ))}

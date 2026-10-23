@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/table';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { useLastDefined } from '@/hooks/use-last-defined';
-import { formatDecimal } from '@/lib/decimal';
+import { formatMoney } from '@/lib/decimal';
 import { genericErrorMessage } from '@/lib/errors';
 import { usePageSize } from '@/lib/page-size';
 import { FilterSelect } from '@/modules/subledger/components/filter-select';
@@ -139,11 +139,11 @@ function DocumentDetail({
                             {shown.accounting_date}
                         </Fact>
                         <Fact label={t('documents.amount')}>
-                            {formatDecimal(shown.amount, i18n.language)}{' '}
+                            {formatMoney(shown.amount, i18n.language)}{' '}
                             {shown.currency}
                         </Fact>
                         <Fact label={t('documents.functionalAmount')}>
-                            {formatDecimal(
+                            {formatMoney(
                                 shown.functional_amount,
                                 i18n.language,
                             )}
@@ -424,7 +424,7 @@ export function DocumentsPage({
                                             {document.due_date}
                                         </TableCell>
                                         <TableCell className="text-end tabular-nums">
-                                            {formatDecimal(
+                                            {formatMoney(
                                                 document.amount,
                                                 i18n.language,
                                             )}{' '}

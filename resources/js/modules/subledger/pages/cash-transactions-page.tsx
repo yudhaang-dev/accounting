@@ -42,7 +42,7 @@ import {
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { useLastDefined } from '@/hooks/use-last-defined';
 import { todayIso } from '@/lib/date';
-import { formatDecimal } from '@/lib/decimal';
+import { formatMoney } from '@/lib/decimal';
 import { actionErrorMessage, genericErrorMessage } from '@/lib/errors';
 import { usePageSize } from '@/lib/page-size';
 import {
@@ -427,7 +427,7 @@ export function CashTransactionsPage({
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="text-end tabular-nums">
-                                                    {formatDecimal(
+                                                    {formatMoney(
                                                         transaction.amount,
                                                         i18n.language,
                                                     )}{' '}
