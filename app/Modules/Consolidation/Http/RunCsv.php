@@ -48,6 +48,10 @@ final class RunCsv
                 $rows[] = self::row('elimination', $line, $elimination, $names);
             }
 
+            foreach ($line['adjustments'] as $adjustment) {
+                $rows[] = self::row('adjustment', $line, $adjustment, []);
+            }
+
             $rows[] = self::row('line', $line, $line, []);
         }
 

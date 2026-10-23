@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Consolidation\Http\AdjustmentController;
 use App\Modules\Consolidation\Http\GroupAccountController;
 use App\Modules\Consolidation\Http\GroupController;
 use App\Modules\Consolidation\Http\GroupRateController;
@@ -43,4 +44,9 @@ Route::prefix('groups/{group}')->where(['group' => ApiServiceProvider::ULID, 'id
     Route::get('runs', [RunController::class, 'index'])->middleware('group-access:read')->name('groups.runs.index');
     Route::post('runs', [RunController::class, 'store'])->middleware('group-access:run')->name('groups.runs.store');
     Route::get('runs/{id}', [RunController::class, 'show'])->middleware('group-access:read')->name('groups.runs.show');
+
+    Route::get('runs/{run}/adjustments', [AdjustmentController::class, 'index'])->middleware('group-access:read')->name('groups.runs.adjustments.index');
+    Route::post('runs/{run}/adjustments', [AdjustmentController::class, 'store'])->middleware('group-access:run')->name('groups.runs.adjustments.store');
+    Route::post('adjustments/{id}/approve', [AdjustmentController::class, 'approve'])->middleware('group-access:approve')->name('groups.adjustments.approve');
+    Route::post('adjustments/{id}/reject', [AdjustmentController::class, 'reject'])->middleware('group-access:approve')->name('groups.adjustments.reject');
 });

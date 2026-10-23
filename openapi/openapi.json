@@ -1123,6 +1123,499 @@
                 }
             }
         },
+        "/groups/{group}/runs/{run}/adjustments": {
+            "get": {
+                "operationId": "groups.runs.adjustments.index",
+                "summary": "The adjustments recorded on a run, oldest first, whatever their status; only the approved ones are part of\nthe result of the run. Needs a read grant on the group",
+                "tags": [
+                    "Adjustment"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "run",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "run_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "source": {
+                                                        "type": "string"
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "proposed_by": {
+                                                        "type": "integer"
+                                                    },
+                                                    "decided_by": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "decided_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "rejection_reason": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "lines": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "group_account_id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "code": {
+                                                                    "type": "string"
+                                                                },
+                                                                "name": {
+                                                                    "type": "string"
+                                                                },
+                                                                "class": {
+                                                                    "type": "string"
+                                                                },
+                                                                "debit": {
+                                                                    "type": "string"
+                                                                },
+                                                                "credit": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "group_account_id",
+                                                                "code",
+                                                                "name",
+                                                                "class",
+                                                                "debit",
+                                                                "credit"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "run_id",
+                                                    "source",
+                                                    "reason",
+                                                    "status",
+                                                    "proposed_by",
+                                                    "decided_by",
+                                                    "decided_at",
+                                                    "rejection_reason",
+                                                    "created_at",
+                                                    "lines"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "groups.runs.adjustments.store",
+                "summary": "Proposes an adjustment of a run on accounts of the group (CO-FR-08): a source, a reason, and balanced\nlines of one side each in the presentation currency. It changes nothing until someone other than the\nproposer approves it, and it is never posted to a ledger of an entity. Needs a run grant on the group",
+                "tags": [
+                    "Adjustment"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "run",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateAdjustmentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "integer",
+                                    "const": 201
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/groups/{group}/adjustments/{id}/approve": {
+            "post": {
+                "operationId": "groups.adjustments.approve",
+                "summary": "Approves a pending adjustment, which from then on is part of the result of its run. Needs the approval\nability on the group, and the approver cannot be who proposed it (SEGREGATION_OF_DUTIES)",
+                "tags": [
+                    "Adjustment"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "run_id": {
+                                                    "type": "string"
+                                                },
+                                                "source": {
+                                                    "type": "string"
+                                                },
+                                                "reason": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "proposed_by": {
+                                                    "type": "integer"
+                                                },
+                                                "decided_by": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decided_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "rejection_reason": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "lines": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "group_account_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "class": {
+                                                                "type": "string"
+                                                            },
+                                                            "debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "credit": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "group_account_id",
+                                                            "code",
+                                                            "name",
+                                                            "class",
+                                                            "debit",
+                                                            "credit"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "run_id",
+                                                "source",
+                                                "reason",
+                                                "status",
+                                                "proposed_by",
+                                                "decided_by",
+                                                "decided_at",
+                                                "rejection_reason",
+                                                "created_at",
+                                                "lines"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/groups/{group}/adjustments/{id}/reject": {
+            "post": {
+                "operationId": "groups.adjustments.reject",
+                "summary": "Rejects a pending adjustment with a reason; it stays on record and is not part of the result. Same rules\nas approving",
+                "tags": [
+                    "Adjustment"
+                ],
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RejectAdjustmentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "run_id": {
+                                                    "type": "string"
+                                                },
+                                                "source": {
+                                                    "type": "string"
+                                                },
+                                                "reason": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "proposed_by": {
+                                                    "type": "integer"
+                                                },
+                                                "decided_by": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decided_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "rejection_reason": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "lines": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "group_account_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "class": {
+                                                                "type": "string"
+                                                            },
+                                                            "debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "credit": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "group_account_id",
+                                                            "code",
+                                                            "name",
+                                                            "class",
+                                                            "debit",
+                                                            "credit"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "run_id",
+                                                "source",
+                                                "reason",
+                                                "status",
+                                                "proposed_by",
+                                                "decided_by",
+                                                "decided_at",
+                                                "rejection_reason",
+                                                "created_at",
+                                                "lines"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/reports/aging": {
             "get": {
                 "operationId": "reports.aging",
@@ -24201,6 +24694,53 @@
                 ],
                 "title": "CreateAccountRequest"
             },
+            "CreateAdjustmentRequest": {
+                "type": "object",
+                "properties": {
+                    "source": {
+                        "type": "string",
+                        "description": "Where the adjustment comes from: a document, a calculation, an instruction.",
+                        "maxLength": 255
+                    },
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 2000
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "group_account_id": {
+                                    "type": "string"
+                                },
+                                "debit": {
+                                    "type": "number",
+                                    "description": "One side per line, in the presentation currency of the group.",
+                                    "minimum": 0
+                                },
+                                "credit": {
+                                    "type": "number",
+                                    "minimum": 0
+                                }
+                            },
+                            "required": [
+                                "group_account_id",
+                                "debit",
+                                "credit"
+                            ]
+                        },
+                        "minItems": 2,
+                        "maxItems": 200
+                    }
+                },
+                "required": [
+                    "source",
+                    "reason",
+                    "lines"
+                ],
+                "title": "CreateAdjustmentRequest"
+            },
             "CreateCashAccountRequest": {
                 "type": "object",
                 "properties": {
@@ -28874,6 +29414,19 @@
                     "lock_version"
                 ],
                 "title": "RecurringScheduleResource"
+            },
+            "RejectAdjustmentRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 2000
+                    }
+                },
+                "required": [
+                    "reason"
+                ],
+                "title": "RejectAdjustmentRequest"
             },
             "ReopenFiscalYearRequest": {
                 "type": "object",

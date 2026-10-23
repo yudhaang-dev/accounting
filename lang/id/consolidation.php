@@ -32,5 +32,10 @@ return [
     'translation_rate_missing' => 'Grup belum memiliki kurs jenis :type untuk :currency pada atau sebelum :date. Catat kurs itu sebelum menjalankan.',
     'package_not_closed' => 'Buku perusahaan belum ditutup untuk rentang ini (:status).',
     'package_coverage' => 'Buku besar perusahaan tidak mencakup rentang ini seluruhnya (:status).',
+    'adjustment_account' => 'Akun tidak ada di grup ini atau tidak aktif.',
+    'adjustment_one_side' => 'Setiap baris berisi debit atau kredit, bukan keduanya dan bukan nol.',
+    'adjustment_unbalanced' => 'Debit dan kredit penyesuaian harus sama.',
+    'adjustment_not_pending' => 'Hanya penyesuaian yang menunggu persetujuan yang dapat disetujui atau ditolak.',
+    'adjustment_approver_must_differ' => 'Penyesuaian harus diputuskan oleh orang selain yang mengusulkannya.',
 
 ];

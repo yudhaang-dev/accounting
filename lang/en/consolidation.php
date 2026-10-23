@@ -32,5 +32,10 @@ return [
     'translation_rate_missing' => 'The group has no rate of type :type for :currency on or before :date. Record it before running.',
     'package_not_closed' => 'The books of the company are not closed for this range (:status).',
     'package_coverage' => 'The ledger of the company does not cover this range completely (:status).',
+    'adjustment_account' => 'The account does not exist in this group or is not active.',
+    'adjustment_one_side' => 'A line has either a debit or a credit, not both and not neither.',
+    'adjustment_unbalanced' => 'The debits and credits of the adjustment must be equal.',
+    'adjustment_not_pending' => 'Only an adjustment waiting for approval can be approved or rejected.',
+    'adjustment_approver_must_differ' => 'An adjustment must be decided by someone other than who proposed it.',
 
 ];

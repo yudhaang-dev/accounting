@@ -262,6 +262,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/groups/{group}/runs/{run}/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The adjustments recorded on a run, oldest first, whatever their status; only the approved ones are part of
+         *     the result of the run. Needs a read grant on the group
+         */
+        get: operations["groups.runs.adjustments.index"];
+        put?: never;
+        /**
+         * Proposes an adjustment of a run on accounts of the group (CO-FR-08): a source, a reason, and balanced
+         *     lines of one side each in the presentation currency. It changes nothing until someone other than the
+         *     proposer approves it, and it is never posted to a ledger of an entity. Needs a run grant on the group
+         */
+        post: operations["groups.runs.adjustments.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{group}/adjustments/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approves a pending adjustment, which from then on is part of the result of its run. Needs the approval
+         *     ability on the group, and the approver cannot be who proposed it (SEGREGATION_OF_DUTIES)
+         */
+        post: operations["groups.adjustments.approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{group}/adjustments/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rejects a pending adjustment with a reason; it stays on record and is not part of the result. Same rules
+         *     as approving
+         */
+        post: operations["groups.adjustments.reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/reports/aging": {
         parameters: {
             query?: never;
@@ -4183,6 +4248,18 @@ export interface components {
             normal_balance?: "debit" | "credit" | null;
             parent_id?: string | null;
         };
+        /** CreateAdjustmentRequest */
+        CreateAdjustmentRequest: {
+            /** @description Where the adjustment comes from: a document, a calculation, an instruction. */
+            source: string;
+            reason: string;
+            lines: {
+                group_account_id: string;
+                /** @description One side per line, in the presentation currency of the group. */
+                debit: number;
+                credit: number;
+            }[];
+        };
         /** CreateCashAccountRequest */
         CreateCashAccountRequest: {
             name: string;
@@ -5344,6 +5421,10 @@ export interface components {
             created_by: number;
             lock_version: number;
         };
+        /** RejectAdjustmentRequest */
+        RejectAdjustmentRequest: {
+            reason: string;
+        };
         /** ReopenFiscalYearRequest */
         ReopenFiscalYearRequest: {
             reason: string;
@@ -6416,6 +6497,171 @@ export interface operations {
                         data: {
                             template: string;
                             created: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "groups.runs.adjustments.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+                run: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            run_id: string;
+                            source: string;
+                            reason: string;
+                            status: string;
+                            proposed_by: number;
+                            decided_by: number | null;
+                            decided_at: string | null;
+                            rejection_reason: string | null;
+                            created_at: string | null;
+                            lines: {
+                                group_account_id: string;
+                                code: string;
+                                name: string;
+                                class: string;
+                                debit: string;
+                                credit: string;
+                            }[];
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.runs.adjustments.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+                run: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAdjustmentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": 201;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "groups.adjustments.approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            run_id: string;
+                            source: string;
+                            reason: string;
+                            status: string;
+                            proposed_by: number;
+                            decided_by: number | null;
+                            decided_at: string | null;
+                            rejection_reason: string | null;
+                            created_at: string | null;
+                            lines: {
+                                group_account_id: string;
+                                code: string;
+                                name: string;
+                                class: string;
+                                debit: string;
+                                credit: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "groups.adjustments.reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectAdjustmentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            run_id: string;
+                            source: string;
+                            reason: string;
+                            status: string;
+                            proposed_by: number;
+                            decided_by: number | null;
+                            decided_at: string | null;
+                            rejection_reason: string | null;
+                            created_at: string | null;
+                            lines: {
+                                group_account_id: string;
+                                code: string;
+                                name: string;
+                                class: string;
+                                debit: string;
+                                credit: string;
+                            }[];
                         };
                     };
                 };

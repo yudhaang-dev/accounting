@@ -2,6 +2,8 @@
 
 namespace App\Modules\Consolidation\Application;
 
+use App\Modules\Consolidation\Domain\Adjustment;
+use App\Modules\Consolidation\Domain\AdjustmentLine;
 use App\Modules\Consolidation\Domain\Run;
 use App\Modules\Consolidation\Domain\RunBalance;
 use App\Modules\Consolidation\Domain\RunElimination;
@@ -25,6 +27,10 @@ use Brick\Math\RoundingMode;
  * of their own. A line carries the eliminations on its group account, and its figures are the sources plus them;
  * eliminations that belong to no group account (what a pair left within the tolerance, a position whose account
  * has no mapping) are listed apart. Both are part of the totals, so the run still balances.
+ *
+ * Manual adjustments recorded on the run (CO-FR-08) are added when the result is read, and only the approved
+ * ones: the rows of the run never change, the adjustments are records about it. An adjustment is a movement of
+ * the period, so it adds to the debit and credit columns and to the closing balance, never to the opening one.
  *
  * A group line adds the movements and the balances of its sources; the closing balance is stated as one
  * signed figure, debit minus credit, and split into the side it falls on. The result says `management_rollup`
@@ -68,11 +74,12 @@ final class RunResult
         $balances = $run->balances()->orderBy('group_account_code')->orderBy('company_id')->orderBy('account_code')->get();
         $eliminations = $run->eliminations()->orderBy('group_account_code')->orderBy('company_id')->orderBy('account_code')->orderBy('id')->get();
         $matches = $run->matches()->orderBy('kind')->orderBy('company_a_id')->orderBy('company_b_id')->get();
-        $scale = $this->scale([...$balances->all(), ...$eliminations->all(), ...$matches->all()]);
+        $recorded = Adjustment::query()->where('run_id', $run->id)->with('lines')->orderBy('created_at')->orderBy('id')->get();
+        $scale = $this->scale(array_values([...$balances->all(), ...$eliminations->all(), ...$matches->all(), ...$recorded->pluck('lines')->flatten()->all()]));
 
         $lines = [];
         $exceptions = [];
-        $totals = ['mapped' => $this->zero(), 'unmapped' => $this->zero(), 'eliminations' => $this->zero()];
+        $totals = ['mapped' => $this->zero(), 'unmapped' => $this->zero(), 'eliminations' => $this->zero(), 'adjustments' => $this->zero()];
 
         foreach ($balances as $balance) {
             $closing = BigDecimal::of($balance->closing_debit)->minus($balance->closing_credit);
@@ -120,7 +127,27 @@ final class RunResult
             $lines[$elimination->group_account_id]['eliminations'][] = $this->elimination($elimination, $scale);
         }
 
-        $grand = $this->add($this->add($this->add($this->zero(), null, $totals['mapped']), null, $totals['unmapped']), null, $totals['eliminations']);
+        foreach ($recorded->where('status', Adjustment::APPROVED) as $adjustment) {
+            foreach ($adjustment->lines as $line) {
+                $amounts = $this->zero();
+                $amounts['debit'] = $amounts['closing_debit'] = BigDecimal::of($line->debit);
+                $amounts['credit'] = $amounts['closing_credit'] = BigDecimal::of($line->credit);
+
+                $lines[$line->group_account_id] ??= [
+                    'group_account_id' => $line->group_account_id,
+                    'code' => $line->group_account_code,
+                    'name' => $line->group_account_name,
+                    'class' => $line->group_account_class,
+                    'sum' => $this->zero(),
+                    'sources' => [],
+                ];
+                $lines[$line->group_account_id]['sum'] = $this->add($lines[$line->group_account_id]['sum'], null, $amounts);
+                $lines[$line->group_account_id]['adjustments'][] = ['adjustment_id' => $adjustment->id, 'source' => $adjustment->source, 'reason' => $adjustment->reason, ...$this->figures($amounts, $scale)];
+                $totals['adjustments'] = $this->add($totals['adjustments'], null, $amounts);
+            }
+        }
+
+        $grand = $this->add($this->add($this->add($this->add($this->zero(), null, $totals['mapped']), null, $totals['unmapped']), null, $totals['eliminations']), null, $totals['adjustments']);
 
         return [
             ...$this->summary($run),
@@ -146,6 +173,7 @@ final class RunResult
                 ...$this->figures($line['sum'], $scale),
                 'sources' => $line['sources'],
                 'eliminations' => $line['eliminations'] ?? [],
+                'adjustments' => $line['adjustments'] ?? [],
             ], $lines)),
             'exceptions' => $exceptions,
             'intercompany' => $matches->map(fn (RunMatch $match): array => [
@@ -161,7 +189,9 @@ final class RunResult
                 'positions' => $match->positions,
             ])->values()->all(),
             'unassigned_eliminations' => $unassigned,
+            'adjustments' => $recorded->map(fn (Adjustment $adjustment): array => $this->adjustment($adjustment))->values()->all(),
             'totals' => [
+                'adjustments' => $this->figures($totals['adjustments'], $scale),
                 'eliminations' => $this->figures($totals['eliminations'], $scale),
                 'mapped' => $this->figures($totals['mapped'], $scale),
                 'unmapped' => $this->figures($totals['unmapped'], $scale),
@@ -241,6 +271,44 @@ final class RunResult
     }
 
     /**
+     * The adjustments recorded on a run, oldest first, whatever their status.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function adjustments(Run $run): array
+    {
+        return array_values(Adjustment::query()->where('run_id', $run->id)->with('lines')->orderBy('created_at')->orderBy('id')->get()
+            ->map(fn (Adjustment $adjustment): array => $this->adjustment($adjustment))->all());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function adjustment(Adjustment $adjustment): array
+    {
+        return [
+            'id' => $adjustment->id,
+            'run_id' => $adjustment->run_id,
+            'source' => $adjustment->source,
+            'reason' => $adjustment->reason,
+            'status' => $adjustment->status,
+            'proposed_by' => $adjustment->proposed_by,
+            'decided_by' => $adjustment->decided_by,
+            'decided_at' => $adjustment->decided_at?->toIso8601String(),
+            'rejection_reason' => $adjustment->rejection_reason,
+            'created_at' => $adjustment->created_at?->toIso8601String(),
+            'lines' => $adjustment->lines->map(fn (AdjustmentLine $line): array => [
+                'group_account_id' => $line->group_account_id,
+                'code' => $line->group_account_code,
+                'name' => $line->group_account_name,
+                'class' => $line->group_account_class,
+                'debit' => $this->natural($line->debit),
+                'credit' => $this->natural($line->credit),
+            ])->values()->all(),
+        ];
+    }
+
+    /**
      * One elimination: the reversal of an intragroup position, or the difference a pair left (CO-FR-07).
      *
      * @param  int<0, max>  $scale
@@ -270,7 +338,7 @@ final class RunResult
     /**
      * The scale amounts were stored with: the most decimals any of them really uses, at least two.
      *
-     * @param  list<RunBalance|RunElimination|RunMatch>  $rows
+     * @param  list<RunBalance|RunElimination|RunMatch|AdjustmentLine>  $rows
      * @return int<0, max>
      */
     private function scale(array $rows): int
@@ -278,7 +346,11 @@ final class RunResult
         $scale = 2;
 
         foreach ($rows as $row) {
-            $columns = $row instanceof RunMatch ? ['amount_a', 'amount_b', 'difference'] : ['opening_debit', 'opening_credit', 'debit', 'credit', 'closing_debit', 'closing_credit'];
+            $columns = match (true) {
+                $row instanceof RunMatch => ['amount_a', 'amount_b', 'difference'],
+                $row instanceof AdjustmentLine => ['debit', 'credit'],
+                default => ['opening_debit', 'opening_credit', 'debit', 'credit', 'closing_debit', 'closing_credit'],
+            };
 
             foreach ($columns as $column) {
                 $scale = max($scale, strlen(rtrim(explode('.', (string) BigDecimal::of($row->getAttribute($column)))[1] ?? '', '0')));
@@ -286,6 +358,14 @@ final class RunResult
         }
 
         return min($scale, self::SCALE);
+    }
+
+    /** The amount with the decimals it uses, at least two. */
+    private function natural(string $amount): string
+    {
+        $decimals = strlen(rtrim(explode('.', (string) BigDecimal::of($amount))[1] ?? '', '0'));
+
+        return (string) BigDecimal::of($amount)->toScale(max(2, min($decimals, self::SCALE)), RoundingMode::HalfUp);
     }
 
     /** @param  int<0, max>  $scale */
