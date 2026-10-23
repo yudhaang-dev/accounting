@@ -41,5 +41,7 @@ return [
     'formal_unmapped' => ':count account balance(s) have no mapping to the group chart of accounts.',
     'formal_intragroup_exceptions' => ':count intragroup pair(s) do not match within the tolerance or have no counterparty in the perimeter.',
     'formal_unbalanced' => 'The package of company :company does not balance.',
+    'cash_flow_class_invalid' => 'Only an asset, a liability or an equity account has a cash flow class, and only an asset can be cash.',
+    'formal_cash_flow_unclassified' => 'The cash flow needs a class for the group accounts :accounts.',
 
 ];

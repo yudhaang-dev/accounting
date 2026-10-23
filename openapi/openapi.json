@@ -9678,7 +9678,7 @@
         "/groups/{group}/accounts/{id}": {
             "patch": {
                 "operationId": "groups.accounts.update",
-                "summary": "Renames or deactivates an account; its class never changes",
+                "summary": "Renames or deactivates an account, or sets how it enters the cash flow; its class never changes",
                 "tags": [
                     "GroupAccount"
                 ],
@@ -22121,7 +22121,7 @@
         "/groups/{group}/runs/{id}/statements": {
             "get": {
                 "operationId": "groups.runs.statements",
-                "summary": "The group statements of a run (CO-FR-10): the balance sheet and the income statement over the accounts of the\ngroup, the report of eliminations and adjustments, and the reconciliation of each entity to the group total.\nThey are read from the run, so they carry its label and say whether it is `formal`; a draft is never taken for\na formal statement. `cash_flow` is null: there is no cash flow classification at group level. With\n`Accept: text/csv` the rows are downloaded instead (X-FR-02). Needs a read grant on the group",
+                "summary": "The group statements of a run (CO-FR-10): the balance sheet and the income statement over the accounts of the\ngroup, the report of eliminations and adjustments, and the reconciliation of each entity to the group total.\nThey are read from the run, so they carry its label and say whether it is `formal`; a draft is never taken for\na formal statement. `cash_flow` is indirect, from the change of each balance sheet account by its cash flow class; accounts without a class are listed in `unclassified` and keep it from reconciling. With\n`Accept: text/csv` the rows are downloaded instead (X-FR-02). Needs a read grant on the group",
                 "tags": [
                     "Run"
                 ],
@@ -22559,7 +22559,187 @@
                                                     ]
                                                 },
                                                 "cash_flow": {
-                                                    "type": "null"
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "method": {
+                                                            "type": "string"
+                                                        },
+                                                        "net_result": {
+                                                            "type": "string"
+                                                        },
+                                                        "operating": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "lines": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "group_account_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "code": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "amount": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "group_account_id",
+                                                                            "code",
+                                                                            "name",
+                                                                            "amount"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "total": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "lines",
+                                                                "total"
+                                                            ]
+                                                        },
+                                                        "investing": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "lines": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "group_account_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "code": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "amount": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "group_account_id",
+                                                                            "code",
+                                                                            "name",
+                                                                            "amount"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "total": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "lines",
+                                                                "total"
+                                                            ]
+                                                        },
+                                                        "financing": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "lines": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "group_account_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "code": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "amount": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "group_account_id",
+                                                                            "code",
+                                                                            "name",
+                                                                            "amount"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "total": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "lines",
+                                                                "total"
+                                                            ]
+                                                        },
+                                                        "translation_effect": {
+                                                            "type": "string"
+                                                        },
+                                                        "net_change": {
+                                                            "type": "string"
+                                                        },
+                                                        "opening_cash": {
+                                                            "type": "string"
+                                                        },
+                                                        "closing_cash": {
+                                                            "type": "string"
+                                                        },
+                                                        "difference": {
+                                                            "type": "string"
+                                                        },
+                                                        "unclassified": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "group_account_id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "code": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "amount": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "group_account_id",
+                                                                    "code",
+                                                                    "name",
+                                                                    "amount"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "reconciled": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "method",
+                                                        "net_result",
+                                                        "operating",
+                                                        "investing",
+                                                        "financing",
+                                                        "translation_effect",
+                                                        "net_change",
+                                                        "opening_cash",
+                                                        "closing_cash",
+                                                        "difference",
+                                                        "unclassified",
+                                                        "reconciled"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -25417,6 +25597,20 @@
                             "income",
                             "expense"
                         ]
+                    },
+                    "cash_flow_class": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "How the account enters the group cash flow; only for assets, liabilities and equity, and `cash` only for assets.",
+                        "enum": [
+                            "cash",
+                            "operating",
+                            "investing",
+                            "financing",
+                            null
+                        ]
                     }
                 },
                 "required": [
@@ -27200,6 +27394,12 @@
                     "class": {
                         "type": "string"
                     },
+                    "cash_flow_class": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "is_active": {
                         "type": "boolean"
                     },
@@ -27212,6 +27412,7 @@
                     "code",
                     "name",
                     "class",
+                    "cash_flow_class",
                     "is_active",
                     "lock_version"
                 ],
@@ -31244,6 +31445,20 @@
                     },
                     "is_active": {
                         "type": "boolean"
+                    },
+                    "cash_flow_class": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Null clears it. Runs made earlier keep the class their accounts had.",
+                        "enum": [
+                            "cash",
+                            "operating",
+                            "investing",
+                            "financing",
+                            null
+                        ]
                     }
                 },
                 "required": [

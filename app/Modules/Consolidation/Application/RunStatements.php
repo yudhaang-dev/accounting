@@ -16,7 +16,8 @@ use Brick\Math\BigDecimal;
  * - The income statement takes the movement of the range.
  * - Assets and expenses are shown as debit minus credit, liabilities, equity and income as credit minus debit.
  * - A statement carries the label and the formal flag of its run, so a draft is never taken for a formal one.
- *   There is no group cash flow: it needs a classification of cash flows at group level that does not exist.
+ * - The cash flow is indirect (CO-FR-10), built from the change of each balance sheet account of the group between
+ *   the opening and the closing balance of the run, by the cash flow class the account had in the run.
  */
 final class RunStatements
 {
@@ -38,7 +39,7 @@ final class RunStatements
             'income_statement' => $this->incomeStatement($lines),
             'eliminations' => $this->eliminations($result),
             'reconciliation' => $this->reconciliation($result),
-            'cash_flow' => null,
+            'cash_flow' => $this->cashFlow($lines),
         ];
     }
 
@@ -70,10 +71,103 @@ final class RunStatements
             'assets' => $assets,
             'liabilities' => $liabilities,
             'equity' => $equity,
-            'current_year_earnings' => (string) $earnings,
-            'total_liabilities_and_equity' => (string) $right,
-            'difference' => (string) BigDecimal::of($assets['total'])->minus($right),
+            'current_year_earnings' => $this->str($earnings),
+            'total_liabilities_and_equity' => $this->str($right),
+            'difference' => $this->str(BigDecimal::of($assets['total'])->minus($right)),
             'balanced' => BigDecimal::of($assets['total'])->isEqualTo($right),
+        ];
+    }
+
+    /**
+     * The indirect cash flow of the group (CO-FR-10). Starting from the result of the range, the change of every
+     * other account of the balance sheet moves cash the other way: an asset that grew used cash, a liability that
+     * grew supplied it. The accounts of each class make up one activity; `cash` accounts are the cash itself, and
+     * an equity account without a class counts as financing. The translation difference account is not an
+     * activity: it and what translating the opening balances at their own rate leaves are shown as the effect of
+     * translation. An asset or liability with a balance and no class is `unclassified`, left out of every
+     * activity, and then the cash flow does not reconcile and says so rather than hiding it.
+     *
+     * @param  list<array<string, mixed>>  $lines
+     * @return array<string, mixed>
+     */
+    private function cashFlow(array $lines): array
+    {
+        $zero = BigDecimal::zero();
+        $activities = ['operating' => [], 'investing' => [], 'financing' => []];
+        $unclassified = [];
+        $openingCash = $zero;
+        $closingCash = $zero;
+        $resultByMovement = $zero;
+        $resultByChange = $zero;
+        $translation = $zero;
+
+        foreach ($lines as $line) {
+            $opening = BigDecimal::of($line['opening_debit'])->minus($line['opening_credit']);
+            $closing = BigDecimal::of($line['closing']);
+            $change = $closing->minus($opening);
+
+            if (in_array($line['class'], ['income', 'expense'], true)) {
+                $resultByMovement = $resultByMovement->minus(BigDecimal::of($line['debit'])->minus($line['credit']));
+                $resultByChange = $resultByChange->minus($change);
+
+                continue;
+            }
+
+            if ($this->isTranslationDifference($line['sources'])) {
+                $translation = $translation->minus($change);
+
+                continue;
+            }
+
+            $class = $line['cash_flow_class'] ?? ($line['class'] === 'equity' ? 'financing' : null);
+
+            if ($class === 'cash') {
+                $openingCash = $openingCash->plus($opening);
+                $closingCash = $closingCash->plus($closing);
+
+                continue;
+            }
+
+            $row = ['group_account_id' => $line['group_account_id'], 'code' => $line['code'], 'name' => $line['name'], 'amount' => $this->str($change->negated())];
+
+            if ($class === null) {
+                if (! $opening->isZero() || ! $closing->isZero()) {
+                    $unclassified[] = $row;
+                }
+
+                continue;
+            }
+
+            $activities[$class][] = $row;
+        }
+
+        // What translating the opening result at its own rate adds to the result of the range, with the change of the
+        // translation difference account: the part of the change in cash that no activity explains.
+        $translationEffect = $resultByChange->minus($resultByMovement)->plus($translation);
+
+        $totals = [];
+
+        foreach ($activities as $activity => $rows) {
+            $totals[$activity] = array_reduce($rows, fn (BigDecimal $sum, array $row): BigDecimal => $sum->plus($row['amount']), $zero);
+        }
+
+        $operating = $resultByMovement->plus($totals['operating']);
+        $netChange = $operating->plus($totals['investing'])->plus($totals['financing'])->plus($translationEffect);
+        $difference = $closingCash->minus($openingCash)->minus($netChange);
+
+        return [
+            'method' => 'indirect',
+            'net_result' => $this->str($resultByMovement),
+            'operating' => ['lines' => $activities['operating'], 'total' => $this->str($operating)],
+            'investing' => ['lines' => $activities['investing'], 'total' => $this->str($totals['investing'])],
+            'financing' => ['lines' => $activities['financing'], 'total' => $this->str($totals['financing'])],
+            'translation_effect' => $this->str($translationEffect),
+            'net_change' => $this->str($netChange),
+            'opening_cash' => $this->str($openingCash),
+            'closing_cash' => $this->str($closingCash),
+            'difference' => $this->str($difference),
+            'unclassified' => $unclassified,
+            'reconciled' => $unclassified === [] && $difference->isZero(),
         ];
     }
 
@@ -89,7 +183,7 @@ final class RunStatements
         return [
             'income' => $income,
             'expenses' => $expenses,
-            'net_result' => (string) BigDecimal::of($income['total'])->minus($expenses['total']),
+            'net_result' => $this->str(BigDecimal::of($income['total'])->minus($expenses['total'])),
         ];
     }
 
@@ -110,10 +204,10 @@ final class RunStatements
 
             $value = $amount($line);
             $total = $total->plus($value);
-            $rows[] = ['group_account_id' => $line['group_account_id'], 'code' => $line['code'], 'name' => $line['name'], 'amount' => (string) $value];
+            $rows[] = ['group_account_id' => $line['group_account_id'], 'code' => $line['code'], 'name' => $line['name'], 'amount' => $this->str($value)];
         }
 
-        return ['lines' => $rows, 'total' => (string) $total];
+        return ['lines' => $rows, 'total' => $this->str($total)];
     }
 
     /**
@@ -219,10 +313,10 @@ final class RunStatements
                 'functional_currency' => $entity['functional_currency'],
                 'book_status' => $entity['book_status'],
                 'coverage_status' => $entity['coverage_status'],
-                'accounts' => (string) $part['accounts'],
-                'translation_difference' => (string) $part['translation_difference'],
-                'eliminations' => (string) $part['eliminations'],
-                'contribution' => (string) $contribution,
+                'accounts' => $this->str($part['accounts']),
+                'translation_difference' => $this->str($part['translation_difference']),
+                'eliminations' => $this->str($part['eliminations']),
+                'contribution' => $this->str($contribution),
             ];
         }
 
@@ -230,10 +324,32 @@ final class RunStatements
 
         return [
             'entities' => $rows,
-            'elimination_differences' => (string) $apart,
-            'adjustments' => (string) $adjusted,
-            'total' => (string) $total->plus($apart)->plus($adjusted),
+            'elimination_differences' => $this->str($apart),
+            'adjustments' => $this->str($adjusted),
+            'total' => $this->str($total->plus($apart)->plus($adjusted)),
             'run_total' => $result['totals']['all']['closing'],
         ];
+    }
+
+    /**
+     * Whether a line is the account that takes the translation difference: it has sources and all are that.
+     *
+     * @param  list<array<string, mixed>>  $sources
+     */
+    private function isTranslationDifference(array $sources): bool
+    {
+        foreach ($sources as $source) {
+            if ($source['kind'] !== 'translation_difference') {
+                return false;
+            }
+        }
+
+        return $sources !== [];
+    }
+
+    /** The amount with at least two decimals: a sum of nothing is 0.00, as every other figure. */
+    private function str(BigDecimal $amount): string
+    {
+        return (string) $amount->toScale(max(2, $amount->getScale()));
     }
 }

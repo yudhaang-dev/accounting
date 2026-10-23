@@ -41,5 +41,7 @@ return [
     'formal_unmapped' => ':count saldo akun belum dipetakan ke bagan akun grup.',
     'formal_intragroup_exceptions' => ':count pasangan intragrup tidak cocok dalam toleransi atau tidak memiliki lawan di dalam perimeter.',
     'formal_unbalanced' => 'Paket perusahaan :company tidak seimbang.',
+    'cash_flow_class_invalid' => 'Hanya akun aset, liabilitas, atau ekuitas yang memiliki kelas arus kas, dan hanya aset yang dapat menjadi kas.',
+    'formal_cash_flow_unclassified' => 'Arus kas memerlukan kelas untuk akun grup :accounts.',
 
 ];

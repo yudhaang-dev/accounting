@@ -33,7 +33,7 @@ final class EliminateIntragroup
     /**
      * @param  list<string>  $memberIds  the entities of the run
      * @param  list<array<string, mixed>>  $positions  `company_id`, `counterparty_company_id`, account fields and the six amounts, in the presentation currency
-     * @param  array<string, array{id: string, code: string, name: string, class: string}|null>  $groupAccounts  the group account by `company:account`
+     * @param  array<string, array{id: string, code: string, name: string, class: string, cash_flow_class: string|null}|null>  $groupAccounts  the group account by `company:account`
      * @return array{matches: list<array<string, mixed>>, eliminations: list<array<string, mixed>>} rows to store, without the run
      */
     public function __invoke(array $memberIds, array $positions, string $tolerance, array $groupAccounts): array
@@ -111,6 +111,7 @@ final class EliminateIntragroup
                     'group_account_code' => $target['code'] ?? null,
                     'group_account_name' => $target['name'] ?? null,
                     'group_account_class' => $target['class'] ?? null,
+                    'group_account_cash_flow_class' => $target['cash_flow_class'] ?? null,
                     'opening_debit' => $this->money($position['opening_credit']),
                     'opening_credit' => $this->money($position['opening_debit']),
                     'debit' => $this->money($position['credit']),
@@ -142,6 +143,7 @@ final class EliminateIntragroup
                 'group_account_code' => null,
                 'group_account_name' => null,
                 'group_account_class' => null,
+                'group_account_cash_flow_class' => null,
                 'opening_debit' => $this->money($net['opening']->isPositive() ? $net['opening'] : BigDecimal::zero()),
                 'opening_credit' => $this->money($net['opening']->isNegative() ? $net['opening']->negated() : BigDecimal::zero()),
                 'debit' => $this->money($net['movement']->isPositive() ? $net['movement'] : BigDecimal::zero()),

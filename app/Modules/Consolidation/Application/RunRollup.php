@@ -129,6 +129,7 @@ final class RunRollup
                             'group_account_code' => $target?->code,
                             'group_account_name' => $target?->name,
                             'group_account_class' => $target?->class,
+                            'group_account_cash_flow_class' => $target?->cash_flow_class,
                         ] + $balance;
                     }, $chunk));
                 }
@@ -183,6 +184,14 @@ final class RunRollup
 
         if ($exceptions > 0) {
             $blockers[] = __('consolidation.formal_intragroup_exceptions', ['count' => $exceptions]);
+        }
+
+        $unclassified = RunBalance::query()->where('run_id', $run->id)->whereNotNull('group_account_id')->whereIn('group_account_class', ['asset', 'liability'])->whereNull('group_account_cash_flow_class')->where('kind', 'account')
+            ->where(fn ($query) => $query->where('opening_debit', '<>', 0)->orWhere('opening_credit', '<>', 0)->orWhere('closing_debit', '<>', 0)->orWhere('closing_credit', '<>', 0))
+            ->distinct()->pluck('group_account_code');
+
+        if ($unclassified->isNotEmpty()) {
+            $blockers[] = __('consolidation.formal_cash_flow_unclassified', ['accounts' => $unclassified->sort()->implode(', ')]);
         }
 
         foreach ($packages as $companyId => $package) {
@@ -240,7 +249,7 @@ final class RunRollup
             }
         }
 
-        $targets = array_map(fn (?GroupAccount $account): ?array => $account === null ? null : ['id' => $account->id, 'code' => $account->code, 'name' => $account->name, 'class' => $account->class], $mapped);
+        $targets = array_map(fn (?GroupAccount $account): ?array => $account === null ? null : ['id' => $account->id, 'code' => $account->code, 'name' => $account->name, 'class' => $account->class, 'cash_flow_class' => $account->cash_flow_class], $mapped);
         $result = ($this->eliminate)(array_map(fn (PerimeterMember $member): string => $member->company_id, $members), $positions, (string) $group->elimination_tolerance, $targets);
 
         foreach ($result['matches'] as $match) {

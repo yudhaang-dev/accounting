@@ -32,8 +32,9 @@ beforeEach(function () {
     ])->assertCreated()->json('data.id');
     $this->actingAs($approver)->postJson(stPath("perimeter/{$memberId}/approve"))->assertOk();
 
-    $account = fn (string $code, string $class): string => $this->actingAs($this->admin)->postJson(stPath('accounts'), ['code' => $code, 'name' => "Account {$code}", 'class' => $class])->assertCreated()->json('data.id');
-    [$cash, $receivable, $payable, $revenue, $expense] = [$account('1000', 'asset'), $account('1500', 'asset'), $account('2500', 'liability'), $account('4000', 'income'), $account('6000', 'expense')];
+    $account = fn (string $code, string $class, ?string $cashFlow = null): string => $this->actingAs($this->admin)->postJson(stPath('accounts'), ['code' => $code, 'name' => "Account {$code}", 'class' => $class, 'cash_flow_class' => $cashFlow])->assertCreated()->json('data.id');
+    $this->cashAccount = $account('1000', 'asset', 'cash');
+    [$cash, $receivable, $payable, $revenue, $expense] = [$this->cashAccount, $account('1500', 'asset', 'operating'), $account('2500', 'liability', 'operating'), $account('4000', 'income'), $account('6000', 'expense')];
 
     $row = fn (string $company, string $code, string $group): array => ['company_id' => $company, 'account_id' => stAccountId($company, $code), 'group_account_id' => $group];
     $this->actingAs($this->admin)->putJson(stPath('account-mappings'), ['lock_version' => 0, 'effective_date' => '2026-01-01', 'mappings' => [
@@ -147,12 +148,69 @@ describe('group statements of a run (CO-FR-10)', function () {
             ->and($statements['reconciliation']['total'])->toBe($statements['reconciliation']['run_total']);
     });
 
-    it('carries the label of the run and no cash flow', function () {
+    it('carries the label of the run', function () {
         $statements = stStatements();
 
-        expect($statements['label'])->toBe('management_rollup')
-            ->and($statements['formal'])->toBeFalse()
-            ->and($statements['cash_flow'])->toBeNull();
+        expect($statements['label'])->toBe('management_rollup')->and($statements['formal'])->toBeFalse();
+    });
+
+    it('states the indirect cash flow from the result and the change of the other accounts', function () {
+        $flow = stStatements()['cash_flow'];
+
+        // The loan between the entities was eliminated, so only the result moved cash: 1000 received, 100 spent.
+        expect($flow['method'])->toBe('indirect')
+            ->and($flow['net_result'])->toBe('900.00')
+            ->and($flow['operating']['total'])->toBe('900.00')
+            ->and($flow['investing']['total'])->toBe('0.00')
+            ->and($flow['financing']['total'])->toBe('0.00')
+            ->and($flow['translation_effect'])->toBe('0.00')
+            ->and($flow['opening_cash'])->toBe('0.00')
+            ->and($flow['closing_cash'])->toBe('900.00')
+            ->and($flow['net_change'])->toBe('900.00')
+            ->and($flow['difference'])->toBe('0.00')
+            ->and($flow['unclassified'])->toBe([])
+            ->and($flow['reconciled'])->toBeTrue();
+    });
+
+    it('lists an account without a class and does not reconcile, but only for runs made after the change', function () {
+        $before = stStatements();
+        $this->actingAs($this->admin)->patchJson(stPath("accounts/{$this->cashAccount}"), ['lock_version' => 1, 'cash_flow_class' => null])->assertOk();
+
+        // The run keeps the class its accounts had then.
+        expect(stStatements()['cash_flow'])->toBe($before['cash_flow']);
+
+        $newRunId = $this->actingAs($this->admin)->postJson(stPath('runs'), ['from' => '2026-01-01', 'to' => '2026-01-31'])->assertCreated()->json('data.id');
+        $flow = $this->actingAs($this->admin)->getJson(stPath("runs/{$newRunId}/statements"))->assertOk()->json('data.cash_flow');
+
+        expect($flow['unclassified'])->toHaveCount(1)
+            ->and($flow['unclassified'][0]['code'])->toBe('1000')
+            ->and($flow['reconciled'])->toBeFalse();
+    });
+
+    it('puts a change of equity in financing and a purchase of an asset in investing', function () {
+        $accounts = collect($this->actingAs($this->admin)->getJson(stPath('accounts'))->assertOk()->json('data'))->keyBy('code');
+        $equipment = $this->actingAs($this->admin)->postJson(stPath('accounts'), ['code' => '1600', 'name' => 'Equipment', 'class' => 'asset', 'cash_flow_class' => 'investing'])->assertCreated()->json('data.id');
+        $capital = $this->actingAs($this->admin)->postJson(stPath('accounts'), ['code' => '3000', 'name' => 'Capital', 'class' => 'equity'])->assertCreated()->json('data.id');
+        $this->actingAs($this->admin)->putJson(stPath('account-mappings'), ['lock_version' => 1, 'effective_date' => '2026-01-01', 'mappings' => [
+            ['company_id' => $this->parentId, 'account_id' => stAccountId($this->parentId, '1112'), 'group_account_id' => $accounts['1000']['id']],
+            ['company_id' => $this->parentId, 'account_id' => stAccountId($this->parentId, '1170'), 'group_account_id' => $accounts['1500']['id']],
+            ['company_id' => $this->parentId, 'account_id' => stAccountId($this->parentId, '4110'), 'group_account_id' => $accounts['4000']['id']],
+            ['company_id' => $this->parentId, 'account_id' => stAccountId($this->parentId, '1211'), 'group_account_id' => $equipment],
+            ['company_id' => $this->parentId, 'account_id' => stAccountId($this->parentId, '3110'), 'group_account_id' => $capital],
+            ['company_id' => $this->childId, 'account_id' => stAccountId($this->childId, '1111'), 'group_account_id' => $accounts['1000']['id']],
+            ['company_id' => $this->childId, 'account_id' => stAccountId($this->childId, '2130'), 'group_account_id' => $accounts['2500']['id']],
+            ['company_id' => $this->childId, 'account_id' => stAccountId($this->childId, '6220'), 'group_account_id' => $accounts['6000']['id']],
+        ]])->assertOk();
+        stPost($this->parentId, '1112', '3110', '500.00');
+        stPost($this->parentId, '1211', '1112', '200.00');
+
+        $runId = $this->actingAs($this->admin)->postJson(stPath('runs'), ['from' => '2026-01-01', 'to' => '2026-01-31'])->assertCreated()->json('data.id');
+        $flow = $this->actingAs($this->admin)->getJson(stPath("runs/{$runId}/statements"))->assertOk()->json('data.cash_flow');
+
+        expect($flow['investing']['total'])->toBe('-200.00')
+            ->and($flow['financing']['total'])->toBe('500.00')
+            ->and($flow['closing_cash'])->toBe('1200.00')
+            ->and($flow['reconciled'])->toBeTrue();
     });
 
     it('is downloaded as CSV', function () {

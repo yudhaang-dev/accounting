@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class GroupAccountResource extends JsonResource
 {
     /**
-     * @return array{id: string, code: string, name: string, class: string, is_active: bool, lock_version: int}
+     * @return array{id: string, code: string, name: string, class: string, cash_flow_class: string|null, is_active: bool, lock_version: int}
      */
     public function toArray(Request $request): array
     {
@@ -21,6 +21,7 @@ class GroupAccountResource extends JsonResource
             'code' => $this->resource->code,
             'name' => $this->resource->name,
             'class' => $this->resource->class,
+            'cash_flow_class' => $this->resource->cash_flow_class,
             'is_active' => $this->resource->is_active,
             'lock_version' => $this->resource->lock_version,
         ];

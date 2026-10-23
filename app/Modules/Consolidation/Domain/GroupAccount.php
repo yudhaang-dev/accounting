@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $class
  * @property bool $is_active
+ * @property string|null $cash_flow_class `cash`, `operating`, `investing` or `financing`; null for income and expense, and for an account not classified yet (CO-FR-10)
  * @property int $lock_version
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -26,9 +27,11 @@ class GroupAccount extends UlidModel
 
     public const CLASSES = ['asset', 'liability', 'equity', 'income', 'expense'];
 
+    public const CASH_FLOW_CLASSES = ['cash', 'operating', 'investing', 'financing'];
+
     protected $table = 'co_group_accounts';
 
-    protected $fillable = ['group_id', 'code', 'name', 'class', 'is_active'];
+    protected $fillable = ['group_id', 'code', 'name', 'class', 'is_active', 'cash_flow_class'];
 
     protected function casts(): array
     {

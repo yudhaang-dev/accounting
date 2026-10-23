@@ -80,6 +80,7 @@ final class ManageAdjustments
                     'group_account_code' => $account->code,
                     'group_account_name' => $account->name,
                     'group_account_class' => $account->class,
+                    'group_account_cash_flow_class' => $account->cash_flow_class,
                     'debit' => $line['debit'],
                     'credit' => $line['credit'],
                 ]);

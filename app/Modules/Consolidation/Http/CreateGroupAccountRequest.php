@@ -18,6 +18,8 @@ class CreateGroupAccountRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             // The element of the statement the account belongs to; fixed once created.
             'class' => ['required', 'string', Rule::in(GroupAccount::CLASSES)],
+            // How the account enters the group cash flow; only for assets, liabilities and equity, and `cash` only for assets.
+            'cash_flow_class' => ['nullable', 'string', Rule::in(GroupAccount::CASH_FLOW_CLASSES)],
         ];
     }
 }

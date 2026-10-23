@@ -18,14 +18,14 @@ class GroupAccountController
 
     public function store(CreateGroupAccountRequest $request, ManageGroupAccounts $accounts, string $group): JsonResponse
     {
-        $account = $accounts->create($group, $request->string('code')->toString(), $request->string('name')->toString(), $request->string('class')->toString());
+        $account = $accounts->create($group, $request->string('code')->toString(), $request->string('name')->toString(), $request->string('class')->toString(), $request->filled('cash_flow_class') ? $request->string('cash_flow_class')->toString() : null);
 
         return (new GroupAccountResource($account))->response()->setStatusCode(201);
     }
 
-    /** Renames or deactivates an account; its class never changes. */
+    /** Renames or deactivates an account, or sets how it enters the cash flow; its class never changes. */
     public function update(UpdateGroupAccountRequest $request, ManageGroupAccounts $accounts, string $group, string $id): GroupAccountResource
     {
-        return new GroupAccountResource($accounts->update($group, $id, $request->safe()->only(['name', 'is_active']), $request->integer('lock_version')));
+        return new GroupAccountResource($accounts->update($group, $id, $request->safe()->only(['name', 'is_active', 'cash_flow_class']), $request->integer('lock_version')));
     }
 }

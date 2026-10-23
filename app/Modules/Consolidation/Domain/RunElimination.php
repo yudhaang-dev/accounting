@@ -22,6 +22,7 @@ use App\Support\Eloquent\UlidModel;
  * @property string|null $group_account_code
  * @property string|null $group_account_name
  * @property string|null $group_account_class
+ * @property string|null $group_account_cash_flow_class
  * @property string $opening_debit
  * @property string $opening_credit
  * @property string $debit

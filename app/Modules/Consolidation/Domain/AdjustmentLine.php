@@ -13,6 +13,7 @@ use App\Support\Eloquent\UlidModel;
  * @property string $group_account_code
  * @property string $group_account_name
  * @property string $group_account_class
+ * @property string|null $group_account_cash_flow_class
  * @property string $debit
  * @property string $credit
  */

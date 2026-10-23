@@ -1795,7 +1795,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Renames or deactivates an account; its class never changes */
+        /** Renames or deactivates an account, or sets how it enters the cash flow; its class never changes */
         patch: operations["groups.accounts.update"];
         trace?: never;
     };
@@ -3680,7 +3680,7 @@ export interface paths {
          * The group statements of a run (CO-FR-10): the balance sheet and the income statement over the accounts of the
          *     group, the report of eliminations and adjustments, and the reconciliation of each entity to the group total.
          *     They are read from the run, so they carry its label and say whether it is `formal`; a draft is never taken for
-         *     a formal statement. `cash_flow` is null: there is no cash flow classification at group level. With
+         *     a formal statement. `cash_flow` is indirect, from the change of each balance sheet account by its cash flow class; accounts without a class are listed in `unclassified` and keep it from reconciling. With
          *     `Accept: text/csv` the rows are downloaded instead (X-FR-02). Needs a read grant on the group
          */
         get: operations["groups.runs.statements"];
@@ -4348,6 +4348,11 @@ export interface components {
              * @enum {string}
              */
             class: "asset" | "liability" | "equity" | "income" | "expense";
+            /**
+             * @description How the account enters the group cash flow; only for assets, liabilities and equity, and `cash` only for assets.
+             * @enum {string|null}
+             */
+            cash_flow_class?: "cash" | "operating" | "investing" | "financing" | null;
         };
         /** CreateGroupRequest */
         CreateGroupRequest: {
@@ -4792,6 +4797,7 @@ export interface components {
             code: string;
             name: string;
             class: string;
+            cash_flow_class: string | null;
             is_active: boolean;
             lock_version: number;
         };
@@ -5791,6 +5797,11 @@ export interface components {
             lock_version: number;
             name?: string;
             is_active?: boolean;
+            /**
+             * @description Null clears it. Runs made earlier keep the class their accounts had.
+             * @enum {string|null}
+             */
+            cash_flow_class?: "cash" | "operating" | "investing" | "financing" | null;
         };
         /** UpdateGroupRequest */
         UpdateGroupRequest: {
@@ -14688,7 +14699,49 @@ export interface operations {
                                 total: string;
                                 run_total: string;
                             };
-                            cash_flow: null;
+                            cash_flow: {
+                                method: string;
+                                net_result: string;
+                                operating: {
+                                    lines: {
+                                        group_account_id: string;
+                                        code: string;
+                                        name: string;
+                                        amount: string;
+                                    }[];
+                                    total: string;
+                                };
+                                investing: {
+                                    lines: {
+                                        group_account_id: string;
+                                        code: string;
+                                        name: string;
+                                        amount: string;
+                                    }[];
+                                    total: string;
+                                };
+                                financing: {
+                                    lines: {
+                                        group_account_id: string;
+                                        code: string;
+                                        name: string;
+                                        amount: string;
+                                    }[];
+                                    total: string;
+                                };
+                                translation_effect: string;
+                                net_change: string;
+                                opening_cash: string;
+                                closing_cash: string;
+                                difference: string;
+                                unclassified: {
+                                    group_account_id: string;
+                                    code: string;
+                                    name: string;
+                                    amount: string;
+                                }[];
+                                reconciled: boolean;
+                            };
                         };
                     };
                 };

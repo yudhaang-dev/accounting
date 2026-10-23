@@ -20,8 +20,9 @@ beforeEach(function () {
         'name' => 'Grup', 'parent_company_id' => $this->parentId, 'presentation_currency' => 'IDR', 'effective_from' => '2026-01-01',
     ])->assertCreated()->json('data.id');
 
-    $account = fn (string $code, string $class): string => $this->actingAs($this->admin)->postJson(fmPath('accounts'), ['code' => $code, 'name' => "Account {$code}", 'class' => $class])->assertCreated()->json('data.id');
-    $this->cash = $account('1000', 'asset');
+    $account = fn (string $code, string $class, ?string $cashFlow = null): string => $this->actingAs($this->admin)->postJson(fmPath('accounts'), ['code' => $code, 'name' => "Account {$code}", 'class' => $class, 'cash_flow_class' => $cashFlow])->assertCreated()->json('data.id');
+    $this->cash = $account('1000', 'asset', 'cash');
+    $this->account = $account;
     $this->revenue = $account('4000', 'income');
 
     fmPost('1112', '4110', null);
@@ -121,5 +122,14 @@ describe('formal consolidation (CO-FR-05)', function () {
 
         $this->actingAs($this->admin)->postJson("/api/v1/groups/{$group}/runs", ['from' => '2026-01-01', 'to' => '2026-01-31', 'formal' => true])
             ->assertUnprocessable()->assertJsonValidationErrors(['formal']);
+    });
+
+    it('is refused while an asset or a liability with a balance has no cash flow class', function () {
+        $this->actingAs($this->admin)->patchJson(fmPath("accounts/{$this->cash}"), ['lock_version' => 1, 'cash_flow_class' => null])->assertOk();
+
+        $response = fmRun(['formal' => true])->assertUnprocessable()->assertJsonValidationErrors(['formal']);
+
+        expect($response->json('errors.formal.0'))->toContain('1000')
+            ->and(Run::where('group_id', $this->groupId)->count())->toBe(0);
     });
 });

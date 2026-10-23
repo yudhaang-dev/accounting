@@ -97,6 +97,7 @@ final class RunResult
                 'code' => (string) $balance->group_account_code,
                 'name' => (string) $balance->group_account_name,
                 'class' => (string) $balance->group_account_class,
+                'cash_flow_class' => $balance->group_account_cash_flow_class,
                 'sum' => $this->zero(),
                 'sources' => [],
             ];
@@ -121,6 +122,7 @@ final class RunResult
                 'code' => (string) $elimination->group_account_code,
                 'name' => (string) $elimination->group_account_name,
                 'class' => (string) $elimination->group_account_class,
+                'cash_flow_class' => $elimination->group_account_cash_flow_class,
                 'sum' => $this->zero(),
                 'sources' => [],
             ];
@@ -139,6 +141,7 @@ final class RunResult
                     'code' => $line->group_account_code,
                     'name' => $line->group_account_name,
                     'class' => $line->group_account_class,
+                    'cash_flow_class' => $line->group_account_cash_flow_class,
                     'sum' => $this->zero(),
                     'sources' => [],
                 ];
@@ -171,6 +174,7 @@ final class RunResult
                 'code' => $line['code'],
                 'name' => $line['name'],
                 'class' => $line['class'],
+                'cash_flow_class' => $line['cash_flow_class'],
                 ...$this->figures($line['sum'], $scale),
                 'sources' => $line['sources'],
                 'eliminations' => $line['eliminations'] ?? [],
