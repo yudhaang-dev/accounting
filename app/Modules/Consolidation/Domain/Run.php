@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string $status `complete` when every package is closed and covers the range, otherwise `draft`
  * @property string $presentation_currency
  * @property int|null $mapping_version
+ * @property string $elimination_tolerance the tolerance of the group the run matched intragroup pairs by, in the presentation currency
  * @property int|null $translation_policy_version the version of the translation policy, null when nothing was translated
  * @property list<array<string, mixed>> $perimeter
  * @property string $package_policy
@@ -48,6 +49,18 @@ class Run extends UlidModel
     public function entities(): HasMany
     {
         return $this->hasMany(RunEntity::class)->orderBy('company_name')->orderBy('company_id');
+    }
+
+    /** @return HasMany<RunMatch, $this> */
+    public function matches(): HasMany
+    {
+        return $this->hasMany(RunMatch::class);
+    }
+
+    /** @return HasMany<RunElimination, $this> */
+    public function eliminations(): HasMany
+    {
+        return $this->hasMany(RunElimination::class);
     }
 
     /** @return HasMany<RunBalance, $this> */

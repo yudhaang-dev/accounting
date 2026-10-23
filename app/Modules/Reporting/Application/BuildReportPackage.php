@@ -4,11 +4,14 @@ namespace App\Modules\Reporting\Application;
 
 use App\Modules\GeneralLedger\Contracts\AccountData;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
+use App\Modules\GeneralLedger\Contracts\IntercompanyRow;
+use App\Modules\GeneralLedger\Contracts\LedgerReader;
 use App\Modules\GeneralLedger\Contracts\PeriodData;
 use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\Reporting\Contracts\ReportPackage;
 use App\Modules\Reporting\Contracts\ReportPackageAccount;
 use App\Modules\Reporting\Contracts\ReportPackageBalance;
+use App\Modules\Reporting\Contracts\ReportPackageIntercompany;
 use App\Modules\Reporting\Contracts\ReportPackagePeriod;
 use App\Modules\Reporting\Contracts\ReportPackages;
 use App\Support\Access\DataScope;
@@ -29,6 +32,7 @@ final class BuildReportPackage implements ReportPackages
         private readonly PeriodDirectory $periods,
         private readonly AccountDirectory $accounts,
         private readonly CashEquivalents $cash,
+        private readonly LedgerReader $ledger,
         private readonly CompanyContext $company,
     ) {}
 
@@ -63,6 +67,10 @@ final class BuildReportPackage implements ReportPackages
                     'parameters' => $report['parameters'],
                     'conversion_batch_id' => $report['conversion_batch']['id'] ?? null,
                 ],
+                intercompany: array_map(fn (IntercompanyRow $row): ReportPackageIntercompany => new ReportPackageIntercompany(
+                    $row->counterpartyCompanyId, $row->accountId, $row->code, $row->name, $row->class->value,
+                    $row->openingDebit, $row->openingCredit, $row->debit, $row->credit, $row->closingDebit, $row->closingCredit,
+                ), $this->ledger->intercompanyBalances($companyId, $from, $to)),
             );
         });
     }

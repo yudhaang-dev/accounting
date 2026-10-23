@@ -13,9 +13,9 @@ class GroupController
         return new GroupResource(Group::query()->findOrFail($group));
     }
 
-    /** Renames the group or sets its package policy. The parent company and the presentation currency do not change after creation. */
+    /** Renames the group, sets its package policy or the tolerance of intragroup eliminations (in the presentation currency). The parent company and the presentation currency do not change after creation. */
     public function update(UpdateGroupRequest $request, ManageGroups $groups, string $group): GroupResource
     {
-        return new GroupResource($groups->update($group, $request->safe()->only(['name', 'package_policy']), $request->integer('lock_version')));
+        return new GroupResource($groups->update($group, $request->safe()->only(['name', 'package_policy', 'elimination_tolerance']), $request->integer('lock_version')));
     }
 }

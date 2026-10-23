@@ -9,7 +9,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * CSV download of a run result (X-FR-02, CO-FR-10): the same numbers as the JSON, one row per entity account
- * behind a group line, a row for the line itself, one for each exception, and the grand total. Every group
+ * behind a group line, one for each elimination on it, a row for the line itself, one for each exception and for
+ * each elimination without a group account, and the grand total. Every group
  * line stays traceable to the accounts and entities it adds up.
  */
 final class RunCsv
@@ -43,7 +44,15 @@ final class RunCsv
                 $rows[] = self::row('source', $line, $source, $names);
             }
 
+            foreach ($line['eliminations'] as $elimination) {
+                $rows[] = self::row('elimination', $line, $elimination, $names);
+            }
+
             $rows[] = self::row('line', $line, $line, []);
+        }
+
+        foreach ($result['unassigned_eliminations'] as $elimination) {
+            $rows[] = self::row($elimination['kind'] === 'difference' ? 'elimination_difference' : 'elimination', [], $elimination, $names);
         }
 
         foreach ($exceptions as $exception) {

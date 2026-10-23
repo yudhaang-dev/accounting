@@ -93,4 +93,15 @@ interface LedgerReader
      * @return list<LedgerLineRow>
      */
     public function accountLines(string $companyId, string $from, string $to, string $accountId, ?array $dimensionSetIds = null, ?array $transactionTypeKeys = null, ?JournalSource $source = null): array;
+
+    /**
+     * The balances of the lines that name another group company as counterparty, per counterparty and account,
+     * ordered by counterparty, then account code (CO-FR-07). The opening balance is the ledger before `$from`.
+     * Lines without a counterparty are not here, and combinations without balance or movement are left out.
+     *
+     * @param  string  $from  `YYYY-MM-DD`
+     * @param  string  $to  `YYYY-MM-DD`
+     * @return list<IntercompanyRow>
+     */
+    public function intercompanyBalances(string $companyId, string $from, string $to): array;
 }

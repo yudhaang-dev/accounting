@@ -1650,7 +1650,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Renames the group or sets its package policy. The parent company and the presentation currency do not change after creation */
+        /** Renames the group, sets its package policy or the tolerance of intragroup eliminations (in the presentation currency). The parent company and the presentation currency do not change after creation */
         patch: operations["groups.update"];
         trace?: never;
     };
@@ -3567,6 +3567,11 @@ export interface paths {
          *     has no policy or a rate it needs is missing. It is also refused when a member joined or left inside the range,
          *     and, under the package policy `reject`, when a package is not closed or does not cover the range; under
          *     `draft` such a run is kept with status `draft`.
+         *
+         *     What the entities hold against each other (lines that name another company of the group as counterparty) is
+         *     matched pair by pair (CO-FR-07): the pairs whose positions differ by no more than the `elimination_tolerance` of
+         *     the group are eliminated, the others are listed in `intercompany` as exceptions and nothing of them is eliminated.
+         *     What a matched pair still leaves is kept in `unassigned_eliminations`, never removed silently.
          */
         post: operations["groups.runs.store"];
         delete?: never;
@@ -4693,6 +4698,7 @@ export interface components {
             parent_company_id: string;
             presentation_currency: string;
             package_policy: string;
+            elimination_tolerance: string;
             lock_version: number;
         };
         /** GroupRateResource */
@@ -4714,6 +4720,7 @@ export interface components {
             parent_company_id: string;
             presentation_currency: string;
             package_policy: string;
+            elimination_tolerance: string;
             lock_version: number;
         };
         /** HistoryImportResource */
@@ -5686,6 +5693,8 @@ export interface components {
              * @enum {string}
              */
             package_policy?: "draft" | "reject";
+            /** @description The largest difference, in the presentation currency, that an intragroup pair may leave and still be eliminated. */
+            elimination_tolerance?: number;
         };
         /** UpdateIntegrationClientRequest */
         UpdateIntegrationClientRequest: {
@@ -9550,6 +9559,7 @@ export interface operations {
                             parent_company_id: string;
                             presentation_currency: string;
                             package_policy: string;
+                            elimination_tolerance: string;
                             lock_version: number;
                             abilities: string[];
                         }[];
@@ -13903,6 +13913,7 @@ export interface operations {
                             mapping_version: number | null;
                             translation_policy_version: number | null;
                             package_policy: string;
+                            elimination_tolerance: string;
                             coverage_status: string;
                             created_by: number | null;
                             created_at: string | null;
@@ -13953,6 +13964,7 @@ export interface operations {
                             mapping_version: number | null;
                             translation_policy_version: number | null;
                             package_policy: string;
+                            elimination_tolerance: string;
                             coverage_status: string;
                             created_by: number | null;
                             created_at: string | null;
@@ -14011,6 +14023,23 @@ export interface operations {
                                         [key: string]: unknown;
                                     } | null;
                                 }[];
+                                eliminations: {
+                                    match_id: string;
+                                    kind: string;
+                                    company_id: string | null;
+                                    counterparty_company_id: string | null;
+                                    account_id: string | null;
+                                    code: string | null;
+                                    name: string | null;
+                                    class: string | null;
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                    closing: string;
+                                }[];
                             }[];
                             exceptions: {
                                 company_id: string;
@@ -14030,7 +14059,41 @@ export interface operations {
                                 } | null;
                                 reason: string;
                             }[];
+                            intercompany: {
+                                id: string;
+                                kind: string;
+                                company_a_id: string;
+                                company_b_id: string;
+                                amount_a: string;
+                                amount_b: string;
+                                difference: string;
+                                status: string;
+                                reason: string | null;
+                                positions: {
+                                    [key: string]: unknown;
+                                }[];
+                            }[];
+                            unassigned_eliminations: {
+                                match_id: string;
+                                kind: string;
+                                company_id: string | null;
+                                counterparty_company_id: string | null;
+                                account_id: string | null;
+                                code: string | null;
+                                name: string | null;
+                                class: string | null;
+                                opening_debit: string;
+                                opening_credit: string;
+                                debit: string;
+                                credit: string;
+                                closing_debit: string;
+                                closing_credit: string;
+                                closing: string;
+                            }[];
                             totals: {
+                                eliminations: {
+                                    [key: string]: string;
+                                };
                                 mapped: {
                                     [key: string]: string;
                                 };
@@ -14081,6 +14144,7 @@ export interface operations {
                             mapping_version: number | null;
                             translation_policy_version: number | null;
                             package_policy: string;
+                            elimination_tolerance: string;
                             coverage_status: string;
                             created_by: number | null;
                             created_at: string | null;
@@ -14139,6 +14203,23 @@ export interface operations {
                                         [key: string]: unknown;
                                     } | null;
                                 }[];
+                                eliminations: {
+                                    match_id: string;
+                                    kind: string;
+                                    company_id: string | null;
+                                    counterparty_company_id: string | null;
+                                    account_id: string | null;
+                                    code: string | null;
+                                    name: string | null;
+                                    class: string | null;
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                    closing: string;
+                                }[];
                             }[];
                             exceptions: {
                                 company_id: string;
@@ -14158,7 +14239,41 @@ export interface operations {
                                 } | null;
                                 reason: string;
                             }[];
+                            intercompany: {
+                                id: string;
+                                kind: string;
+                                company_a_id: string;
+                                company_b_id: string;
+                                amount_a: string;
+                                amount_b: string;
+                                difference: string;
+                                status: string;
+                                reason: string | null;
+                                positions: {
+                                    [key: string]: unknown;
+                                }[];
+                            }[];
+                            unassigned_eliminations: {
+                                match_id: string;
+                                kind: string;
+                                company_id: string | null;
+                                counterparty_company_id: string | null;
+                                account_id: string | null;
+                                code: string | null;
+                                name: string | null;
+                                class: string | null;
+                                opening_debit: string;
+                                opening_credit: string;
+                                debit: string;
+                                credit: string;
+                                closing_debit: string;
+                                closing_credit: string;
+                                closing: string;
+                            }[];
                             totals: {
+                                eliminations: {
+                                    [key: string]: string;
+                                };
                                 mapped: {
                                     [key: string]: string;
                                 };

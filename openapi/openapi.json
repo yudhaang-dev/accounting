@@ -8815,7 +8815,7 @@
             },
             "patch": {
                 "operationId": "groups.update",
-                "summary": "Renames the group or sets its package policy. The parent company and the presentation currency do not change after creation",
+                "summary": "Renames the group, sets its package policy or the tolerance of intragroup eliminations (in the presentation currency). The parent company and the presentation currency do not change after creation",
                 "tags": [
                     "Group"
                 ],
@@ -8902,6 +8902,9 @@
                                                     "package_policy": {
                                                         "type": "string"
                                                     },
+                                                    "elimination_tolerance": {
+                                                        "type": "string"
+                                                    },
                                                     "lock_version": {
                                                         "type": "integer"
                                                     },
@@ -8918,6 +8921,7 @@
                                                     "parent_company_id",
                                                     "presentation_currency",
                                                     "package_policy",
+                                                    "elimination_tolerance",
                                                     "lock_version",
                                                     "abilities"
                                                 ]
@@ -20114,6 +20118,9 @@
                                                     "package_policy": {
                                                         "type": "string"
                                                     },
+                                                    "elimination_tolerance": {
+                                                        "type": "string"
+                                                    },
                                                     "coverage_status": {
                                                         "type": "string"
                                                     },
@@ -20143,6 +20150,7 @@
                                                     "mapping_version",
                                                     "translation_policy_version",
                                                     "package_policy",
+                                                    "elimination_tolerance",
                                                     "coverage_status",
                                                     "created_by",
                                                     "created_at"
@@ -20188,7 +20196,7 @@
             },
             "post": {
                 "operationId": "groups.runs.store",
-                "description": "The result is labelled `management_rollup` and is never `formal`. An entity in another functional currency\nis translated by the translation policy and the rates of the group, and the run is refused (422) when the group\nhas no policy or a rate it needs is missing. It is also refused when a member joined or left inside the range,\nand, under the package policy `reject`, when a package is not closed or does not cover the range; under\n`draft` such a run is kept with status `draft`.",
+                "description": "The result is labelled `management_rollup` and is never `formal`. An entity in another functional currency\nis translated by the translation policy and the rates of the group, and the run is refused (422) when the group\nhas no policy or a rate it needs is missing. It is also refused when a member joined or left inside the range,\nand, under the package policy `reject`, when a package is not closed or does not cover the range; under\n`draft` such a run is kept with status `draft`.\n\nWhat the entities hold against each other (lines that name another company of the group as counterparty) is\nmatched pair by pair (CO-FR-07): the pairs whose positions differ by no more than the `elimination_tolerance` of\nthe group are eliminated, the others are listed in `intercompany` as exceptions and nothing of them is eliminated.\nWhat a matched pair still leaves is kept in `unassigned_eliminations`, never removed silently.",
                 "summary": "Runs the management roll-up of the group for `from`..`to` (CO-FR-04): the packages of the entities that\nare in the perimeter for the whole range, added up per account of the group through the version of the\nmapping in force on `to`. Needs a run grant on the group, not access to the companies (CO-FR-01)",
                 "tags": [
                     "Run"
@@ -20264,6 +20272,9 @@
                                                     ]
                                                 },
                                                 "package_policy": {
+                                                    "type": "string"
+                                                },
+                                                "elimination_tolerance": {
                                                     "type": "string"
                                                 },
                                                 "coverage_status": {
@@ -20496,6 +20507,94 @@
                                                                         "translation"
                                                                     ]
                                                                 }
+                                                            },
+                                                            "eliminations": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "match_id": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "kind": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "company_id": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "counterparty_company_id": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "account_id": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "code": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "name": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "class": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "opening_debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "opening_credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing_debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing_credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "match_id",
+                                                                        "kind",
+                                                                        "company_id",
+                                                                        "counterparty_company_id",
+                                                                        "account_id",
+                                                                        "code",
+                                                                        "name",
+                                                                        "class",
+                                                                        "opening_debit",
+                                                                        "opening_credit",
+                                                                        "debit",
+                                                                        "credit",
+                                                                        "closing_debit",
+                                                                        "closing_credit",
+                                                                        "closing"
+                                                                    ]
+                                                                }
                                                             }
                                                         },
                                                         "required": [
@@ -20510,7 +20609,8 @@
                                                             "closing",
                                                             "closing_debit",
                                                             "closing_credit",
-                                                            "sources"
+                                                            "sources",
+                                                            "eliminations"
                                                         ]
                                                     }
                                                 },
@@ -20584,9 +20684,160 @@
                                                         ]
                                                     }
                                                 },
+                                                "intercompany": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "company_a_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "company_b_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount_a": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount_b": {
+                                                                "type": "string"
+                                                            },
+                                                            "difference": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "reason": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "positions": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "additionalProperties": {}
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "kind",
+                                                            "company_a_id",
+                                                            "company_b_id",
+                                                            "amount_a",
+                                                            "amount_b",
+                                                            "difference",
+                                                            "status",
+                                                            "reason",
+                                                            "positions"
+                                                        ]
+                                                    }
+                                                },
+                                                "unassigned_eliminations": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "match_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "company_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "counterparty_company_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "account_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "code": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "name": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "class": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "opening_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "opening_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "match_id",
+                                                            "kind",
+                                                            "company_id",
+                                                            "counterparty_company_id",
+                                                            "account_id",
+                                                            "code",
+                                                            "name",
+                                                            "class",
+                                                            "opening_debit",
+                                                            "opening_credit",
+                                                            "debit",
+                                                            "credit",
+                                                            "closing_debit",
+                                                            "closing_credit",
+                                                            "closing"
+                                                        ]
+                                                    }
+                                                },
                                                 "totals": {
                                                     "type": "object",
                                                     "properties": {
+                                                        "eliminations": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
+                                                        },
                                                         "mapped": {
                                                             "type": "object",
                                                             "additionalProperties": {
@@ -20607,6 +20858,7 @@
                                                         }
                                                     },
                                                     "required": [
+                                                        "eliminations",
                                                         "mapped",
                                                         "unmapped",
                                                         "all"
@@ -20629,6 +20881,7 @@
                                                 "mapping_version",
                                                 "translation_policy_version",
                                                 "package_policy",
+                                                "elimination_tolerance",
                                                 "coverage_status",
                                                 "created_by",
                                                 "created_at",
@@ -20636,6 +20889,8 @@
                                                 "entities",
                                                 "lines",
                                                 "exceptions",
+                                                "intercompany",
+                                                "unassigned_eliminations",
                                                 "totals",
                                                 "balanced"
                                             ]
@@ -20735,6 +20990,9 @@
                                                 "package_policy": {
                                                     "type": "string"
                                                 },
+                                                "elimination_tolerance": {
+                                                    "type": "string"
+                                                },
                                                 "coverage_status": {
                                                     "type": "string"
                                                 },
@@ -20965,6 +21223,94 @@
                                                                         "translation"
                                                                     ]
                                                                 }
+                                                            },
+                                                            "eliminations": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "match_id": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "kind": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "company_id": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "counterparty_company_id": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "account_id": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "code": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "name": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "class": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "opening_debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "opening_credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing_debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing_credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "match_id",
+                                                                        "kind",
+                                                                        "company_id",
+                                                                        "counterparty_company_id",
+                                                                        "account_id",
+                                                                        "code",
+                                                                        "name",
+                                                                        "class",
+                                                                        "opening_debit",
+                                                                        "opening_credit",
+                                                                        "debit",
+                                                                        "credit",
+                                                                        "closing_debit",
+                                                                        "closing_credit",
+                                                                        "closing"
+                                                                    ]
+                                                                }
                                                             }
                                                         },
                                                         "required": [
@@ -20979,7 +21325,8 @@
                                                             "closing",
                                                             "closing_debit",
                                                             "closing_credit",
-                                                            "sources"
+                                                            "sources",
+                                                            "eliminations"
                                                         ]
                                                     }
                                                 },
@@ -21053,9 +21400,160 @@
                                                         ]
                                                     }
                                                 },
+                                                "intercompany": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "company_a_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "company_b_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount_a": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount_b": {
+                                                                "type": "string"
+                                                            },
+                                                            "difference": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "reason": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "positions": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "additionalProperties": {}
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "kind",
+                                                            "company_a_id",
+                                                            "company_b_id",
+                                                            "amount_a",
+                                                            "amount_b",
+                                                            "difference",
+                                                            "status",
+                                                            "reason",
+                                                            "positions"
+                                                        ]
+                                                    }
+                                                },
+                                                "unassigned_eliminations": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "match_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "company_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "counterparty_company_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "account_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "code": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "name": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "class": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "opening_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "opening_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_debit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing_credit": {
+                                                                "type": "string"
+                                                            },
+                                                            "closing": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "match_id",
+                                                            "kind",
+                                                            "company_id",
+                                                            "counterparty_company_id",
+                                                            "account_id",
+                                                            "code",
+                                                            "name",
+                                                            "class",
+                                                            "opening_debit",
+                                                            "opening_credit",
+                                                            "debit",
+                                                            "credit",
+                                                            "closing_debit",
+                                                            "closing_credit",
+                                                            "closing"
+                                                        ]
+                                                    }
+                                                },
                                                 "totals": {
                                                     "type": "object",
                                                     "properties": {
+                                                        "eliminations": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
+                                                        },
                                                         "mapped": {
                                                             "type": "object",
                                                             "additionalProperties": {
@@ -21076,6 +21574,7 @@
                                                         }
                                                     },
                                                     "required": [
+                                                        "eliminations",
                                                         "mapped",
                                                         "unmapped",
                                                         "all"
@@ -21098,6 +21597,7 @@
                                                 "mapping_version",
                                                 "translation_policy_version",
                                                 "package_policy",
+                                                "elimination_tolerance",
                                                 "coverage_status",
                                                 "created_by",
                                                 "created_at",
@@ -21105,6 +21605,8 @@
                                                 "entities",
                                                 "lines",
                                                 "exceptions",
+                                                "intercompany",
+                                                "unassigned_eliminations",
                                                 "totals",
                                                 "balanced"
                                             ]
@@ -25707,6 +26209,9 @@
                     "package_policy": {
                         "type": "string"
                     },
+                    "elimination_tolerance": {
+                        "type": "string"
+                    },
                     "lock_version": {
                         "type": "integer"
                     }
@@ -25717,6 +26222,7 @@
                     "parent_company_id",
                     "presentation_currency",
                     "package_policy",
+                    "elimination_tolerance",
                     "lock_version"
                 ],
                 "title": "GroupDataResource"
@@ -25789,6 +26295,9 @@
                     "package_policy": {
                         "type": "string"
                     },
+                    "elimination_tolerance": {
+                        "type": "string"
+                    },
                     "lock_version": {
                         "type": "integer"
                     }
@@ -25799,6 +26308,7 @@
                     "parent_company_id",
                     "presentation_currency",
                     "package_policy",
+                    "elimination_tolerance",
                     "lock_version"
                 ],
                 "title": "GroupResource"
@@ -29720,6 +30230,12 @@
                             "draft",
                             "reject"
                         ]
+                    },
+                    "elimination_tolerance": {
+                        "type": "number",
+                        "description": "The largest difference, in the presentation currency, that an intragroup pair may leave and still be eliminated.",
+                        "minimum": 0,
+                        "maximum": 1.0e+18
                     }
                 },
                 "required": [

@@ -23,6 +23,7 @@ final readonly class ReportPackage
      * @param  bool  $balanced  debit equals credit in every column, as the trial balance states
      * @param  array<string, int|null>  $mappingVersions  account role key => the version in force at the cutoff date, null when never mapped
      * @param  array<string, mixed>  $sourceReferences  the report the balances were read from, its parameters and the opening balance batch of a migrated company
+     * @param  list<ReportPackageIntercompany>  $intercompany  the part of the balances that is held against other group companies, by counterparty then account code (CO-FR-07)
      */
     public function __construct(
         public string $companyId,
@@ -40,6 +41,7 @@ final readonly class ReportPackage
         public bool $balanced,
         public array $mappingVersions,
         public array $sourceReferences,
+        public array $intercompany = [],
     ) {}
 
     public function isClosed(): bool

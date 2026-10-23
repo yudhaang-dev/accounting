@@ -17,7 +17,7 @@ class GroupController
      * The groups the user holds a grant on, by name, each with what the user may do on it (`abilities`: `read`,
      * `run`, `approve`). Membership of workspaces does not list a group (IA-FR-07).
      *
-     * @response array{data: list<array{id: string, name: string, parent_company_id: string, presentation_currency: string, package_policy: string, lock_version: int, abilities: list<string>}>}
+     * @response array{data: list<array{id: string, name: string, parent_company_id: string, presentation_currency: string, package_policy: string, elimination_tolerance: string, lock_version: int, abilities: list<string>}>}
      */
     public function index(Request $request, Groups $groups, GroupGrants $grants): JsonResponse
     {

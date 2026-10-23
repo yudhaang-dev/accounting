@@ -16,6 +16,8 @@ class UpdateGroupRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:255'],
             // What a run does with a package that is not closed or does not cover its range: keep it as a draft or refuse it.
             'package_policy' => ['sometimes', 'string', 'in:draft,reject'],
+            // The largest difference, in the presentation currency, that an intragroup pair may leave and still be eliminated.
+            'elimination_tolerance' => ['sometimes', 'decimal:0,6', 'min:0', 'max:999999999999999999'],
         ];
     }
 }

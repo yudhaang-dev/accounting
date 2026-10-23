@@ -11,5 +11,6 @@ final readonly class GroupData
         public string $presentationCurrency,
         public int $lockVersion = 1,
         public string $packagePolicy = 'draft',
+        public string $eliminationTolerance = '0',
     ) {}
 }

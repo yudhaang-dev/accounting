@@ -8,7 +8,9 @@ use App\Modules\Consolidation\Domain\MappingVersion;
 use App\Modules\Consolidation\Domain\PerimeterMember;
 use App\Modules\Consolidation\Domain\Run;
 use App\Modules\Consolidation\Domain\RunBalance;
+use App\Modules\Consolidation\Domain\RunElimination;
 use App\Modules\Consolidation\Domain\RunEntity;
+use App\Modules\Consolidation\Domain\RunMatch;
 use App\Modules\Consolidation\Domain\TranslationPolicy;
 use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\Reporting\Contracts\ReportPackage;
@@ -32,6 +34,8 @@ use Illuminate\Validation\ValidationException;
  *   translated by the policy and the rates of the group, or the run is refused for lack of them (CO-FR-06,
  *   CO-AC-03). Its translation difference is a row of its own on the equity account of the policy.
  * - An account with no mapping is kept as an exception with its balance, so the totals still add up (CO-AC-02).
+ * - What the entities hold against each other is matched pair by pair within the tolerance of the group and the
+ *   pairs that agree are eliminated; the others are exceptions (CO-FR-07). Eliminations live only in the run.
  * - A package that is not closed, or does not cover the range, is flagged. The group's package policy decides
  *   whether the run is kept as a draft or refused (CO-FR-03); data that is not there is never counted as zero.
  * - A run is only ever added. A later change of perimeter, mapping or ledger makes a new run (CO-FR-09, CO-AC-05).
@@ -42,6 +46,7 @@ final class RunRollup
         private readonly ReportPackages $packages,
         private readonly CompanyDirectory $companies,
         private readonly TranslatePackage $translate,
+        private readonly EliminateIntragroup $eliminate,
         private readonly Audit $audit,
     ) {}
 
@@ -83,6 +88,7 @@ final class RunRollup
                     'approved_at' => $member->approved_at?->toIso8601String(),
                 ], $members),
                 'package_policy' => $group->package_policy,
+                'elimination_tolerance' => $group->elimination_tolerance,
                 'coverage_status' => $coverage,
                 'created_by' => $userId,
             ])->refresh();
@@ -128,17 +134,75 @@ final class RunRollup
                 }
             }
 
+            $this->storeEliminations($run, $group, $members, $packages, $translated, $mapped);
+
             $this->audit->record(
                 'group_run.created',
                 "Management roll-up of group {$group->name} for {$from}..{$to} ({$run->status}).",
                 $run,
-                after: ['status' => $run->status, 'mapping_version' => $run->mapping_version, 'translation_policy_version' => $run->translation_policy_version, 'entities' => array_keys($packages), 'coverage_status' => $coverage],
+                after: ['status' => $run->status, 'elimination_tolerance' => $run->elimination_tolerance, 'mapping_version' => $run->mapping_version, 'translation_policy_version' => $run->translation_policy_version, 'entities' => array_keys($packages), 'coverage_status' => $coverage],
                 properties: ['group_id' => $group->id, 'from' => $from, 'to' => $to],
                 companyId: $group->parent_company_id,
             );
 
             return $run;
         });
+    }
+
+    /**
+     * Matches what the entities hold against each other and stores the verdicts and the rows that eliminate the
+     * pairs that agree (CO-FR-07). Positions are in the presentation currency: translated for an entity in another
+     * currency, as the package has them otherwise.
+     *
+     * @param  list<PerimeterMember>  $members
+     * @param  array<string, ReportPackage>  $packages
+     * @param  array<string, array{rows: list<array<string, mixed>>, intercompany: list<array<string, mixed>>, translation: array<string, mixed>}>  $translated
+     * @param  array<string, GroupAccount|null>  $mapped
+     */
+    private function storeEliminations(Run $run, Group $group, array $members, array $packages, array $translated, array $mapped): void
+    {
+        $positions = [];
+
+        foreach ($packages as $companyId => $package) {
+            if ($package->coverageStatus === 'unavailable') {
+                continue;
+            }
+
+            if (isset($translated[$companyId])) {
+                array_push($positions, ...$translated[$companyId]['intercompany']);
+
+                continue;
+            }
+
+            foreach ($package->intercompany as $position) {
+                $positions[] = [
+                    'company_id' => $companyId,
+                    'counterparty_company_id' => $position->counterpartyCompanyId,
+                    'account_id' => $position->accountId,
+                    'account_code' => $position->code,
+                    'account_name' => $position->name,
+                    'account_class' => $position->class,
+                    'translation' => null,
+                    'opening_debit' => $position->openingDebit,
+                    'opening_credit' => $position->openingCredit,
+                    'debit' => $position->debit,
+                    'credit' => $position->credit,
+                    'closing_debit' => $position->closingDebit,
+                    'closing_credit' => $position->closingCredit,
+                ];
+            }
+        }
+
+        $targets = array_map(fn (?GroupAccount $account): ?array => $account === null ? null : ['id' => $account->id, 'code' => $account->code, 'name' => $account->name, 'class' => $account->class], $mapped);
+        $result = ($this->eliminate)(array_map(fn (PerimeterMember $member): string => $member->company_id, $members), $positions, (string) $group->elimination_tolerance, $targets);
+
+        foreach ($result['matches'] as $match) {
+            RunMatch::create(['run_id' => $run->id] + $match);
+        }
+
+        foreach (array_chunk($result['eliminations'], 500) as $chunk) {
+            RunElimination::query()->insert(array_map(fn (array $row): array => ['id' => (string) Str::ulid(), 'run_id' => $run->id] + $row, $chunk));
+        }
     }
 
     /**
@@ -235,7 +299,7 @@ final class RunRollup
      *
      * @param  list<PerimeterMember>  $members
      * @param  array<string, ReportPackage>  $packages
-     * @return array{0: TranslationPolicy|null, 1: array<string, array{rows: list<array<string, mixed>>, translation: array<string, mixed>}>}
+     * @return array{0: TranslationPolicy|null, 1: array<string, array{rows: list<array<string, mixed>>, intercompany: list<array<string, mixed>>, translation: array<string, mixed>}>}
      *
      * @throws ValidationException
      */

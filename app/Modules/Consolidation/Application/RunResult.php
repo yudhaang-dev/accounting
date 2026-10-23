@@ -4,7 +4,9 @@ namespace App\Modules\Consolidation\Application;
 
 use App\Modules\Consolidation\Domain\Run;
 use App\Modules\Consolidation\Domain\RunBalance;
+use App\Modules\Consolidation\Domain\RunElimination;
 use App\Modules\Consolidation\Domain\RunEntity;
+use App\Modules\Consolidation\Domain\RunMatch;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 
@@ -17,6 +19,12 @@ use Brick\Math\RoundingMode;
  * An entity in another currency is translated before it is added (CO-FR-06): its rows carry the amounts in the
  * functional currency and the rates they came from, and the difference that translation leaves is a row of its
  * own, of kind `translation_difference`, on the equity account of the policy.
+ *
+ * What the entities hold against each other is matched pair by pair (CO-FR-07): `intercompany` lists the verdict
+ * on each pair with the positions behind it, and the pairs that agreed within the tolerance are eliminated by rows
+ * of their own. A line carries the eliminations on its group account, and its figures are the sources plus them;
+ * eliminations that belong to no group account (what a pair left within the tolerance, a position whose account
+ * has no mapping) are listed apart. Both are part of the totals, so the run still balances.
  *
  * A group line adds the movements and the balances of its sources; the closing balance is stated as one
  * signed figure, debit minus credit, and split into the side it falls on. The result says `management_rollup`
@@ -44,6 +52,7 @@ final class RunResult
             'mapping_version' => $run->mapping_version,
             'translation_policy_version' => $run->translation_policy_version,
             'package_policy' => $run->package_policy,
+            'elimination_tolerance' => $this->money(BigDecimal::of($run->elimination_tolerance), 2),
             'coverage_status' => $run->coverage_status,
             'created_by' => $run->created_by,
             'created_at' => $run->created_at?->toIso8601String(),
@@ -57,11 +66,13 @@ final class RunResult
     {
         $entities = $run->entities()->get();
         $balances = $run->balances()->orderBy('group_account_code')->orderBy('company_id')->orderBy('account_code')->get();
-        $scale = $this->scale(array_values($balances->all()));
+        $eliminations = $run->eliminations()->orderBy('group_account_code')->orderBy('company_id')->orderBy('account_code')->orderBy('id')->get();
+        $matches = $run->matches()->orderBy('kind')->orderBy('company_a_id')->orderBy('company_b_id')->get();
+        $scale = $this->scale([...$balances->all(), ...$eliminations->all(), ...$matches->all()]);
 
         $lines = [];
         $exceptions = [];
-        $totals = ['mapped' => $this->zero(), 'unmapped' => $this->zero()];
+        $totals = ['mapped' => $this->zero(), 'unmapped' => $this->zero(), 'eliminations' => $this->zero()];
 
         foreach ($balances as $balance) {
             $closing = BigDecimal::of($balance->closing_debit)->minus($balance->closing_credit);
@@ -86,7 +97,30 @@ final class RunResult
             $totals['mapped'] = $this->add($totals['mapped'], $balance);
         }
 
-        $grand = $this->add($this->add($this->zero(), null, $totals['mapped']), null, $totals['unmapped']);
+        $unassigned = [];
+
+        foreach ($eliminations as $elimination) {
+            $totals['eliminations'] = $this->add($totals['eliminations'], $elimination);
+
+            if ($elimination->group_account_id === null) {
+                $unassigned[] = $this->elimination($elimination, $scale);
+
+                continue;
+            }
+
+            $lines[$elimination->group_account_id] ??= [
+                'group_account_id' => $elimination->group_account_id,
+                'code' => (string) $elimination->group_account_code,
+                'name' => (string) $elimination->group_account_name,
+                'class' => (string) $elimination->group_account_class,
+                'sum' => $this->zero(),
+                'sources' => [],
+            ];
+            $lines[$elimination->group_account_id]['sum'] = $this->add($lines[$elimination->group_account_id]['sum'], $elimination);
+            $lines[$elimination->group_account_id]['eliminations'][] = $this->elimination($elimination, $scale);
+        }
+
+        $grand = $this->add($this->add($this->add($this->zero(), null, $totals['mapped']), null, $totals['unmapped']), null, $totals['eliminations']);
 
         return [
             ...$this->summary($run),
@@ -111,9 +145,24 @@ final class RunResult
                 'class' => $line['class'],
                 ...$this->figures($line['sum'], $scale),
                 'sources' => $line['sources'],
+                'eliminations' => $line['eliminations'] ?? [],
             ], $lines)),
             'exceptions' => $exceptions,
+            'intercompany' => $matches->map(fn (RunMatch $match): array => [
+                'id' => $match->id,
+                'kind' => $match->kind,
+                'company_a_id' => $match->company_a_id,
+                'company_b_id' => $match->company_b_id,
+                'amount_a' => $this->money(BigDecimal::of($match->amount_a), $scale),
+                'amount_b' => $this->money(BigDecimal::of($match->amount_b), $scale),
+                'difference' => $this->money(BigDecimal::of($match->difference), $scale),
+                'status' => $match->status,
+                'reason' => $match->reason,
+                'positions' => $match->positions,
+            ])->values()->all(),
+            'unassigned_eliminations' => $unassigned,
             'totals' => [
+                'eliminations' => $this->figures($totals['eliminations'], $scale),
                 'mapped' => $this->figures($totals['mapped'], $scale),
                 'unmapped' => $this->figures($totals['unmapped'], $scale),
                 'all' => $this->figures($grand, $scale),
@@ -139,7 +188,7 @@ final class RunResult
      * @param  array<string, BigDecimal>|null  $other  added instead of a balance
      * @return array<string, BigDecimal>
      */
-    private function add(array $sum, ?RunBalance $balance, ?array $other = null): array
+    private function add(array $sum, RunBalance|RunElimination|null $balance, ?array $other = null): array
     {
         foreach (array_keys($sum) as $column) {
             $sum[$column] = $sum[$column]->plus($balance !== null ? $balance->{$column} : $other[$column]);
@@ -192,18 +241,47 @@ final class RunResult
     }
 
     /**
+     * One elimination: the reversal of an intragroup position, or the difference a pair left (CO-FR-07).
+     *
+     * @param  int<0, max>  $scale
+     * @return array<string, string|null>
+     */
+    private function elimination(RunElimination $elimination, int $scale): array
+    {
+        return [
+            'match_id' => $elimination->match_id,
+            'kind' => $elimination->kind,
+            'company_id' => $elimination->company_id,
+            'counterparty_company_id' => $elimination->counterparty_company_id,
+            'account_id' => $elimination->account_id,
+            'code' => $elimination->account_code,
+            'name' => $elimination->account_name,
+            'class' => $elimination->account_class,
+            'opening_debit' => $this->money(BigDecimal::of($elimination->opening_debit), $scale),
+            'opening_credit' => $this->money(BigDecimal::of($elimination->opening_credit), $scale),
+            'debit' => $this->money(BigDecimal::of($elimination->debit), $scale),
+            'credit' => $this->money(BigDecimal::of($elimination->credit), $scale),
+            'closing_debit' => $this->money(BigDecimal::of($elimination->closing_debit), $scale),
+            'closing_credit' => $this->money(BigDecimal::of($elimination->closing_credit), $scale),
+            'closing' => $this->money(BigDecimal::of($elimination->closing_debit)->minus($elimination->closing_credit), $scale),
+        ];
+    }
+
+    /**
      * The scale amounts were stored with: the most decimals any of them really uses, at least two.
      *
-     * @param  list<RunBalance>  $balances
+     * @param  list<RunBalance|RunElimination|RunMatch>  $rows
      * @return int<0, max>
      */
-    private function scale(array $balances): int
+    private function scale(array $rows): int
     {
         $scale = 2;
 
-        foreach ($balances as $balance) {
-            foreach (['opening_debit', 'opening_credit', 'debit', 'credit', 'closing_debit', 'closing_credit'] as $column) {
-                $scale = max($scale, strlen(rtrim(explode('.', (string) BigDecimal::of($balance->{$column}))[1] ?? '', '0')));
+        foreach ($rows as $row) {
+            $columns = $row instanceof RunMatch ? ['amount_a', 'amount_b', 'difference'] : ['opening_debit', 'opening_credit', 'debit', 'credit', 'closing_debit', 'closing_credit'];
+
+            foreach ($columns as $column) {
+                $scale = max($scale, strlen(rtrim(explode('.', (string) BigDecimal::of($row->getAttribute($column)))[1] ?? '', '0')));
             }
         }
 

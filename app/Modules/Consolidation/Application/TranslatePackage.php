@@ -43,7 +43,7 @@ final class TranslatePackage
     private const COLUMNS = ['opening_debit', 'opening_credit', 'debit', 'credit', 'closing_debit', 'closing_credit'];
 
     /**
-     * @return array{rows: list<array<string, mixed>>, translation: array<string, mixed>} rows to store for the run, without ID and run
+     * @return array{rows: list<array<string, mixed>>, intercompany: list<array<string, mixed>>, translation: array<string, mixed>} rows and intercompany positions to store for the run, without ID and run
      *
      * @throws ValidationException
      */
@@ -83,23 +83,23 @@ final class TranslatePackage
         };
 
         $sums = array_fill_keys(self::COLUMNS, BigDecimal::zero());
-        $rows = [];
 
-        foreach ($package->balances as $balance) {
-            $typeId = match ($balance->class) {
+        /**
+         * The six amounts of one balance or position at the rates of its account class: assets and liabilities
+         * at the closing rate, income and expenses at the average rate, equity at the historical rate.
+         *
+         * @param  array<string, string>  $functional
+         * @return array{0: array<string, string>, 1: array<string, string|null>}
+         */
+        $translate = function (string $class, array $functional) use ($policy, $dayBefore, $to, $historical, $rateOn): array {
+            $typeId = match ($class) {
                 'asset', 'liability' => $policy->closing_rate_type_id,
                 'income', 'expense' => $policy->average_rate_type_id,
                 'equity' => $policy->historical_rate_type_id,
-                default => throw new LogicException("Unknown account class [{$balance->class}]."),
+                default => throw new LogicException("Unknown account class [{$class}]."),
             };
-            $isEquity = $balance->class === 'equity';
+            $isEquity = $class === 'equity';
             $dates = ['opening' => $isEquity ? $historical : $dayBefore, 'movement' => $isEquity ? $historical : $to, 'closing' => $isEquity ? $historical : $to];
-
-            $functional = [
-                'opening_debit' => $balance->openingDebit, 'opening_credit' => $balance->openingCredit,
-                'debit' => $balance->debit, 'credit' => $balance->credit,
-                'closing_debit' => $balance->closingDebit, 'closing_credit' => $balance->closingCredit,
-            ];
             $rates = ['opening' => null, 'movement' => null, 'closing' => null];
             $translated = [];
 
@@ -115,7 +115,23 @@ final class TranslatePackage
                 $rate = $rateOn($typeId, $dates[$part]);
                 $rates[$part] = (string) $rate->rate;
                 $translated[$column] = $this->money(BigDecimal::of($amount)->multipliedBy($rate->rate));
-                $sums[$column] = $sums[$column]->plus($translated[$column]);
+            }
+
+            return [$translated, $rates];
+        };
+
+        $rows = [];
+
+        foreach ($package->balances as $balance) {
+            $functional = [
+                'opening_debit' => $balance->openingDebit, 'opening_credit' => $balance->openingCredit,
+                'debit' => $balance->debit, 'credit' => $balance->credit,
+                'closing_debit' => $balance->closingDebit, 'closing_credit' => $balance->closingCredit,
+            ];
+            [$translated, $rates] = $translate($balance->class, $functional);
+
+            foreach ($translated as $column => $amount) {
+                $sums[$column] = $sums[$column]->plus($amount);
             }
 
             $rows[] = [
@@ -126,6 +142,28 @@ final class TranslatePackage
                 'account_class' => $balance->class,
                 'kind' => 'account',
                 'translation' => json_encode(['functional' => $functional, 'rates' => $rates], JSON_THROW_ON_ERROR),
+            ] + $translated;
+        }
+
+        // The part of those balances held against other group companies, at the rates of the same accounts.
+        $intercompany = [];
+
+        foreach ($package->intercompany as $position) {
+            $functional = [
+                'opening_debit' => $position->openingDebit, 'opening_credit' => $position->openingCredit,
+                'debit' => $position->debit, 'credit' => $position->credit,
+                'closing_debit' => $position->closingDebit, 'closing_credit' => $position->closingCredit,
+            ];
+            [$translated, $rates] = $translate($position->class, $functional);
+
+            $intercompany[] = [
+                'company_id' => $companyId,
+                'counterparty_company_id' => $position->counterpartyCompanyId,
+                'account_id' => $position->accountId,
+                'account_code' => $position->code,
+                'account_name' => $position->name,
+                'account_class' => $position->class,
+                'translation' => ['functional' => $functional, 'rates' => $rates],
             ] + $translated;
         }
 
@@ -157,6 +195,7 @@ final class TranslatePackage
 
         return [
             'rows' => $rows,
+            'intercompany' => $intercompany,
             'translation' => [
                 'policy_version' => $policy->version,
                 'functional_currency' => $currency,

@@ -55,7 +55,7 @@ final class ManageGroups implements Groups
     }
 
     /**
-     * @param  array<string, mixed>  $changes  `name` and `package_policy`
+     * @param  array<string, mixed>  $changes  `name`, `package_policy` and `elimination_tolerance`
      *
      * @throws ApiException VERSION_CONFLICT
      */
@@ -65,7 +65,7 @@ final class ManageGroups implements Groups
             $group = Group::query()->lockForUpdate()->findOrFail($groupId);
             $before = $this->snapshot($group);
 
-            $group->updateLocked(array_intersect_key($changes, array_flip(['name', 'package_policy'])), $expectedVersion);
+            $group->updateLocked(array_intersect_key($changes, array_flip(['name', 'package_policy', 'elimination_tolerance'])), $expectedVersion);
 
             if ($before !== $this->snapshot($group)) {
                 $this->audit->record('group.updated', "Consolidation group {$group->name} updated.", $group, before: $before, after: $this->snapshot($group), companyId: $group->parent_company_id);
@@ -94,12 +94,12 @@ final class ManageGroups implements Groups
 
     private function data(Group $group): GroupData
     {
-        return new GroupData($group->id, $group->name, $group->parent_company_id, $group->presentation_currency, $group->lock_version, $group->package_policy);
+        return new GroupData($group->id, $group->name, $group->parent_company_id, $group->presentation_currency, $group->lock_version, $group->package_policy, (string) $group->elimination_tolerance);
     }
 
     /** @return array<string, mixed> */
     private function snapshot(Group $group): array
     {
-        return ['name' => $group->name, 'parent_company_id' => $group->parent_company_id, 'presentation_currency' => $group->presentation_currency, 'package_policy' => $group->package_policy];
+        return ['name' => $group->name, 'parent_company_id' => $group->parent_company_id, 'presentation_currency' => $group->presentation_currency, 'package_policy' => $group->package_policy, 'elimination_tolerance' => (string) $group->elimination_tolerance];
     }
 }

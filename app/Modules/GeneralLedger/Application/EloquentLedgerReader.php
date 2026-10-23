@@ -6,6 +6,7 @@ use App\Modules\GeneralLedger\Contracts\AccountClass;
 use App\Modules\GeneralLedger\Contracts\AccountLineRow;
 use App\Modules\GeneralLedger\Contracts\AccountMovementRow;
 use App\Modules\GeneralLedger\Contracts\CurrencyBalanceRow;
+use App\Modules\GeneralLedger\Contracts\IntercompanyRow;
 use App\Modules\GeneralLedger\Contracts\JournalSource;
 use App\Modules\GeneralLedger\Contracts\LedgerLineRow;
 use App\Modules\GeneralLedger\Contracts\LedgerReader;
@@ -162,6 +163,54 @@ final class EloquentLedgerReader implements LedgerReader
                 $this->amount(BigDecimal::of($row->transaction_credit), $scale),
                 $this->amount(BigDecimal::of($row->debit), $functionalScale),
                 $this->amount(BigDecimal::of($row->credit), $functionalScale),
+            );
+        }
+
+        return $result;
+    }
+
+    public function intercompanyBalances(string $companyId, string $from, string $to): array
+    {
+        $rows = DB::table('gl_journal_lines as l')
+            ->join('gl_accounts as a', fn ($join) => $join->on('a.company_id', '=', 'l.company_id')->on('a.id', '=', 'l.account_id'))
+            ->where('l.company_id', $companyId)
+            ->whereNotNull('l.counterparty_company_id')
+            ->where('l.accounting_date', '<=', $to)
+            ->groupBy('l.counterparty_company_id', 'a.id', 'a.code', 'a.name', 'a.class')
+            ->orderBy('l.counterparty_company_id')
+            ->orderBy('a.code')
+            ->selectRaw('l.counterparty_company_id, a.id, a.code, a.name, a.class')
+            ->selectRaw('coalesce(sum(case when l.accounting_date < ? then l.debit - l.credit else 0 end), 0) as opening', [$from])
+            ->selectRaw('coalesce(sum(case when l.accounting_date >= ? then l.debit else 0 end), 0) as debit', [$from])
+            ->selectRaw('coalesce(sum(case when l.accounting_date >= ? then l.credit else 0 end), 0) as credit', [$from])
+            ->get();
+
+        $scale = $this->currencies->functionalScale($companyId);
+        $result = [];
+
+        foreach ($rows as $row) {
+            $opening = BigDecimal::of($row->opening);
+            $debit = BigDecimal::of($row->debit);
+            $credit = BigDecimal::of($row->credit);
+
+            if ($opening->isZero() && $debit->isZero() && $credit->isZero()) {
+                continue;
+            }
+
+            $closing = $opening->plus($debit)->minus($credit);
+
+            $result[] = new IntercompanyRow(
+                $row->counterparty_company_id,
+                $row->id,
+                $row->code,
+                $row->name,
+                AccountClass::from($row->class),
+                $this->side($opening, true, $scale),
+                $this->side($opening, false, $scale),
+                $this->amount($debit, $scale),
+                $this->amount($credit, $scale),
+                $this->side($closing, true, $scale),
+                $this->side($closing, false, $scale),
             );
         }
 
