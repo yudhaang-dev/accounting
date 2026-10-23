@@ -13,6 +13,10 @@ const SECTIONS = [
     { to: '/groups/$groupId/perimeter', label: 'consolidation.nav.perimeter' },
     { to: '/groups/$groupId/accounts', label: 'consolidation.nav.accounts' },
     { to: '/groups/$groupId/mapping', label: 'consolidation.nav.mapping' },
+    {
+        to: '/groups/$groupId/translation',
+        label: 'consolidation.nav.translation',
+    },
     { to: '/groups/$groupId/runs', label: 'consolidation.nav.runs' },
 ] as const;
 

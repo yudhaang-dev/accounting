@@ -3180,6 +3180,7 @@ export const id = {
             perimeter: 'Perimeter',
             accounts: 'Akun grup',
             mapping: 'Pemetaan akun',
+            translation: 'Translasi',
             runs: 'Run',
         },
         perimeter: {
@@ -3318,6 +3319,65 @@ export const id = {
             exceptions: 'Pengecualian: akun tanpa pemetaan',
             exceptionsDescription:
                 'Saldo akun ini tetap dihitung dalam total, tetapi belum masuk ke akun grup mana pun. Petakan lalu jalankan roll-up lagi.',
+        },
+        translation: {
+            description:
+                'Entitas dengan mata uang fungsional selain mata uang penyajian grup diterjemahkan dengan kebijakan ini: aset dan liabilitas dengan kurs penutup, pendapatan dan beban dengan kurs rata-rata, ekuitas dengan kurs historis. Selisihnya masuk ke satu akun ekuitas grup.',
+            policy: {
+                title: 'Kebijakan translasi',
+                none: 'Belum ada kebijakan',
+                version: 'Versi {{version}} berlaku sejak {{date}}',
+                choose: 'Pilih…',
+                closing: 'Kurs penutup',
+                closingHint: 'Untuk aset dan liabilitas.',
+                average: 'Kurs rata-rata',
+                averageHint: 'Untuk pendapatan dan beban.',
+                historical: 'Kurs historis',
+                historicalHint: 'Untuk ekuitas.',
+                difference: 'Akun selisih translasi',
+                differenceHint:
+                    'Akun ekuitas grup yang menampung selisih translasi.',
+                effectiveDate: 'Berlaku sejak',
+                save: 'Simpan sebagai versi baru',
+                saved: 'Kebijakan translasi versi {{version}} disimpan.',
+                conflict:
+                    'Kebijakan sudah diubah orang lain. Tampilan sudah dimuat ulang; periksa lalu simpan lagi.',
+            },
+            types: {
+                title: 'Jenis kurs',
+                new: 'Jenis kurs baru',
+                newTitle: 'Jenis kurs baru',
+                editTitle: 'Ubah jenis kurs',
+                dialogDescription: 'Form jenis kurs grup.',
+                code: 'Kode',
+                codeHint:
+                    'Huruf kecil, angka, dan garis bawah; tidak dapat diubah.',
+                codeInvalid:
+                    'Mulai dengan huruf kecil; hanya huruf kecil, angka, dan garis bawah.',
+                name: 'Nama',
+                active: 'Aktif',
+                empty: 'Belum ada jenis kurs. Buat jenis untuk kurs penutup, rata-rata, dan historis.',
+                created: 'Jenis kurs {{name}} dibuat.',
+                saved: 'Jenis kurs {{name}} disimpan.',
+            },
+            rates: {
+                title: 'Kurs',
+                new: 'Catat kurs',
+                newTitle: 'Catat kurs',
+                dialogDescription: 'Form kurs presentasi grup.',
+                type: 'Jenis kurs',
+                allTypes: 'Semua jenis',
+                showAll: 'Tampilkan koreksi',
+                currency: 'Mata uang',
+                currencyInvalid: 'Tiga huruf, misalnya USD.',
+                date: 'Tanggal berlaku',
+                rate: 'Kurs',
+                rateHint: 'Jumlah {{currency}} untuk 1 unit mata uang ini.',
+                rateInvalid: 'Kurs harus lebih dari nol.',
+                version: 'Versi',
+                empty: 'Belum ada kurs.',
+                saved: 'Kurs {{currency}} dicatat.',
+            },
         },
     },
 };

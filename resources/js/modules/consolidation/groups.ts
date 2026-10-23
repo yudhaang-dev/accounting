@@ -30,6 +30,18 @@ export type RunLine = Run['lines'][number];
 export type RunSource = RunLine['sources'][number];
 export type RunEntity = Run['entities'][number];
 export type RunException = Run['exceptions'][number];
+export type RateType =
+    components['schemas']['App.Modules.Consolidation.Http.RateTypeResource'];
+export type GroupRate = components['schemas']['GroupRateResource'];
+export type TranslationPolicy = DataOf<
+    Json<'groups.translation-policy.show', 200>
+>;
+
+export type RateFilters = {
+    rate_type_id?: string;
+    currency?: string;
+    include_superseded?: boolean;
+};
 
 export const GROUP_ACCOUNT_CLASSES = [
     'asset',
@@ -140,6 +152,112 @@ export const runQuery = (groupId: string, runId: string) =>
                 )
             ).data,
     });
+
+export const rateTypesQuery = (groupId: string) =>
+    queryOptions({
+        queryKey: [...everything, groupId, 'rate-types'],
+        queryFn: async (): Promise<RateType[]> =>
+            (
+                await unwrap(
+                    api.GET('/groups/{group}/rate-types', {
+                        params: { path: { group: groupId } },
+                    }),
+                )
+            ).data,
+    });
+
+export const translationPolicyQuery = (groupId: string) =>
+    queryOptions({
+        queryKey: [...everything, groupId, 'translation-policy'],
+        queryFn: async (): Promise<TranslationPolicy> =>
+            (
+                await unwrap(
+                    api.GET('/groups/{group}/translation-policy', {
+                        params: { path: { group: groupId } },
+                    }),
+                )
+            ).data,
+    });
+
+export const groupRatesQuery = (groupId: string, filters: RateFilters) =>
+    queryOptions({
+        queryKey: [...everything, groupId, 'rates', filters],
+        queryFn: async (): Promise<GroupRate[]> =>
+            (
+                await unwrap(
+                    api.GET('/groups/{group}/rates', {
+                        params: {
+                            path: { group: groupId },
+                            query: {
+                                'filter[rate_type_id]': filters.rate_type_id,
+                                'filter[currency]': filters.currency,
+                                'filter[include_superseded]':
+                                    filters.include_superseded,
+                                per_page: 200,
+                            },
+                        },
+                    }),
+                )
+            ).data,
+    });
+
+export async function createRateType(
+    groupId: string,
+    body: { code: string; name: string },
+): Promise<RateType> {
+    return (
+        await unwrap(
+            api.POST('/groups/{group}/rate-types', {
+                params: { path: { group: groupId } },
+                body,
+            }),
+        )
+    ).data;
+}
+
+export async function updateRateType(
+    groupId: string,
+    type: RateType,
+    body: { name?: string; is_active?: boolean },
+): Promise<RateType> {
+    return (
+        await unwrap(
+            api.PATCH('/groups/{group}/rate-types/{id}', {
+                params: { path: { group: groupId, id: type.id } },
+                body: { lock_version: type.lock_version, ...body },
+            }),
+        )
+    ).data;
+}
+
+/** The policy as a new version; `lockVersion` is the version that was read, 0 for none. */
+export async function saveTranslationPolicy(
+    groupId: string,
+    body: components['schemas']['SaveTranslationPolicyRequest'],
+) {
+    return (
+        await unwrap(
+            api.PUT('/groups/{group}/translation-policy', {
+                params: { path: { group: groupId } },
+                body,
+            }),
+        )
+    ).data;
+}
+
+export async function recordGroupRate(
+    groupId: string,
+    body: components['schemas']['RecordGroupRateRequest'],
+): Promise<GroupRate> {
+    return (
+        await unwrap(
+            api.POST('/groups/{group}/rates', {
+                params: { path: { group: groupId } },
+                body,
+            }),
+        )
+    ).data;
+}
 
 export type CreateGroupInput = components['schemas']['CreateGroupRequest'];
 

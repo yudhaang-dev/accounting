@@ -29,6 +29,7 @@ import {
 } from '@/modules/identity-access/workspaces';
 import { GroupAccountsPage } from '@/modules/consolidation/pages/group-accounts-page';
 import { GroupLayout } from '@/modules/consolidation/pages/group-layout';
+import { TranslationPage } from '@/modules/consolidation/pages/translation-page';
 import { GroupsPage } from '@/modules/consolidation/pages/groups-page';
 import { MappingPage } from '@/modules/consolidation/pages/mapping-page';
 import { PerimeterPage } from '@/modules/consolidation/pages/perimeter-page';
@@ -2030,6 +2031,26 @@ const groupMappingRoute = createRoute({
     },
 });
 
+const groupTranslationRoute = createRoute({
+    getParentRoute: () => groupRoute,
+    path: '/translation',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'consolidation.nav.translation',
+                href: `/groups/${m.params.groupId}/translation`,
+            },
+        ],
+    },
+    component: function GroupTranslation() {
+        return (
+            <TranslationPage
+                groupId={groupTranslationRoute.useParams().groupId}
+            />
+        );
+    },
+});
+
 const groupRunsRoute = createRoute({
     getParentRoute: () => groupRoute,
     path: '/runs',
@@ -2095,6 +2116,7 @@ const routeTree = rootRoute.addChildren([
                 groupPerimeterRoute,
                 groupAccountsRoute,
                 groupMappingRoute,
+                groupTranslationRoute,
                 groupRunsRoute,
                 groupRunRoute,
             ]),

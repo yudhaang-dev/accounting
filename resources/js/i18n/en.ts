@@ -3181,6 +3181,7 @@ export const en: Widen<typeof id> = {
             perimeter: 'Perimeter',
             accounts: 'Group accounts',
             mapping: 'Account mapping',
+            translation: 'Translation',
             runs: 'Runs',
         },
         perimeter: {
@@ -3320,6 +3321,65 @@ export const en: Widen<typeof id> = {
             exceptions: 'Exceptions: accounts without a mapping',
             exceptionsDescription:
                 'The balances of these accounts are still in the totals, but are not in any group account yet. Map them, then run the roll-up again.',
+        },
+        translation: {
+            description:
+                'Entities whose functional currency is not the presentation currency of the group are translated by this policy: assets and liabilities at the closing rate, income and expenses at the average rate, equity at the historical rate. The difference goes to one group equity account.',
+            policy: {
+                title: 'Translation policy',
+                none: 'No policy yet',
+                version: 'Version {{version}} in force since {{date}}',
+                choose: 'Choose…',
+                closing: 'Closing rate',
+                closingHint: 'For assets and liabilities.',
+                average: 'Average rate',
+                averageHint: 'For income and expenses.',
+                historical: 'Historical rate',
+                historicalHint: 'For equity.',
+                difference: 'Translation difference account',
+                differenceHint:
+                    'The group equity account that takes the translation difference.',
+                effectiveDate: 'Effective from',
+                save: 'Save as a new version',
+                saved: 'Translation policy version {{version}} saved.',
+                conflict:
+                    'The policy was changed by someone else. The view has been reloaded; check it and save again.',
+            },
+            types: {
+                title: 'Rate types',
+                new: 'New rate type',
+                newTitle: 'New rate type',
+                editTitle: 'Edit rate type',
+                dialogDescription: 'Form for a rate type of the group.',
+                code: 'Code',
+                codeHint:
+                    'Lowercase letters, digits and underscores; it cannot be changed.',
+                codeInvalid:
+                    'Start with a lowercase letter; only lowercase letters, digits and underscores.',
+                name: 'Name',
+                active: 'Active',
+                empty: 'No rate types yet. Create types for the closing, average and historical rates.',
+                created: 'Rate type {{name}} created.',
+                saved: 'Rate type {{name}} saved.',
+            },
+            rates: {
+                title: 'Rates',
+                new: 'Record a rate',
+                newTitle: 'Record a rate',
+                dialogDescription: 'Form for a presentation rate of the group.',
+                type: 'Rate type',
+                allTypes: 'All types',
+                showAll: 'Show corrections',
+                currency: 'Currency',
+                currencyInvalid: 'Three letters, for example USD.',
+                date: 'Effective date',
+                rate: 'Rate',
+                rateHint: 'Amount of {{currency}} for 1 unit of this currency.',
+                rateInvalid: 'The rate must be greater than zero.',
+                version: 'Version',
+                empty: 'No rates yet.',
+                saved: 'Rate {{currency}} recorded.',
+            },
         },
     },
 };
