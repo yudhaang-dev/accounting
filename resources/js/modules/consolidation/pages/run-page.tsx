@@ -25,6 +25,10 @@ import { useDocumentTitle } from '@/hooks/use-document-title';
 import { formatIsoDate } from '@/lib/date';
 import { formatMoney } from '@/lib/decimal';
 import { actionErrorMessage, genericErrorMessage } from '@/lib/errors';
+import {
+    IntercompanySection,
+    TranslationSection,
+} from '@/modules/consolidation/components/run-sections';
 import { exportRun, runQuery } from '@/modules/consolidation/groups';
 
 /**
@@ -85,7 +89,9 @@ export function RunPage({
                             {formatIsoDate(result.to, i18n.language)}
                         </h2>
                         <Badge variant="outline">
-                            {t('consolidation.runPage.rollup')}
+                            {t(
+                                `consolidation.runPage.labels.${result.label as 'management_rollup'}`,
+                            )}
                         </Badge>
                         <Badge
                             variant={
@@ -106,6 +112,8 @@ export function RunPage({
                                 result.mapping_version ??
                                 t('consolidation.runPage.noMapping'),
                         })}
+                        {result.translation_policy_version !== null &&
+                            ` · ${t('consolidation.runPage.translationVersion', { version: result.translation_policy_version })}`}
                     </p>
                 </div>
                 <Button
@@ -126,15 +134,17 @@ export function RunPage({
                 <FormAlert>{actionErrorMessage(download.error, t)}</FormAlert>
             )}
 
-            <Alert>
-                <TriangleAlertIcon aria-hidden />
-                <AlertTitle>
-                    {t('consolidation.runPage.notFormalTitle')}
-                </AlertTitle>
-                <AlertDescription>
-                    {t('consolidation.runPage.notFormal')}
-                </AlertDescription>
-            </Alert>
+            {result.label !== 'consolidated' && (
+                <Alert>
+                    <TriangleAlertIcon aria-hidden />
+                    <AlertTitle>
+                        {t('consolidation.runPage.notFormalTitle')}
+                    </AlertTitle>
+                    <AlertDescription>
+                        {t('consolidation.runPage.notFormal')}
+                    </AlertDescription>
+                </Alert>
+            )}
 
             {result.status === 'draft' && (
                 <Alert>
@@ -221,6 +231,8 @@ export function RunPage({
                     </Table>
                 </div>
             </section>
+
+            <TranslationSection run={result} />
 
             <section
                 className="flex flex-col gap-2"
@@ -329,6 +341,9 @@ export function RunPage({
                                                         {names.get(
                                                             source.company_id,
                                                         ) ?? source.company_id}
+                                                        {source.kind ===
+                                                            'translation_difference' &&
+                                                            ` · ${t('consolidation.runPage.translationDifference')}`}
                                                     </TableCell>
                                                     <TableCell className="text-end tabular-nums">
                                                         {money(source.debit)}
@@ -348,6 +363,84 @@ export function RunPage({
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
+                                        {expanded &&
+                                            line.eliminations.map(
+                                                (elimination) => (
+                                                    <TableRow
+                                                        key={`${elimination.match_id}:${elimination.kind}:${elimination.company_id}`}
+                                                        className="bg-muted/40 text-sm"
+                                                    >
+                                                        <TableCell />
+                                                        <TableCell />
+                                                        <TableCell className="text-muted-foreground">
+                                                            {t(
+                                                                `consolidation.runPage.eliminationKinds.${elimination.kind as 'elimination'}`,
+                                                            )}
+                                                            {elimination.company_id &&
+                                                                ` · ${names.get(elimination.company_id) ?? elimination.company_id}`}
+                                                        </TableCell>
+                                                        <TableCell className="text-end tabular-nums">
+                                                            {money(
+                                                                elimination.debit,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-end tabular-nums">
+                                                            {money(
+                                                                elimination.credit,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-end tabular-nums">
+                                                            {money(
+                                                                elimination.closing_debit,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-end tabular-nums">
+                                                            {money(
+                                                                elimination.closing_credit,
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
+                                        {expanded &&
+                                            line.adjustments.map(
+                                                (adjustment) => (
+                                                    <TableRow
+                                                        key={`${adjustment.adjustment_id}:${line.group_account_id}`}
+                                                        className="bg-muted/40 text-sm"
+                                                    >
+                                                        <TableCell />
+                                                        <TableCell />
+                                                        <TableCell className="text-muted-foreground">
+                                                            {t(
+                                                                'consolidation.runPage.adjustment',
+                                                            )}{' '}
+                                                            ·{' '}
+                                                            {adjustment.source}
+                                                        </TableCell>
+                                                        <TableCell className="text-end tabular-nums">
+                                                            {money(
+                                                                adjustment.debit,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-end tabular-nums">
+                                                            {money(
+                                                                adjustment.credit,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-end tabular-nums">
+                                                            {money(
+                                                                adjustment.closing_debit,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-end tabular-nums">
+                                                            {money(
+                                                                adjustment.closing_credit,
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                     </Fragment>
                                 );
                             })}
@@ -373,6 +466,8 @@ export function RunPage({
                     </Table>
                 </div>
             </section>
+
+            <IntercompanySection run={result} />
 
             {result.exceptions.length > 0 && (
                 <section

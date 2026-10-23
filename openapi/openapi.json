@@ -20875,7 +20875,77 @@
                                                                     "object",
                                                                     "null"
                                                                 ],
-                                                                "additionalProperties": {}
+                                                                "properties": {
+                                                                    "policy_version": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "functional_currency": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "presentation_currency": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "rates": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "purpose": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "rate_type": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "requested_date": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "effective_date": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "rate": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "version": {
+                                                                                    "type": "integer"
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "purpose",
+                                                                                "rate_type",
+                                                                                "requested_date",
+                                                                                "effective_date",
+                                                                                "rate",
+                                                                                "version"
+                                                                            ]
+                                                                        }
+                                                                    },
+                                                                    "difference": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "account_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "opening": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "closing": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "account_id",
+                                                                            "opening",
+                                                                            "closing"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "policy_version",
+                                                                    "functional_currency",
+                                                                    "presentation_currency",
+                                                                    "rates",
+                                                                    "difference"
+                                                                ]
                                                             }
                                                         },
                                                         "required": [
@@ -20909,6 +20979,12 @@
                                                             },
                                                             "class": {
                                                                 "type": "string"
+                                                            },
+                                                            "cash_flow_class": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
                                                             },
                                                             "opening_debit": {
                                                                 "type": "string"
@@ -20980,7 +21056,27 @@
                                                                                 "object",
                                                                                 "null"
                                                                             ],
-                                                                            "additionalProperties": {}
+                                                                            "properties": {
+                                                                                "functional": {
+                                                                                    "type": "object",
+                                                                                    "additionalProperties": {
+                                                                                        "type": "string"
+                                                                                    }
+                                                                                },
+                                                                                "rates": {
+                                                                                    "type": "object",
+                                                                                    "additionalProperties": {
+                                                                                        "type": [
+                                                                                            "string",
+                                                                                            "null"
+                                                                                        ]
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "functional",
+                                                                                "rates"
+                                                                            ]
                                                                         }
                                                                     },
                                                                     "required": [
@@ -21088,6 +21184,56 @@
                                                                         "closing"
                                                                     ]
                                                                 }
+                                                            },
+                                                            "adjustments": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "adjustment_id": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "source": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "reason": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "opening_debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "opening_credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing_debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing_credit": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "adjustment_id",
+                                                                        "source",
+                                                                        "reason",
+                                                                        "opening_debit",
+                                                                        "opening_credit",
+                                                                        "debit",
+                                                                        "credit",
+                                                                        "closing",
+                                                                        "closing_debit",
+                                                                        "closing_credit"
+                                                                    ]
+                                                                }
                                                             }
                                                         },
                                                         "required": [
@@ -21095,6 +21241,7 @@
                                                             "code",
                                                             "name",
                                                             "class",
+                                                            "cash_flow_class",
                                                             "opening_debit",
                                                             "opening_credit",
                                                             "debit",
@@ -21103,7 +21250,8 @@
                                                             "closing_debit",
                                                             "closing_credit",
                                                             "sources",
-                                                            "eliminations"
+                                                            "eliminations",
+                                                            "adjustments"
                                                         ]
                                                     }
                                                 },
@@ -21153,7 +21301,27 @@
                                                                     "object",
                                                                     "null"
                                                                 ],
-                                                                "additionalProperties": {}
+                                                                "properties": {
+                                                                    "functional": {
+                                                                        "type": "object",
+                                                                        "additionalProperties": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "rates": {
+                                                                        "type": "object",
+                                                                        "additionalProperties": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "functional",
+                                                                    "rates"
+                                                                ]
                                                             },
                                                             "reason": {
                                                                 "type": "string"
@@ -21322,9 +21490,112 @@
                                                         ]
                                                     }
                                                 },
+                                                "adjustments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "run_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "source": {
+                                                                "type": "string"
+                                                            },
+                                                            "reason": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "proposed_by": {
+                                                                "type": "integer"
+                                                            },
+                                                            "decided_by": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "decided_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "rejection_reason": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "created_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "lines": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "group_account_id": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "code": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "class": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "credit": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "group_account_id",
+                                                                        "code",
+                                                                        "name",
+                                                                        "class",
+                                                                        "debit",
+                                                                        "credit"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "run_id",
+                                                            "source",
+                                                            "reason",
+                                                            "status",
+                                                            "proposed_by",
+                                                            "decided_by",
+                                                            "decided_at",
+                                                            "rejection_reason",
+                                                            "created_at",
+                                                            "lines"
+                                                        ]
+                                                    }
+                                                },
                                                 "totals": {
                                                     "type": "object",
                                                     "properties": {
+                                                        "adjustments": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
+                                                        },
                                                         "eliminations": {
                                                             "type": "object",
                                                             "additionalProperties": {
@@ -21351,6 +21622,7 @@
                                                         }
                                                     },
                                                     "required": [
+                                                        "adjustments",
                                                         "eliminations",
                                                         "mapped",
                                                         "unmapped",
@@ -21384,6 +21656,7 @@
                                                 "exceptions",
                                                 "intercompany",
                                                 "unassigned_eliminations",
+                                                "adjustments",
                                                 "totals",
                                                 "balanced"
                                             ]
@@ -21591,7 +21864,77 @@
                                                                     "object",
                                                                     "null"
                                                                 ],
-                                                                "additionalProperties": {}
+                                                                "properties": {
+                                                                    "policy_version": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "functional_currency": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "presentation_currency": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "rates": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "purpose": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "rate_type": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "requested_date": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "effective_date": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "rate": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "version": {
+                                                                                    "type": "integer"
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "purpose",
+                                                                                "rate_type",
+                                                                                "requested_date",
+                                                                                "effective_date",
+                                                                                "rate",
+                                                                                "version"
+                                                                            ]
+                                                                        }
+                                                                    },
+                                                                    "difference": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "account_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "opening": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "closing": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "account_id",
+                                                                            "opening",
+                                                                            "closing"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "policy_version",
+                                                                    "functional_currency",
+                                                                    "presentation_currency",
+                                                                    "rates",
+                                                                    "difference"
+                                                                ]
                                                             }
                                                         },
                                                         "required": [
@@ -21625,6 +21968,12 @@
                                                             },
                                                             "class": {
                                                                 "type": "string"
+                                                            },
+                                                            "cash_flow_class": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
                                                             },
                                                             "opening_debit": {
                                                                 "type": "string"
@@ -21696,7 +22045,27 @@
                                                                                 "object",
                                                                                 "null"
                                                                             ],
-                                                                            "additionalProperties": {}
+                                                                            "properties": {
+                                                                                "functional": {
+                                                                                    "type": "object",
+                                                                                    "additionalProperties": {
+                                                                                        "type": "string"
+                                                                                    }
+                                                                                },
+                                                                                "rates": {
+                                                                                    "type": "object",
+                                                                                    "additionalProperties": {
+                                                                                        "type": [
+                                                                                            "string",
+                                                                                            "null"
+                                                                                        ]
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "functional",
+                                                                                "rates"
+                                                                            ]
                                                                         }
                                                                     },
                                                                     "required": [
@@ -21804,6 +22173,56 @@
                                                                         "closing"
                                                                     ]
                                                                 }
+                                                            },
+                                                            "adjustments": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "adjustment_id": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "source": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "reason": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "opening_debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "opening_credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "credit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing_debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "closing_credit": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "adjustment_id",
+                                                                        "source",
+                                                                        "reason",
+                                                                        "opening_debit",
+                                                                        "opening_credit",
+                                                                        "debit",
+                                                                        "credit",
+                                                                        "closing",
+                                                                        "closing_debit",
+                                                                        "closing_credit"
+                                                                    ]
+                                                                }
                                                             }
                                                         },
                                                         "required": [
@@ -21811,6 +22230,7 @@
                                                             "code",
                                                             "name",
                                                             "class",
+                                                            "cash_flow_class",
                                                             "opening_debit",
                                                             "opening_credit",
                                                             "debit",
@@ -21819,7 +22239,8 @@
                                                             "closing_debit",
                                                             "closing_credit",
                                                             "sources",
-                                                            "eliminations"
+                                                            "eliminations",
+                                                            "adjustments"
                                                         ]
                                                     }
                                                 },
@@ -21869,7 +22290,27 @@
                                                                     "object",
                                                                     "null"
                                                                 ],
-                                                                "additionalProperties": {}
+                                                                "properties": {
+                                                                    "functional": {
+                                                                        "type": "object",
+                                                                        "additionalProperties": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "rates": {
+                                                                        "type": "object",
+                                                                        "additionalProperties": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "functional",
+                                                                    "rates"
+                                                                ]
                                                             },
                                                             "reason": {
                                                                 "type": "string"
@@ -22038,9 +22479,112 @@
                                                         ]
                                                     }
                                                 },
+                                                "adjustments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "run_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "source": {
+                                                                "type": "string"
+                                                            },
+                                                            "reason": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "proposed_by": {
+                                                                "type": "integer"
+                                                            },
+                                                            "decided_by": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "decided_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "rejection_reason": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "created_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "lines": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "group_account_id": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "code": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "class": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "debit": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "credit": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "group_account_id",
+                                                                        "code",
+                                                                        "name",
+                                                                        "class",
+                                                                        "debit",
+                                                                        "credit"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "run_id",
+                                                            "source",
+                                                            "reason",
+                                                            "status",
+                                                            "proposed_by",
+                                                            "decided_by",
+                                                            "decided_at",
+                                                            "rejection_reason",
+                                                            "created_at",
+                                                            "lines"
+                                                        ]
+                                                    }
+                                                },
                                                 "totals": {
                                                     "type": "object",
                                                     "properties": {
+                                                        "adjustments": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
+                                                        },
                                                         "eliminations": {
                                                             "type": "object",
                                                             "additionalProperties": {
@@ -22067,6 +22611,7 @@
                                                         }
                                                     },
                                                     "required": [
+                                                        "adjustments",
                                                         "eliminations",
                                                         "mapped",
                                                         "unmapped",
@@ -22100,6 +22645,7 @@
                                                 "exceptions",
                                                 "intercompany",
                                                 "unassigned_eliminations",
+                                                "adjustments",
                                                 "totals",
                                                 "balanced"
                                             ]

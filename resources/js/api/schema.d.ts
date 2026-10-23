@@ -14274,7 +14274,22 @@ export interface operations {
                                     [key: string]: unknown;
                                 };
                                 translation: {
-                                    [key: string]: unknown;
+                                    policy_version: number;
+                                    functional_currency: string;
+                                    presentation_currency: string;
+                                    rates: {
+                                        purpose: string;
+                                        rate_type: string;
+                                        requested_date: string;
+                                        effective_date: string;
+                                        rate: string;
+                                        version: number;
+                                    }[];
+                                    difference: {
+                                        account_id: string;
+                                        opening: string;
+                                        closing: string;
+                                    };
                                 } | null;
                             }[];
                             lines: {
@@ -14282,6 +14297,7 @@ export interface operations {
                                 code: string;
                                 name: string;
                                 class: string;
+                                cash_flow_class: string | null;
                                 opening_debit: string;
                                 opening_credit: string;
                                 debit: string;
@@ -14304,7 +14320,12 @@ export interface operations {
                                     closing: string;
                                     kind: string;
                                     translation: {
-                                        [key: string]: unknown;
+                                        functional: {
+                                            [key: string]: string;
+                                        };
+                                        rates: {
+                                            [key: string]: string | null;
+                                        };
                                     } | null;
                                 }[];
                                 eliminations: {
@@ -14324,6 +14345,18 @@ export interface operations {
                                     closing_credit: string;
                                     closing: string;
                                 }[];
+                                adjustments: {
+                                    adjustment_id: string;
+                                    source: string;
+                                    reason: string;
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                }[];
                             }[];
                             exceptions: {
                                 company_id: string;
@@ -14339,7 +14372,12 @@ export interface operations {
                                 closing_credit: string;
                                 kind: string;
                                 translation: {
-                                    [key: string]: unknown;
+                                    functional: {
+                                        [key: string]: string;
+                                    };
+                                    rates: {
+                                        [key: string]: string | null;
+                                    };
                                 } | null;
                                 reason: string;
                             }[];
@@ -14374,7 +14412,30 @@ export interface operations {
                                 closing_credit: string;
                                 closing: string;
                             }[];
+                            adjustments: {
+                                id: string;
+                                run_id: string;
+                                source: string;
+                                reason: string;
+                                status: string;
+                                proposed_by: number;
+                                decided_by: number | null;
+                                decided_at: string | null;
+                                rejection_reason: string | null;
+                                created_at: string | null;
+                                lines: {
+                                    group_account_id: string;
+                                    code: string;
+                                    name: string;
+                                    class: string;
+                                    debit: string;
+                                    credit: string;
+                                }[];
+                            }[];
                             totals: {
+                                adjustments: {
+                                    [key: string]: string;
+                                };
                                 eliminations: {
                                     [key: string]: string;
                                 };
@@ -14454,7 +14515,22 @@ export interface operations {
                                     [key: string]: unknown;
                                 };
                                 translation: {
-                                    [key: string]: unknown;
+                                    policy_version: number;
+                                    functional_currency: string;
+                                    presentation_currency: string;
+                                    rates: {
+                                        purpose: string;
+                                        rate_type: string;
+                                        requested_date: string;
+                                        effective_date: string;
+                                        rate: string;
+                                        version: number;
+                                    }[];
+                                    difference: {
+                                        account_id: string;
+                                        opening: string;
+                                        closing: string;
+                                    };
                                 } | null;
                             }[];
                             lines: {
@@ -14462,6 +14538,7 @@ export interface operations {
                                 code: string;
                                 name: string;
                                 class: string;
+                                cash_flow_class: string | null;
                                 opening_debit: string;
                                 opening_credit: string;
                                 debit: string;
@@ -14484,7 +14561,12 @@ export interface operations {
                                     closing: string;
                                     kind: string;
                                     translation: {
-                                        [key: string]: unknown;
+                                        functional: {
+                                            [key: string]: string;
+                                        };
+                                        rates: {
+                                            [key: string]: string | null;
+                                        };
                                     } | null;
                                 }[];
                                 eliminations: {
@@ -14504,6 +14586,18 @@ export interface operations {
                                     closing_credit: string;
                                     closing: string;
                                 }[];
+                                adjustments: {
+                                    adjustment_id: string;
+                                    source: string;
+                                    reason: string;
+                                    opening_debit: string;
+                                    opening_credit: string;
+                                    debit: string;
+                                    credit: string;
+                                    closing: string;
+                                    closing_debit: string;
+                                    closing_credit: string;
+                                }[];
                             }[];
                             exceptions: {
                                 company_id: string;
@@ -14519,7 +14613,12 @@ export interface operations {
                                 closing_credit: string;
                                 kind: string;
                                 translation: {
-                                    [key: string]: unknown;
+                                    functional: {
+                                        [key: string]: string;
+                                    };
+                                    rates: {
+                                        [key: string]: string | null;
+                                    };
                                 } | null;
                                 reason: string;
                             }[];
@@ -14554,7 +14653,30 @@ export interface operations {
                                 closing_credit: string;
                                 closing: string;
                             }[];
+                            adjustments: {
+                                id: string;
+                                run_id: string;
+                                source: string;
+                                reason: string;
+                                status: string;
+                                proposed_by: number;
+                                decided_by: number | null;
+                                decided_at: string | null;
+                                rejection_reason: string | null;
+                                created_at: string | null;
+                                lines: {
+                                    group_account_id: string;
+                                    code: string;
+                                    name: string;
+                                    class: string;
+                                    debit: string;
+                                    credit: string;
+                                }[];
+                            }[];
                             totals: {
+                                adjustments: {
+                                    [key: string]: string;
+                                };
                                 eliminations: {
                                     [key: string]: string;
                                 };

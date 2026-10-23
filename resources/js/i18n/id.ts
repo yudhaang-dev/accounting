@@ -3302,6 +3302,52 @@ export const id = {
             createdAt: 'Dijalankan',
         },
         runPage: {
+            labels: {
+                management_rollup: 'Roll-up manajemen',
+                consolidated: 'Konsolidasian',
+            },
+            translationVersion: 'kebijakan translasi versi {{version}}',
+            translationDifference: 'selisih translasi',
+            adjustment: 'Penyesuaian',
+            eliminationKinds: {
+                elimination: 'Eliminasi',
+                difference: 'Selisih eliminasi',
+            },
+            translation: {
+                title: 'Translasi',
+                description:
+                    'Kurs yang dibaca untuk tiap entitas yang mata uang fungsionalnya berbeda. Tanggal diminta adalah tanggal yang dibutuhkan aturan; tanggal berlaku adalah kurs terakhir yang tercatat pada atau sebelumnya.',
+                policy: 'kebijakan versi {{version}}',
+                purpose: 'Untuk',
+                purposes: {
+                    closing: 'Aset dan liabilitas',
+                    average: 'Pendapatan dan beban',
+                    historical: 'Ekuitas',
+                },
+                requested: 'Tanggal diminta',
+                effective: 'Tanggal berlaku',
+                difference:
+                    'Selisih translasi: awal {{opening}}, akhir {{closing}}.',
+            },
+            intercompany: {
+                title: 'Transaksi antaranggota',
+                description:
+                    'Pasangan yang selisihnya tidak lebih dari {{tolerance}} {{currency}} dieliminasi. Di atas itu pasangan menjadi pengecualian dan tidak dieliminasi sama sekali.',
+                pair: 'Pasangan',
+                kind: 'Jenis',
+                kinds: { balance: 'Saldo akhir', flow: 'Mutasi' },
+                amountA: 'Jumlah A',
+                amountB: 'Jumlah B',
+                difference: 'Selisih',
+                status: 'Status',
+                matched: 'Dieliminasi',
+                reasons: {
+                    difference: 'Selisih melebihi toleransi',
+                    outside_perimeter: 'Lawan di luar perimeter',
+                },
+                leftover:
+                    'Sisa selisih yang masih di dalam toleransi tetap ada di grup sebagai baris selisih tanpa akun grup, sehingga run tetap seimbang.',
+            },
             pageTitle: 'Hasil run',
             rollup: 'Roll-up manajemen',
             meta: 'Mata uang penyajian {{currency}} · pemetaan versi {{version}}',

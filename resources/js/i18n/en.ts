@@ -3304,6 +3304,52 @@ export const en: Widen<typeof id> = {
             createdAt: 'Run at',
         },
         runPage: {
+            labels: {
+                management_rollup: 'Management roll-up',
+                consolidated: 'Consolidated',
+            },
+            translationVersion: 'translation policy version {{version}}',
+            translationDifference: 'translation difference',
+            adjustment: 'Adjustment',
+            eliminationKinds: {
+                elimination: 'Elimination',
+                difference: 'Elimination difference',
+            },
+            translation: {
+                title: 'Translation',
+                description:
+                    'The rates read for each entity whose functional currency differs. The requested date is the date the rule needs; the effective date is the latest rate recorded on or before it.',
+                policy: 'policy version {{version}}',
+                purpose: 'For',
+                purposes: {
+                    closing: 'Assets and liabilities',
+                    average: 'Income and expenses',
+                    historical: 'Equity',
+                },
+                requested: 'Requested date',
+                effective: 'Effective date',
+                difference:
+                    'Translation difference: opening {{opening}}, closing {{closing}}.',
+            },
+            intercompany: {
+                title: 'Intragroup transactions',
+                description:
+                    'Pairs whose difference is no more than {{tolerance}} {{currency}} are eliminated. Above that the pair is an exception and nothing of it is eliminated.',
+                pair: 'Pair',
+                kind: 'Kind',
+                kinds: { balance: 'Closing balance', flow: 'Movement' },
+                amountA: 'Amount A',
+                amountB: 'Amount B',
+                difference: 'Difference',
+                status: 'Status',
+                matched: 'Eliminated',
+                reasons: {
+                    difference: 'Difference above tolerance',
+                    outside_perimeter: 'Counterparty outside the perimeter',
+                },
+                leftover:
+                    'What remains of a difference within the tolerance stays in the group as a row without a group account, so the run still balances.',
+            },
             pageTitle: 'Run result',
             rollup: 'Management roll-up',
             meta: 'Presentation currency {{currency}} · mapping version {{version}}',
