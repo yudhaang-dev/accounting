@@ -58,8 +58,9 @@ Proses dan perhitungan operasional milik sistem sumber — persediaan/HPP, payro
 | Peran akun | `AccountRole` | Key stabil (mis. `retained_earnings`) yang dipetakan ke ID akun oleh modul pemiliknya. |
 | Dimensi | `DimensionType`, `DimensionValue` | Tipe analisis per perusahaan; `department` dan `project` adalah seed. |
 | Set dimensi | `DimensionSet`, `dimension_set_id` | Kombinasi unik nilai dimensi yang disimpan pada baris. |
-| Pihak | `Party` | Pelanggan atau pemasok pada subledger. |
-| Profil posting | `PostingProfile` | Penentu akun kontrol piutang/utang bagi pihak. |
+| Pihak | `Party` | Lawan transaksi pada subledger (pelanggan, pemasok, karyawan, pemegang saham, dan seterusnya). |
+| Peran pihak | `PartyRole` | Jenis pihak per perusahaan sebagai data (`key`, label); satu pihak boleh banyak peran. Berbeda dari peran akun (`AccountRole`), peran akun kontrol (`ControlRole`), dan role IAM. |
+| Profil posting | `PostingProfile` | Penentu akun kontrol piutang/utang bagi pihak, atau bagi rute subledger yang menamainya. |
 | Rekening kas/bank | `CashAccount` | Kas atau rekening bank beserta mata uang dan akun GL-nya. |
 | Jenis Transaksi | `TransactionType` | Definisi berversi (mode, skema field, validasi, aturan posting); klasifikasi semua jurnal. |
 | Aturan Posting | `PostingRule` | Pemetaan field nominal ke akun dan sisi debit/kredit. |

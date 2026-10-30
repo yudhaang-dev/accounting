@@ -21,7 +21,7 @@
 | Data induk | profil perusahaan (`/api/v1/companies/{companyId}`), `dimension-types`, `dimension-values`, `iso-currencies` (referensi ISO 4217, baca saja), `currencies` (diidentifikasi kode ISO), `rate-types`, `exchange-rates` (`GET exchange-rates/lookup` untuk pencarian kurs, `POST exchange-rates/import` untuk CSV) |
 | Buku besar | `accounts`, `account-templates`, `fiscal-calendar`, `fiscal-years`, `periods`, `journals` (baca), `opening-balance-imports`, `history-imports`, `revaluation-runs`, `general-ledger/account-role-mappings` |
 | Pencatatan | `transaction-types`, `entries`, `financial-events`, `recurring-schedules` |
-| Subledger | `parties`, `posting-profiles`, `cash-accounts`, `documents`, `open-items`, `allocations`, `reconciliations`, `subledger/account-role-mappings`, `reports/aging` |
+| Subledger | `parties` (peran lewat `roles`, daftar key), `party-roles`, `posting-profiles`, `cash-accounts`, `documents`, `open-items`, `allocations`, `reconciliations`, `subledger/account-role-mappings`, `reports/aging` |
 | Perencanaan | `plans`, `plan-versions` |
 | Pelaporan | `report-definitions`, `report-definitions/{id}/results`, `movement-classifications`, `reporting/account-role-mappings`, `reports/trial-balance`, `reports/general-ledger`, `report-snapshots` |
 | Lintas modul | `policies/{key}` (kebijakan per modul, mis. `approval`, `ledger`, `security`), `account-role-catalog` |
@@ -123,7 +123,7 @@ Kode baru ditambahkan ke tabel ini sebelum dipakai.
   - `currency`: mata uang aktif perusahaan. `exchange_rate` (string desimal) opsional bila kebijakan mengizinkan kurs input; bila kosong, kurs diambil dari tabel (MD-FR-08).
   - `amounts`: key dari skema Jenis Transaksi; string desimal non-negatif dengan skala ≤ skala mata uang.
   - `dimensions`: objek key tipe dimensi → ID nilai atau `null`.
-  - `party`, `cash_account`, `allocations`: bila diminta skema; pihak dapat dirujuk lewat ID atau referensi eksternal milik `source_system` klien (SL-FR-01).
+  - `party`, `cash_account`, `allocations`: bila diminta skema; pihak dapat dirujuk lewat ID atau referensi eksternal milik `source_system` klien (SL-FR-01). Pihak yang tidak memiliki salah satu `allowed_roles` field ditolak dengan error pada field itu (TE-FR-04).
   - `references`: `source_transaction_id` wajib untuk klien mesin; metadata lain disimpan opak. `source_system` dilarang di body; server mengambilnya dari principal.
   - API tidak menerima skema vendor atau data operasional (mis. data karyawan) dan tidak menghitung nilai operasional (P-02).
 - **API-TR-19 Respons.** `data` berisi `event_id`, `status` (status entri), serta `journal_id` dan `journal_number` bila sudah diposting.
