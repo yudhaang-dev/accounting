@@ -10,6 +10,9 @@
         "types:check": "tsc --noEmit",
         "test": "vp test run",
         "e2e": "playwright test",
+        "manual:reset": "node e2e/manual/reset.mjs",
+        "manual": "playwright test -c playwright.manual.config.ts",
+        "manual:headed": "playwright test -c playwright.manual.config.ts --headed",
         "api:types": "openapi-typescript openapi/openapi.json -o resources/js/api/schema.d.ts"
     },
     "dependencies": {

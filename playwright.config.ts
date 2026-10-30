@@ -14,6 +14,8 @@ if (process.env.TEST_WORKER_INDEX === undefined) {
  */
 export default defineConfig({
     testDir: './e2e',
+    // The manual-book scenarios run against the local site with their own config (playwright.manual.config.ts).
+    testIgnore: '**/manual/**',
     outputDir: './test-results/e2e',
     // One scenario after another: they share one database and one session.
     fullyParallel: false,
