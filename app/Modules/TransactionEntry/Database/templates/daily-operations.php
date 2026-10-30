@@ -143,6 +143,58 @@ return [
                 'allocations_field' => 'allocations',
             ],
         ],
+        // Cash that goes out and leaves the party owing the company, such as the advance of an employee or a loan
+        // given; the party repays it with a receipt that names it. To keep what employees owe apart from trade
+        // receivables, give their parties a posting profile whose receivables control is an account of its own.
+        [
+            'key' => 'party_loan',
+            'label' => 'Kasbon atau Pinjaman ke Pihak',
+            'mode' => 'structured',
+            'fields' => [
+                ['name' => 'party', 'type' => 'party', 'label' => 'Penerima'],
+                ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Dibayar dari rekening'],
+                ['name' => 'loan_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
+                ['name' => 'due_date', 'type' => 'date', 'label' => 'Jatuh tempo pengembalian', 'required' => false],
+                ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah'],
+            ],
+            'posting_rules' => [
+                ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'party'], 'apply_dimensions' => false, 'reuses_field' => true],
+                ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
+            ],
+            'subledger_route' => [
+                'kind' => 'loan',
+                'control_role' => 'receivables_control',
+                'party_field' => 'party',
+                'document_number_field' => 'loan_number',
+                'due_date_field' => 'due_date',
+                'cash_account_field' => 'bank',
+            ],
+        ],
+        // The other way round: cash comes in and the company owes the party, repaid with a payment that names it.
+        [
+            'key' => 'loan_received',
+            'label' => 'Pinjaman Diterima',
+            'mode' => 'structured',
+            'fields' => [
+                ['name' => 'party', 'type' => 'party', 'label' => 'Pemberi pinjaman'],
+                ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Diterima di rekening'],
+                ['name' => 'loan_number', 'type' => 'reference', 'label' => 'Nomor perjanjian', 'required' => false],
+                ['name' => 'due_date', 'type' => 'date', 'label' => 'Jatuh tempo pelunasan', 'required' => false],
+                ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah'],
+            ],
+            'posting_rules' => [
+                ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
+                ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'party'], 'apply_dimensions' => false, 'reuses_field' => true],
+            ],
+            'subledger_route' => [
+                'kind' => 'loan',
+                'control_role' => 'payables_control',
+                'party_field' => 'party',
+                'document_number_field' => 'loan_number',
+                'due_date_field' => 'due_date',
+                'cash_account_field' => 'bank',
+            ],
+        ],
         // Both amounts are asked for so that a transfer between accounts of different currencies can state each
         // in the currency of its account; for the same currency they are the same number.
         [

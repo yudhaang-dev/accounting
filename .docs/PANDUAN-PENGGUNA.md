@@ -219,6 +219,8 @@ Tanggal akuntansi harus berada di periode **Terbuka**. Periode yang ditutup meno
 | Terima Pembayaran Pelanggan | Pelanggan, rekening, nomor bukti, jumlah, faktur yang dilunasi | Kas atau bank (D) / Piutang (K) |
 | Tagihan Pemasok | Pemasok, nomor tagihan, jatuh tempo, total, akun biaya atau persediaan | Biaya (D) / Utang (K) |
 | Bayar Pemasok | Pemasok, rekening, nomor bukti, jumlah, tagihan yang dilunasi | Utang (D) / Kas atau bank (K) |
+| Kasbon atau Pinjaman ke Pihak | Penerima, rekening, nomor bukti, jatuh tempo pengembalian, jumlah | Piutang pihak (D) / Kas atau bank (K) |
+| Pinjaman Diterima | Pemberi pinjaman, rekening, nomor perjanjian, jatuh tempo pelunasan, jumlah | Kas atau bank (D) / Utang pihak (K) |
 | Transfer Antar Kas atau Bank | Dari rekening, ke rekening, jumlah keluar, jumlah masuk | Rekening tujuan (D) / Rekening asal (K) |
 | Ringkasan Payroll | Tanggal, gaji bruto, akun beban gaji, akun utang gaji | Beban gaji (D) / Utang gaji (K) |
 
@@ -288,7 +290,7 @@ Pemetaan berversi, jadi posting lama tetap pada akunnya.
 
 ### 6.3 Dokumen dan open item
 
-- **Dokumen** (*Subledger → Dokumen*) adalah faktur, nota kredit, pembayaran, uang muka, dan penghapusan, yang tercipta saat entri berrute subledger diposting. Daftar ini hanya untuk dibaca; buka dokumen untuk melihat jurnal dan entri asalnya.
+- **Dokumen** (*Subledger → Dokumen*) adalah faktur, nota kredit, pembayaran, uang muka, penghapusan, dan pinjaman atau kasbon, yang tercipta saat entri berrute subledger diposting. Daftar ini hanya untuk dibaca; buka dokumen untuk melihat jurnal dan entri asalnya.
 - **Open item** (*Subledger → Open item*) adalah sisa yang masih harus dibayar atau diterima dari tiap dokumen, dalam mata uang dokumen dan fungsional. Statusnya *Terbuka*, *Lunas*, atau *Dibalik*. Daftar ini hanya untuk dibaca; dokumen dan alokasi yang mengubahnya.
 
 ### 6.4 Pelunasan dan uang muka
@@ -466,7 +468,7 @@ Rancang tiga hal:
    - *Akun rekening kas* (dari rekening yang dipilih).
 
    Aturan *Selisih kurs* menutup sisa nilai agar jurnal seimbang dalam mata uang fungsional. Nominal nol dilewati. Memakai ulang satu field nominal pada beberapa aturan harus dinyatakan eksplisit.
-3. **Rute subledger.** Menentukan apakah entri menghasilkan dokumen subledger (Faktur, Nota kredit, Pembayaran, Penghapusan, atau Transfer), akun kontrolnya, field pihak, nomor dokumen, jatuh tempo, rekening kas, dan field alokasi.
+3. **Rute subledger.** Menentukan apakah entri menghasilkan dokumen subledger (Faktur, Nota kredit, Pembayaran, Penghapusan, Pinjaman atau kasbon, atau Transfer), akun kontrolnya, field pihak, nomor dokumen, jatuh tempo, rekening kas, dan field alokasi.
 
 Kebijakan mata uang jenis menentukan mata uang yang diizinkan dan apakah kurs boleh diinput manual.
 

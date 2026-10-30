@@ -98,6 +98,26 @@ function docPaymentBody(array $overrides = []): array
     ], $overrides);
 }
 
+/** A loan to a party: the receivable raised against the cash that went out, such as the advance of an employee. */
+function docLoanBody(array $overrides = []): array
+{
+    return array_replace_recursive([
+        'mode' => 'structured',
+        'fields' => [
+            ['name' => 'party', 'type' => 'party', 'label' => 'Karyawan'],
+            ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Dibayar dari rekening'],
+            ['name' => 'number', 'type' => 'reference', 'label' => 'Nomor', 'required' => false],
+            ['name' => 'due', 'type' => 'date', 'label' => 'Jatuh tempo', 'required' => false],
+            ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah'],
+        ],
+        'posting_rules' => [
+            ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => docControl(), 'apply_dimensions' => false, 'reuses_field' => true],
+            ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
+        ],
+        'subledger_route' => ['kind' => 'loan', 'control_role' => 'receivables_control', 'party_field' => 'party', 'document_number_field' => 'number', 'due_date_field' => 'due', 'cash_account_field' => 'bank'],
+    ], $overrides);
+}
+
 /** Creates a type of the key and publishes a version of the body; returns the response of the draft when it is refused. */
 function docType(string $key, array $body)
 {

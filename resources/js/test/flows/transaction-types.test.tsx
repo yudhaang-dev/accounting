@@ -653,6 +653,52 @@ describe('version designer', () => {
             });
         });
 
+        it('offers a loan, which moves cash and settles nothing, with a hint on what it does', async () => {
+            const api = open();
+
+            renderApp(designer(sales.id));
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('combobox', { name: 'Jenis dokumen' }),
+            );
+            await typist.click(
+                await screen.findByRole('option', {
+                    name: 'Pinjaman atau kasbon',
+                }),
+            );
+
+            expect(
+                await screen.findByText(/Pinjaman menaikkan saldo sekaligus/),
+            ).toBeInTheDocument();
+            expect(
+                screen.queryByRole('combobox', { name: 'Field alokasi' }),
+            ).not.toBeInTheDocument();
+
+            await typist.click(
+                await screen.findByRole('combobox', {
+                    name: 'Field rekening kas/bank',
+                }),
+            );
+            await typist.click(
+                await screen.findByRole('option', { name: 'Rekening bank' }),
+            );
+            await typist.click(
+                screen.getByRole('button', { name: 'Simpan draf' }),
+            );
+
+            await waitFor(() => expect(api.called(save)).toHaveLength(1));
+            expect(api.called(save)[0]?.body).toMatchObject({
+                subledger_route: {
+                    kind: 'loan',
+                    control_role: 'receivables_control',
+                    party_field: 'customer',
+                    cash_account_field: 'bank',
+                    allocations_field: null,
+                },
+            });
+        });
+
         it('takes the route off the draft when it is switched off', async () => {
             const api = open();
 

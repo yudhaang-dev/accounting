@@ -102,13 +102,14 @@ export const ROUTE_KINDS = [
     'payment',
     'advance',
     'write_off',
+    'loan',
     'transfer',
 ] as const;
 
 const ROUTE_ROLES = ['receivables_control', 'payables_control'] as const;
 
 /** What a kind of document does, which decides the fields of the route it can use (SL-FR-04, SL-FR-11). */
-const MOVES_CASH = ['payment', 'advance'];
+const MOVES_CASH = ['payment', 'advance', 'loan'];
 const ALLOCATES = ['credit_note', 'payment', 'write_off'];
 
 const blankRoute = (): RouteRow => ({
@@ -805,6 +806,11 @@ function RouteEditor() {
                     {transfer && (
                         <p className="text-sm text-muted-foreground">
                             {t('transactionTypes.designer.route.transferHint')}
+                        </p>
+                    )}
+                    {route.kind === 'loan' && (
+                        <p className="text-sm text-muted-foreground">
+                            {t('transactionTypes.designer.route.loanHint')}
                         </p>
                     )}
                     {routeErrors?.message && (

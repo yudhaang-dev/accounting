@@ -1179,6 +1179,7 @@ export const en: Widen<typeof id> = {
             payment: 'Payment',
             advance: 'Advance',
             write_off: 'Write-off',
+            loan: 'Loan or staff advance',
         },
         party: 'Party',
         allParties: 'All parties',
@@ -1916,6 +1917,7 @@ export const en: Widen<typeof id> = {
                     payment: 'Payment',
                     advance: 'Advance',
                     write_off: 'Write-off',
+                    loan: 'Loan or staff advance',
                     transfer: 'Transfer between cash accounts',
                 },
                 role: 'Control account',
@@ -1936,6 +1938,8 @@ export const en: Widen<typeof id> = {
                 chooseField: 'Choose a field',
                 transferHint:
                     'Cash leaves the account in the first field and enters the account in the second, each in its own currency.',
+                loanHint:
+                    'A loan raises a balance and moves cash at once: the receivables control account goes up and cash goes out (an employee advance, a loan given), or the payables control account goes up and cash comes in (a loan received). The party settles it with a payment that names this loan.',
             },
             fixedAccount: 'Fixed account',
             chooseAccount: 'Choose an account',

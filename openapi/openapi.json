@@ -27246,13 +27246,14 @@
             },
             "DocumentKind": {
                 "type": "string",
-                "description": "The kinds of document the subledger records (SL-FR-04). A mechanism of the system, not data a company defines: an invoice creates an open item; the others settle open items, and what they leave unsettled stays an open item of its own until it is allocated (SL-FR-05).\n",
+                "description": "The kinds of document the subledger records (SL-FR-04). A mechanism of the system, not data a company defines: an invoice or a loan creates an open item; the others settle open items, and what they leave unsettled stays an open item of its own until it is allocated (SL-FR-05). A loan is the one kind that raises a balance and moves cash at once: the cash goes out and the party owes the company for it (an employee's advance, a loan given), or the cash comes in and the company owes the party (a loan received). It is settled later by the payments and credit notes that lower it.\n",
                 "enum": [
                     "invoice",
                     "credit_note",
                     "payment",
                     "advance",
-                    "write_off"
+                    "write_off",
+                    "loan"
                 ],
                 "title": "DocumentKind"
             },

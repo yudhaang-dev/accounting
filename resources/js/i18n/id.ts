@@ -1175,6 +1175,7 @@ export const id = {
             payment: 'Pembayaran',
             advance: 'Uang muka',
             write_off: 'Penghapusan',
+            loan: 'Pinjaman atau kasbon',
         },
         party: 'Pihak',
         allParties: 'Semua pihak',
@@ -1911,6 +1912,7 @@ export const id = {
                     payment: 'Pembayaran',
                     advance: 'Uang muka',
                     write_off: 'Penghapusan',
+                    loan: 'Pinjaman atau kasbon',
                     transfer: 'Transfer antar rekening kas',
                 },
                 role: 'Akun kontrol',
@@ -1930,6 +1932,8 @@ export const id = {
                 chooseField: 'Pilih field',
                 transferHint:
                     'Kas keluar dari rekening pada field pertama dan masuk ke rekening pada field kedua, masing-masing dalam mata uangnya.',
+                loanHint:
+                    'Pinjaman menaikkan saldo sekaligus menggerakkan kas: akun kontrol piutang naik dan kas keluar (kasbon, pinjaman diberikan), atau akun kontrol utang naik dan kas masuk (pinjaman diterima). Pihak melunasinya dengan pembayaran yang menyebut pinjaman ini.',
             },
             fixedAccount: 'Akun tetap',
             chooseAccount: 'Pilih akun',

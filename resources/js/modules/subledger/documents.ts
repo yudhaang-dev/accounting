@@ -13,6 +13,7 @@ export const DOCUMENT_KINDS: DocumentKind[] = [
     'payment',
     'advance',
     'write_off',
+    'loan',
 ];
 
 export const OPEN_ITEM_STATUSES = ['open', 'settled', 'reversed'] as const;

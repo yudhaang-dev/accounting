@@ -58,6 +58,7 @@ const kindLabel = (value: string) =>
             payment: 'documents.kinds.payment',
             advance: 'documents.kinds.advance',
             write_off: 'documents.kinds.write_off',
+            loan: 'documents.kinds.loan',
         }) as const
     )[value as DocumentKind];
 

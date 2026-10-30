@@ -96,6 +96,13 @@ Bila pelanggan membayar sebelum ada faktur, catat sebagai **Terima Pembayaran Pe
 - **Isi:** Pemasok, rekening sumber dana, nomor bukti, jumlah dibayar, dan **Tagihan yang dilunasi**.
 - Cara memilih tagihan sama seperti pelunasan faktur.
 
+### Kasbon karyawan atau pinjaman
+
+- **Jenis:** Kasbon atau Pinjaman ke Pihak; untuk pinjaman yang diterima perusahaan, Pinjaman Diterima.
+- **Isi:** Penerima (atau pemberi pinjaman), rekening, nomor bukti, jatuh tempo pengembalian, jumlah.
+- **Hasil:** piutang pihak bertambah dan kas keluar dari rekening (pada pinjaman diterima, utang bertambah dan kas masuk).
+- Pengembalian dicatat dengan **Terima Pembayaran Pelanggan** yang menyebut kasbonnya di *Faktur yang dilunasi*. Penerima harus sudah terdaftar sebagai pihak; minta akuntan menambahkannya bila belum ada.
+
 ### Transfer antar kas atau bank
 
 - **Jenis:** Transfer Antar Kas atau Bank.
@@ -124,7 +131,7 @@ Semua di menu kelompok **Subledger**.
 | Menu | Gunanya |
 | --- | --- |
 | **Open item** | Sisa tagihan atau utang tiap dokumen: Terbuka, Lunas, atau Dibalik. Hanya dibaca |
-| **Dokumen** | Faktur, nota kredit, pembayaran, uang muka, penghapusan, beserta jurnalnya. Hanya dibaca |
+| **Dokumen** | Faktur, nota kredit, pembayaran, uang muka, penghapusan, pinjaman atau kasbon, beserta jurnalnya. Hanya dibaca |
 | **Alokasi** | Pencocokan pembayaran atau uang muka dengan faktur |
 | **Transaksi kas** | Penerimaan dan pengeluaran per rekening |
 | **Umur piutang/utang** | Tagihan menurut umur: belum jatuh tempo, 1–30 hari, dan seterusnya |

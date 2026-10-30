@@ -44,7 +44,7 @@ beforeEach(function () {
     ])->assertCreated()->json('data.id');
 
     $this->actingAs($this->admin)->postJson("{$this->url}/transaction-types/import-template", [
-        'template' => 'daily-operations', 'confirmed' => true, 'keys' => ['customer_receipt', 'supplier_bill', 'supplier_payment', 'cash_transfer'],
+        'template' => 'daily-operations', 'confirmed' => true, 'keys' => ['customer_receipt', 'supplier_bill', 'supplier_payment', 'cash_transfer', 'party_loan', 'loan_received'],
     ])->assertCreated();
     $this->actingAs($this->admin)->postJson("{$this->url}/transaction-types/import-template", [
         'template' => 'general', 'confirmed' => true, 'keys' => ['credit_sale'],
@@ -111,5 +111,42 @@ describe('a cash transfer', function () {
         expect($lines)->toHaveCount(2)
             ->and((float) $lines->firstWhere('account_id', $this->pettyCash)->debit)->toBe(500000.0)
             ->and((float) $lines->firstWhere('account_id', $this->bank)->credit)->toBe(500000.0);
+    });
+});
+
+describe('a loan to a party', function () {
+    it('raises what the party owes, moves the cash out, and is repaid by a receipt that names it', function () {
+        $posted = docPosted(docEntry('party_loan', ['party' => $this->customer, 'bank' => $this->cashAccount, 'loan_number' => 'KSB-1', 'total' => '2000000'])->assertCreated()->json('data.id'));
+        $lines = DB::table('gl_journal_lines')->where('journal_id', $posted['journal_id'])->get();
+        $loan = DB::table('sl_open_items')->where('kind', 'loan')->first();
+
+        expect($lines)->toHaveCount(2)
+            ->and((float) $lines->firstWhere('account_id', $this->receivables)->debit)->toBe(2000000.0)
+            ->and((float) $lines->firstWhere('account_id', $this->bank)->credit)->toBe(2000000.0)
+            ->and($loan)->toMatchArray(['side' => 'debit', 'document_number' => 'KSB-1', 'remaining_amount' => '2000000.000000'])
+            ->and(DB::table('sl_cash_transactions')->value('direction'))->toBe('out');
+
+        docPosted(docEntry('customer_receipt', ['customer' => $this->customer, 'bank' => $this->cashAccount, 'total' => '2000000', 'allocations' => [['open_item_id' => $loan->id, 'amount' => '2000000']]])->assertCreated()->json('data.id'));
+
+        expect(DB::table('sl_open_items')->where('id', $loan->id)->value('status'))->toBe('settled')
+            ->and(functionalBalance($this->receivables))->toBe(0.0);
+    });
+
+    it('refuses a supplier that is no customer, as a receivable needs one', function () {
+        $id = docEntry('party_loan', ['party' => $this->supplier, 'bank' => $this->cashAccount, 'total' => '1000'])->assertCreated()->json('data.id');
+
+        docAct($this->preparer, $id, 'submit')->assertUnprocessable()->assertJsonValidationErrors(['values.party']);
+    });
+});
+
+describe('a loan received', function () {
+    it('raises what the company owes the lender and moves the cash in', function () {
+        $posted = docPosted(docEntry('loan_received', ['party' => $this->supplier, 'bank' => $this->cashAccount, 'total' => '5000000'])->assertCreated()->json('data.id'));
+        $lines = DB::table('gl_journal_lines')->where('journal_id', $posted['journal_id'])->get();
+
+        expect((float) $lines->firstWhere('account_id', $this->bank)->debit)->toBe(5000000.0)
+            ->and((float) $lines->firstWhere('account_id', $this->payables)->credit)->toBe(5000000.0)
+            ->and(DB::table('sl_open_items')->where('kind', 'loan')->value('side'))->toBe('credit')
+            ->and(DB::table('sl_cash_transactions')->value('direction'))->toBe('in');
     });
 });
