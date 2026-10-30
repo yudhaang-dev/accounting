@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/table';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { genericErrorMessage } from '@/lib/errors';
+import { DescriptionDialog } from '@/modules/transaction-entry/components/description-dialog';
 import { NumberingDialog } from '@/modules/transaction-entry/components/numbering-dialog';
 import { TemplateImportDialog } from '@/modules/transaction-entry/components/template-import-dialog';
 import { TransactionTypeForm } from '@/modules/transaction-entry/components/transaction-type-form';
@@ -53,6 +54,7 @@ export function TransactionTypesPage({
     const [creating, setCreating] = useState(false);
     const [importing, setImporting] = useState(false);
     const [numbering, setNumbering] = useState<TransactionType | null>(null);
+    const [describing, setDescribing] = useState<TransactionType | null>(null);
 
     useDocumentTitle(t('transactionTypes.pageTitle'));
 
@@ -150,6 +152,11 @@ export function TransactionTypesPage({
                                                 <span className="font-mono text-xs text-muted-foreground">
                                                     {type.key}
                                                 </span>
+                                                {type.description && (
+                                                    <span className="max-w-md text-xs text-muted-foreground">
+                                                        {type.description}
+                                                    </span>
+                                                )}
                                             </div>
                                         </TableCell>
                                         <TableCell>
@@ -235,6 +242,17 @@ export function TransactionTypesPage({
                                                         )}
                                                     </DropdownMenuItem>
                                                 )}
+                                                {canManage && (
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            setDescribing(type)
+                                                        }
+                                                    >
+                                                        {t(
+                                                            'entries.types.descriptionEdit',
+                                                        )}
+                                                    </DropdownMenuItem>
+                                                )}
                                             </RowActions>
                                         </TableCell>
                                     </TableRow>
@@ -266,6 +284,11 @@ export function TransactionTypesPage({
                 companyId={companyId}
                 type={numbering}
                 onClose={() => setNumbering(null)}
+            />
+            <DescriptionDialog
+                companyId={companyId}
+                type={describing}
+                onClose={() => setDescribing(null)}
             />
         </>
     );

@@ -45,13 +45,34 @@ class TransactionTypeController
     }
 
     /**
+     * Says when the type is used, for the catalog an operator picks from. An empty description clears it.
+     */
+    public function describe(DescribeTransactionTypeRequest $request, string $companyId, string $id, Audit $audit): TransactionTypeResource
+    {
+        $description = $request->validated('description');
+        $description = is_string($description) && trim($description) !== '' ? trim($description) : null;
+
+        return DB::transaction(function () use ($description, $id, $audit, $companyId): TransactionTypeResource {
+            $type = TransactionType::query()->lockForUpdate()->findOrFail($id);
+            $before = $type->description;
+
+            $type->description = $description;
+            $type->save();
+
+            $audit->record('transaction_type.description_changed', "Description of transaction type {$type->key} changed.", $type, before: ['description' => $before], after: ['description' => $description], companyId: $companyId);
+
+            return new TransactionTypeResource($type->load('versions'));
+        });
+    }
+
+    /**
      * Defines a transaction type with a published first version in `free_lines` mode.
      */
     public function store(CreateTransactionTypeRequest $request, CreateTransactionType $create): JsonResponse
     {
-        /** @var array{key: string, label: string} $data */
+        /** @var array{key: string, label: string, description?: string|null} $data */
         $data = $request->validated();
 
-        return (new TransactionTypeResource($create($data['key'], $data['label'])))->response()->setStatusCode(201);
+        return (new TransactionTypeResource($create($data['key'], $data['label'], $data['description'] ?? null)))->response()->setStatusCode(201);
     }
 }

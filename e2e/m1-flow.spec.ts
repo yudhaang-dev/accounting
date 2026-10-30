@@ -205,6 +205,13 @@ test('from sign-in to a posted journal in the trial balance', async ({
         await shot(page, 'transaction-type');
         await page.getByRole('button', { name: 'Buat jenis' }).click();
 
+        // A new entry starts from the catalog: the type just made is there to pick, and nothing is chosen for us.
+        await expect(
+            page.getByRole('heading', { name: 'Pilih jenis transaksi' }),
+        ).toBeVisible();
+        await shot(page, 'entry-catalog');
+        await page.getByRole('link', { name: /Jurnal Umum/ }).click();
+
         await expect(
             page.getByLabel('Keterangan', { exact: true }),
         ).toBeVisible();
@@ -321,6 +328,7 @@ test('from sign-in to a posted journal in the trial balance', async ({
     await test.step('the server refuses an unbalanced entry, in words', async () => {
         await sidebar(page, 'Entri').click();
         await page.getByRole('link', { name: 'Entri baru' }).first().click();
+        await page.getByRole('link', { name: /Jurnal Umum/ }).click();
         await fillEntry(page, 'Entri tidak seimbang', '100', '90');
         await expect(page.getByText(/^Selisih /)).toBeVisible();
         await page.getByRole('button', { name: 'Simpan draf' }).click();

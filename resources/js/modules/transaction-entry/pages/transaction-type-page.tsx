@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { actionErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
+import { DescriptionDialog } from '@/modules/transaction-entry/components/description-dialog';
 import {
     valuesOfVersion,
     versionInputOf,
@@ -60,6 +61,7 @@ export function TransactionTypePage({
         transactionTypeQuery(companyId, typeId),
     );
     const [picked, setPicked] = useState<number | null>(null);
+    const [describing, setDescribing] = useState(false);
     const [confirming, setConfirming] = useState<'publish' | 'retire' | null>(
         null,
     );
@@ -148,6 +150,20 @@ export function TransactionTypePage({
                     <span className="font-mono text-xs text-muted-foreground">
                         {type.key}
                     </span>
+                    <p className="max-w-2xl text-sm text-muted-foreground">
+                        {type.description ??
+                            t('entries.types.descriptionEmpty')}
+                        {canManage && (
+                            <Button
+                                variant="link"
+                                size="sm"
+                                className="ms-2 h-auto p-0"
+                                onClick={() => setDescribing(true)}
+                            >
+                                {t('entries.types.descriptionEdit')}
+                            </Button>
+                        )}
+                    </p>
                 </div>
                 {canManage && (
                     <Button
@@ -165,6 +181,11 @@ export function TransactionTypePage({
             </div>
 
             {actionError && <FormAlert>{actionError}</FormAlert>}
+            <DescriptionDialog
+                companyId={companyId}
+                type={describing ? type : null}
+                onClose={() => setDescribing(false)}
+            />
 
             <div className="grid gap-4 lg:grid-cols-[14rem_minmax(0,1fr)]">
                 <nav aria-label={t('transactionTypes.designer.versions')}>

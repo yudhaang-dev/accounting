@@ -172,6 +172,7 @@ Menerbitkan versi memeriksa kelengkapan; pesannya menyebut yang kurang.
 - Beri label dengan istilah admin, bukan istilah akuntansi: "Jumlah diterima", bukan "Debit kas".
 - Kunci sisi lawan sebanyak mungkin. Pengguna hanya memilih yang memang berbeda tiap transaksi.
 - Gunakan field *Pihak* dan *Rekening kas/bank* supaya akun piutang, utang, dan kas ditentukan sistem.
+- Isi **Deskripsi** tiap jenis (*Jenis transaksi → Ubah deskripsi*): satu atau dua kalimat tentang kapan jenis itu dipakai. Deskripsi tampil di kartu katalog yang dipilih operator saat membuat entri baru.
 - Jenis baris bebas (Jurnal Umum, Penyesuaian, revaluasi, tutup buku) tetap untuk akuntan. Batasi lewat izin dan kebijakan persetujuan.
 
 ### Kasbon karyawan dan pinjaman

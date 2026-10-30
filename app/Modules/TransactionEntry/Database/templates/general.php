@@ -11,6 +11,7 @@ return [
         [
             'key' => 'general_journal',
             'label' => 'Jurnal Umum',
+            'description' => 'Jurnal bebas untuk akuntan: memilih akun dan mengisi debit dan kredit sendiri.',
             'mode' => 'free_lines',
             'fields' => [],
             'posting_rules' => [],
@@ -18,6 +19,7 @@ return [
         [
             'key' => 'adjustment',
             'label' => 'Jurnal Penyesuaian',
+            'description' => 'Jurnal bebas untuk penyesuaian akhir periode, seperti penyusutan atau persediaan. Untuk akuntan.',
             'mode' => 'free_lines',
             'fields' => [],
             'posting_rules' => [],
@@ -25,6 +27,7 @@ return [
         [
             'key' => 'payroll_summary',
             'label' => 'Ringkasan Payroll',
+            'description' => 'Mencatat beban gaji dan utang gaji satu periode.',
             'mode' => 'structured',
             'fields' => [
                 ['name' => 'payroll_date', 'type' => 'date', 'label' => 'Tanggal payroll'],
@@ -43,6 +46,7 @@ return [
         [
             'key' => 'credit_sale',
             'label' => 'Penjualan Kredit',
+            'description' => 'Penjualan yang belum dibayar pelanggan. Menambah piutang pelanggan.',
             'mode' => 'structured',
             'fields' => [
                 ['name' => 'customer', 'type' => 'party', 'label' => 'Pelanggan'],

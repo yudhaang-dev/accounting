@@ -27,6 +27,9 @@ Route::companyScoped(function () {
     Route::put('transaction-types/{id}/numbering', [TransactionTypeController::class, 'numbering'])
         ->middleware('permission:policies.manage')->where('id', ApiServiceProvider::ULID)->name('transaction-types.numbering');
 
+    Route::put('transaction-types/{id}/description', [TransactionTypeController::class, 'describe'])
+        ->middleware('permission:policies.manage')->where('id', ApiServiceProvider::ULID)->name('transaction-types.description');
+
     Route::post('transaction-types/{id}/versions', [TransactionTypeVersionController::class, 'store'])
         ->middleware('permission:policies.manage')->where('id', ApiServiceProvider::ULID)->name('transaction-types.versions.store');
     Route::get('transaction-types/{id}/versions/{version}/schema', [TransactionTypeVersionController::class, 'schema'])

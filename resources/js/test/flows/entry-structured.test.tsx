@@ -207,7 +207,7 @@ describe('structured entry form', () => {
             }),
         );
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=payroll_summary`);
         const typist = userEvent.setup();
 
         await typist.type(
@@ -256,7 +256,7 @@ describe('structured entry form', () => {
         const create = `POST ${base}/entries`;
         const api = mockApi(form([payroll()], { [create]: () => json({}) }));
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=payroll_summary`);
         const typist = userEvent.setup();
 
         await typist.type(
@@ -274,7 +274,7 @@ describe('structured entry form', () => {
     it('picks the party of a field from the subledger', async () => {
         mockApi(form([payroll()]));
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=payroll_summary`);
         const typist = userEvent.setup();
 
         expect(await screen.findByText('Pihak pembayar')).toBeInTheDocument();
@@ -380,7 +380,7 @@ describe('structured entry form', () => {
             }),
         );
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=customer_payment`);
         const typist = userEvent.setup();
 
         await typist.type(
@@ -451,7 +451,7 @@ describe('structured entry form', () => {
             }),
         );
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=payroll_summary`);
         const typist = userEvent.setup();
 
         await typist.type(await screen.findByLabelText('Keterangan'), 'Gaji');
@@ -492,7 +492,7 @@ describe('structured entry form', () => {
             ),
         );
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=payroll_summary`);
         const typist = userEvent.setup();
 
         await typist.type(

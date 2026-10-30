@@ -204,7 +204,7 @@ Daftar entri bisa difilter menurut status, rentang tanggal, dan pembalikan terja
 
 ### 5.2 Membuat entri
 
-1. Klik **Entri baru** dan pilih **Jenis transaksi**.
+1. Klik **Entri baru**. Katalog **Jenis transaksi** tampil sebagai kartu dengan kolom pencarian (nama, kunci, dan deskripsi). Klik kartu jenis yang sesuai; **Ganti jenis** di atas form kembali ke katalog. Hanya jenis yang versinya sudah terbit yang tampil.
 2. Isi **Tanggal akuntansi** (menentukan periode jurnal), **Tanggal dokumen** (opsional), dan **Keterangan**.
 3. Isi sisanya sesuai jenis (lihat di bawah).
 4. Klik **Simpan draf**, lalu di halaman detail klik **Ajukan**.

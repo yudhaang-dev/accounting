@@ -1636,8 +1636,20 @@ export const id = {
             autoReversalPending:
                 'Akan dibalik otomatis pada {{date}} setelah diposting.',
         },
+        catalog: {
+            title: 'Pilih jenis transaksi',
+            description:
+                'Pilih jenis yang sesuai dengan kejadian yang akan dicatat.',
+            search: 'Cari jenis transaksi',
+            searchPlaceholder: 'Cari menurut nama atau deskripsi',
+            noMatch: 'Tidak ada jenis yang cocok',
+            noMatchDescription: 'Ubah kata kunci pencarian.',
+        },
         form: {
             newTitle: 'Entri baru',
+            changeType: 'Ganti jenis',
+            typeUnavailable:
+                'Jenis transaksi "{{key}}" tidak ada atau belum diterbitkan.',
             editTitle: 'Ubah entri {{number}}',
             type: 'Jenis transaksi',
             accountingDate: 'Tanggal akuntansi',
@@ -1716,6 +1728,14 @@ export const id = {
             create: 'Buat jenis',
             creating: 'Membuat…',
             created: 'Jenis transaksi dibuat.',
+            descriptionLabel: 'Deskripsi (opsional)',
+            descriptionHint:
+                'Kapan jenis ini dipakai, supaya operator memilih jenis yang tepat.',
+            descriptionEdit: 'Ubah deskripsi',
+            descriptionSaved: 'Deskripsi disimpan.',
+            descriptionEmpty: 'Belum ada deskripsi.',
+            descriptionSave: 'Simpan deskripsi',
+            descriptionSaving: 'Menyimpan…',
             noneUsable:
                 'Belum ada jenis transaksi yang terbit. Minta administrator menerbitkan versinya di perancang jenis transaksi.',
         },

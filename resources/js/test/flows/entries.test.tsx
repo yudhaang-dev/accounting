@@ -225,7 +225,7 @@ describe('entry form', () => {
     it('keeps one side per line and totals with exact decimals', async () => {
         mockApi(formRoutes(['entries.read', 'entries.create']));
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=general`);
         const typist = userEvent.setup();
 
         const debit = await screen.findByLabelText('Debit Baris 1');
@@ -244,7 +244,7 @@ describe('entry form', () => {
     it('says when a line is incomplete or the amount is not a number', async () => {
         const api = mockApi(formRoutes(['entries.read', 'entries.create']));
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=general`);
         const typist = userEvent.setup();
 
         await typist.type(await screen.findByLabelText('Keterangan'), 'Tes');
@@ -266,7 +266,7 @@ describe('entry form', () => {
             [`GET ${entryPath()}`]: () => json({ data: entry() }),
         });
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=general`);
         const typist = userEvent.setup();
 
         await typist.type(
@@ -342,6 +342,7 @@ describe('entry form', () => {
             ).toEqual({
                 key: 'general',
                 label: 'Jurnal Umum',
+                description: null,
             }),
         );
     });
@@ -521,6 +522,7 @@ describe('creating a transaction type', () => {
             ).toEqual({
                 key: 'general',
                 label: 'Jurnal Umum',
+                description: null,
             }),
         );
     });
@@ -913,7 +915,7 @@ describe('dimensions on entry lines', () => {
             [`GET ${entryPath()}`]: () => json({ data: entry() }),
         });
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=general`);
         const typist = userEvent.setup();
 
         await typist.type(
@@ -978,7 +980,7 @@ describe('dimensions on entry lines', () => {
             [`GET ${base}/accounts`]: accountList,
         });
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=general`);
 
         await screen.findByLabelText('Keterangan');
         expect(
@@ -1002,7 +1004,7 @@ describe('dimensions on entry lines', () => {
                 json({ message: 'Forbidden', code: 'FORBIDDEN' }, 403),
         });
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=general`);
 
         expect(await screen.findByLabelText('Keterangan')).toBeInTheDocument();
         expect(

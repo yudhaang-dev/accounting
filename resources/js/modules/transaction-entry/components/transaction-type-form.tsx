@@ -13,13 +13,14 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { genericErrorMessage } from '@/lib/errors';
 import { applyApiErrors } from '@/lib/forms';
 import { isApiError } from '@/lib/http';
 import { slugify } from '@/lib/slug';
 import { createTransactionType } from '@/modules/transaction-entry/transaction-types';
 
-type Values = { key: string; label: string };
+type Values = { key: string; label: string; description: string };
 
 /**
  * Creates a transaction type (TE-FR-01). A new type starts as
@@ -35,7 +36,9 @@ export function TransactionTypeForm({
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const [formError, setFormError] = useState<string | null>(null);
-    const form = useForm<Values>({ defaultValues: { key: '', label: '' } });
+    const form = useForm<Values>({
+        defaultValues: { key: '', label: '', description: '' },
+    });
     const {
         register,
         formState: { errors, dirtyFields },
@@ -53,7 +56,14 @@ export function TransactionTypeForm({
 
     const create = useMutation({
         mutationFn: (values: Values) =>
-            createTransactionType(companyId, values),
+            createTransactionType(companyId, {
+                key: values.key,
+                label: values.label,
+                description:
+                    values.description.trim() === ''
+                        ? null
+                        : values.description.trim(),
+            }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({
                 queryKey: ['companies', companyId, 'transaction-types'],
@@ -130,6 +140,25 @@ export function TransactionTypeForm({
                         )}
                     </Field>
                 </div>
+                <Field data-invalid={errors.description ? true : undefined}>
+                    <FieldLabel htmlFor="type-description-new">
+                        {t('entries.types.descriptionLabel')}
+                    </FieldLabel>
+                    <Textarea
+                        id="type-description-new"
+                        rows={2}
+                        maxLength={500}
+                        aria-invalid={errors.description ? true : undefined}
+                        {...register('description')}
+                    />
+                    {errors.description ? (
+                        <FieldError>{errors.description.message}</FieldError>
+                    ) : (
+                        <FieldDescription>
+                            {t('entries.types.descriptionHint')}
+                        </FieldDescription>
+                    )}
+                </Field>
                 <SubmitButton
                     className="w-auto self-start"
                     pending={create.isPending}

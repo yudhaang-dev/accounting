@@ -3789,6 +3789,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/transaction-types/{id}/description": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Says when the type is used, for the catalog an operator picks from. An empty description clears it */
+        put: operations["transaction-types.description"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/transaction-type-templates": {
         parameters: {
             query?: never;
@@ -4471,6 +4488,7 @@ export interface components {
             /** @description Keys starting with `system.` are defined by code and contain a dot, which this pattern excludes. */
             key: string;
             label: string;
+            description?: string | null;
         };
         /** CreateWorkspaceRequest */
         CreateWorkspaceRequest: {
@@ -4513,6 +4531,10 @@ export interface components {
          * @enum {string}
          */
         CurrencyRounding: "half_up" | "half_even" | "up" | "down";
+        /** DescribeTransactionTypeRequest */
+        DescribeTransactionTypeRequest: {
+            description: string | null;
+        };
         /**
          * DimensionRequirement
          * @description Whether lines on an account must, may or must not carry a value of a dimension type (GL-FR-02).
@@ -5654,6 +5676,7 @@ export interface components {
             id: string;
             key: string;
             label: string;
+            description: string | null;
             numbering: {
                 policy: string;
             } & {
@@ -15141,6 +15164,37 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["NumberingRequest"];
+            };
+        };
+        responses: {
+            /** @description `TransactionTypeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TransactionTypeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "transaction-types.description": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DescribeTransactionTypeRequest"];
             };
         };
         responses: {

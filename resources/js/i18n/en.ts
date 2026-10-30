@@ -1640,8 +1640,20 @@ export const en: Widen<typeof id> = {
             autoReversalPending:
                 'Will be reversed automatically on {{date}} once posted.',
         },
+        catalog: {
+            title: 'Choose a transaction type',
+            description:
+                'Choose the type that fits the event you are recording.',
+            search: 'Search transaction types',
+            searchPlaceholder: 'Search by name or description',
+            noMatch: 'No type matches',
+            noMatchDescription: 'Change the search words.',
+        },
         form: {
             newTitle: 'New entry',
+            changeType: 'Change type',
+            typeUnavailable:
+                'The transaction type "{{key}}" does not exist or is not published.',
             editTitle: 'Edit entry {{number}}',
             type: 'Transaction type',
             accountingDate: 'Accounting date',
@@ -1720,6 +1732,14 @@ export const en: Widen<typeof id> = {
             create: 'Create type',
             creating: 'Creating…',
             created: 'Transaction type created.',
+            descriptionLabel: 'Description (optional)',
+            descriptionHint:
+                'When this type is used, so operators pick the right one.',
+            descriptionEdit: 'Edit description',
+            descriptionSaved: 'Description saved.',
+            descriptionEmpty: 'No description yet.',
+            descriptionSave: 'Save description',
+            descriptionSaving: 'Saving…',
             noneUsable:
                 'No transaction type is published yet. Ask an administrator to publish a version in the transaction type designer.',
         },

@@ -228,7 +228,82 @@ describe('transaction type list', () => {
         expect(api.called(create)[0]?.body).toEqual({
             key: 'kas_kecil',
             label: 'Kas Kecil',
+            description: null,
         });
+    });
+
+    it('shows what each type is for under its name', async () => {
+        mockApi({
+            ...withPermissions(manage),
+            [`GET ${base}/transaction-types`]: listing([
+                typeRow({ description: 'Jurnal bebas untuk akuntan.' }),
+                payroll(),
+            ]),
+        });
+
+        renderApp(typesPath);
+
+        expect(
+            await screen.findByText('Jurnal bebas untuk akuntan.'),
+        ).toBeInTheDocument();
+    });
+
+    it('writes the description of a type, and clears it when it is emptied', async () => {
+        const describe = `PUT ${base}/transaction-types/${typeId}/description`;
+        const api = mockApi({
+            ...withPermissions(manage),
+            [`GET ${base}/transaction-types`]: listing([
+                typeRow({ description: 'Lama' }),
+            ]),
+            [describe]: () => json({ data: typeRow() }),
+        });
+
+        renderApp(typesPath);
+        const typist = userEvent.setup();
+
+        await rowAction(typist, 'Jurnal Umum', 'Ubah deskripsi');
+        const dialog = await screen.findByRole('dialog');
+        const field = within(dialog).getByLabelText('Deskripsi (opsional)');
+
+        expect(field).toHaveValue('Lama');
+
+        await typist.clear(field);
+        await typist.type(field, '  Pakai untuk jurnal bebas.  ');
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Simpan deskripsi' }),
+        );
+
+        await waitFor(() => expect(api.called(describe)).toHaveLength(1));
+        expect(api.called(describe)[0]?.body).toEqual({
+            description: 'Pakai untuk jurnal bebas.',
+        });
+    });
+
+    it('sends null when the description is emptied', async () => {
+        const describe = `PUT ${base}/transaction-types/${typeId}/description`;
+        const api = mockApi({
+            ...withPermissions(manage),
+            [`GET ${base}/transaction-types`]: listing([
+                typeRow({ description: 'Lama' }),
+            ]),
+            [describe]: () => json({ data: typeRow() }),
+        });
+
+        renderApp(typesPath);
+        const typist = userEvent.setup();
+
+        await rowAction(typist, 'Jurnal Umum', 'Ubah deskripsi');
+        const dialog = await screen.findByRole('dialog');
+
+        await typist.clear(
+            within(dialog).getByLabelText('Deskripsi (opsional)'),
+        );
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Simpan deskripsi' }),
+        );
+
+        await waitFor(() => expect(api.called(describe)).toHaveLength(1));
+        expect(api.called(describe)[0]?.body).toEqual({ description: null });
     });
 
     it('sets the number series and when the number is given', async () => {

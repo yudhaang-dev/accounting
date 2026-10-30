@@ -21,14 +21,14 @@ final class CreateTransactionType
     /**
      * @throws ValidationException when the key is already used in the company
      */
-    public function __invoke(string $key, string $label): TransactionType
+    public function __invoke(string $key, string $label, ?string $description = null): TransactionType
     {
-        return DB::transaction(function () use ($key, $label): TransactionType {
+        return DB::transaction(function () use ($key, $label, $description): TransactionType {
             if (TransactionType::query()->where('key', $key)->exists()) {
                 throw ValidationException::withMessages(['key' => [__('entries.type_key_taken', ['key' => $key])]]);
             }
 
-            $type = TransactionType::create(['key' => $key, 'label' => $label])->refresh();
+            $type = TransactionType::create(['key' => $key, 'label' => $label, 'description' => $description])->refresh();
 
             TransactionTypeVersion::create([
                 'transaction_type_id' => $type->id,
@@ -41,7 +41,7 @@ final class CreateTransactionType
                 'transaction_type.created',
                 "Transaction type {$type->key} created.",
                 $type,
-                after: ['key' => $type->key, 'label' => $type->label, 'version' => 1],
+                after: ['key' => $type->key, 'label' => $type->label, 'description' => $type->description, 'version' => 1],
                 companyId: $type->company_id,
             );
 

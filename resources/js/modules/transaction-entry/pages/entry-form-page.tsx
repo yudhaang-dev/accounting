@@ -119,12 +119,15 @@ export function EntryFormPage({
     companyId,
     entryId,
     replacesId,
+    typeKey,
     canManageTypes,
     canUseDimensions,
 }: {
     companyId: string;
     entryId?: string;
     replacesId?: string;
+    /** The type chosen in the catalog for a new entry. */
+    typeKey?: string;
     canManageTypes: boolean;
     canUseDimensions: boolean;
 }) {
@@ -164,6 +167,7 @@ export function EntryFormPage({
             <CardContent>
                 <EntryForm
                     companyId={companyId}
+                    typeKey={typeKey}
                     canManageTypes={canManageTypes}
                     canUseDimensions={canUseDimensions}
                 />

@@ -41,7 +41,7 @@ Draf → Menunggu persetujuan → Disetujui → Diposting
 
 Langkah umum untuk semua transaksi:
 
-1. Klik **Entri baru** dan pilih **Jenis transaksi**.
+1. Klik **Entri baru**. Katalog jenis transaksi tampil sebagai kartu; cari lewat kolom pencarian bila perlu, lalu klik kartu jenis yang sesuai dengan kejadiannya. Deskripsi di kartu menjelaskan kapan jenis itu dipakai. Salah pilih? Klik **Ganti jenis** di atas form, sebelum menyimpan.
 2. Isi **Tanggal akuntansi**, **Keterangan**, dan isian jenis itu.
 3. Klik **Simpan draf**.
 4. Di halaman detail, klik **Ajukan**.

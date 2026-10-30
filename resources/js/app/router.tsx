@@ -73,6 +73,7 @@ import { scheduleQuery } from '@/modules/transaction-entry/recurring-schedules';
 import { ApprovalPolicyPage } from '@/modules/transaction-entry/pages/approval-policy-page';
 import { ApprovalsPage } from '@/modules/transaction-entry/pages/approvals-page';
 import { EntriesPage } from '@/modules/transaction-entry/pages/entries-page';
+import { EntryCatalogPage } from '@/modules/transaction-entry/pages/entry-catalog-page';
 import { EntryFormPage } from '@/modules/transaction-entry/pages/entry-form-page';
 import { EntryPage } from '@/modules/transaction-entry/pages/entry-page';
 import { transactionTypeQuery } from '@/modules/transaction-entry/transaction-types';
@@ -981,10 +982,16 @@ const approvalPolicyRoute = createRoute({
 const newEntryRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/entries/new',
-    validateSearch: (search: Record<string, unknown>): { replaces?: string } =>
-        typeof search.replaces === 'string' && search.replaces !== ''
+    validateSearch: (
+        search: Record<string, unknown>,
+    ): { replaces?: string; type?: string } => ({
+        ...(typeof search.replaces === 'string' && search.replaces !== ''
             ? { replaces: search.replaces }
-            : {},
+            : {}),
+        ...(typeof search.type === 'string' && search.type !== ''
+            ? { type: search.type }
+            : {}),
+    }),
     staticData: {
         crumbs: (m) => [
             { labelKey: 'app.navEntries', href: at(m, '/entries') },
@@ -994,12 +1001,22 @@ const newEntryRoute = createRoute({
     beforeLoad: requirePermission('entries.create'),
     component: function NewEntry() {
         const { workspace } = newEntryRoute.useRouteContext();
-        const { replaces } = newEntryRoute.useSearch();
+        const { replaces, type } = newEntryRoute.useSearch();
+
+        if (replaces === undefined && type === undefined) {
+            return (
+                <EntryCatalogPage
+                    companyId={workspace.company_id}
+                    canManageTypes={can(workspace, 'policies.manage')}
+                />
+            );
+        }
 
         return (
             <EntryFormPage
                 companyId={workspace.company_id}
                 replacesId={replaces}
+                typeKey={type}
                 canManageTypes={can(workspace, 'policies.manage')}
                 canUseDimensions={can(workspace, 'dimensions.read')}
             />

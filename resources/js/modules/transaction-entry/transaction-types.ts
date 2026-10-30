@@ -95,7 +95,7 @@ export function usableTypes(types: TransactionType[]): TransactionType[] {
 
 export async function createTransactionType(
     companyId: string,
-    body: { key: string; label: string },
+    body: { key: string; label: string; description?: string | null },
 ): Promise<TransactionType> {
     return asType(
         (
@@ -104,6 +104,27 @@ export async function createTransactionType(
                     params: { path: { companyId } },
                     body,
                 }),
+            )
+        ).data,
+    );
+}
+
+/** Says when the type is used, for the catalog an operator picks from; empty clears it (TE-FR-01). */
+export async function setDescription(
+    companyId: string,
+    id: string,
+    description: string | null,
+): Promise<TransactionType> {
+    return asType(
+        (
+            await unwrap(
+                api.PUT(
+                    '/companies/{companyId}/transaction-types/{id}/description',
+                    {
+                        params: { path: { companyId, id } },
+                        body: { description },
+                    },
+                ),
             )
         ).data,
     );

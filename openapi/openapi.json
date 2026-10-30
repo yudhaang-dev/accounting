@@ -24045,6 +24045,69 @@
                 }
             }
         },
+        "/companies/{companyId}/transaction-types/{id}/description": {
+            "put": {
+                "operationId": "transaction-types.description",
+                "summary": "Says when the type is used, for the catalog an operator picks from. An empty description clears it",
+                "tags": [
+                    "TransactionType"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DescribeTransactionTypeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`TransactionTypeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/TransactionTypeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/transaction-type-templates": {
             "get": {
                 "operationId": "transaction-type-templates.index",
@@ -26992,6 +27055,13 @@
                     "label": {
                         "type": "string",
                         "maxLength": 255
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
                     }
                 },
                 "required": [
@@ -27132,6 +27202,22 @@
                     "down"
                 ],
                 "title": "CurrencyRounding"
+            },
+            "DescribeTransactionTypeRequest": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    }
+                },
+                "required": [
+                    "description"
+                ],
+                "title": "DescribeTransactionTypeRequest"
             },
             "DimensionRequirement": {
                 "type": "string",
@@ -31726,6 +31812,12 @@
                     "label": {
                         "type": "string"
                     },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "numbering": {
                         "type": "object",
                         "properties": {
@@ -31792,6 +31884,7 @@
                     "id",
                     "key",
                     "label",
+                    "description",
                     "numbering",
                     "versions",
                     "lock_version"

@@ -63,6 +63,7 @@ function EntryFields({
     replaces,
     companyId,
     entry,
+    typeKey: chosenType,
     types,
     accounts,
     dimensionTypes,
@@ -71,6 +72,8 @@ function EntryFields({
     entry?: Entry;
     /** A posted entry this one replaces (TE-FR-11); its content is the starting point. */
     replaces?: Entry;
+    /** The type chosen in the catalog; the form is made for it and the type cannot change here. */
+    typeKey?: string;
     types: TransactionType[];
     accounts: LineAccount[];
     dimensionTypes: LineDimensionType[];
@@ -84,7 +87,7 @@ function EntryFields({
             ? valuesOf(entry, '')
             : replaces
               ? valuesFromReplaced(replaces)
-              : valuesOf(undefined, types[0]?.key ?? ''),
+              : valuesOf(undefined, chosenType ?? types[0]?.key ?? ''),
     });
     const {
         register,
@@ -250,7 +253,9 @@ function EntryFields({
                                 <Select
                                     value={field.value}
                                     items={typeItems}
-                                    disabled={Boolean(entry || replaces)}
+                                    disabled={Boolean(
+                                        entry || replaces || chosenType,
+                                    )}
                                     onValueChange={field.onChange}
                                 >
                                     <SelectTrigger
@@ -278,6 +283,15 @@ function EntryFields({
                             <FieldError>
                                 {errors.transaction_type_key.message}
                             </FieldError>
+                        )}
+                        {chosenType && !entry && !replaces && (
+                            <Link
+                                to="/w/$companyId/entries/new"
+                                params={{ companyId }}
+                                className="w-fit text-sm underline-offset-4 hover:underline"
+                            >
+                                {t('entries.form.changeType')}
+                            </Link>
                         )}
                     </Field>
                     <Field
@@ -464,6 +478,7 @@ export function EntryForm({
     replaces,
     companyId,
     entry,
+    typeKey,
     canManageTypes,
     canUseDimensions,
 }: {
@@ -471,6 +486,8 @@ export function EntryForm({
     entry?: Entry;
     /** A posted entry the new one replaces. */
     replaces?: Entry;
+    /** The type chosen in the catalog for a new entry. */
+    typeKey?: string;
     canManageTypes: boolean;
     /** Whether the user may read dimensions, and so pick them on a line. */
     canUseDimensions: boolean;
@@ -518,11 +535,29 @@ export function EntryForm({
         return <FormAlert>{t('entries.types.noneUsable')}</FormAlert>;
     }
 
+    if (typeKey !== undefined && !usable.some((type) => type.key === typeKey)) {
+        return (
+            <div className="flex flex-col items-start gap-3">
+                <FormAlert>
+                    {t('entries.form.typeUnavailable', { key: typeKey })}
+                </FormAlert>
+                <Link
+                    to="/w/$companyId/entries/new"
+                    params={{ companyId }}
+                    className="text-sm underline-offset-4 hover:underline"
+                >
+                    {t('entries.form.changeType')}
+                </Link>
+            </div>
+        );
+    }
+
     return (
         <EntryFields
             companyId={companyId}
             entry={entry}
             replaces={replaces}
+            typeKey={typeKey}
             types={usable}
             accounts={accounts.data}
             dimensionTypes={dimensions.data ?? []}

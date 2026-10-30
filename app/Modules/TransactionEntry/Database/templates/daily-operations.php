@@ -15,6 +15,7 @@ return [
         [
             'key' => 'customer_receipt',
             'label' => 'Terima Pembayaran Pelanggan',
+            'description' => 'Uang masuk dari pelanggan untuk melunasi faktur, atau sebagai uang muka.',
             'mode' => 'structured',
             'fields' => [
                 ['name' => 'customer', 'type' => 'party', 'label' => 'Pelanggan'],
@@ -40,6 +41,7 @@ return [
         [
             'key' => 'supplier_bill',
             'label' => 'Tagihan Pemasok',
+            'description' => 'Tagihan dari pemasok yang belum dibayar. Menambah utang pemasok.',
             'mode' => 'structured',
             'fields' => [
                 ['name' => 'supplier', 'type' => 'party', 'label' => 'Pemasok'],
@@ -64,6 +66,7 @@ return [
         [
             'key' => 'supplier_payment',
             'label' => 'Bayar Pemasok',
+            'description' => 'Pembayaran ke pemasok untuk melunasi tagihan.',
             'mode' => 'structured',
             'fields' => [
                 ['name' => 'supplier', 'type' => 'party', 'label' => 'Pemasok'],
@@ -92,6 +95,7 @@ return [
         [
             'key' => 'customer_receipt_cross_currency',
             'label' => 'Terima Pembayaran, Rekening Beda Mata Uang',
+            'description' => 'Pelunasan faktur valas yang dibayar ke rekening berbeda mata uang.',
             'mode' => 'structured',
             'fields' => [
                 ['name' => 'customer', 'type' => 'party', 'label' => 'Pelanggan'],
@@ -119,6 +123,7 @@ return [
         [
             'key' => 'supplier_payment_cross_currency',
             'label' => 'Bayar Pemasok, Rekening Beda Mata Uang',
+            'description' => 'Pembayaran tagihan valas dari rekening berbeda mata uang.',
             'mode' => 'structured',
             'fields' => [
                 ['name' => 'supplier', 'type' => 'party', 'label' => 'Pemasok'],
@@ -149,6 +154,7 @@ return [
         [
             'key' => 'party_loan',
             'label' => 'Kasbon atau Pinjaman ke Pihak',
+            'description' => 'Uang keluar yang harus dikembalikan penerimanya, seperti kasbon karyawan.',
             'mode' => 'structured',
             'fields' => [
                 ['name' => 'party', 'type' => 'party', 'label' => 'Penerima'],
@@ -174,6 +180,7 @@ return [
         [
             'key' => 'loan_received',
             'label' => 'Pinjaman Diterima',
+            'description' => 'Uang masuk dari pinjaman yang harus dilunasi, seperti pinjaman bank.',
             'mode' => 'structured',
             'fields' => [
                 ['name' => 'party', 'type' => 'party', 'label' => 'Pemberi pinjaman'],
@@ -200,6 +207,7 @@ return [
         [
             'key' => 'cash_transfer',
             'label' => 'Transfer Antar Kas atau Bank',
+            'description' => 'Memindahkan uang antar kas atau rekening bank milik sendiri.',
             'mode' => 'structured',
             'fields' => [
                 ['name' => 'from', 'type' => 'cash_account', 'label' => 'Dari rekening'],

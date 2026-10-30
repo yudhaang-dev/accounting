@@ -489,7 +489,7 @@ describe('scheduled reversal', () => {
             [`GET ${base}/accounts`]: accounts,
         });
 
-        renderApp(`${entriesPath}/new`);
+        renderApp(`${entriesPath}/new?type=general`);
         const typist = userEvent.setup();
 
         await typist.type(await screen.findByLabelText('Keterangan'), 'Akrual');
