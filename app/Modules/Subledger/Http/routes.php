@@ -12,6 +12,7 @@ use App\Modules\Subledger\Http\OpenItemController;
 use App\Modules\Subledger\Http\OpenItemRevaluationController;
 use App\Modules\Subledger\Http\PartyBalancesController;
 use App\Modules\Subledger\Http\PartyController;
+use App\Modules\Subledger\Http\PartyRoleController;
 use App\Modules\Subledger\Http\PostingProfileController;
 use App\Modules\Subledger\Http\ReconciliationController;
 use App\Platform\Api\ApiServiceProvider;
@@ -20,6 +21,13 @@ use Illuminate\Support\Facades\Route;
 // API routes for the Subledger module, mounted under /api/v1 (see SubledgerServiceProvider).
 
 Route::companyScoped(function () {
+    Route::get('party-roles', [PartyRoleController::class, 'index'])->middleware('permission:parties.read')->name('party-roles.index');
+    Route::get('party-role-templates', [PartyRoleController::class, 'templates'])->middleware('permission:parties.manage')->name('party-roles.templates');
+    Route::post('party-roles/import-template', [PartyRoleController::class, 'import'])->middleware('permission:parties.manage')->name('party-roles.import-template');
+    Route::post('party-roles', [PartyRoleController::class, 'store'])->middleware('permission:parties.manage')->name('party-roles.store');
+    Route::patch('party-roles/{id}', [PartyRoleController::class, 'update'])
+        ->middleware('permission:parties.manage')->where('id', ApiServiceProvider::ULID)->name('party-roles.update');
+
     Route::get('parties', [PartyController::class, 'index'])->middleware('permission:parties.read')->name('parties.index');
     Route::post('parties', [PartyController::class, 'store'])->middleware('permission:parties.manage')->name('parties.store');
     Route::get('parties/{id}', [PartyController::class, 'show'])

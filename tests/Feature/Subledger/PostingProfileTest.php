@@ -147,8 +147,8 @@ describe('posting profiles (SL-FR-02)', function () {
         mapControl($default, 'receivables_control', $this->receivables)->assertOk();
         mapControl($foreign, 'receivables_control', $special)->assertOk();
 
-        $plain = $this->actingAs($this->admin)->postJson("{$this->url}/parties", ['name' => 'Biasa', 'is_customer' => true])->assertCreated();
-        $abroad = $this->actingAs($this->admin)->postJson("{$this->url}/parties", ['name' => 'Luar Negeri', 'is_customer' => true, 'posting_profile_id' => $foreign])
+        $plain = $this->actingAs($this->admin)->postJson("{$this->url}/parties", ['name' => 'Biasa'])->assertCreated();
+        $abroad = $this->actingAs($this->admin)->postJson("{$this->url}/parties", ['name' => 'Luar Negeri', 'posting_profile_id' => $foreign])
             ->assertCreated()->assertJsonPath('data.posting_profile_id', $foreign);
 
         $controls = app(ControlAccounts::class);
@@ -171,7 +171,7 @@ describe('posting profiles (SL-FR-02)', function () {
         [$otherCompanyId] = createWorkspaceAs($other, 'Beta');
         $foreignProfile = $this->actingAs($other)->postJson("/api/v1/companies/{$otherCompanyId}/posting-profiles", ['name' => 'Beta'])->assertCreated()->json('data.id');
 
-        $this->actingAs($this->admin)->postJson("{$this->url}/parties", ['name' => 'X', 'is_customer' => true, 'posting_profile_id' => $foreignProfile])
+        $this->actingAs($this->admin)->postJson("{$this->url}/parties", ['name' => 'X', 'posting_profile_id' => $foreignProfile])
             ->assertUnprocessable()->assertJsonValidationErrors(['posting_profile_id']);
         $this->actingAs($this->admin)->getJson("{$this->url}/posting-profiles/{$foreignProfile}")->assertNotFound();
     });

@@ -16,8 +16,9 @@ class UpdatePartyRequest extends FormRequest
         return [
             'lock_version' => ['required', 'integer', 'min:1'],
             'name' => ['sometimes', 'string', 'max:255'],
-            'is_customer' => ['sometimes', 'boolean'],
-            'is_supplier' => ['sometimes', 'boolean'],
+            // The whole set of roles the party holds.
+            'roles' => ['sometimes', 'array', 'max:20'],
+            'roles.*' => ['string', 'distinct', 'max:32'],
             'tax_id' => ['sometimes', 'nullable', 'string', 'max:64'],
             // The profile deciding its control accounts; empty means the default profile (SL-FR-02).
             'posting_profile_id' => ['sometimes', 'nullable', 'string', 'size:26'],

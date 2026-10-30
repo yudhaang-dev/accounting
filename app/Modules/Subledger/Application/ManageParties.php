@@ -4,6 +4,8 @@ namespace App\Modules\Subledger\Application;
 
 use App\Modules\Subledger\Domain\Party;
 use App\Modules\Subledger\Domain\PartyExternalRef;
+use App\Modules\Subledger\Domain\PartyRole;
+use App\Modules\Subledger\Domain\PartyRoleAssignment;
 use App\Modules\Subledger\Domain\PartyStatus;
 use App\Modules\Subledger\Domain\PostingProfile;
 use App\Platform\Api\ApiException;
@@ -19,12 +21,12 @@ use Illuminate\Validation\ValidationException;
  */
 final class ManageParties
 {
-    private const FIELDS = ['name', 'is_customer', 'is_supplier', 'tax_id', 'posting_profile_id', 'counterparty_company_id'];
+    private const FIELDS = ['name', 'tax_id', 'posting_profile_id', 'counterparty_company_id'];
 
     public function __construct(private readonly Audit $audit) {}
 
     /**
-     * @param  array<string, mixed>  $data  name, is_customer, is_supplier, tax_id, external_refs
+     * @param  array<string, mixed>  $data  name, roles (keys), tax_id, external_refs
      *
      * @throws ValidationException
      */
@@ -33,6 +35,7 @@ final class ManageParties
         return $this->guarded(fn () => DB::transaction(function () use ($data): Party {
             $this->assertProfile($data['posting_profile_id'] ?? null);
             $party = Party::create(array_intersect_key($data, array_flip(self::FIELDS)));
+            $this->syncRoles($party, $data['roles'] ?? []);
             $this->addRefs($party, $data['external_refs'] ?? []);
             $party = $this->loaded($party);
 
@@ -46,7 +49,7 @@ final class ManageParties
      * References are only added: one that already belongs to this party is ignored, one that
      * belongs to another party is rejected.
      *
-     * @param  array<string, mixed>  $data  any of name, is_customer, is_supplier, tax_id, external_refs
+     * @param  array<string, mixed>  $data  any of name, roles (keys, the whole set), tax_id, external_refs
      *
      * @throws ApiException VERSION_CONFLICT
      * @throws ValidationException
@@ -60,14 +63,12 @@ final class ManageParties
             $changes = array_intersect_key($data, array_flip(self::FIELDS));
             $this->assertProfile($changes['posting_profile_id'] ?? null);
 
-            if (! ($changes['is_customer'] ?? $party->is_customer) && ! ($changes['is_supplier'] ?? $party->is_supplier)) {
-                throw ValidationException::withMessages(['is_customer' => [__('parties.role_required')]]);
-            }
-
             $party->updateLocked($changes, $expectedVersion);
 
-            // References are part of the resource, so adding one is a new version even when no field changed.
-            if ($this->addRefs($party, $data['external_refs'] ?? []) > 0 && $party->lock_version === $expectedVersion) {
+            // Roles and references are part of the resource, so changing one is a new version even when no field changed.
+            $changed = ($this->syncRoles($party, $data['roles'] ?? null) ? 1 : 0) + $this->addRefs($party, $data['external_refs'] ?? []);
+
+            if ($changed > 0 && $party->lock_version === $expectedVersion) {
                 $party->lock_version = $expectedVersion + 1;
                 $party->save();
             }
@@ -121,6 +122,59 @@ final class ManageParties
     }
 
     /**
+     * Makes the roles of the party those of the keys. A role it holds already stays even when it has been
+     * deactivated; one it would gain must exist and be active. Null leaves them as they are.
+     *
+     * @param  list<string>|null  $keys
+     * @return bool whether the set changed
+     *
+     * @throws ValidationException
+     */
+    private function syncRoles(Party $party, ?array $keys): bool
+    {
+        if ($keys === null) {
+            return false;
+        }
+
+        $roles = PartyRole::query()->whereIn('key', $keys)->get()->keyBy('key');
+        $held = PartyRoleAssignment::query()->where('party_id', $party->id)->get()->keyBy('party_role_id');
+        $errors = [];
+
+        foreach ($keys as $index => $key) {
+            $role = $roles->get($key);
+
+            if ($role === null) {
+                $errors["roles.{$index}"] = [__('party_roles.unknown', ['key' => $key])];
+            } elseif (! $role->isActive() && ! $held->has($role->id)) {
+                $errors["roles.{$index}"] = [__('party_roles.inactive', ['key' => $key])];
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        $wanted = $roles->pluck('id')->all();
+        $changed = false;
+
+        foreach ($held as $roleId => $assignment) {
+            if (! in_array($roleId, $wanted, true)) {
+                $assignment->delete();
+                $changed = true;
+            }
+        }
+
+        foreach ($wanted as $roleId) {
+            if (! $held->has($roleId)) {
+                PartyRoleAssignment::create(['party_id' => $party->id, 'party_role_id' => $roleId]);
+                $changed = true;
+            }
+        }
+
+        return $changed;
+    }
+
+    /**
      * @param  list<array{source_system: string, external_ref: string}>  $refs
      * @return int how many references were added
      *
@@ -169,7 +223,7 @@ final class ManageParties
 
     private function loaded(Party $party): Party
     {
-        return $party->refresh()->load('externalRefs');
+        return $party->refresh()->load('externalRefs', 'roleAssignments.role');
     }
 
     /** @return array<string, mixed> */
@@ -177,6 +231,7 @@ final class ManageParties
     {
         return [
             ...$party->only([...self::FIELDS, 'status']),
+            'roles' => $party->roleKeys(),
             'external_refs' => $party->externalRefs->map->only(['source_system', 'external_ref'])->all(),
         ];
     }

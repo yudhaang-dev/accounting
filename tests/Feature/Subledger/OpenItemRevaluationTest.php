@@ -50,7 +50,7 @@ beforeEach(function () {
     }
 
     $this->customer = docParty(['name' => 'PT Maju Jaya']);
-    $this->supplier = docParty(['name' => 'UD Pemasok', 'is_customer' => false, 'is_supplier' => true]);
+    $this->supplier = docParty(['name' => 'UD Pemasok', 'roles' => ['supplier']]);
     $this->usdBank = $this->cashAccount = $this->actingAs($this->admin)->postJson("{$this->url}/cash-accounts", [
         'name' => 'BCA USD', 'kind' => 'bank', 'bank_name' => 'BCA', 'account_number' => '999', 'currency' => 'USD', 'account_id' => $this->bank,
     ])->assertCreated()->json('data.id');

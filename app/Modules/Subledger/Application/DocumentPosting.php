@@ -146,8 +146,6 @@ final class DocumentPosting implements SubledgerPosting
             $errors['party_id'][] = __('documents.party_unknown');
         } elseif (! $party->isActive) {
             $errors['party_id'][] = __('documents.party_inactive', ['name' => $party->name]);
-        } elseif (! ($document->role->value === 'receivables_control' ? $party->isCustomer : $party->isSupplier)) {
-            $errors['party_id'][] = __($document->role->value === 'receivables_control' ? 'documents.party_not_customer' : 'documents.party_not_supplier', ['name' => $party->name]);
         }
 
         $cash = null;

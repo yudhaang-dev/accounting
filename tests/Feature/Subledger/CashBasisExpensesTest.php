@@ -33,7 +33,7 @@ beforeEach(function () {
     $profile = $this->actingAs($this->admin)->postJson("{$this->url}/posting-profiles", ['name' => 'Third parties'])->assertCreated()->json('data.id');
     $this->actingAs($this->admin)->putJson("{$this->url}/posting-profiles/{$profile}/accounts/payables_control", ['lock_version' => 0, 'account_id' => $this->payables])->assertOk();
 
-    $this->supplier = docParty(['name' => 'UD Pemasok', 'is_customer' => false, 'is_supplier' => true]);
+    $this->supplier = docParty(['name' => 'UD Pemasok', 'roles' => ['supplier']]);
     $this->cashAccount = $this->actingAs($this->admin)->postJson("{$this->url}/cash-accounts", [
         'name' => 'BCA', 'kind' => 'bank', 'bank_name' => 'BCA', 'account_number' => '999', 'currency' => 'IDR', 'account_id' => $this->bank,
     ])->assertCreated()->json('data.id');

@@ -16,7 +16,7 @@ class ListPartiesRequest extends FormRequest
         return [
             'filter' => ['sometimes', 'array'],
             'filter.status' => ['sometimes', Rule::enum(PartyStatus::class)],
-            'filter.role' => ['sometimes', Rule::in(['customer', 'supplier'])],
+            'filter.role' => ['sometimes', 'string', 'max:32'],
             'filter.search' => ['sometimes', 'string', 'max:100'],
             // A reference only identifies a party together with its source system.
             'filter.source_system' => ['required_with:filter.external_ref', 'string', 'max:64'],

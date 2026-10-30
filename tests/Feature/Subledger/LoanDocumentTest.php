@@ -35,7 +35,7 @@ beforeEach(function () {
     }
 
     $this->employee = docParty(['name' => 'Siti Rahma']);
-    $this->lender = docParty(['name' => 'Bank Mitra', 'is_customer' => false, 'is_supplier' => true]);
+    $this->lender = docParty(['name' => 'Bank Mitra', 'roles' => ['supplier']]);
     $this->cashAccount = $this->actingAs($this->admin)->postJson("{$this->url}/cash-accounts", [
         'name' => 'BCA Operasional', 'kind' => 'bank', 'bank_name' => 'BCA', 'account_number' => '123-456-7890', 'currency' => 'IDR', 'account_id' => $this->bank,
     ])->assertCreated()->json('data.id');
@@ -95,12 +95,11 @@ describe('a loan given (SL-FR-04, SL-FR-11)', function () {
             ->and(DB::table('gl_journal_lines')->where('account_id', $this->bank)->count())->toBe(0);
     });
 
-    it('refuses the party, the cash account and the due date that do not fit, on their fields', function () {
+    it('refuses the inactive party, the cash account and the due date that do not fit, on their fields', function () {
         $inactive = docParty(['name' => 'PT Tidur']);
         $this->actingAs($this->admin)->postJson("{$this->url}/parties/{$inactive}/deactivate")->assertOk();
 
         docAct($this->preparer, docLoan('1000', [], $inactive)->assertCreated()->json('data.id'), 'submit')->assertUnprocessable()->assertJsonValidationErrors(['values.party']);
-        docAct($this->preparer, docLoan('1000', [], $this->lender)->assertCreated()->json('data.id'), 'submit')->assertUnprocessable()->assertJsonValidationErrors(['values.party']);
         docAct($this->preparer, docLoan('1000', ['due' => '2026-03-01'])->assertCreated()->json('data.id'), 'submit')->assertUnprocessable()->assertJsonValidationErrors(['values.due']);
 
         $this->actingAs($this->admin)->postJson("{$this->url}/cash-accounts/{$this->cashAccount}/deactivate")->assertOk();

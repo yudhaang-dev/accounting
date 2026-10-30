@@ -6,7 +6,6 @@ use App\Modules\MasterData\Contracts\CompanyDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
 use App\Modules\MasterData\Contracts\CurrencyRounding;
 use App\Modules\Subledger\Contracts\ControlAccounts;
-use App\Modules\Subledger\Contracts\ControlRole;
 use App\Modules\Subledger\Contracts\DocumentKind;
 use App\Modules\Subledger\Contracts\OpeningOpenItem;
 use App\Modules\Subledger\Contracts\OpeningOpenItemBatch;
@@ -143,8 +142,6 @@ final class RecordOpeningOpenItems implements OpeningOpenItems
                 $errors[$field('party')][] = __('documents.opening_party_unknown');
             } elseif (! $party->isActive) {
                 $errors[$field('party')][] = __('documents.party_inactive', ['name' => $party->name]);
-            } elseif (! ($item->role === ControlRole::Receivables ? $party->isCustomer : $party->isSupplier)) {
-                $errors[$field('party')][] = __($item->role === ControlRole::Receivables ? 'documents.party_not_customer' : 'documents.party_not_supplier', ['name' => $party->name]);
             }
 
             $key = ($partyId ?? '').'|'.$item->role->value.'|'.$item->documentNumber;

@@ -111,7 +111,7 @@ describe('aging by the default policy (SL-FR-08)', function () {
     });
 
     it('ages payables apart from receivables, an invoice of the supplier being positive', function () {
-        $supplier = docParty(['name' => 'UD Pemasok', 'is_customer' => false, 'is_supplier' => true]);
+        $supplier = docParty(['name' => 'UD Pemasok', 'roles' => ['supplier']]);
         docType('credit_purchase', docInvoiceBody([
             'posting_rules' => [
                 ['side' => 'credit', 'account' => docControl()],
@@ -243,7 +243,7 @@ describe('the balance of each party (SL-FR-08)', function () {
     }
 
     it('gives what is owed to the company and what it owes per party, as the aging totals do', function () {
-        $supplier = docParty(['name' => 'UD Pemasok', 'is_customer' => false, 'is_supplier' => true]);
+        $supplier = docParty(['name' => 'UD Pemasok', 'roles' => ['supplier']]);
         docType('credit_purchase', docInvoiceBody([
             'posting_rules' => [
                 ['side' => 'credit', 'account' => docControl()],

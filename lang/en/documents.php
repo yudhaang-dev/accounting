@@ -5,8 +5,6 @@ return [
 
     'party_unknown' => 'The party does not exist in this company.',
     'party_inactive' => 'The party :name is inactive.',
-    'party_not_customer' => 'The party :name is not a customer.',
-    'party_not_supplier' => 'The party :name is not a supplier.',
     'cash_account_required' => 'A document of the kind :kind needs a cash account.',
     'cash_account_unknown' => 'The cash account does not exist in this company.',
     'cash_account_inactive' => 'The cash account :name is inactive.',

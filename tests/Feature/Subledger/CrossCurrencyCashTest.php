@@ -44,7 +44,7 @@ beforeEach(function () {
     }
 
     $this->customer = docParty(['name' => 'PT Maju Jaya']);
-    $this->supplier = docParty(['name' => 'UD Pemasok', 'is_customer' => false, 'is_supplier' => true]);
+    $this->supplier = docParty(['name' => 'UD Pemasok', 'roles' => ['supplier']]);
     $this->idrBank = $this->actingAs($this->admin)->postJson("{$this->url}/cash-accounts", [
         'name' => 'BCA IDR', 'kind' => 'bank', 'bank_name' => 'BCA', 'account_number' => '111', 'currency' => 'IDR', 'account_id' => $this->bank,
     ])->assertCreated()->json('data.id');

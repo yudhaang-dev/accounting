@@ -5,8 +5,6 @@ return [
 
     'party_unknown' => 'Pihak tidak ada di perusahaan ini.',
     'party_inactive' => 'Pihak :name tidak aktif.',
-    'party_not_customer' => 'Pihak :name bukan pelanggan.',
-    'party_not_supplier' => 'Pihak :name bukan pemasok.',
     'cash_account_required' => 'Dokumen berjenis :kind memerlukan rekening kas.',
     'cash_account_unknown' => 'Rekening kas tidak ada di perusahaan ini.',
     'cash_account_inactive' => 'Rekening kas :name tidak aktif.',

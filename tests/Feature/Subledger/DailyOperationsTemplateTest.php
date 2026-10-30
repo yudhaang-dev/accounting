@@ -35,7 +35,7 @@ beforeEach(function () {
     }
 
     $this->customer = docParty(['name' => 'PT Maju Jaya']);
-    $this->supplier = docParty(['name' => 'UD Pemasok', 'is_customer' => false, 'is_supplier' => true]);
+    $this->supplier = docParty(['name' => 'UD Pemasok', 'roles' => ['supplier']]);
     $this->cashAccount = $this->actingAs($this->admin)->postJson("{$this->url}/cash-accounts", [
         'name' => 'BCA Operasional', 'kind' => 'bank', 'bank_name' => 'BCA', 'account_number' => '123-456-7890', 'currency' => 'IDR', 'account_id' => $this->bank,
     ])->assertCreated()->json('data.id');
@@ -96,10 +96,10 @@ describe('a supplier bill and its payment', function () {
             ->and((float) $paidLines->firstWhere('account_id', $this->bank)->credit)->toBe(750000.0);
     });
 
-    it('refuses a customer as the supplier of a bill', function () {
+    it('does not ask the role of the party, which a transaction type may restrict instead (ADR-0015)', function () {
         $id = docEntry('supplier_bill', ['supplier' => $this->customer, 'total' => '1000', 'expense_account' => $this->expense])->assertCreated()->json('data.id');
 
-        docAct($this->preparer, $id, 'submit')->assertUnprocessable()->assertJsonValidationErrors(['values.supplier']);
+        docAct($this->preparer, $id, 'submit')->assertOk();
     });
 });
 
@@ -132,10 +132,10 @@ describe('a loan to a party', function () {
             ->and(functionalBalance($this->receivables))->toBe(0.0);
     });
 
-    it('refuses a supplier that is no customer, as a receivable needs one', function () {
+    it('lends to a party whatever role it holds', function () {
         $id = docEntry('party_loan', ['party' => $this->supplier, 'bank' => $this->cashAccount, 'total' => '1000'])->assertCreated()->json('data.id');
 
-        docAct($this->preparer, $id, 'submit')->assertUnprocessable()->assertJsonValidationErrors(['values.party']);
+        docAct($this->preparer, $id, 'submit')->assertOk();
     });
 });
 

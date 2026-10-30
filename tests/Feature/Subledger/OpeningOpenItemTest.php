@@ -33,7 +33,7 @@ beforeEach(function () {
     }
 
     $this->customer = docParty(['name' => 'PT Maju Jaya', 'external_refs' => [['source_system' => 'legacy', 'external_ref' => 'C-001']]]);
-    $this->supplier = docParty(['name' => 'UD Pemasok', 'is_customer' => false, 'is_supplier' => true, 'external_refs' => [['source_system' => 'legacy', 'external_ref' => 'S-001']]]);
+    $this->supplier = docParty(['name' => 'UD Pemasok', 'roles' => ['supplier'], 'external_refs' => [['source_system' => 'legacy', 'external_ref' => 'S-001']]]);
 });
 
 /** A source balance sheet with receivables and payables, and the capital that makes it balance. */
@@ -134,14 +134,13 @@ describe('importing open items with the opening balance (SL-AC-01, GL-AC-07)', f
 });
 
 describe('what an opening open item must be', function () {
-    it('names a party of the company and the role it plays', function () {
+    it('names a party of the company, whatever role it holds', function () {
         $payload = openingItemsPayload();
         $payload['open_items'][0]['party_ref'] = 'C-404';
-        $payload['open_items'][3]['party_ref'] = 'C-001';
 
         $response = $this->actingAs($this->admin)->postJson("{$this->url}/opening-balance-imports", $payload)->assertUnprocessable();
 
-        expect(array_keys($response->json('errors')))->toContain('open_items.0.party', 'open_items.3.party');
+        expect(array_keys($response->json('errors')))->toContain('open_items.0.party')->not->toContain('open_items.3.party');
     });
 
     it('takes the party by ID as well', function () {

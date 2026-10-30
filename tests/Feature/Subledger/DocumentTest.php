@@ -35,7 +35,7 @@ beforeEach(function () {
     $this->actingAs($this->admin)->putJson("{$this->url}/posting-profiles/{$this->profileId}/accounts/receivables_control", ['lock_version' => 0, 'account_id' => $this->receivables])->assertOk();
 
     $this->customer = docParty(['name' => 'PT Maju Jaya']);
-    $this->supplier = docParty(['name' => 'UD Pemasok', 'is_customer' => false, 'is_supplier' => true]);
+    $this->supplier = docParty(['name' => 'UD Pemasok', 'roles' => ['supplier']]);
     $this->cashAccount = $this->actingAs($this->admin)->postJson("{$this->url}/cash-accounts", [
         'name' => 'BCA Operasional', 'kind' => 'bank', 'bank_name' => 'BCA', 'account_number' => '123-456-7890', 'currency' => 'IDR', 'account_id' => $this->bank,
     ])->assertCreated()->json('data.id');
@@ -130,12 +130,10 @@ describe('an invoice (SL-FR-04)', function () {
     it('refuses the party at submit with an error on its field', function () {
         $inactive = docParty(['name' => 'PT Tidur']);
         $this->actingAs($this->admin)->postJson("{$this->url}/parties/{$inactive}/deactivate")->assertOk();
-        $supplierOnly = $this->supplier;
 
         $submit = fn (string $party) => docAct($this->preparer, docEntry('credit_sale', ['party' => $party, 'total' => '1000'])->assertCreated()->json('data.id'), 'submit');
 
         $submit($inactive)->assertUnprocessable()->assertJsonValidationErrors(['values.party']);
-        $submit($supplierOnly)->assertUnprocessable()->assertJsonValidationErrors(['values.party']);
 
         expect(DB::table('sl_documents')->count())->toBe(0);
     });
@@ -168,7 +166,7 @@ describe('an invoice (SL-FR-04)', function () {
         expect($item)->toMatchArray(['kind' => 'invoice', 'control_role' => 'payables_control', 'side' => 'credit', 'document_number' => 'BILL-9', 'remaining_amount' => '750000.000000']);
     });
 
-    it('refuses a customer on a payables route', function () {
+    it('takes a customer on a payables route, as the role says nothing about the side of the ledger (ADR-0015)', function () {
         docMapPayables();
         docType('credit_purchase', docInvoiceBody([
             'posting_rules' => [['side' => 'credit', 'account' => docControl()], ['side' => 'debit', 'account' => docFixed($this->expense)]],
@@ -177,7 +175,7 @@ describe('an invoice (SL-FR-04)', function () {
 
         $id = docEntry('credit_purchase', ['party' => $this->customer, 'total' => '1000'])->assertCreated()->json('data.id');
 
-        docAct($this->preparer, $id, 'submit')->assertUnprocessable()->assertJsonValidationErrors(['values.party']);
+        docAct($this->preparer, $id, 'submit')->assertOk();
     });
 
     it('records a foreign currency invoice at the rate of the entry in both currencies', function () {

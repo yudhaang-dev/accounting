@@ -45,9 +45,23 @@ function journalOfDocument(string $itemId): string
     return (string) DB::table('sl_documents')->where('id', DB::table('sl_open_items')->where('id', $itemId)->value('document_id'))->value('journal_id');
 }
 
+/** Makes sure the company has the party roles of the keys (the labels are those of the template). */
+function ensurePartyRoles(array $keys): void
+{
+    $have = collect(test()->actingAs(test()->admin)->getJson(test()->url.'/party-roles')->assertOk()->json('data'))->pluck('key')->all();
+    $missing = array_values(array_diff($keys, $have));
+
+    if ($missing !== []) {
+        test()->actingAs(test()->admin)->postJson(test()->url.'/party-roles/import-template', ['confirmed' => true, 'keys' => $missing])->assertCreated();
+    }
+}
+
 function docParty(array $overrides = []): string
 {
-    return (string) test()->actingAs(test()->admin)->postJson(test()->url.'/parties', array_merge(['name' => 'PT Maju Jaya', 'is_customer' => true], $overrides))->assertCreated()->json('data.id');
+    $body = array_merge(['name' => 'PT Maju Jaya', 'roles' => ['customer']], $overrides);
+    ensurePartyRoles($body['roles']);
+
+    return (string) test()->actingAs(test()->admin)->postJson(test()->url.'/parties', $body)->assertCreated()->json('data.id');
 }
 
 function docFixed(string $accountId): array

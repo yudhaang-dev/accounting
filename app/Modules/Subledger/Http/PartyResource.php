@@ -13,15 +13,14 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class PartyResource extends JsonResource
 {
     /**
-     * @return array{id: string, name: string, is_customer: bool, is_supplier: bool, tax_id: string|null, posting_profile_id: string|null, counterparty_company_id: string|null, status: string, external_refs: array<int, array{source_system: string, external_ref: string}>, lock_version: int}
+     * @return array{id: string, name: string, roles: list<string>, tax_id: string|null, posting_profile_id: string|null, counterparty_company_id: string|null, status: string, external_refs: array<int, array{source_system: string, external_ref: string}>, lock_version: int}
      */
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->resource->id,
             'name' => $this->resource->name,
-            'is_customer' => $this->resource->is_customer,
-            'is_supplier' => $this->resource->is_supplier,
+            'roles' => $this->resource->roleKeys(),
             'tax_id' => $this->resource->tax_id,
             'posting_profile_id' => $this->resource->posting_profile_id,
             'counterparty_company_id' => $this->resource->counterparty_company_id,
