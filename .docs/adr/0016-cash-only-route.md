@@ -1,6 +1,6 @@
 # ADR-0016 — Rute Hanya-Kas untuk Kas tanpa Akun Kontrol
 
-Status: Diusulkan (2026-10-30)
+Status: Diterima (2026-10-30)
 
 ## Konteks
 

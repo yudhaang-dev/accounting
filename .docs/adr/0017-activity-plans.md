@@ -1,6 +1,6 @@
 # ADR-0017 — Rencana Kegiatan: Periode Mandiri dan Ruang Lingkup Dimensi
 
-Status: Diusulkan (2026-10-30)
+Status: Diterima (2026-10-30)
 
 ## Konteks
 

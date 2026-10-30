@@ -1,6 +1,6 @@
 # ADR-0015 — Peran Pihak sebagai Data
 
-Status: Diusulkan (2026-10-30)
+Status: Diterima (2026-10-30)
 
 ## Konteks
 
