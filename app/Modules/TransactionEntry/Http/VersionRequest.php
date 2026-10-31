@@ -58,6 +58,7 @@ class VersionRequest extends FormRequest
             'subledger_route.cash_account_field' => ['sometimes', 'nullable', 'string', 'max:64'],
             'subledger_route.counterpart_cash_account_field' => ['sometimes', 'nullable', 'string', 'max:64'],
             'subledger_route.allocations_field' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'subledger_route.posting_profile_id' => ['sometimes', 'nullable', 'string', 'size:26'],
         ];
     }
 }

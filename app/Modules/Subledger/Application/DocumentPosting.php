@@ -174,7 +174,7 @@ final class DocumentPosting implements SubledgerPosting
             throw ValidationException::withMessages($errors);
         }
 
-        $control = $this->controlAccounts->require($companyId, $document->role, $document->partyId, $command->accountingDate);
+        $control = $this->controlAccounts->require($companyId, $document->role, $document->partyId, $command->accountingDate, $document->postingProfileId);
         $errors = $this->lineErrors($document, $control, $cash);
 
         if ($errors !== []) {
@@ -290,6 +290,7 @@ final class DocumentPosting implements SubledgerPosting
         $recorded = Document::create([
             'kind' => $document->kind,
             'control_role' => $document->role,
+            'posting_profile_id' => $document->postingProfileId,
             'party_id' => $document->partyId,
             'cash_account_id' => $cash?->id,
             'journal_id' => $journal->id,
@@ -310,6 +311,7 @@ final class DocumentPosting implements SubledgerPosting
             'document_id' => $recorded->id,
             'party_id' => $document->partyId,
             'control_role' => $document->role,
+            'posting_profile_id' => $document->postingProfileId,
             'kind' => $document->kind,
             'side' => $side,
             'document_number' => $number,
@@ -393,7 +395,7 @@ final class DocumentPosting implements SubledgerPosting
                 $errors[] = __('documents.allocation_amount_positive');
             }
 
-            array_push($errors, ...$this->allocator->problems($item, $document->partyId, $document->role, $side, $currency, $amount));
+            array_push($errors, ...$this->allocator->problems($item, $document->partyId, $document->role, $side, $currency, $amount, $control->postingProfileId));
             $sum = $sum->plus($amount);
         }
 

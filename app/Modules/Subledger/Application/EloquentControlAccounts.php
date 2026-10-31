@@ -5,6 +5,7 @@ namespace App\Modules\Subledger\Application;
 use App\Modules\Subledger\Contracts\ControlAccount;
 use App\Modules\Subledger\Contracts\ControlAccounts;
 use App\Modules\Subledger\Contracts\ControlRole;
+use App\Modules\Subledger\Domain\OpenItem;
 use App\Modules\Subledger\Domain\Party;
 use App\Modules\Subledger\Domain\PostingProfile;
 use App\Modules\Subledger\Domain\PostingProfileAccount;
@@ -19,9 +20,9 @@ final class EloquentControlAccounts implements ControlAccounts
 {
     public function __construct(private readonly ControlAccountRules $rules) {}
 
-    public function require(string $companyId, ControlRole $role, ?string $partyId = null, ?string $asOf = null): ControlAccount
+    public function require(string $companyId, ControlRole $role, ?string $partyId = null, ?string $asOf = null, ?string $postingProfileId = null): ControlAccount
     {
-        $profileId = $this->profileId($companyId, $partyId);
+        $profileId = $postingProfileId ?? $this->profileId($companyId, $partyId);
 
         if ($profileId === null) {
             throw $this->unmapped($role, __('posting_profiles.no_default'));
@@ -47,6 +48,31 @@ final class EloquentControlAccounts implements ControlAccounts
         }
 
         return new ControlAccount($role, $mapping->account_id, $profileId, $mapping->version);
+    }
+
+    /** @return list<string> */
+    public function profileProblems(string $companyId, string $postingProfileId, ControlRole $role): array
+    {
+        $exists = PostingProfile::query()->withoutGlobalScope(CompanyScope::class)
+            ->where('company_id', $companyId)->whereKey($postingProfileId)->exists();
+
+        if (! $exists) {
+            return [__('posting_profiles.unknown_profile')];
+        }
+
+        $mapped = PostingProfileAccount::query()->withoutGlobalScope(CompanyScope::class)
+            ->where('company_id', $companyId)->where('posting_profile_id', $postingProfileId)->where('control_role', $role->value)->exists();
+
+        return $mapped ? [] : [__('posting_profiles.role_unmapped', ['key' => $role->value])];
+    }
+
+    /**
+     * The profile that decides the control account of an open item: the one its route named, else the profile of
+     * its party, else the default.
+     */
+    public function profileOf(OpenItem $item): ?string
+    {
+        return $item->posting_profile_id ?? $this->profileId($item->company_id, $item->party_id);
     }
 
     private function profileId(string $companyId, ?string $partyId): ?string

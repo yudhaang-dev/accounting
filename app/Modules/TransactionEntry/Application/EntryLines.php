@@ -200,7 +200,9 @@ final class EntryLines
             throw ValidationException::withMessages(["values.{$field}" => [__('entries.field_party_unknown')]]);
         }
 
-        return $this->controlAccounts->require($companyId, SubledgerRoute::role($version->subledger_route ?? throw new LogicException('A control account rule needs the subledger route.')), $partyId, $accountingDate)->accountId;
+        $route = $version->subledger_route ?? throw new LogicException('A control account rule needs the subledger route.');
+
+        return $this->controlAccounts->require($companyId, SubledgerRoute::role($route), $partyId, $accountingDate, $route['posting_profile_id'])->accountId;
     }
 
     /**

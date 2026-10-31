@@ -134,6 +134,7 @@ final class EntryDocuments
             documentNumber: $this->value($values, $route['document_number_field']) ?? $entry->number,
             dueDate: $this->value($values, $route['due_date_field']),
             allocations: $this->allocations($values, $route['allocations_field']),
+            postingProfileId: $route['posting_profile_id'],
         );
     }
 

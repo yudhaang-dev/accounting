@@ -16,6 +16,7 @@ final readonly class SubledgerDocument
      * @param  string|null  $documentNumber  the number the source gave the document; the journal number when empty
      * @param  string|null  $dueDate  `YYYY-MM-DD`; the document date when empty
      * @param  list<array{open_item_id: string, amount: string}>  $allocations  open items the document settles when it is posted (SL-FR-05)
+     * @param  string|null  $postingProfileId  the profile whose control account the document posts to; the profile of the party when empty (SL-FR-02)
      * @param  PostJournal  $journal  posted with the source `subledger`, and with the entry as its idempotency key
      */
     public function __construct(
@@ -27,5 +28,6 @@ final readonly class SubledgerDocument
         public ?string $documentNumber = null,
         public ?string $dueDate = null,
         public array $allocations = [],
+        public ?string $postingProfileId = null,
     ) {}
 }

@@ -77,8 +77,8 @@ final class ManageAllocations
             }
 
             $errors = [
-                ...$this->allocator->problems($other, $one->party_id, $one->control_role, $one->side, $one->currency, $value),
-                ...$this->allocator->problems($one, $one->party_id, $one->control_role, $other->side, $one->currency, $value),
+                ...$this->allocator->problems($other, $one->party_id, $one->control_role, $one->side, $one->currency, $value, $this->allocator->profileOf($one)),
+                ...$this->allocator->problems($one, $one->party_id, $one->control_role, $other->side, $one->currency, $value, $this->allocator->profileOf($other)),
             ];
 
             if ($date < $one->document_date->toDateString() || $date < $other->document_date->toDateString()) {
@@ -173,7 +173,7 @@ final class ManageAllocations
      */
     private function book(OpenItem $item, string $date, BigDecimal $difference, ?int $userId, string $description, ?bool $gainAccount = null): string
     {
-        $control = $this->controlAccounts->require($item->company_id, $item->control_role, $item->party_id, $date);
+        $control = $this->controlAccounts->require($item->company_id, $item->control_role, $item->party_id, $date, $item->posting_profile_id);
         $lines = $this->differences->lines($item->company_id, $date, $control->accountId, $item->currency, (string) $item->exchange_rate, $difference, $gainAccount);
 
         return $this->posting->post(new PostJournal(

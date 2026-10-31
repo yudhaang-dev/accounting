@@ -27,6 +27,7 @@ return [
     'allocation_exceeds_document' => 'The open items settled exceed the amount of the document, :total.',
     'allocation_item_unknown' => 'The open item does not exist in this company.',
     'allocation_item_settled' => 'The open item :number is settled already.',
+    'allocation_item_profile' => 'The open item :number stands on another posting profile, so it cannot be settled here.',
     'allocation_item_party' => 'The open item :number belongs to another party or control account.',
     'allocation_item_side' => 'The open item :number is on the same side; only opposite sides settle each other.',
     'allocation_item_currency' => 'The open item :number is in :currency, not in the currency of the document.',

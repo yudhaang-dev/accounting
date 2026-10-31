@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property DocumentKind $kind
  * @property ControlRole $control_role
  * @property string $party_id
+ * @property string|null $posting_profile_id the profile the route named; empty when the party's profile applies (SL-FR-02)
  * @property string|null $cash_account_id
  * @property string $journal_id
  * @property string|null $entry_id
@@ -44,7 +45,7 @@ class Document extends CompanyScopedModel
     protected $fillable = [
         'kind', 'control_role', 'party_id', 'cash_account_id', 'journal_id', 'entry_id', 'document_number', 'document_date', 'due_date',
         'accounting_date', 'currency', 'amount', 'functional_amount', 'exchange_rate', 'description', 'created_by',
-        'is_opening', 'control_account_id',
+        'is_opening', 'control_account_id', 'posting_profile_id',
     ];
 
     protected function casts(): array

@@ -14,7 +14,10 @@ use App\Modules\Subledger\Contracts\DocumentKind;
  * The kind `transfer` is no document: the entry moves cash from the cash account of one field to the one of
  * another, each in its own currency, and has no party and no control account.
  *
- * @phpstan-type Route array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null}
+ * `posting_profile_id` names the posting profile whose control account the entries of the version post to; empty
+ * means the profile of the party (SL-FR-02).
+ *
+ * @phpstan-type Route array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null, posting_profile_id: string|null}
  */
 final class SubledgerRoute
 {
@@ -37,6 +40,7 @@ final class SubledgerRoute
             'cash_account_field' => self::optional($input['cash_account_field'] ?? null),
             'allocations_field' => self::optional($input['allocations_field'] ?? null),
             'counterpart_cash_account_field' => self::optional($input['counterpart_cash_account_field'] ?? null),
+            'posting_profile_id' => self::optional($input['posting_profile_id'] ?? null),
         ];
     }
 

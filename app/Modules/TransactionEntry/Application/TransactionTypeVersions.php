@@ -5,6 +5,7 @@ namespace App\Modules\TransactionEntry\Application;
 use App\Modules\GeneralLedger\Contracts\AccountDirectory;
 use App\Modules\MasterData\Contracts\Currencies;
 use App\Modules\MasterData\Contracts\DimensionSets;
+use App\Modules\Subledger\Contracts\ControlAccounts;
 use App\Modules\Subledger\Contracts\ControlRole;
 use App\Modules\Subledger\Contracts\DocumentKind;
 use App\Modules\TransactionEntry\Domain\FieldType;
@@ -37,6 +38,7 @@ final class TransactionTypeVersions
         private readonly AccountDirectory $accounts,
         private readonly DimensionSets $dimensions,
         private readonly Currencies $currencies,
+        private readonly ControlAccounts $controlAccounts,
     ) {}
 
     /**
@@ -333,7 +335,7 @@ final class TransactionTypeVersions
      * @param  list<FieldDefinition>|null  $fields
      * @param  list<RuleLine>|null  $rules
      * @param  array<string, mixed>|null  $route
-     * @return array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null}|null
+     * @return array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null, posting_profile_id: string|null}|null
      *
      * @throws ValidationException
      */
@@ -381,6 +383,10 @@ final class TransactionTypeVersions
             $errors['subledger_route.control_role'] = [__('entries.route_role_unknown')];
         }
 
+        if ($role !== null && $stored['posting_profile_id'] !== null && ($problems = $this->controlAccounts->profileProblems($this->company->require(), $stored['posting_profile_id'], $role)) !== []) {
+            $errors['subledger_route.posting_profile_id'] = $problems;
+        }
+
         if ($stored['party_field'] === '') {
             $errors['subledger_route.party_field'] = [__('entries.route_party_field_required')];
         }
@@ -422,10 +428,10 @@ final class TransactionTypeVersions
      * The route of a transfer between cash accounts: two cash account fields, the one the cash leaves,
      * credited, and the one it enters, debited. A transfer has no party, no document and no control account.
      *
-     * @param  array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null}  $stored
+     * @param  array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null, posting_profile_id: string|null}  $stored
      * @param  list<FieldDefinition>|null  $fields
      * @param  list<RuleLine>|null  $rules
-     * @return array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null}
+     * @return array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null, posting_profile_id: string|null}
      *
      * @throws ValidationException
      */
@@ -460,6 +466,10 @@ final class TransactionTypeVersions
 
         if ($stored['control_role'] !== '') {
             $errors['subledger_route.control_role'] = [__('entries.route_transfer_field_not_allowed', ['field' => $stored['control_role']])];
+        }
+
+        if ($stored['posting_profile_id'] !== null) {
+            $errors['subledger_route.posting_profile_id'] = [__('entries.route_transfer_field_not_allowed', ['field' => $stored['posting_profile_id']])];
         }
 
         $out = 0;
@@ -504,7 +514,7 @@ final class TransactionTypeVersions
 
     /**
      * @param  list<RuleLine>  $rules
-     * @param  array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null}  $route
+     * @param  array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null, posting_profile_id: string|null}  $route
      * @param  'debit'|'credit'  $controlSide
      * @return array<string, list<string>>
      */

@@ -27,6 +27,7 @@ return [
     'allocation_exceeds_document' => 'Open item yang dilunasi melebihi nilai dokumen, :total.',
     'allocation_item_unknown' => 'Open item tidak ada di perusahaan ini.',
     'allocation_item_settled' => 'Open item :number sudah lunas.',
+    'allocation_item_profile' => 'Open item :number memakai profil posting lain sehingga tidak dapat dilunasi di sini.',
     'allocation_item_party' => 'Open item :number milik pihak atau akun kontrol lain.',
     'allocation_item_side' => 'Open item :number berada di sisi yang sama; hanya sisi berlawanan yang saling melunasi.',
     'allocation_item_currency' => 'Open item :number bermata uang :currency, bukan mata uang dokumen.',

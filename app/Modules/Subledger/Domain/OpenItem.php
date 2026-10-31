@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string $document_id
  * @property string $party_id
  * @property ControlRole $control_role
+ * @property string|null $posting_profile_id the profile the route named; empty when the party's profile applies (SL-FR-02)
  * @property DocumentKind $kind
  * @property string $side `debit` or `credit`
  * @property string $document_number
@@ -42,7 +43,7 @@ class OpenItem extends CompanyScopedModel
     protected $attributes = ['status' => 'open'];
 
     protected $fillable = [
-        'document_id', 'party_id', 'control_role', 'kind', 'side', 'document_number', 'document_date', 'due_date', 'currency',
+        'document_id', 'party_id', 'control_role', 'posting_profile_id', 'kind', 'side', 'document_number', 'document_date', 'due_date', 'currency',
         'original_amount', 'remaining_amount', 'original_functional', 'remaining_functional', 'exchange_rate', 'status',
     ];
 

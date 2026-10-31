@@ -239,7 +239,7 @@ final class RevalueOpenItems
 
         foreach ($adjustments as $row) {
             $item = $row['item'];
-            $account = $this->controlAccounts->require($companyId, $item->control_role, $item->party_id, $end)->accountId;
+            $account = $this->controlAccounts->require($companyId, $item->control_role, $item->party_id, $end, $item->posting_profile_id)->accountId;
             $key = "{$account}|{$item->currency}";
             // A debit side item worth more is a debit; a credit side one worth more is a credit.
             $effect = $item->side === 'debit' ? $row['adjustment'] : $row['adjustment']->negated();

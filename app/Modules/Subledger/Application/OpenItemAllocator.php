@@ -18,16 +18,23 @@ use Brick\Math\RoundingMode;
  */
 final class OpenItemAllocator
 {
-    public function __construct(private readonly Audit $audit) {}
+    public function __construct(private readonly Audit $audit, private readonly EloquentControlAccounts $controlAccounts) {}
+
+    /** The posting profile whose control account the open item stands on. */
+    public function profileOf(OpenItem $item): ?string
+    {
+        return $this->controlAccounts->profileOf($item);
+    }
 
     /**
      * Why an open item cannot be settled by a document or item of the party, control role, side and
      * currency given, for that amount; empty when it can.
      *
      * @param  string  $side  `debit` or `credit`, the side of the document or item that settles it; the open item must be on the other
+     * @param  string|null  $profileId  the posting profile the settling document or item stands on; the open item must stand on the same one, since each profile has its own control account
      * @return list<string>
      */
-    public function problems(?OpenItem $item, string $partyId, ControlRole $role, string $side, string $currency, BigDecimal $amount): array
+    public function problems(?OpenItem $item, string $partyId, ControlRole $role, string $side, string $currency, BigDecimal $amount, ?string $profileId = null): array
     {
         if ($item === null) {
             return [__('documents.allocation_item_unknown')];
@@ -44,6 +51,10 @@ final class OpenItemAllocator
 
         if ($item->party_id !== $partyId || $item->control_role !== $role) {
             $problems[] = __('documents.allocation_item_party', ['number' => $number]);
+        }
+
+        if ($profileId !== null && $this->profileOf($item) !== $profileId) {
+            $problems[] = __('documents.allocation_item_profile', ['number' => $number]);
         }
 
         if ($item->side === $side) {
