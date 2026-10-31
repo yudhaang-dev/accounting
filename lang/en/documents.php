@@ -20,6 +20,7 @@ return [
     'stray_cash_line' => 'Account :account belongs to a cash account; only a document that moves its cash can post to it.',
     'transfer_same_account' => 'A transfer needs two different cash accounts.',
     'transfer_line_side' => 'A transfer posts to the cash account :name on the :side side.',
+    'cash_entry_line_sides' => 'The lines to the cash account :name must all be debits (cash in) or all credits (cash out).',
     'allocations_required' => 'A document of the kind :kind must settle open items for its full amount.',
     'allocations_not_allowed' => 'A document of the kind :kind does not settle open items.',
     'allocation_repeated' => 'An open item can be named only once.',

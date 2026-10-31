@@ -45,6 +45,22 @@ interface SubledgerPosting
     public function postTransfer(CashTransfer $transfer): PostedJournal;
 
     /**
+     * Checks what posting cash without a party will check (SL-FR-11): the cash account exists and is active,
+     * the journal's lines to its account all stand on one side and in its currency, and it touches no
+     * control account and no other cash account; then the journal itself. Nothing is stored.
+     *
+     * Fails with a validation error keyed `cash_account_id` or `lines`, or with any error of the ledger.
+     */
+    public function validateCashEntry(CashEntry $entry): void;
+
+    /**
+     * Posts the journal of a cash entry and records its cash, in when the lines to the cash account debit
+     * it and out when they credit it. Posting the same entry again returns its journal and records nothing
+     * more.
+     */
+    public function postCashEntry(CashEntry $entry): PostedJournal;
+
+    /**
      * Checks what reversing the journal of a document will check (SL-FR-12): the ledger's own rules for a
      * reversal, that the journal is one a document was posted with, and that the document has no active
      * allocation. Nothing is stored.

@@ -20,6 +20,7 @@ return [
     'stray_cash_line' => 'Akun :account milik sebuah rekening kas; hanya dokumen yang menggerakkan kasnya yang dapat memposting ke sana.',
     'transfer_same_account' => 'Transfer memerlukan dua rekening kas yang berbeda.',
     'transfer_line_side' => 'Transfer diposting ke rekening kas :name di sisi :side.',
+    'cash_entry_line_sides' => 'Baris ke rekening kas :name harus semuanya debit (kas masuk) atau semuanya kredit (kas keluar).',
     'allocations_required' => 'Dokumen berjenis :kind harus melunasi open item sebesar nilai penuhnya.',
     'allocations_not_allowed' => 'Dokumen berjenis :kind tidak melunasi open item.',
     'allocation_repeated' => 'Satu open item hanya boleh disebut sekali.',

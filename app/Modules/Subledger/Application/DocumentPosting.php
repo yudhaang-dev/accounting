@@ -17,6 +17,7 @@ use App\Modules\MasterData\Contracts\CurrencyRounding;
 use App\Modules\MasterData\Contracts\ExchangeRates;
 use App\Modules\Subledger\Contracts\CashAccountData;
 use App\Modules\Subledger\Contracts\CashAccountDirectory;
+use App\Modules\Subledger\Contracts\CashEntry;
 use App\Modules\Subledger\Contracts\CashTransfer;
 use App\Modules\Subledger\Contracts\ControlAccount;
 use App\Modules\Subledger\Contracts\ControlAccounts;
@@ -67,6 +68,7 @@ final class DocumentPosting implements SubledgerPosting
         private readonly Currencies $currencies,
         private readonly ExchangeRates $rates,
         private readonly CashTransferPosting $transfers,
+        private readonly CashEntryPosting $cashEntries,
         private readonly DocumentReversals $reversals,
     ) {}
 
@@ -86,6 +88,16 @@ final class DocumentPosting implements SubledgerPosting
     public function postTransfer(CashTransfer $transfer): PostedJournal
     {
         return $this->transfers->post($transfer);
+    }
+
+    public function validateCashEntry(CashEntry $entry): void
+    {
+        $this->cashEntries->validate($entry);
+    }
+
+    public function postCashEntry(CashEntry $entry): PostedJournal
+    {
+        return $this->cashEntries->post($entry);
     }
 
     public function validateReversal(ReverseJournal $reversal): void
