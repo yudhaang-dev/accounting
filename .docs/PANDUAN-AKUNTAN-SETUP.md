@@ -307,7 +307,7 @@ Gunakan data uji, atau periode yang akan dibatalkan:
 
 > **Uang muka pelanggan.** Pembayaran lewat jenis penerimaan mencatat kas di debit dan akun kontrol piutang di kredit, sehingga uang muka berupa saldo kredit pada akun piutang. Putuskan apakah penyajian neraca cukup, atau Anda perlu jenis tersendiri yang mencatat uang muka ke akun kewajiban dan menerapkannya manual ke faktur.
 
-> **Biaya tunai tanpa pihak** belum tersedia sebagai jenis siap pakai, karena rute subledger mewajibkan pihak dan akun kas hanya menerima sumber Subledger. Sediakan prosedur pengganti bagi admin.
+> **Kas tanpa pihak** (biaya tunai, setoran modal tunai, bunga bank) dirancang dengan rute *Kas tanpa pihak*: satu field rekening kas, tepat satu aturan bersumber rekening kas yang sisinya menentukan arah, dan tanpa field pihak. Akun lain pada jurnalnya harus menerima sumber Subledger; akun biaya yang dibatasi hanya ke sumber Entri akan menolak jenis ini, dengan pesan yang menyebut akunnya.
 
 ### Setelah berjalan
 

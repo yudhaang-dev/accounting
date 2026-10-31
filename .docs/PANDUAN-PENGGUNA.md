@@ -574,7 +574,6 @@ Pesan "diubah di tempat lain" muncul karena setiap data punya nomor versi; siste
 ## 14. Batasan yang perlu diketahui
 
 - **Pembayaran ke rekening beda mata uang.** Jenis yang memakai satu jumlah untuk faktur dan rekening (*Terima Pembayaran Pelanggan*, *Bayar Pemasok*) menolak saat **Ajukan** bila mata uang entri berbeda dari mata uang rekening. Untuk kasus itu pakai *Terima Pembayaran, Rekening Beda Mata Uang* atau *Bayar Pemasok, Rekening Beda Mata Uang*: Anda mengisi dua jumlah, yang melunasi faktur dan yang masuk atau keluar di rekening. Kurs rekening diambil dari tabel kurs. Selisih antara keduanya masuk ke akun selisih kurs. Transfer antar rekening beda mata uang juga didukung.
-- **Biaya tunai tanpa pihak** belum tersedia sebagai jenis siap pakai. Rute subledger mewajibkan pihak dan akun kas hanya menerima sumber Subledger. Catat lewat Tagihan Pemasok lalu Bayar Pemasok, atau minta akuntan merancang jenis yang sesuai.
 - **Uang muka pelanggan** tercatat sebagai saldo kredit akun piutang (lihat 6.4).
 - **Kalender fiskal** di wizard hanya bulanan. Pola lain dibuat lewat API.
 - **2FA** diperiksa sebagai "terpasang di akun", bukan sebagai tantangan ulang per sesi.
