@@ -30571,7 +30571,7 @@
                         "type": "string"
                     },
                     "lock_version": {
-                        "type": "string"
+                        "type": "integer"
                     }
                 },
                 "required": [

@@ -5353,7 +5353,7 @@ export interface components {
             key: string;
             label: string;
             status: string;
-            lock_version: string;
+            lock_version: number;
         };
         /**
          * PartyStatus

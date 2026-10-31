@@ -759,6 +759,53 @@ describe('version designer', () => {
             });
         });
 
+        it('saves a cash route with no party, control account, or profile', async () => {
+            const api = open();
+
+            renderApp(designer(sales.id));
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('combobox', { name: 'Jenis dokumen' }),
+            );
+            await typist.click(
+                await screen.findByRole('option', { name: 'Kas tanpa pihak' }),
+            );
+
+            expect(
+                screen.queryByRole('combobox', { name: 'Field pihak' }),
+            ).not.toBeInTheDocument();
+            expect(
+                screen.queryByRole('combobox', { name: 'Profil posting' }),
+            ).not.toBeInTheDocument();
+
+            await typist.click(
+                await screen.findByRole('combobox', {
+                    name: 'Field rekening kas/bank',
+                }),
+            );
+            await typist.click(
+                await screen.findByRole('option', { name: 'Rekening bank' }),
+            );
+            await typist.click(
+                screen.getByRole('button', { name: 'Simpan draf' }),
+            );
+
+            await waitFor(() => expect(api.called(save)).toHaveLength(1));
+            expect(api.called(save)[0]?.body).toMatchObject({
+                subledger_route: {
+                    kind: 'cash',
+                    control_role: null,
+                    party_field: null,
+                    cash_account_field: 'bank',
+                    due_date_field: null,
+                    allocations_field: null,
+                    counterpart_cash_account_field: null,
+                    posting_profile_id: null,
+                },
+            });
+        });
+
         it('limits a party field to the roles checked, and leaves it open when none is', async () => {
             const api = open();
 

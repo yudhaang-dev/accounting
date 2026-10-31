@@ -1985,6 +1985,7 @@ export const id = {
                     write_off: 'Penghapusan',
                     loan: 'Pinjaman atau kasbon',
                     transfer: 'Transfer antar rekening kas',
+                    cash: 'Kas tanpa pihak',
                 },
                 role: 'Akun kontrol',
                 postingProfile: 'Profil posting',
@@ -2005,6 +2006,8 @@ export const id = {
                 },
                 none: 'Tidak dipakai',
                 chooseField: 'Pilih field',
+                cashHint:
+                    'Entri kas hanya mencatat pergerakan kas, tanpa pihak, akun kontrol, atau open item. Debit ke field rekening kas berarti kas masuk; kredit berarti kas keluar. Field nomor dokumen, bila dipilih, menjadi referensi transaksi kas.',
                 transferHint:
                     'Kas keluar dari rekening pada field pertama dan masuk ke rekening pada field kedua, masing-masing dalam mata uangnya.',
                 loanHint:

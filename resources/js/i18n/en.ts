@@ -1990,6 +1990,7 @@ export const en: Widen<typeof id> = {
                     write_off: 'Write-off',
                     loan: 'Loan or staff advance',
                     transfer: 'Transfer between cash accounts',
+                    cash: 'Cash without a party',
                 },
                 role: 'Control account',
                 postingProfile: 'Posting profile',
@@ -2011,6 +2012,8 @@ export const en: Widen<typeof id> = {
                 },
                 none: 'Not used',
                 chooseField: 'Choose a field',
+                cashHint:
+                    'A cash entry records only the movement of cash, with no party, control account or open item. A debit to the cash account field is cash in; a credit is cash out. The document number field, when chosen, is the reference of the cash transaction.',
                 transferHint:
                     'Cash leaves the account in the first field and enters the account in the second, each in its own currency.',
                 loanHint:

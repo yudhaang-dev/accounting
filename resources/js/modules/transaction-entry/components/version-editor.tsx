@@ -101,7 +101,7 @@ type Values = {
     subledger_route: RouteRow | null;
 };
 
-/** The kinds a route can record; `transfer` moves cash between two cash accounts and is no document (TE-FR-10). */
+/** The kinds a route can record; `transfer` and `cash` move cash and are no document (TE-FR-10, ADR-0016). */
 export const ROUTE_KINDS = [
     'invoice',
     'credit_note',
@@ -110,12 +110,13 @@ export const ROUTE_KINDS = [
     'write_off',
     'loan',
     'transfer',
+    'cash',
 ] as const;
 
 const ROUTE_ROLES = ['receivables_control', 'payables_control'] as const;
 
 /** What a kind of document does, which decides the fields of the route it can use (SL-FR-04, SL-FR-11). */
-const MOVES_CASH = ['payment', 'advance', 'loan'];
+const MOVES_CASH = ['payment', 'advance', 'loan', 'cash'];
 const ALLOCATES = ['credit_note', 'payment', 'write_off'];
 
 const blankRoute = (): RouteRow => ({
@@ -231,15 +232,16 @@ export function valuesOfVersion(version: TypeVersion): Values {
  */
 function routeInputOf(route: RouteRow): SubledgerRoute {
     const transfer = route.kind === 'transfer';
+    const noParty = transfer || route.kind === 'cash';
     const optional = (value: string, used: boolean) =>
         used && value !== '' ? value : null;
 
     return {
         kind: route.kind,
-        control_role: transfer ? null : route.control_role,
-        party_field: transfer ? null : route.party_field,
+        control_role: noParty ? null : route.control_role,
+        party_field: noParty ? null : route.party_field,
         document_number_field: optional(route.document_number_field, !transfer),
-        due_date_field: optional(route.due_date_field, !transfer),
+        due_date_field: optional(route.due_date_field, !noParty),
         cash_account_field: optional(
             route.cash_account_field,
             transfer || MOVES_CASH.includes(route.kind),
@@ -252,7 +254,7 @@ function routeInputOf(route: RouteRow): SubledgerRoute {
             route.allocations_field,
             ALLOCATES.includes(route.kind),
         ),
-        posting_profile_id: optional(route.posting_profile_id, !transfer),
+        posting_profile_id: optional(route.posting_profile_id, !noParty),
     };
 }
 
@@ -783,6 +785,7 @@ function RouteEditor({ companyId }: { companyId: string }) {
         label: t(`transactionTypes.designer.route.roles.${value}`),
     }));
     const transfer = route?.kind === 'transfer';
+    const noParty = transfer || route?.kind === 'cash';
     const picker = (
         key: Exclude<
             keyof RouteRow,
@@ -888,7 +891,7 @@ function RouteEditor({ companyId }: { companyId: string }) {
                                 </Field>
                             )}
                         />
-                        {!transfer && (
+                        {!noParty && (
                             <Controller
                                 control={control}
                                 name="subledger_route.control_role"
@@ -911,7 +914,7 @@ function RouteEditor({ companyId }: { companyId: string }) {
                                 )}
                             />
                         )}
-                        {!transfer && (
+                        {!noParty && (
                             <Controller
                                 control={control}
                                 name="subledger_route.posting_profile_id"
@@ -982,10 +985,10 @@ function RouteEditor({ companyId }: { companyId: string }) {
                                 )}
                             />
                         )}
-                        {!transfer && picker('party_field', 'party', true)}
+                        {!noParty && picker('party_field', 'party', true)}
                         {!transfer &&
                             picker('document_number_field', 'reference', false)}
-                        {!transfer && picker('due_date_field', 'date', false)}
+                        {!noParty && picker('due_date_field', 'date', false)}
                         {(transfer || MOVES_CASH.includes(route.kind)) &&
                             picker('cash_account_field', 'cash_account', true)}
                         {transfer &&
@@ -1004,6 +1007,11 @@ function RouteEditor({ companyId }: { companyId: string }) {
                     {transfer && (
                         <p className="text-sm text-muted-foreground">
                             {t('transactionTypes.designer.route.transferHint')}
+                        </p>
+                    )}
+                    {route.kind === 'cash' && (
+                        <p className="text-sm text-muted-foreground">
+                            {t('transactionTypes.designer.route.cashHint')}
                         </p>
                     )}
                     {route.kind === 'loan' && (
