@@ -14,6 +14,10 @@ use App\Modules\Subledger\Contracts\DocumentKind;
  * The kind `transfer` is no document: the entry moves cash from the cash account of one field to the one of
  * another, each in its own currency, and has no party and no control account.
  *
+ * The kind `cash` ("cash without a party", ADR-0016) is no document either: the entry moves cash in or out of the
+ * cash account of one field, and `document_number_field`, when given, is the reference of the cash transaction.
+ * It has no party, no control account and no open item.
+ *
  * `posting_profile_id` names the posting profile whose control account the entries of the version post to; empty
  * means the profile of the party (SL-FR-02).
  *
@@ -22,6 +26,8 @@ use App\Modules\Subledger\Contracts\DocumentKind;
 final class SubledgerRoute
 {
     public const TRANSFER = 'transfer';
+
+    public const CASH = 'cash';
 
     /**
      * The shape that is stored, with every key present.
@@ -48,6 +54,12 @@ final class SubledgerRoute
     public static function isTransfer(?array $route): bool
     {
         return $route !== null && $route['kind'] === self::TRANSFER;
+    }
+
+    /** @param  Route|null  $route */
+    public static function isCash(?array $route): bool
+    {
+        return $route !== null && $route['kind'] === self::CASH;
     }
 
     /** @param  Route  $route */

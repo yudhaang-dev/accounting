@@ -369,6 +369,10 @@ final class TransactionTypeVersions
             return $this->checkedTransferRoute($stored, $fields, $rules);
         }
 
+        if ($stored['kind'] === SubledgerRoute::CASH) {
+            return $this->checkedCashRoute($stored, $fields, $rules);
+        }
+
         $kind = DocumentKind::tryFrom($stored['kind']);
         $role = ControlRole::tryFrom($stored['control_role']);
         $typeOf = [];
@@ -505,6 +509,74 @@ final class TransactionTypeVersions
 
         if ($errors === [] && ($out === 0 || $in === 0)) {
             $errors['subledger_route'] = [__('entries.route_transfer_rule_required')];
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $stored;
+    }
+
+    /**
+     * The route of cash without a party (ADR-0016): one cash account field and, optionally, the field of the
+     * reference of the cash transaction, with exactly one rule that posts to that cash account on either side.
+     * Nothing else of a document: no party, control account, due date, allocations, or posting profile.
+     *
+     * @param  array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null, posting_profile_id: string|null}  $stored
+     * @param  list<FieldDefinition>|null  $fields
+     * @param  list<RuleLine>|null  $rules
+     * @return array{kind: string, control_role: string, party_field: string, document_number_field: string|null, due_date_field: string|null, cash_account_field: string|null, allocations_field: string|null, counterpart_cash_account_field: string|null, posting_profile_id: string|null}
+     *
+     * @throws ValidationException
+     */
+    private function checkedCashRoute(array $stored, ?array $fields, ?array $rules): array
+    {
+        $typeOf = [];
+        $errors = [];
+
+        foreach ($fields ?? [] as $field) {
+            $typeOf[$field['name']] = $field['type'];
+        }
+
+        foreach (SubledgerRoute::fields($stored) as $used) {
+            if (in_array($used['key'], ['cash_account_field', 'document_number_field'], true)) {
+                if (($typeOf[$used['name']] ?? null) !== $used['type']->value) {
+                    $errors["subledger_route.{$used['key']}"] = [__('entries.route_field_type', ['field' => $used['name'], 'type' => $used['type']->value])];
+                }
+            } else {
+                $errors["subledger_route.{$used['key']}"] = [__('entries.route_cash_only_field_not_allowed', ['field' => $used['name']])];
+            }
+        }
+
+        if ($stored['cash_account_field'] === null) {
+            $errors['subledger_route.cash_account_field'] = [__('entries.route_cash_field_required', ['kind' => SubledgerRoute::CASH])];
+        }
+
+        foreach (['control_role', 'posting_profile_id'] as $key) {
+            if ($stored[$key] !== '' && $stored[$key] !== null) {
+                $errors["subledger_route.{$key}"] = [__('entries.route_cash_only_field_not_allowed', ['field' => $stored[$key]])];
+            }
+        }
+
+        $cash = 0;
+
+        foreach ($rules ?? [] as $index => $rule) {
+            $source = $rule['account']['source'] ?? null;
+
+            if ($source === PostingRules::CONTROL_ACCOUNT) {
+                $errors["posting_rules.{$index}.account"] = [__('entries.rule_control_cash_only')];
+            } elseif ($source === PostingRules::CASH_ACCOUNT) {
+                $cash++;
+
+                if (($rule['account']['field'] ?? null) !== $stored['cash_account_field']) {
+                    $errors["posting_rules.{$index}.account.field"] = [__('entries.rule_cash_only_field')];
+                }
+            }
+        }
+
+        if ($errors === [] && $cash !== 1) {
+            $errors['subledger_route'] = [__('entries.route_cash_only_rule_required')];
         }
 
         if ($errors !== []) {

@@ -9,6 +9,7 @@ use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostingValidator;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\GeneralLedger\Contracts\ReverseJournal;
+use App\Modules\Subledger\Contracts\CashEntry;
 use App\Modules\Subledger\Contracts\CashTransfer;
 use App\Modules\Subledger\Contracts\SubledgerDocument;
 use App\Modules\Subledger\Contracts\SubledgerPosting;
@@ -56,9 +57,11 @@ final class EntryDocuments
     public function validate(Entry $entry, array $route, PostJournal $journal): void
     {
         try {
-            SubledgerRoute::isTransfer($route)
-                ? $this->subledger->validateTransfer($this->transfer($entry, $route, $journal))
-                : $this->subledger->validate($this->document($entry, $route, $journal));
+            match (true) {
+                SubledgerRoute::isTransfer($route) => $this->subledger->validateTransfer($this->transfer($entry, $route, $journal)),
+                SubledgerRoute::isCash($route) => $this->subledger->validateCashEntry($this->cashEntry($entry, $route, $journal)),
+                default => $this->subledger->validate($this->document($entry, $route, $journal)),
+            };
         } catch (ValidationException $e) {
             throw $this->onFields($e, $route);
         }
@@ -100,9 +103,11 @@ final class EntryDocuments
     public function post(Entry $entry, array $route, PostJournal $journal): PostedJournal
     {
         try {
-            return SubledgerRoute::isTransfer($route)
-                ? $this->subledger->postTransfer($this->transfer($entry, $route, $journal))
-                : $this->subledger->post($this->document($entry, $route, $journal))->journal;
+            return match (true) {
+                SubledgerRoute::isTransfer($route) => $this->subledger->postTransfer($this->transfer($entry, $route, $journal)),
+                SubledgerRoute::isCash($route) => $this->subledger->postCashEntry($this->cashEntry($entry, $route, $journal)),
+                default => $this->subledger->post($this->document($entry, $route, $journal))->journal,
+            };
         } catch (ValidationException $e) {
             throw $this->onFields($e, $route);
         }
@@ -116,6 +121,16 @@ final class EntryDocuments
         $values = $entry->field_values ?? [];
 
         return new CashTransfer($journal, $this->value($values, $route['cash_account_field']) ?? '', $this->value($values, $route['counterpart_cash_account_field']) ?? '');
+    }
+
+    /**
+     * @param  Route  $route
+     */
+    private function cashEntry(Entry $entry, array $route, PostJournal $journal): CashEntry
+    {
+        $values = $entry->field_values ?? [];
+
+        return new CashEntry($journal, $this->value($values, $route['cash_account_field']) ?? '', $this->value($values, $route['document_number_field']));
     }
 
     /**
