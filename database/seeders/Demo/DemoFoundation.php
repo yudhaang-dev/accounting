@@ -315,9 +315,10 @@ final class DemoFoundation
 
     private function parties(): void
     {
-        $this->say('Pelanggan dan pemasok');
+        $this->say('Peran pihak, pelanggan, dan pemasok');
 
         $this->api->as($this->users['accountant']);
+        $this->api->post($this->url('/party-roles/import-template'), ['confirmed' => true, 'keys' => ['customer', 'supplier', 'employee', 'lender', 'shareholder']]);
 
         foreach ([
             'rsud' => ['RSUD Harapan Sehat', '01.100.200.3-011.000'],
@@ -330,7 +331,7 @@ final class DemoFoundation
             'dinkes' => ['Dinas Kesehatan Kota', null],
         ] as $key => [$name, $tax]) {
             $this->customers[$key] = $this->api->post($this->url('/parties'), array_filter([
-                'name' => $name, 'is_customer' => true, 'tax_id' => $tax,
+                'name' => $name, 'roles' => ['customer'], 'tax_id' => $tax,
                 'external_refs' => [['source_system' => 'erp', 'external_ref' => 'C-'.(100 + count($this->customers))]],
             ]))['data']['id'];
         }
@@ -352,7 +353,7 @@ final class DemoFoundation
             'saham' => ['Pemegang Saham (dividen)', null],
         ] as $key => [$name, $tax]) {
             $this->suppliers[$key] = $this->api->post($this->url('/parties'), array_filter([
-                'name' => $name, 'is_supplier' => true, 'tax_id' => $tax,
+                'name' => $name, 'roles' => $key === 'saham' ? ['supplier', 'shareholder'] : ['supplier'], 'tax_id' => $tax,
                 'external_refs' => [['source_system' => 'erp', 'external_ref' => 'S-'.(100 + count($this->suppliers))]],
             ]))['data']['id'];
         }

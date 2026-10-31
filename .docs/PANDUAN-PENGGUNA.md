@@ -220,6 +220,11 @@ Tanggal akuntansi harus berada di periode **Terbuka**. Periode yang ditutup meno
 | Tagihan Pemasok | Pemasok, nomor tagihan, jatuh tempo, total, akun biaya atau persediaan | Biaya (D) / Utang (K) |
 | Bayar Pemasok | Pemasok, rekening, nomor bukti, jumlah, tagihan yang dilunasi | Utang (D) / Kas atau bank (K) |
 | Kasbon atau Pinjaman ke Pihak | Penerima, rekening, nomor bukti, jatuh tempo pengembalian, jumlah | Piutang pihak (D) / Kas atau bank (K) |
+| Kasbon Karyawan | Karyawan, rekening, nomor bukti, jatuh tempo pengembalian, jumlah | Piutang karyawan (D) / Kas atau bank (K) |
+| Pengembalian Kasbon Karyawan | Karyawan, rekening, nomor bukti, jumlah, kasbon yang dilunasi | Kas atau bank (D) / Piutang karyawan (K) |
+| Modal Ditempatkan, Belum Disetor | Pemegang saham, nomor bukti, jatuh tempo, jumlah, akun modal | Piutang pemegang saham (D) / Modal (K) |
+| Setoran Modal Pemegang Saham | Pemegang saham, rekening, nomor bukti, jumlah, modal yang dilunasi | Kas atau bank (D) / Piutang pemegang saham (K) |
+| Bayar Pinjaman | Pemberi pinjaman, rekening, nomor bukti, jumlah, pinjaman yang dilunasi | Utang pihak (D) / Kas atau bank (K) |
 | Pinjaman Diterima | Pemberi pinjaman, rekening, nomor perjanjian, jatuh tempo pelunasan, jumlah | Kas atau bank (D) / Utang pihak (K) |
 | Transfer Antar Kas atau Bank | Dari rekening, ke rekening, jumlah keluar, jumlah masuk | Rekening tujuan (D) / Rekening asal (K) |
 | Ringkasan Payroll | Tanggal, gaji bruto, akun beban gaji, akun utang gaji | Beban gaji (D) / Utang gaji (K) |
@@ -275,7 +280,9 @@ Bagian ini mencakup menu kelompok **Subledger**.
 
 ### 6.1 Pihak dan profil posting
 
-**Pihak** (*Subledger → Pihak*) adalah pelanggan dan pemasok. Klik **Tambah pihak**, isi nama, pilih peran (Pelanggan, Pemasok, atau keduanya), dan NPWP bila ada. Pihak dengan **referensi eksternal** bisa dikenali oleh sistem lain per sistem sumber; referensi yang sudah ditambahkan tidak bisa dihapus.
+**Peran pihak** (*Subledger → Peran pihak*) menyatakan siapa pihak itu bagi perusahaan: pelanggan, pemasok, karyawan, pemberi pinjaman, pemegang saham, atau peran buatan sendiri. Akuntan mengimpor peran bawaan setelah membaca dan mengonfirmasinya. Peran tidak menentukan piutang atau utang; itu urusan profil posting.
+
+**Pihak** (*Subledger → Pihak*) adalah orang atau badan yang berurusan dengan perusahaan. Klik **Tambah pihak**, isi nama, centang peran (satu pihak boleh memegang beberapa peran, atau tidak ada), dan NPWP bila ada. Daftar bisa disaring menurut peran. Pihak dengan **referensi eksternal** bisa dikenali oleh sistem lain per sistem sumber; referensi yang sudah ditambahkan tidak bisa dihapus.
 
 **Profil posting** (*Subledger → Profil posting*) menentukan akun kontrol piutang dan utang bagi pihak yang memakainya. Profil pertama menjadi default dan melayani pihak tanpa profil.
 
@@ -444,7 +451,7 @@ Bagian ini untuk akuntan atau administrator pemegang izin kelola kebijakan.
 
 *Transaksi → Jenis transaksi* menampilkan semua jenis beserta mode, versi, dan pola nomor.
 
-- **Impor template** menyarankan jenis umum. Tinjau tiap jenis (field dan aturan posting), pilih yang Anda mau, centang pernyataan konfirmasi, lalu klik **Impor**. Template yang tersedia: *Jenis Transaksi umum* (Jurnal Umum, Jurnal Penyesuaian, Ringkasan Payroll, Penjualan Kredit) dan *Transaksi harian* (Terima Pembayaran Pelanggan, Tagihan Pemasok, Bayar Pemasok, Transfer Antar Kas atau Bank, serta Terima Pembayaran dan Bayar Pemasok untuk rekening beda mata uang). Jenis yang kuncinya sudah ada ditandai *Sudah ada*.
+- **Impor template** menyarankan jenis umum. Tinjau tiap jenis (field dan aturan posting), pilih yang Anda mau, centang pernyataan konfirmasi, lalu klik **Impor**. Template yang tersedia: *Jenis Transaksi umum* (Jurnal Umum, Jurnal Penyesuaian, Ringkasan Payroll, Penjualan Kredit) dan *Transaksi harian* (Terima Pembayaran Pelanggan, Tagihan Pemasok, Bayar Pemasok, Kasbon Karyawan, Pengembalian Kasbon Karyawan, Modal Ditempatkan Belum Disetor, Setoran Modal Pemegang Saham, Pinjaman Diterima, Bayar Pinjaman, Transfer Antar Kas atau Bank, serta Terima Pembayaran dan Bayar Pemasok untuk rekening beda mata uang). Field pihak pada jenis bawaan hanya menerima peran yang cocok, jadi peran yang disebutnya harus sudah ada; bila belum, impor ditolak dan menyebut perannya. Jenis yang kuncinya sudah ada ditandai *Sudah ada*.
 - **Jenis baru** membuat jenis baris bebas dengan versi pertama yang sudah terbit. Kunci (huruf kecil, angka, garis bawah) tidak bisa diubah setelah dibuat.
 - **Atur penomoran** menentukan pola nomor entri, misalnya `JU/{yyyy}/{mm}/{seq}`, lebar urutan, kapan urutan mulai dari 1 lagi, dan kapan nomor diberikan (saat entri dibuat atau saat diajukan). Memberi nomor saat diajukan menjaga urutan bebas dari draf yang tidak jadi dipakai.
 

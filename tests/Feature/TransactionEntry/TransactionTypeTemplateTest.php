@@ -31,7 +31,7 @@ function importTemplate(array $body, ?User $as = null)
 describe('transaction type templates (TE-FR-01, X-AC-03)', function () {
     it('lists the templates and shows the types of one for review without creating anything', function () {
         $this->actingAs($this->admin)->getJson("{$this->url}/transaction-type-templates")
-            ->assertOk()->assertJsonPath('data.0.key', 'daily-operations')->assertJsonPath('data.0.type_count', 8)
+            ->assertOk()->assertJsonPath('data.0.key', 'daily-operations')->assertJsonPath('data.0.type_count', 13)
             ->assertJsonPath('data.1.key', 'general')->assertJsonPath('data.1.type_count', 4);
 
         $this->actingAs($this->admin)->getJson("{$this->url}/transaction-type-templates/general")

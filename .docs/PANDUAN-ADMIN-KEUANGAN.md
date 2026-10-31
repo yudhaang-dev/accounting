@@ -98,10 +98,16 @@ Bila pelanggan membayar sebelum ada faktur, catat sebagai **Terima Pembayaran Pe
 
 ### Kasbon karyawan atau pinjaman
 
-- **Jenis:** Kasbon atau Pinjaman ke Pihak; untuk pinjaman yang diterima perusahaan, Pinjaman Diterima.
-- **Isi:** Penerima (atau pemberi pinjaman), rekening, nomor bukti, jatuh tempo pengembalian, jumlah.
-- **Hasil:** piutang pihak bertambah dan kas keluar dari rekening (pada pinjaman diterima, utang bertambah dan kas masuk).
-- Pengembalian dicatat dengan **Terima Pembayaran Pelanggan** yang menyebut kasbonnya di *Faktur yang dilunasi*. Penerima harus sudah terdaftar sebagai pihak; minta akuntan menambahkannya bila belum ada.
+- **Jenis:** Kasbon Karyawan; untuk pinjaman yang diterima perusahaan, Pinjaman Diterima.
+- **Isi:** Karyawan (atau pemberi pinjaman), rekening, nomor bukti, jatuh tempo pengembalian, jumlah.
+- **Hasil:** piutang karyawan bertambah dan kas keluar dari rekening (pada pinjaman diterima, utang bertambah dan kas masuk).
+- Pengembalian dicatat dengan **Pengembalian Kasbon Karyawan** yang menyebut kasbonnya di *Kasbon yang dilunasi*; pinjaman diterima dilunasi dengan **Bayar Pinjaman**.
+- Daftar pilihan hanya memuat pihak yang berperan sesuai (Karyawan untuk kasbon, Pemberi pinjaman untuk pinjaman). Bila orangnya tidak muncul, pihaknya belum terdaftar atau belum diberi perannya; minta akuntan menambahkannya.
+
+### Setoran modal pemegang saham
+
+- **Modal yang dijanjikan tetapi belum dibayar:** **Modal Ditempatkan, Belum Disetor**; isi pemegang saham, jumlah, dan akun modal. Piutang pemegang saham bertambah.
+- **Saat dibayar:** **Setoran Modal Pemegang Saham**, menyebut modal yang dilunasi di *Modal yang dilunasi*. Kas masuk dan piutang berkurang.
 
 ### Transfer antar kas atau bank
 
@@ -260,7 +266,7 @@ Bila meminta bantuan, sebutkan **nomor entri** dan **pesan yang tampil**. Keduan
 | Posting | Mengubah entri menjadi jurnal di buku besar |
 | Jurnal | Hasil posting; tidak bisa diubah |
 | Jenis Transaksi | Bentuk isian dan aturan pencatatan suatu transaksi |
-| Pihak | Pelanggan atau pemasok |
+| Pihak | Orang atau badan yang berurusan dengan perusahaan: pelanggan, pemasok, karyawan, pemberi pinjaman, pemegang saham |
 | Faktur | Tagihan ke pelanggan (atau dari pemasok) yang menimbulkan piutang atau utang |
 | Open item | Sisa tagihan atau utang suatu dokumen yang belum lunas |
 | Alokasi | Pencocokan pembayaran atau uang muka dengan faktur |

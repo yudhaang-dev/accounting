@@ -2,9 +2,11 @@
 
 namespace App\Modules\TransactionEntry\Application;
 
+use App\Modules\Subledger\Contracts\PartyDirectory;
 use App\Modules\TransactionEntry\Domain\TransactionType;
 use App\Modules\TransactionEntry\Domain\TransactionTypeMode;
 use App\Platform\Audit\Audit;
+use App\Support\Company\CompanyContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -19,6 +21,8 @@ final class ImportTransactionTypeTemplate
         private readonly TransactionTypeTemplates $templates,
         private readonly TransactionTypeVersions $versions,
         private readonly Audit $audit,
+        private readonly PartyDirectory $parties,
+        private readonly CompanyContext $company,
     ) {}
 
     /**
@@ -38,6 +42,27 @@ final class ImportTransactionTypeTemplate
         foreach ($keys as $index => $key) {
             if (! isset($byKey[$key])) {
                 $errors["keys.{$index}"] = [__('entries.template_type_unknown', ['key' => $key])];
+            }
+        }
+
+        $companyId = $this->company->require();
+
+        foreach ($keys as $index => $key) {
+            if (! isset($byKey[$key])) {
+                continue;
+            }
+
+            $roles = [];
+
+            foreach ($byKey[$key]['fields'] as $field) {
+                array_push($roles, ...($field['allowed_roles'] ?? []));
+            }
+
+            $roles = array_values(array_unique($roles));
+            $missing = $this->parties->unusableRoles($companyId, $roles);
+
+            if ($missing !== []) {
+                $errors["keys.{$index}"] = [__('entries.template_roles_missing', ['key' => $key, 'roles' => implode(', ', $missing)])];
             }
         }
 

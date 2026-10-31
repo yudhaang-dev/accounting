@@ -41,6 +41,7 @@ return [
                 ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'gross_salary', 'account' => ['source' => 'field', 'field' => 'payable_account'], 'apply_dimensions' => true, 'reuses_field' => true],
             ],
         ],
+        // The customer field accepts parties with the role `customer`, which the company must have (ADR-0015).
         // The receivable is the control account of the customer's posting profile, so the type needs
         // the mapping of `receivables_control` and a party; it opens the invoice as an open item (SL-FR-04).
         [
@@ -49,7 +50,7 @@ return [
             'description' => 'Penjualan yang belum dibayar pelanggan. Menambah piutang pelanggan.',
             'mode' => 'structured',
             'fields' => [
-                ['name' => 'customer', 'type' => 'party', 'label' => 'Pelanggan'],
+                ['name' => 'customer', 'type' => 'party', 'label' => 'Pelanggan', 'allowed_roles' => ['customer']],
                 ['name' => 'invoice_number', 'type' => 'reference', 'label' => 'Nomor faktur', 'required' => false],
                 ['name' => 'due_date', 'type' => 'date', 'label' => 'Jatuh tempo', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Total faktur'],

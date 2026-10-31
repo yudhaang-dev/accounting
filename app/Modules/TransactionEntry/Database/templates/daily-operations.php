@@ -6,6 +6,10 @@
 // from the ledger account of the cash account. Only the expense account of a supplier bill is picked by
 // the user, since the template cannot know the chart of accounts of a company. Every type needs the
 // posting profile of its parties, with the mapping of `receivables_control` or `payables_control`.
+// A party field accepts only the party roles that fit the type (ADR-0015), so the roles it names must exist
+// and be active in the company before the type is imported. A template cannot name a posting profile, since
+// profiles belong to a company: to keep one person's staff advance apart from a supplier payable, the
+// company gives the route of a new version its own posting profile.
 return [
     'key' => 'daily-operations',
     'name' => 'Transaksi harian',
@@ -18,7 +22,7 @@ return [
             'description' => 'Uang masuk dari pelanggan untuk melunasi faktur, atau sebagai uang muka.',
             'mode' => 'structured',
             'fields' => [
-                ['name' => 'customer', 'type' => 'party', 'label' => 'Pelanggan'],
+                ['name' => 'customer', 'type' => 'party', 'label' => 'Pelanggan', 'allowed_roles' => ['customer']],
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Diterima di rekening'],
                 ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah diterima'],
@@ -44,7 +48,7 @@ return [
             'description' => 'Tagihan dari pemasok yang belum dibayar. Menambah utang pemasok.',
             'mode' => 'structured',
             'fields' => [
-                ['name' => 'supplier', 'type' => 'party', 'label' => 'Pemasok'],
+                ['name' => 'supplier', 'type' => 'party', 'label' => 'Pemasok', 'allowed_roles' => ['supplier']],
                 ['name' => 'bill_number', 'type' => 'reference', 'label' => 'Nomor tagihan', 'required' => false],
                 ['name' => 'due_date', 'type' => 'date', 'label' => 'Jatuh tempo', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Total tagihan'],
@@ -69,7 +73,7 @@ return [
             'description' => 'Pembayaran ke pemasok untuk melunasi tagihan.',
             'mode' => 'structured',
             'fields' => [
-                ['name' => 'supplier', 'type' => 'party', 'label' => 'Pemasok'],
+                ['name' => 'supplier', 'type' => 'party', 'label' => 'Pemasok', 'allowed_roles' => ['supplier']],
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Dibayar dari rekening'],
                 ['name' => 'payment_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah dibayar'],
@@ -98,7 +102,7 @@ return [
             'description' => 'Pelunasan faktur valas yang dibayar ke rekening berbeda mata uang.',
             'mode' => 'structured',
             'fields' => [
-                ['name' => 'customer', 'type' => 'party', 'label' => 'Pelanggan'],
+                ['name' => 'customer', 'type' => 'party', 'label' => 'Pelanggan', 'allowed_roles' => ['customer']],
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Diterima di rekening'],
                 ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah faktur yang dilunasi (mata uang entri)'],
@@ -126,7 +130,7 @@ return [
             'description' => 'Pembayaran tagihan valas dari rekening berbeda mata uang.',
             'mode' => 'structured',
             'fields' => [
-                ['name' => 'supplier', 'type' => 'party', 'label' => 'Pemasok'],
+                ['name' => 'supplier', 'type' => 'party', 'label' => 'Pemasok', 'allowed_roles' => ['supplier']],
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Dibayar dari rekening'],
                 ['name' => 'payment_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah tagihan yang dilunasi (mata uang entri)'],
@@ -183,7 +187,7 @@ return [
             'description' => 'Uang masuk dari pinjaman yang harus dilunasi, seperti pinjaman bank.',
             'mode' => 'structured',
             'fields' => [
-                ['name' => 'party', 'type' => 'party', 'label' => 'Pemberi pinjaman'],
+                ['name' => 'party', 'type' => 'party', 'label' => 'Pemberi pinjaman', 'allowed_roles' => ['lender']],
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Diterima di rekening'],
                 ['name' => 'loan_number', 'type' => 'reference', 'label' => 'Nomor perjanjian', 'required' => false],
                 ['name' => 'due_date', 'type' => 'date', 'label' => 'Jatuh tempo pelunasan', 'required' => false],
@@ -200,6 +204,136 @@ return [
                 'document_number_field' => 'loan_number',
                 'due_date_field' => 'due_date',
                 'cash_account_field' => 'bank',
+            ],
+        ],
+        // The staff advance, its return, and the capital a shareholder has subscribed but not yet paid. Each
+        // is a receivable from a party of one role; the roles keep an employee out of a shareholder's list.
+        [
+            'key' => 'employee_advance',
+            'label' => 'Kasbon Karyawan',
+            'description' => 'Uang keluar untuk karyawan yang harus dikembalikan, dipotong gaji atau dibayar kembali.',
+            'mode' => 'structured',
+            'fields' => [
+                ['name' => 'employee', 'type' => 'party', 'label' => 'Karyawan', 'allowed_roles' => ['employee']],
+                ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Dibayar dari rekening'],
+                ['name' => 'advance_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
+                ['name' => 'due_date', 'type' => 'date', 'label' => 'Jatuh tempo pengembalian', 'required' => false],
+                ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah'],
+            ],
+            'posting_rules' => [
+                ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'employee'], 'apply_dimensions' => false, 'reuses_field' => true],
+                ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
+            ],
+            'subledger_route' => [
+                'kind' => 'loan',
+                'control_role' => 'receivables_control',
+                'party_field' => 'employee',
+                'document_number_field' => 'advance_number',
+                'due_date_field' => 'due_date',
+                'cash_account_field' => 'bank',
+            ],
+        ],
+        [
+            'key' => 'employee_advance_return',
+            'label' => 'Pengembalian Kasbon Karyawan',
+            'description' => 'Uang masuk dari karyawan untuk melunasi kasbon.',
+            'mode' => 'structured',
+            'fields' => [
+                ['name' => 'employee', 'type' => 'party', 'label' => 'Karyawan', 'allowed_roles' => ['employee']],
+                ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Diterima di rekening'],
+                ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
+                ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah diterima'],
+                ['name' => 'allocations', 'type' => 'allocations', 'label' => 'Kasbon yang dilunasi', 'required' => false],
+            ],
+            'posting_rules' => [
+                ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
+                ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'employee'], 'apply_dimensions' => false, 'reuses_field' => true],
+            ],
+            'subledger_route' => [
+                'kind' => 'payment',
+                'control_role' => 'receivables_control',
+                'party_field' => 'employee',
+                'document_number_field' => 'receipt_number',
+                'due_date_field' => null,
+                'cash_account_field' => 'bank',
+                'allocations_field' => 'allocations',
+            ],
+        ],
+        [
+            'key' => 'capital_subscription',
+            'label' => 'Modal Ditempatkan, Belum Disetor',
+            'description' => 'Modal yang dijanjikan pemegang saham tetapi belum dibayar. Menambah piutang pemegang saham.',
+            'mode' => 'structured',
+            'fields' => [
+                ['name' => 'shareholder', 'type' => 'party', 'label' => 'Pemegang saham', 'allowed_roles' => ['shareholder']],
+                ['name' => 'subscription_number', 'type' => 'reference', 'label' => 'Nomor akta atau bukti', 'required' => false],
+                ['name' => 'due_date', 'type' => 'date', 'label' => 'Jatuh tempo setoran', 'required' => false],
+                ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah'],
+                ['name' => 'equity_account', 'type' => 'account', 'label' => 'Akun modal'],
+            ],
+            'posting_rules' => [
+                ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'shareholder'], 'apply_dimensions' => false, 'reuses_field' => true],
+                ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'field', 'field' => 'equity_account'], 'apply_dimensions' => true, 'reuses_field' => true],
+            ],
+            'subledger_route' => [
+                'kind' => 'invoice',
+                'control_role' => 'receivables_control',
+                'party_field' => 'shareholder',
+                'document_number_field' => 'subscription_number',
+                'due_date_field' => 'due_date',
+                'cash_account_field' => null,
+            ],
+        ],
+        [
+            'key' => 'capital_payment',
+            'label' => 'Setoran Modal Pemegang Saham',
+            'description' => 'Uang masuk dari pemegang saham untuk modal yang sudah ditempatkan.',
+            'mode' => 'structured',
+            'fields' => [
+                ['name' => 'shareholder', 'type' => 'party', 'label' => 'Pemegang saham', 'allowed_roles' => ['shareholder']],
+                ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Diterima di rekening'],
+                ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
+                ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah diterima'],
+                ['name' => 'allocations', 'type' => 'allocations', 'label' => 'Modal yang dilunasi', 'required' => false],
+            ],
+            'posting_rules' => [
+                ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
+                ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'shareholder'], 'apply_dimensions' => false, 'reuses_field' => true],
+            ],
+            'subledger_route' => [
+                'kind' => 'payment',
+                'control_role' => 'receivables_control',
+                'party_field' => 'shareholder',
+                'document_number_field' => 'receipt_number',
+                'due_date_field' => null,
+                'cash_account_field' => 'bank',
+                'allocations_field' => 'allocations',
+            ],
+        ],
+        [
+            'key' => 'loan_repayment',
+            'label' => 'Bayar Pinjaman',
+            'description' => 'Pembayaran kepada pemberi pinjaman untuk melunasi pinjaman yang diterima.',
+            'mode' => 'structured',
+            'fields' => [
+                ['name' => 'party', 'type' => 'party', 'label' => 'Pemberi pinjaman', 'allowed_roles' => ['lender']],
+                ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Dibayar dari rekening'],
+                ['name' => 'payment_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
+                ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah dibayar'],
+                ['name' => 'allocations', 'type' => 'allocations', 'label' => 'Pinjaman yang dilunasi', 'required' => false],
+            ],
+            'posting_rules' => [
+                ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'party'], 'apply_dimensions' => false, 'reuses_field' => true],
+                ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
+            ],
+            'subledger_route' => [
+                'kind' => 'payment',
+                'control_role' => 'payables_control',
+                'party_field' => 'party',
+                'document_number_field' => 'payment_number',
+                'due_date_field' => null,
+                'cash_account_field' => 'bank',
+                'allocations_field' => 'allocations',
             ],
         ],
         // Both amounts are asked for so that a transfer between accounts of different currencies can state each

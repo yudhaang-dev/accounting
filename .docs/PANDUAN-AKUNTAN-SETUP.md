@@ -127,7 +127,9 @@ Keputusan yang perlu diambil lebih dulu: dimensi apa saja yang benar-benar dipak
 
 Pemetaan berversi. **Tanpa pemetaan, entri berpihak ditolak dengan `MAPPING_REQUIRED`.**
 
-**Pihak** (Subledger → Pihak): tambahkan pelanggan dan pemasok awal. Pihak dengan **referensi eksternal** per sistem sumber dikenali oleh sistem lain; referensi yang sudah ditambahkan tidak bisa dihapus. Untuk jumlah besar, minta pengembang mengimpor lewat API.
+**Peran pihak** (Subledger → Peran pihak): peran adalah data per perusahaan, bukan kotak centang. Klik **Impor peran bawaan**, baca daftarnya (Pelanggan, Pemasok, Karyawan, Pemberi pinjaman, Pemegang saham), centang konfirmasi, lalu impor; tambahkan peran sendiri bila perlu. Peran yang pernah dipakai hanya dapat dinonaktifkan, dan kuncinya tidak berubah. **Peran tidak menentukan sisi buku besar**: akun kontrol datang dari profil posting. Peran hanya dipakai untuk membatasi pilihan pihak di Jenis Transaksi dan menyaring daftar. Satu pihak boleh memegang beberapa peran.
+
+**Pihak** (Subledger → Pihak): tambahkan pihak awal dan centang perannya (pihak boleh disimpan tanpa peran, tetapi tidak muncul di pilihan yang dibatasi peran). Pihak dengan **referensi eksternal** per sistem sumber dikenali oleh sistem lain; referensi yang sudah ditambahkan tidak bisa dihapus. Untuk jumlah besar, minta pengembang mengimpor lewat API.
 
 ---
 
@@ -152,7 +154,7 @@ Transaksi → Jenis transaksi → **Impor template**. Tinjau tiap jenis, pilih y
 | Template | Jenis |
 | --- | --- |
 | Jenis Transaksi umum | Jurnal Umum, Jurnal Penyesuaian, Ringkasan Payroll, Penjualan Kredit |
-| Transaksi harian | Terima Pembayaran Pelanggan, Tagihan Pemasok, Bayar Pemasok, Kasbon atau Pinjaman ke Pihak, Pinjaman Diterima, Transfer Antar Kas atau Bank, Terima Pembayaran dan Bayar Pemasok untuk rekening beda mata uang |
+| Transaksi harian | Terima Pembayaran Pelanggan, Tagihan Pemasok, Bayar Pemasok, Kasbon atau Pinjaman ke Pihak, Pinjaman Diterima, Kasbon Karyawan, Pengembalian Kasbon Karyawan, Modal Ditempatkan Belum Disetor, Setoran Modal Pemegang Saham, Bayar Pinjaman, Transfer Antar Kas atau Bank, Terima Pembayaran dan Bayar Pemasok untuk rekening beda mata uang |
 
 Template tidak mengenal COA Anda, jadi akun biaya, pendapatan, dan payroll berupa **field akun** yang diisi pengguna. **Persempit sebelum dipakai admin:** buka perancang, buat versi baru, dan pada field akun isi *Akun yang boleh dipilih* dengan akun yang relevan saja (misalnya hanya akun pendapatan). Atau ganti field akun dengan **akun tetap** di aturan posting bila akunnya selalu sama.
 
@@ -177,15 +179,21 @@ Menerbitkan versi memeriksa kelengkapan; pesannya menyebut yang kurang.
 
 ### Kasbon karyawan dan pinjaman
 
-Kas keluar yang menambah piutang kepada karyawan (kasbon) atau pihak lain tidak bisa dicatat sebagai faktur, karena faktur tidak menggerakkan kas, dan tidak bisa lewat jurnal bebas, karena akun kas hanya menerima sumber Subledger. Pakai jenis dokumen **Pinjaman atau kasbon** (`loan`), yang menaikkan saldo akun kontrol sekaligus menggerakkan kas. Template *Transaksi harian* menyediakan **Kasbon atau Pinjaman ke Pihak** (piutang naik, kas keluar) dan **Pinjaman Diterima** (utang naik, kas masuk).
+Kas keluar yang menambah piutang kepada karyawan (kasbon) atau pihak lain tidak bisa dicatat sebagai faktur, karena faktur tidak menggerakkan kas, dan tidak bisa lewat jurnal bebas, karena akun kas hanya menerima sumber Subledger. Pakai jenis dokumen **Pinjaman atau kasbon** (`loan`), yang menaikkan saldo akun kontrol sekaligus menggerakkan kas. Template *Transaksi harian* menyediakan **Kasbon Karyawan** dan **Kasbon atau Pinjaman ke Pihak** (piutang naik, kas keluar) serta **Pinjaman Diterima** (utang naik, kas masuk).
+
+**Template memasang pembatas peran.** Field pihak pada jenis bawaan hanya menerima peran yang cocok (Pelanggan, Pemasok, Karyawan, Pemberi pinjaman, Pemegang saham). Peran yang disebut jenis itu harus sudah ada dan aktif sebelum impor; bila belum, impor ditolak dengan pesan peran yang kurang. Pengaman ini hanya berlaku bila dipasang: jenis rancangan sendiri harus mengisi *Peran yang boleh dimiliki pihak* di perancang.
 
 Agar kasbon terpisah dari piutang usaha di neraca:
 
 1. Buat akun **Piutang Karyawan** (aset, daun) dan batasi sumbernya ke Subledger (bagian 5).
 2. Buat **profil posting** "Karyawan" dan petakan akun kontrol piutangnya ke akun itu (bagian 9).
-3. Tambahkan setiap karyawan sebagai **pihak** berperan Pelanggan dengan profil "Karyawan". Belum ada peran karyawan; pihak yang menerima piutang harus berperan pelanggan.
+3. Tambahkan setiap karyawan sebagai **pihak** berperan Karyawan dengan profil "Karyawan".
 
-Karyawan mengembalikan kasbon dengan **Terima Pembayaran Pelanggan** yang menyebut kasbonnya di *Faktur yang dilunasi*; sisanya tampil di Open item dan laporan umur piutang. Pembalikan kasbon ditolak selama masih ada pengembalian yang aktif.
+Karyawan mengembalikan kasbon dengan **Pengembalian Kasbon Karyawan** yang menyebut kasbonnya di *Kasbon yang dilunasi*; sisanya tampil di Open item dan laporan umur piutang. Pembalikan kasbon ditolak selama masih ada pengembalian yang aktif.
+
+**Orang yang berperan ganda** (karyawan sekaligus pemegang saham) berisiko saldonya bercampur bila akun kontrol hanya mengikuti profil pihak. Pisahkan menurut sifat transaksi, bukan menurut orangnya: buat versi baru jenis Kasbon dan pada *Rute subledger* pilih *Profil posting* Karyawan; buat jenis piutang pemegang saham dengan profil "Pemegang saham" (akun piutang sendiri). Rute dengan profil sendiri memakai akun kontrol profil itu, bukan profil pihaknya. Template tidak dapat menamai profil karena profil milik perusahaan; atur di versi baru setelah impor.
+
+**Setoran modal berbentuk piutang pemegang saham.** Pakai **Modal Ditempatkan, Belum Disetor** (piutang pemegang saham naik, akun modal bertambah) dan **Setoran Modal Pemegang Saham** untuk pelunasannya. Pilihan klasifikasi dan penyajian piutang ini (misalnya sebagai pengurang ekuitas) diputuskan akuntan lewat pemetaan akun dan definisi laporan; sistem tidak menetapkannya.
 
 ### Versi dan penomoran
 

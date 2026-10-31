@@ -34,8 +34,12 @@ beforeEach(function () {
         $this->actingAs($this->admin)->putJson("{$this->url}/posting-profiles/{$profile}/accounts/{$role}", ['lock_version' => 0, 'account_id' => $account])->assertOk();
     }
 
+    ensurePartyRoles(['customer', 'supplier', 'employee', 'shareholder', 'lender']);
     $this->customer = docParty(['name' => 'PT Maju Jaya']);
     $this->supplier = docParty(['name' => 'UD Pemasok', 'roles' => ['supplier']]);
+    $this->employee = docParty(['name' => 'Siti Karyawan', 'roles' => ['employee']]);
+    $this->shareholder = docParty(['name' => 'Budi Pemegang Saham', 'roles' => ['shareholder']]);
+    $this->lender = docParty(['name' => 'Bank Mitra', 'roles' => ['lender']]);
     $this->cashAccount = $this->actingAs($this->admin)->postJson("{$this->url}/cash-accounts", [
         'name' => 'BCA Operasional', 'kind' => 'bank', 'bank_name' => 'BCA', 'account_number' => '123-456-7890', 'currency' => 'IDR', 'account_id' => $this->bank,
     ])->assertCreated()->json('data.id');
@@ -44,7 +48,7 @@ beforeEach(function () {
     ])->assertCreated()->json('data.id');
 
     $this->actingAs($this->admin)->postJson("{$this->url}/transaction-types/import-template", [
-        'template' => 'daily-operations', 'confirmed' => true, 'keys' => ['customer_receipt', 'supplier_bill', 'supplier_payment', 'cash_transfer', 'party_loan', 'loan_received'],
+        'template' => 'daily-operations', 'confirmed' => true, 'keys' => ['customer_receipt', 'supplier_bill', 'supplier_payment', 'cash_transfer', 'party_loan', 'loan_received', 'employee_advance', 'employee_advance_return', 'capital_subscription', 'capital_payment', 'loan_repayment'],
     ])->assertCreated();
     $this->actingAs($this->admin)->postJson("{$this->url}/transaction-types/import-template", [
         'template' => 'general', 'confirmed' => true, 'keys' => ['credit_sale'],
@@ -96,10 +100,10 @@ describe('a supplier bill and its payment', function () {
             ->and((float) $paidLines->firstWhere('account_id', $this->bank)->credit)->toBe(750000.0);
     });
 
-    it('does not ask the role of the party, which a transaction type may restrict instead (ADR-0015)', function () {
+    it('takes only a party that holds the role the type names (ADR-0015)', function () {
         $id = docEntry('supplier_bill', ['supplier' => $this->customer, 'total' => '1000', 'expense_account' => $this->expense])->assertCreated()->json('data.id');
 
-        docAct($this->preparer, $id, 'submit')->assertOk();
+        docAct($this->preparer, $id, 'submit')->assertUnprocessable()->assertJsonValidationErrors(['values.supplier']);
     });
 });
 
@@ -141,12 +145,71 @@ describe('a loan to a party', function () {
 
 describe('a loan received', function () {
     it('raises what the company owes the lender and moves the cash in', function () {
-        $posted = docPosted(docEntry('loan_received', ['party' => $this->supplier, 'bank' => $this->cashAccount, 'total' => '5000000'])->assertCreated()->json('data.id'));
+        $posted = docPosted(docEntry('loan_received', ['party' => $this->lender, 'bank' => $this->cashAccount, 'total' => '5000000'])->assertCreated()->json('data.id'));
         $lines = DB::table('gl_journal_lines')->where('journal_id', $posted['journal_id'])->get();
 
         expect((float) $lines->firstWhere('account_id', $this->bank)->debit)->toBe(5000000.0)
             ->and((float) $lines->firstWhere('account_id', $this->payables)->credit)->toBe(5000000.0)
             ->and(DB::table('sl_open_items')->where('kind', 'loan')->value('side'))->toBe('credit')
             ->and(DB::table('sl_cash_transactions')->value('direction'))->toBe('in');
+    });
+});
+
+describe('a staff advance', function () {
+    it('raises what the employee owes, moves the cash out, and is returned by a payment that names it', function () {
+        $posted = docPosted(docEntry('employee_advance', ['employee' => $this->employee, 'bank' => $this->cashAccount, 'advance_number' => 'KSB-7', 'total' => '600000'])->assertCreated()->json('data.id'));
+        $advance = DB::table('sl_open_items')->where('kind', 'loan')->first();
+
+        expect((float) DB::table('gl_journal_lines')->where('journal_id', $posted['journal_id'])->where('account_id', $this->receivables)->value('debit'))->toBe(600000.0)
+            ->and($advance)->toMatchArray(['party_id' => $this->employee, 'remaining_amount' => '600000.000000']);
+
+        docPosted(docEntry('employee_advance_return', ['employee' => $this->employee, 'bank' => $this->cashAccount, 'total' => '600000', 'allocations' => [['open_item_id' => $advance->id, 'amount' => '600000']]])->assertCreated()->json('data.id'));
+
+        expect(DB::table('sl_open_items')->where('id', $advance->id)->value('status'))->toBe('settled');
+    });
+
+    it('is not offered to a shareholder', function () {
+        $id = docEntry('employee_advance', ['employee' => $this->shareholder, 'bank' => $this->cashAccount, 'total' => '1000'])->assertCreated()->json('data.id');
+
+        docAct($this->preparer, $id, 'submit')->assertUnprocessable()->assertJsonValidationErrors(['values.employee']);
+    });
+});
+
+describe('capital subscribed and paid by a shareholder', function () {
+    it('opens a receivable against the capital account and settles it with the payment', function () {
+        $capital = docAccountId('3110');
+        $posted = docPosted(docEntry('capital_subscription', ['shareholder' => $this->shareholder, 'total' => '10000000', 'equity_account' => $capital])->assertCreated()->json('data.id'));
+        $lines = DB::table('gl_journal_lines')->where('journal_id', $posted['journal_id'])->get();
+        $open = DB::table('sl_open_items')->where('party_id', $this->shareholder)->first();
+
+        expect((float) $lines->firstWhere('account_id', $this->receivables)->debit)->toBe(10000000.0)
+            ->and((float) $lines->firstWhere('account_id', $capital)->credit)->toBe(10000000.0)
+            ->and($open)->toMatchArray(['kind' => 'invoice', 'control_role' => 'receivables_control']);
+
+        docPosted(docEntry('capital_payment', ['shareholder' => $this->shareholder, 'bank' => $this->cashAccount, 'total' => '10000000', 'allocations' => [['open_item_id' => $open->id, 'amount' => '10000000']]])->assertCreated()->json('data.id'));
+
+        expect(DB::table('sl_open_items')->where('id', $open->id)->value('status'))->toBe('settled');
+    });
+});
+
+describe('a loan repayment', function () {
+    it('settles the loan received from the lender', function () {
+        docPosted(docEntry('loan_received', ['party' => $this->lender, 'bank' => $this->cashAccount, 'total' => '5000000'])->assertCreated()->json('data.id'));
+        $loan = DB::table('sl_open_items')->where('kind', 'loan')->first();
+
+        docPosted(docEntry('loan_repayment', ['party' => $this->lender, 'bank' => $this->cashAccount, 'total' => '5000000', 'allocations' => [['open_item_id' => $loan->id, 'amount' => '5000000']]])->assertCreated()->json('data.id'));
+
+        expect(DB::table('sl_open_items')->where('id', $loan->id)->value('status'))->toBe('settled');
+    });
+});
+
+describe('importing a type that names party roles', function () {
+    it('says which roles are missing and creates nothing', function () {
+        $admin = User::factory()->create();
+        [$companyId] = createWorkspaceAs($admin);
+
+        $this->actingAs($admin)->postJson("/api/v1/companies/{$companyId}/transaction-types/import-template", [
+            'template' => 'daily-operations', 'confirmed' => true, 'keys' => ['employee_advance'],
+        ])->assertUnprocessable()->assertJsonValidationErrors(['keys.0']);
     });
 });

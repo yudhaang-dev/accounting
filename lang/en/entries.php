@@ -9,6 +9,7 @@ return [
     'attachments_locked' => 'Attachments of an entry with status :status can no longer be changed.',
     'template_unknown' => 'This transaction type template does not exist.',
     'template_type_unknown' => 'The template has no transaction type :key.',
+    'template_roles_missing' => 'The type :key needs the party roles :roles, which this company does not have or has deactivated. Import or activate them under Party roles first.',
     'type_unknown' => 'The transaction type :key does not exist in this company.',
     'version_unknown' => 'Version :version of this transaction type does not exist.',
     'version_unpublished' => 'Version :version of this transaction type is not published.',
