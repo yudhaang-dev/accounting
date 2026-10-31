@@ -8,6 +8,7 @@ return [
     'period_reversed' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
     'period_fixed' => 'Periode dan ruang lingkup tidak dapat diubah setelah ada versi yang diterbitkan.',
     'period_lines_outside' => 'Rencana punya baris di luar periode yang baru.',
+    'revision_unknown' => 'Versi bukan versi terbit dari rencana ini.',
     'scope_unknown' => 'Nilai dimensi tidak ada di perusahaan ini.',
     'version_name_taken' => 'Sudah ada versi dengan nama ini di rencana ini.',
 

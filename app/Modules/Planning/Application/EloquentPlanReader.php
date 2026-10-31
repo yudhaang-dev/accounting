@@ -3,17 +3,38 @@
 namespace App\Modules\Planning\Application;
 
 use App\Modules\Planning\Contracts\PlanAmount;
+use App\Modules\Planning\Contracts\PlanData;
 use App\Modules\Planning\Contracts\PlanReader;
 use App\Modules\Planning\Contracts\PlanVersionData;
 use App\Modules\Planning\Domain\DefaultPlanVersion;
+use App\Modules\Planning\Domain\Plan;
 use App\Modules\Planning\Domain\PlanLine;
 use App\Modules\Planning\Domain\PlanVersion;
+use App\Modules\Planning\Domain\PlanVersionStatus;
 use App\Support\Company\CompanyScope;
 use Brick\Math\BigDecimal;
 
 /** Reads plans for the given company explicitly, independent of the request company context. */
 final class EloquentPlanReader implements PlanReader
 {
+    public function plan(string $companyId, string $planId): ?PlanData
+    {
+        $plan = Plan::query()->withoutGlobalScope(CompanyScope::class)->where('company_id', $companyId)->find($planId);
+
+        return $plan === null ? null : new PlanData($plan->id, $plan->name, $plan->objective, $plan->starts_on->toDateString(), $plan->ends_on->toDateString(), $plan->scope_dimension_value_id);
+    }
+
+    public function publishedVersions(string $companyId, string $planId): array
+    {
+        return array_values(PlanVersion::query()->withoutGlobalScope(CompanyScope::class)
+            ->where('company_id', $companyId)->where('plan_id', $planId)->where('status', '<>', PlanVersionStatus::Draft->value)
+            ->with(['plan' => fn ($q) => $q->withoutGlobalScope(CompanyScope::class)])
+            ->orderBy('published_at')->orderBy('id')
+            ->get()
+            ->map(fn (PlanVersion $version): PlanVersionData => $this->data($version))
+            ->all());
+    }
+
     public function version(string $companyId, string $versionId): ?PlanVersionData
     {
         $version = PlanVersion::query()->withoutGlobalScope(CompanyScope::class)->where('company_id', $companyId)->with(['plan' => fn ($q) => $q->withoutGlobalScope(CompanyScope::class)])->find($versionId);

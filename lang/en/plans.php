@@ -8,6 +8,7 @@ return [
     'period_reversed' => 'The end date cannot be before the start date.',
     'period_fixed' => 'The period and the scope cannot change once a version has been published.',
     'period_lines_outside' => 'The plan has lines outside the new period.',
+    'revision_unknown' => 'The version is not a published version of this plan.',
     'scope_unknown' => 'The dimension value does not exist in this company.',
     'version_name_taken' => 'A version with this name already exists in this plan.',
 

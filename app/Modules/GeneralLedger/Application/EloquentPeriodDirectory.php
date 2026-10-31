@@ -56,6 +56,19 @@ final class EloquentPeriodDirectory implements PeriodDirectory
         return $year === null ? null : new FiscalYearData($year->id, $year->name, $year->start_date->toDateString(), $year->end_date->toDateString());
     }
 
+    public function overlapping(string $companyId, string $from, string $to): array
+    {
+        return array_values(Period::query()
+            ->withoutGlobalScope(CompanyScope::class)
+            ->where('company_id', $companyId)
+            ->where('start_date', '<=', $to)
+            ->where('end_date', '>=', $from)
+            ->orderBy('start_date')
+            ->get()
+            ->map(fn (Period $period): PeriodData => new PeriodData($period->id, $period->fiscal_year_id, $period->name, $period->start_date->toDateString(), $period->end_date->toDateString(), $period->status->value))
+            ->all());
+    }
+
     public function within(string $companyId, string $from, string $to): array
     {
         return array_values(Period::query()
