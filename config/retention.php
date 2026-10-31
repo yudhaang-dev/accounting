@@ -18,7 +18,11 @@ return [
     | gl_, sl_ and te_ table must carry the retention guard (see RetentionGuard).
     */
 
-    'unprotected_tables' => [],
+    'unprotected_tables' => [
+        // Which roles a party holds today; removing a role deletes the row (SL-FR-01). The party update
+        // is audited, and what the roles were stays in the documents posted under them.
+        'sl_party_role_assignments',
+    ],
 
     /* Table prefixes of financial data that must be protected against hard delete. */
     'protected_prefixes' => ['gl_', 'sl_', 'te_', 'co_'],
