@@ -1109,7 +1109,7 @@ export const id = {
         pageTitle: 'Pihak',
         title: 'Pihak',
         description:
-            'Pelanggan dan pemasok perusahaan beserta referensi yang dipakai sistem sumber dan profil postingnya.',
+            'Pelanggan, pemasok, karyawan, dan pihak lain perusahaan beserta perannya, referensi yang dipakai sistem sumber, dan profil postingnya.',
         add: 'Tambah pihak',
         createTitle: 'Tambah pihak',
         editTitle: 'Ubah pihak {{name}}',

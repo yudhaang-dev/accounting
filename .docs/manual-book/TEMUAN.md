@@ -42,6 +42,16 @@ Rekomendasi: pilihan 1, dengan pilihan 2 sebagai solusi sementara yang didokumen
 
 Keadaan data uji saat ini: jenis "Kasbon Karyawan" punya versi 1 sampai 4 berstatus Terbit (v2 sampai v4 identik, tanpa rute) dan draf v5 dengan rute yang tidak bisa disimpan; akun 1171 Piutang Karyawan, profil posting "Karyawan", dan pihak "Siti Rahma" sudah dibuat; entri `KASBON-KARYAWAN/2026/10/000001` berstatus Draf dan tidak bisa diajukan.
 
+## Temuan 13 dan 19 selesai: peran pihak (B-09)
+
+Terbukti di browser pada database yang sama, sesudah migrasi B-09c dan B-09d dijalankan:
+
+- Migrasi data: pihak lama menerima peran `customer` atau `supplier`; peran bawaan (Karyawan, Pemberi pinjaman, Pemegang saham) diimpor dari dialog dengan konfirmasi.
+- Orang berperan ganda: Siti Rahma berperan Karyawan dan Pemegang saham. Pilihan "Karyawan" pada Kasbon Karyawan hanya menampilkan dia, bukan pemasok atau pelanggan; kasbon dengan pemasok ditolak saat diajukan pada field `employee`.
+- Saldo tidak bercampur: kasbon masuk ke 1171 Piutang Karyawan, Modal Ditempatkan (versi 2 dengan profil posting Pemegang saham pada rutenya, dipilih di perancang) masuk ke 1172 Piutang Pemegang Saham. Rekonsiliasi per 2026-10-31 seimbang di keenam akun kontrol.
+- Daftar Pihak: kolom peran, filter peran, dan saldo piutang gabungan per orang (Rp8.500.000 untuk Siti Rahma).
+- Subjudul layar Pihak masih menyebut "pelanggan dan pemasok"; diperbaiki.
+
 ## Hasil yang sudah terbukti jalan
 
 - Penyiapan perusahaan dari database kosong sampai aktif (profil, 101 akun, FY2026–FY2027, aktivasi).

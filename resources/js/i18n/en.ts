@@ -1113,7 +1113,7 @@ export const en: Widen<typeof id> = {
         pageTitle: 'Parties',
         title: 'Parties',
         description:
-            "The company's customers and suppliers, with the references source systems use for them and their posting profiles.",
+            "The company's customers, suppliers, employees, and other parties, with their roles, the references source systems use for them, and their posting profiles.",
         add: 'Add party',
         createTitle: 'Add party',
         editTitle: 'Edit party {{name}}',
