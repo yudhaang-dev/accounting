@@ -54,6 +54,7 @@ PT Sinar Nusantara Perkasa, distributor alat kesehatan dan perlengkapan kantor. 
 | Tutup periode, periode tutup sementara, tutup tahun buku 2025 | Periode, Tutup tahun |
 | Neraca saldo, buku besar, neraca, laba rugi, arus kas langsung dan tidak langsung, perubahan ekuitas | Laporan |
 | Laporan terhadap anggaran, anggaran 2025 dan 2026, versi draf | Laporan, Anggaran |
+| Rencana kegiatan promosi Mei–Oktober 2026: strategi dan taktik iklan digital (dimensi Kegiatan), estimasi awal, revisi, dan aktual | Perencanaan → Anggaran → Evaluasi (login sebagai akuntan atau direktur) |
 | Snapshot laporan otomatis saat periode ditutup | Laporan → Snapshot |
 | Cakupan data per cabang (login sebagai kepala cabang Surabaya) | Semua laporan dan daftar |
 | Klien integrasi dengan cakupan Surabaya dan peristiwa keuangan | Akses → Klien integrasi, Kotak persetujuan |

@@ -195,6 +195,15 @@ final class DemoOperations
         $this->push($first->addDays(4), 0, 'bill', ['supplier' => 'it', 'account' => '6270', 'subtotal' => 4_800_000, 'ppn' => true, 'terms' => 30, 'what' => 'Langganan perangkat lunak akuntansi dan CRM', 'dept' => 'ADM']);
         $this->push($last->subDays(2), 0, 'bill', ['supplier' => 'logistik', 'account' => '6130', 'subtotal' => $this->round((int) ($revenueGuess * 0.011), 1000), 'ppn' => true, 'terms' => 14, 'what' => 'Pengiriman barang ke pelanggan', 'dept' => 'OPS']);
         $this->push($first->addDays(mt_rand(5, 20)), 0, 'bill', ['supplier' => 'iklan', 'account' => '6110', 'subtotal' => $this->round(($first->year >= 2026 ? mt_rand(15, 32) : mt_rand(11, 26)) * 1_000_000, 1000), 'ppn' => true, 'terms' => 21, 'what' => 'Iklan dan promosi digital', 'dept' => 'SALES']);
+
+        // The promotion study: the digital campaign (a tactic) creeps up month by month, printed material and
+        // exhibitions (the strategy itself) stay flat.
+        if ($this->inPromotion($first)) {
+            $step = $first->month - (int) substr(DemoFoundation::PROMO_FROM, 5);
+            $this->push($first->addDays(8), 0, 'bill', ['supplier' => 'iklan', 'account' => '6110', 'subtotal' => (18 + 4 * $step) * 1_000_000, 'ppn' => true, 'terms' => 21, 'what' => 'Kampanye iklan digital promo semester II', 'dept' => 'SALES', 'activity' => 'PROMO-DIG']);
+            $this->push($first->addDays(12), 0, 'bill', ['supplier' => 'iklan', 'account' => '6110', 'subtotal' => 8_000_000, 'ppn' => true, 'terms' => 21, 'what' => 'Materi cetak dan pameran promo semester II', 'dept' => 'SALES', 'activity' => 'PROMO']);
+        }
+
         $this->push($first->addDays(2), 0, 'bill', ['supplier' => 'atk', 'account' => '6240', 'subtotal' => $this->round(mt_rand(1_800_000, 3_100_000), 1000), 'ppn' => false, 'terms' => 0, 'what' => 'Alat tulis dan perlengkapan kantor', 'dept' => 'ADM', 'from' => 'petty']);
         $this->push($last, 0, 'bill', ['supplier' => 'bank', 'account' => '6280', 'subtotal' => 175_000, 'ppn' => false, 'terms' => 0, 'what' => 'Biaya administrasi bank', 'dept' => 'ADM']);
         $this->push($last, 0, 'bill', ['supplier' => 'bank', 'account' => '7210', 'subtotal' => 2_500_000, 'ppn' => false, 'terms' => 0, 'what' => 'Bunga pinjaman bank', 'dept' => 'ADM']);
@@ -228,6 +237,13 @@ final class DemoOperations
         if (isset($this->vat[$previous]) && $this->vat[$previous]['out'] > $this->vat[$previous]['in']) {
             $this->push($first->addDays(14), 1, 'vat', ['month' => $previous]);
         }
+    }
+
+    private function inPromotion(CarbonImmutable $date): bool
+    {
+        $month = $date->format('Y-m');
+
+        return $month >= DemoFoundation::PROMO_FROM && $month <= DemoFoundation::PROMO_TO;
     }
 
     // ------------------------------------------------------------- processing
@@ -284,17 +300,21 @@ final class DemoOperations
         $date = CarbonImmutable::parse($e['date']);
         $goods = $e['revenue'] === '4110';
 
-        $this->post('sales_invoice', $e['date'], ($goods ? 'Penjualan alat kesehatan dan perlengkapan' : 'Jasa instalasi dan kalibrasi').' - '.$this->customerName($key), [
+        // During the promotion study every third sale of goods is counted to the campaign.
+        $promo = $goods && $this->inPromotion($date) && $this->invoiceSeq % 3 === 0;
+
+        $this->post('sales_invoice', $e['date'], ($goods ? 'Penjualan alat kesehatan dan perlengkapan' : 'Jasa instalasi dan kalibrasi').' - '.$this->customerName($key), array_filter([
             'customer' => $party,
             'invoice_number' => $number,
             'due_date' => $date->addDays($terms)->toDateString(),
             'branch' => $this->f->dimensionValues[$branch],
             'department' => $this->f->dimensionValues['SALES'],
+            'activity' => $promo ? $this->f->dimensionValues['PROMO'] : null,
             'subtotal' => (string) $subtotal,
             'ppn' => (string) $ppn,
             'total' => (string) ($subtotal + $ppn),
             'revenue_account' => $this->f->account($e['revenue']),
-        ]);
+        ], fn ($v) => $v !== null));
 
         if ($goods) {
             $this->goodsSold[$date->format('Y-m')] = ($this->goodsSold[$date->format('Y-m')] ?? 0) + $subtotal;
@@ -392,6 +412,7 @@ final class DemoOperations
             'bill_number' => $number,
             'due_date' => $date->addDays($terms)->toDateString(),
             'department' => isset($e['dept']) ? $this->f->dimensionValues[$e['dept']] : null,
+            'activity' => isset($e['activity']) ? $this->f->dimensionValues[$e['activity']] : null,
             'subtotal' => (string) $subtotal,
             'ppn' => (string) $ppn,
             'total' => (string) $total,

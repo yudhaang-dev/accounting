@@ -20,6 +20,11 @@ final class DemoFoundation
 
     public const START = '2025-01-01';
 
+    /** The months of the promotion study (first and last month, `Y-m`). */
+    public const PROMO_FROM = '2026-05';
+
+    public const PROMO_TO = '2026-10';
+
     /** @var array<string, User> */
     public array $users = [];
 
@@ -286,6 +291,12 @@ final class DemoFoundation
         $value('branch', 'JKT', 'Cabang Jakarta', 'JAWA');
         $value('branch', 'SBY', 'Cabang Surabaya', 'JAWA');
         $value('branch', 'MDN', 'Cabang Medan', 'SUMATERA');
+
+        // An activity is a strategy with tactics beneath it; the plans of the promotion study are measured on it (ADR-0017).
+        $activity = $this->api->post($this->url('/dimension-types'), ['key' => 'activity', 'label' => 'Kegiatan', 'is_hierarchical' => true])['data'];
+        $this->dimensionTypes['activity'] = $activity['id'];
+        $value('activity', 'PROMO', 'Strategi: promosi semester II 2026');
+        $value('activity', 'PROMO-DIG', 'Taktik: iklan digital', 'PROMO');
 
         $value('department', 'SALES', 'Penjualan');
         $value('department', 'OPS', 'Operasional');

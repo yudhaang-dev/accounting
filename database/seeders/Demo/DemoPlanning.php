@@ -43,6 +43,73 @@ final class DemoPlanning
             'require_distinct_publisher' => true,
             'default_versions' => $defaults,
         ]);
+
+        $this->promotion($years[2026]['id']);
+    }
+
+    /**
+     * The case study of ADR-0017: a six-month promotion, a strategy with a digital-advertising tactic beneath
+     * it, each a plan measured on its own activity value. The first published version is the initial estimate;
+     * the revision, published in August, expects the digital spend to climb and the sales to come in lower.
+     * The books carry the actuals: DemoOperations tags the campaign's costs and every third sale of goods.
+     */
+    private function promotion(string $fiscalYearId): void
+    {
+        $this->f->say('Rencana kegiatan: promosi semester II 2026, strategi dan taktik iklan digital');
+
+        $api = $this->f->api->as($this->f->users['accountant']);
+        $periods = collect($api->get($this->f->url('/periods'), ['filter[fiscal_year_id]' => $fiscalYearId, 'per_page' => 50])['data'])->sortBy('number')->values();
+        $window = $periods->slice((int) substr(DemoFoundation::PROMO_FROM, 5) - 1, 6)->values();
+
+        $plans = [
+            ['PROMO', 'Promosi semester II 2026', 'Menaikkan penjualan alat kesehatan lewat promo enam bulan. Hipotesis: tambahan penjualan lebih besar daripada biaya promosinya.', fn (int $i, bool $revised) => [
+                '4110' => $revised && $i >= 3 ? 230_000_000 : 250_000_000,
+                '6110' => $revised && $i >= 3 ? 40_000_000 : 28_000_000,
+            ]],
+            ['PROMO-DIG', 'Taktik iklan digital', 'Iklan digital sebagai taktik promosi. Hipotesis: biaya per bulan tetap sekitar 20 juta.', fn (int $i, bool $revised) => [
+                '6110' => $revised && $i >= 3 ? 32_000_000 : 20_000_000,
+            ]],
+        ];
+
+        foreach ($plans as [$scope, $name, $objective, $amounts]) {
+            $plan = $api->post($this->f->url('/plans'), [
+                'name' => $name,
+                'objective' => $objective,
+                'starts_on' => substr($window->first()['start_date'], 0, 10),
+                'ends_on' => substr($window->last()['end_date'], 0, 10),
+                'scope_dimension_value_id' => $this->f->dimensionValues[$scope],
+            ])['data'];
+
+            $initial = $api->post($this->f->url("/plans/{$plan['id']}/versions"), ['name' => 'Estimasi awal'])['data'];
+            $api->put($this->f->url("/plan-versions/{$initial['id']}/lines"), ['lines' => $this->promotionLines($window->pluck('id')->all(), $amounts, false)]);
+            $initial = $api->get($this->f->url("/plan-versions/{$initial['id']}"))['data'];
+            $this->f->api->as($this->f->users['owner'])->post($this->f->url("/plan-versions/{$initial['id']}/publish"), ['lock_version' => $initial['lock_version']]);
+
+            $api->as($this->f->users['accountant']);
+            $revision = $api->post($this->f->url("/plan-versions/{$initial['id']}/revise"), ['name' => 'Revisi Agustus'])['data'];
+            $api->put($this->f->url("/plan-versions/{$revision['id']}/lines"), ['lines' => $this->promotionLines($window->pluck('id')->all(), $amounts, true)]);
+            $revision = $api->get($this->f->url("/plan-versions/{$revision['id']}"))['data'];
+            $this->f->api->as($this->f->users['owner'])->post($this->f->url("/plan-versions/{$revision['id']}/publish"), ['lock_version' => $revision['lock_version']]);
+            $api->as($this->f->users['accountant']);
+        }
+    }
+
+    /**
+     * @param  list<string>  $periodIds
+     * @param  callable(int, bool): array<string, int>  $amounts  by account code for the month at that index
+     * @return list<array<string, string>>
+     */
+    private function promotionLines(array $periodIds, callable $amounts, bool $revised): array
+    {
+        $lines = [];
+
+        foreach ($periodIds as $i => $period) {
+            foreach ($amounts($i, $revised) as $code => $amount) {
+                $lines[] = ['period_id' => $period, 'account_id' => $this->f->account((string) $code), 'amount' => (string) $amount];
+            }
+        }
+
+        return $lines;
     }
 
     /**

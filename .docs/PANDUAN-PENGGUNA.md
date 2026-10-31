@@ -507,10 +507,26 @@ Wizard ini belum memetakan dimensi; hubungi pengembang bila saldo awal perlu dim
 
 *Perencanaan → Anggaran*. Rencana tidak pernah menjadi jurnal.
 
-1. **Rencana baru**: nama dan tahun buku (tidak bisa diubah kemudian).
-2. **Versi baru** pada rencana (mis. "anggaran awal", "forecast Q2"). Isi baris per periode, akun (pendapatan atau beban), dan dimensi lewat grid, atau impor CSV, atau salin dari versi lain atau dari realisasi.
-3. **Terbitkan** versi. Versi terbit tidak bisa diubah; **Ubah versi terbit** membuat draf baru yang menyalin isinya. Versi tanpa baris tidak bisa diterbitkan. Perusahaan bisa mengatur siapa yang boleh menerbitkan (misalnya bukan orang yang terakhir mengubah baris).
-4. Tetapkan **Pembanding default** agar laporan proyeksi vs realisasi memakainya.
+Rencana dipakai dua cara: **anggaran** (satu tahun, seluruh perusahaan) dan **rencana kegiatan** (satu keputusan, strategi, atau taktik bisnis dengan periodenya sendiri). Bedanya hanya isian saat membuatnya; layar dan aturannya sama.
+
+1. **Rencana baru**: judul, tujuan (apa yang ingin dibuktikan atau dicapai), **periode** (tanggal mulai dan selesai; boleh lintas tahun buku), dan **ruang lingkup** (pilih tipe dimensi, lalu nilainya). Tanpa ruang lingkup, rencana mengukur seluruh perusahaan. Ruang lingkup tidak bisa diubah sesudah versi pertama terbit, karena mengubahnya mengubah arti perbandingan sebelumnya.
+2. **Versi baru** pada rencana (mis. "Estimasi awal", "Revisi Agustus"). Isi baris per periode rencana, akun (pendapatan atau beban), dan dimensi lewat grid, atau impor CSV, atau salin dari versi lain atau dari realisasi. Baris di luar periode rencana ditolak.
+3. **Terbitkan** versi. Versi terbit tidak bisa diubah; **Ubah versi terbit** membuat draf baru yang menyalin isinya. Versi tanpa baris tidak bisa diterbitkan. Perusahaan bisa mengatur siapa yang boleh menerbitkan (misalnya bukan orang yang terakhir mengubah baris). Versi terbit pertama menjadi **estimasi awal**; versi terbit berikutnya menjadi **revisi**, dan estimasi awal tidak pernah tertimpa.
+4. Tetapkan **Pembanding default** agar laporan proyeksi vs realisasi memakainya. Pembanding default hanya melayani rencana tanpa ruang lingkup; layar evaluasi memilih pembandingnya sendiri.
+
+### 11.1 Mengevaluasi rencana kegiatan
+
+Rencana tidak membatasi pencatatan. Ia hanya tolok ukur: pembukuan berjalan seperti biasa, dan realisasinya dibaca otomatis dari buku besar. Syaratnya satu: **beri tag dimensi** pada transaksi yang termasuk kegiatan itu (mis. nilai dimensi Kegiatan pada faktur dan tagihan). Realisasi mencakup nilai dimensi ruang lingkup beserta turunannya, jadi strategi induk otomatis menghitung semua taktik di bawahnya.
+
+*Perencanaan → Anggaran →* **Evaluasi** pada baris rencana menampilkan, per periode dan per akun:
+
+- **Estimasi awal**, **Revisi** (versi terbit terakhir, atau versi lain yang Anda pilih), dan **Aktual** berdampingan;
+- **Selisih** terhadap estimasi awal dan terhadap revisi, dengan penanda *Menguntungkan* atau *Merugikan*;
+- **Kumulatif**: jumlah selisih bertanda dari periode ke periode. Bila terus negatif, perkiraan Anda condong ke satu arah.
+
+Sistem hanya menyajikan angka. Membaca dua hal secara terpisah adalah tugas Anda: apakah **eksekusinya** menyimpang dari rencana (aktual jauh dari revisi), atau **rencananya** yang meleset sejak awal (aktual dekat dengan revisi tetapi jauh dari estimasi awal).
+
+**Contoh: promosi semester II.** Perusahaan menyiapkan dua rencana untuk Mei–Oktober 2026. *Promosi semester II 2026* (strategi) berlingkup nilai dimensi Kegiatan "Strategi: promosi semester II", dengan estimasi penjualan barang 250 juta per bulan dan biaya iklan dan promosi 28 juta. *Taktik iklan digital* berlingkup nilai turunannya, "Taktik: iklan digital", dengan biaya 20 juta per bulan. Faktur penjualan yang termasuk promosi dan tagihan iklannya diberi tag dimensi itu. Mulai Agustus ada **revisi** (biaya iklan digital naik menjadi 32 juta, penjualan turun menjadi 230 juta). Hasil pada layar evaluasi taktik: biaya digital sebenarnya naik 4 juta setiap bulan (18 juta pada Mei sampai 38 juta pada Oktober), sehingga kumulatif terhadap estimasi awal mencapai −48 juta tetapi terhadap revisi hanya −12 juta. Artinya taktik ini meleset dari rencana awal, dan revisi menangkap sebagian besar penyimpangannya. Di sisi strategi, penjualan yang diberi tag promosi melampaui estimasi, sehingga keputusan yang dinilai adalah apakah tambahan penjualan itu sepadan dengan biaya iklan yang membengkak.
 
 ---
 
