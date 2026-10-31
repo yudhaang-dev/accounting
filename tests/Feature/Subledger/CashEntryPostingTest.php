@@ -2,10 +2,15 @@
 
 use App\Models\User;
 use App\Modules\GeneralLedger\Contracts\JournalSource;
+use App\Modules\GeneralLedger\Contracts\PostingService;
 use App\Modules\GeneralLedger\Contracts\PostJournal;
 use App\Modules\GeneralLedger\Contracts\PostJournalLine;
+use App\Modules\GeneralLedger\Contracts\ReverseJournal;
+use App\Modules\Subledger\Application\CashTransferPosting;
 use App\Modules\Subledger\Contracts\CashEntry;
+use App\Modules\Subledger\Contracts\CashTransfer;
 use App\Modules\Subledger\Contracts\SubledgerPosting;
+use App\Platform\Api\ApiException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -150,5 +155,66 @@ describe('a cash entry', function () {
     it('is checked as the ledger checks any journal', function () {
         // An unbalanced journal is refused.
         expect(fn () => app(SubledgerPosting::class)->validateCashEntry(cashEntry([cashEntryLine($this->expense, '1000', '0'), cashEntryLine($this->bank, '0', '900')])))->toThrow(Exception::class);
+    });
+});
+
+function reverseCashJournal(string $journalId, ?string $entryId = null): ReverseJournal
+{
+    return new ReverseJournal(test()->companyId, $journalId, '2026-03-20', entryId: $entryId, postedBy: test()->admin->id);
+}
+
+describe('the reversal of a cash entry (SL-FR-12)', function () {
+    it('answers the cash with a transaction of the opposite direction, so the account follows the ledger', function () {
+        $journal = app(SubledgerPosting::class)->postCashEntry(cashEntry([cashEntryLine($this->expense, '250000', '0'), cashEntryLine($this->bank, '0', '250000')]));
+
+        app(SubledgerPosting::class)->validateReversal(reverseCashJournal($journal->id));
+        $reversal = app(SubledgerPosting::class)->reverse(reverseCashJournal($journal->id));
+
+        $rows = DB::table('sl_cash_transactions')->orderBy('direction')->get();
+
+        expect($rows)->toHaveCount(2)
+            ->and($rows[0])->toMatchArray(['direction' => 'in', 'amount' => '250000.000000', 'journal_id' => $reversal->id, 'document_id' => null, 'transaction_date' => '2026-03-20'])
+            ->and($rows[1])->toMatchArray(['direction' => 'out', 'journal_id' => $journal->id])
+            ->and(DB::table('gl_journals')->where('id', $reversal->id)->value('reverses_journal_id'))->toBe($journal->id);
+    });
+
+    it('is refused a second time, and returns the same reversal for the same key', function () {
+        $journal = app(SubledgerPosting::class)->postCashEntry(cashEntry([cashEntryLine($this->bank, '5000000', '0'), cashEntryLine($this->capital, '0', '5000000')]));
+        $key = (string) Str::ulid();
+
+        $first = app(SubledgerPosting::class)->reverse(reverseCashJournal($journal->id, $key));
+        $again = app(SubledgerPosting::class)->reverse(reverseCashJournal($journal->id, $key));
+
+        expect($again->id)->toBe($first->id)
+            ->and(DB::table('sl_cash_transactions')->count())->toBe(2);
+
+        expect(fn () => app(SubledgerPosting::class)->reverse(reverseCashJournal($journal->id)))->toThrow(ApiException::class)
+            ->and(fn () => app(SubledgerPosting::class)->validateReversal(reverseCashJournal($journal->id)))->toThrow(ApiException::class)
+            ->and(DB::table('sl_cash_transactions')->count())->toBe(2);
+    });
+
+    it('gives back both legs of a transfer', function () {
+        $journal = app(CashTransferPosting::class)->post(new CashTransfer(
+            new PostJournal(companyId: $this->companyId, accountingDate: '2026-03-15', description: 'Transfer', source: JournalSource::Subledger,
+                lines: [cashEntryLine($this->otherBank, '1000000', '0'), cashEntryLine($this->bank, '0', '1000000')], entryId: (string) Str::ulid()),
+            $this->cashAccount,
+            $this->otherCashAccount,
+        ));
+
+        $reversal = app(SubledgerPosting::class)->reverse(reverseCashJournal($journal->id));
+
+        $balance = fn (string $account) => DB::table('sl_cash_transactions')->where('cash_account_id', $account)->get()
+            ->sum(fn ($row) => $row->direction === 'in' ? (float) $row->amount : -(float) $row->amount);
+
+        expect(DB::table('sl_cash_transactions')->where('journal_id', $reversal->id)->count())->toBe(2)
+            ->and($balance($this->cashAccount))->toBe(0.0)
+            ->and($balance($this->otherCashAccount))->toBe(0.0);
+    });
+
+    it('is still refused for a journal that has no cash and no document', function () {
+        $plain = app(PostingService::class)->post(new PostJournal(companyId: $this->companyId, accountingDate: '2026-03-15', description: 'Plain', source: JournalSource::Entry,
+            lines: [cashEntryLine($this->expense, '1000', '0'), cashEntryLine($this->capital, '0', '1000')], entryId: (string) Str::ulid()));
+
+        expect(fn () => app(SubledgerPosting::class)->reverse(reverseCashJournal($plain->id)))->toThrow(ApiException::class);
     });
 });

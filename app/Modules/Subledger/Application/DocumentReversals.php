@@ -24,7 +24,8 @@ use Illuminate\Support\Facades\DB;
  * Reversal of the journal of a document (SL-FR-12). The ledger posts the mirror image of the journal; the
  * subledger takes the document out of the open items and gives back the cash it moved. A document that
  * still has active allocations is refused, so that what was settled against it is not left standing: the
- * allocations have to be cancelled first, each with its own exchange difference.
+ * allocations have to be cancelled first, each with its own exchange difference. The journal of a cash entry
+ * or a transfer has no document: its cash goes back with a transaction of the opposite direction (ADR-0016).
  */
 final class DocumentReversals
 {
@@ -55,6 +56,10 @@ final class DocumentReversals
         return $this->company->run($reversal->companyId, fn (): PostedJournal => DB::transaction(function () use ($reversal): PostedJournal {
             $document = $this->check($reversal, lock: true);
 
+            if ($document === null) {
+                return $this->reverseCash($reversal);
+            }
+
             // Reversing again with the same key: the ledger gives back the reversal it made.
             if (DocumentReversal::query()->where('document_id', $document->id)->exists()) {
                 return $this->posting->reverse($reversal);
@@ -83,15 +88,20 @@ final class DocumentReversals
     }
 
     /**
-     * The document of the journal, once the journal is known to be one that can be reversed.
+     * The document of the journal, once the journal is known to be one that can be reversed; null for the
+     * journal of a cash entry or a transfer, which has cash and no document.
      *
      * @throws ApiException
      */
-    private function check(ReverseJournal $reversal, bool $lock = false): Document
+    private function check(ReverseJournal $reversal, bool $lock = false): ?Document
     {
         $document = Document::query()->when($lock, fn ($query) => $query->lockForUpdate())->where('journal_id', $reversal->journalId)->first();
 
         if ($document === null) {
+            if (CashTransaction::query()->where('journal_id', $reversal->journalId)->whereNull('document_id')->exists()) {
+                return null;
+            }
+
             $number = (string) DB::table('gl_journals')->where('id', $reversal->journalId)->value('number');
 
             throw new ApiException(ErrorCode::InvalidStateTransition, errors: ['journal_id' => [__('documents.reversal_not_document', ['number' => $number])]]);
@@ -120,6 +130,33 @@ final class DocumentReversals
         }
 
         return $document;
+    }
+
+    /** Cash entries and transfers: the ledger reverses the journal, and each cash transaction of it is answered by one of the opposite direction. */
+    private function reverseCash(ReverseJournal $reversal): PostedJournal
+    {
+        $journal = $this->posting->reverse($reversal);
+
+        // Reversing again with the same key: the ledger gives back the reversal it made, whose cash is recorded.
+        if ($journal->replayed) {
+            return $journal;
+        }
+
+        $number = (string) DB::table('gl_journals')->where('id', $reversal->journalId)->value('number');
+
+        foreach (CashTransaction::query()->where('journal_id', $reversal->journalId)->whereNull('document_id')->get() as $transaction) {
+            CashTransaction::create([
+                'cash_account_id' => $transaction->cash_account_id,
+                'direction' => $transaction->direction === CashDirection::In ? CashDirection::Out : CashDirection::In,
+                'amount' => $transaction->amount,
+                'currency' => $transaction->currency,
+                'transaction_date' => $journal->accountingDate,
+                'reference' => (string) __('documents.reversal_cash_description', ['number' => $number]),
+                'journal_id' => $journal->id,
+            ]);
+        }
+
+        return $journal;
     }
 
     /** The cash the document moved goes back with a transaction of the opposite direction, so the account follows the ledger. */
