@@ -2,23 +2,28 @@
 
 namespace App\Modules\Planning\Http;
 
+use App\Modules\GeneralLedger\Contracts\PeriodDirectory;
 use App\Modules\Planning\Application\ManagePlans;
 use App\Modules\Planning\Domain\Plan;
+use App\Support\Company\CompanyContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PlanController
 {
     /**
-     * Plans of the company, ordered by name. Filter: `filter[fiscal_year_id]`. `per_page` defaults
-     * to 50, at most 200.
+     * Plans of the company, ordered by name. Filter: `filter[fiscal_year_id]` keeps the plans whose
+     * period overlaps that fiscal year. `per_page` defaults to 50, at most 200.
      */
-    public function index(ListPlansRequest $request): AnonymousResourceCollection
+    public function index(ListPlansRequest $request, PeriodDirectory $periods, CompanyContext $company): AnonymousResourceCollection
     {
         $filter = $request->validated('filter') ?? [];
+        $year = isset($filter['fiscal_year_id']) ? $periods->fiscalYear($company->require(), $filter['fiscal_year_id']) : null;
 
         $plans = Plan::query()
-            ->when(isset($filter['fiscal_year_id']), fn ($query) => $query->where('fiscal_year_id', $filter['fiscal_year_id']))
+            ->when(isset($filter['fiscal_year_id']), fn ($query) => $year === null
+                ? $query->whereRaw('false')
+                : $query->where('starts_on', '<=', $year->endDate)->where('ends_on', '>=', $year->startDate))
             ->orderBy('name')
             ->orderBy('id')
             ->paginate($request->integer('per_page', 50))
@@ -33,8 +38,10 @@ class PlanController
     }
 
     /**
-     * Adds a plan for a fiscal year. The name is unique within the fiscal year. The versions that hold
-     * its amounts are added with `POST /plans/{id}/versions`.
+     * Adds a plan: a title (`name`), an `objective`, its own period (`starts_on`..`ends_on`, which may
+     * span fiscal years) and optionally the dimension value it is measured against
+     * (`scope_dimension_value_id`; none means the whole company). The name is unique in the company.
+     * The versions that hold its amounts are added with `POST /plans/{id}/versions`.
      */
     public function store(CreatePlanRequest $request, ManagePlans $plans): JsonResponse
     {
@@ -42,7 +49,9 @@ class PlanController
     }
 
     /**
-     * Changes the name or the description. The fiscal year cannot change. `lock_version` is required.
+     * Changes the name, objective or description. The period and the scope change only until a version
+     * has been published, and a period cannot leave out a period that already has lines.
+     * `lock_version` is required.
      */
     public function update(UpdatePlanRequest $request, ManagePlans $plans, string $companyId, string $id): PlanResource
     {

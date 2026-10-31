@@ -17,9 +17,17 @@ beforeEach(function () {
     confirmChartOfAccounts($this->admin, $this->companyId);
     setUpFiscalCalendar($this->admin, $this->companyId);
 
-    $this->fiscalYearId = $this->actingAs($this->admin)->getJson("{$this->url}/fiscal-years")->json('data.0.id');
-    $this->planId = $this->actingAs($this->admin)->postJson("{$this->url}/plans", ['name' => 'Anggaran 2026', 'fiscal_year_id' => $this->fiscalYearId])->json('data.id');
+    $year = $this->actingAs($this->admin)->getJson("{$this->url}/fiscal-years")->json('data.0');
+    $this->fiscalYearId = $year['id'];
+    $this->planId = $this->actingAs($this->admin)->postJson("{$this->url}/plans", ['name' => 'Anggaran 2026', 'starts_on' => $year['start_date'], 'ends_on' => $year['end_date']])->json('data.id');
 });
+
+function pbDimensionValue(): string
+{
+    $type = test()->actingAs(test()->admin)->postJson(test()->url.'/dimension-types', ['key' => 'activity', 'label' => 'Kegiatan'])->assertCreated()->json('data.id');
+
+    return test()->actingAs(test()->admin)->postJson(test()->url.'/dimension-values', ['dimension_type_id' => $type, 'code' => 'PROMO', 'name' => 'Promosi'])->assertCreated()->json('data.id');
+}
 
 /** A draft with one line, last changed by `$actor` (the admin by default). */
 function pbVersion(string $name = 'Anggaran awal', ?User $actor = null): array
@@ -131,6 +139,18 @@ describe('planning policy (PL-FR-04)', function () {
             ->assertUnprocessable()->assertJsonValidationErrors(['default_versions.0.fiscal_year_id']);
         pbPolicy(['lock_version' => 0, 'require_distinct_publisher' => false, 'default_versions' => [$entry($published['id']), $entry(null)]])
             ->assertUnprocessable()->assertJsonValidationErrors(['default_versions.1.fiscal_year_id']);
+
+        // A plan that is measured against one dimension value is no default for the whole company.
+        $scoped = $this->actingAs($this->admin)->postJson("{$this->url}/plans", ['name' => 'Promosi', 'starts_on' => '2026-01-01', 'ends_on' => '2026-03-31', 'scope_dimension_value_id' => pbDimensionValue()])->json('data.id');
+        $scopedVersion = $this->actingAs($this->admin)->postJson("{$this->url}/plans/{$scoped}/versions", ['name' => 'Awal'])->json('data');
+        $this->actingAs($this->admin)->putJson("{$this->url}/plan-versions/{$scopedVersion['id']}/lines", ['lines' => [[
+            'period_id' => (string) Period::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->orderBy('start_date')->value('id'),
+            'account_id' => (string) Account::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->where('code', '4110')->value('id'),
+            'amount' => '10',
+        ]]])->assertOk();
+        pbPublish($scopedVersion)->assertOk();
+        pbPolicy(['lock_version' => 0, 'require_distinct_publisher' => false, 'default_versions' => [$entry($scopedVersion['id'])]])
+            ->assertUnprocessable()->assertJsonValidationErrors(['default_versions.0.plan_version_id']);
 
         $this->actingAs($this->admin)->getJson("{$this->url}/planning-policy")->assertJsonPath('data.default_versions', []);
 

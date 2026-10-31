@@ -4,11 +4,15 @@
 return [
 
     'fiscal_year_unknown' => 'The fiscal year does not exist in this company.',
-    'name_taken' => 'A plan with this name already exists for this fiscal year.',
+    'name_taken' => 'A plan with this name already exists.',
+    'period_reversed' => 'The end date cannot be before the start date.',
+    'period_fixed' => 'The period and the scope cannot change once a version has been published.',
+    'period_lines_outside' => 'The plan has lines outside the new period.',
+    'scope_unknown' => 'The dimension value does not exist in this company.',
     'version_name_taken' => 'A version with this name already exists in this plan.',
 
     'period_unknown' => 'The period does not exist in this company.',
-    'period_outside_year' => 'The period is outside the fiscal year of the plan.',
+    'period_outside_year' => 'The period is outside the period of the plan.',
     'account_unknown' => 'The account does not exist in this company.',
     'account_inactive' => 'Account :code is inactive.',
     'account_parent' => 'Account :code is a parent account; plan a leaf account.',
@@ -17,7 +21,6 @@ return [
     'line_duplicate' => 'The same period, account and dimensions already appear in row :row.',
 
     'copy_same_version' => 'A version cannot be copied into itself.',
-    'copy_other_year' => 'The version belongs to a plan of another fiscal year.',
 
     'csv_required' => 'Send the CSV as a multipart "file" or a text/csv body.',
     'csv_too_large' => 'The CSV file is larger than 2 MB.',
@@ -33,7 +36,8 @@ return [
     'publish_empty' => 'A version without lines cannot be published.',
     'version_unknown' => 'The version does not exist in this company.',
     'default_not_published' => 'Only a published version can be the default comparison.',
-    'default_other_year' => 'The version belongs to a plan of another fiscal year.',
+    'default_other_year' => 'The plan does not overlap the fiscal year.',
+    'default_scoped' => 'A plan with a scope cannot be the default comparison of the whole company.',
     'default_year_repeated' => 'The fiscal year appears more than once.',
 
 ];

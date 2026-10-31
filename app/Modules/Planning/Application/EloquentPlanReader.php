@@ -53,6 +53,8 @@ final class EloquentPlanReader implements PlanReader
 
     private function data(PlanVersion $version): PlanVersionData
     {
-        return new PlanVersionData($version->id, $version->plan->fiscal_year_id, $version->name, $version->status->value);
+        $plan = $version->plan;
+
+        return new PlanVersionData($version->id, $version->name, $version->status->value, $plan->starts_on->toDateString(), $plan->ends_on->toDateString(), $plan->scope_dimension_value_id);
     }
 }

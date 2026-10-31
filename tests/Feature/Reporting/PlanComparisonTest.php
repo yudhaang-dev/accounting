@@ -18,8 +18,9 @@ beforeEach(function () {
     setUpFiscalCalendar($this->admin, $this->companyId);
 
     $this->viewer = memberWithRoles($this->companyId, 'viewer');
-    $this->fiscalYearId = $this->actingAs($this->admin)->getJson("{$this->url}/fiscal-years")->json('data.0.id');
-    $this->planId = $this->actingAs($this->admin)->postJson("{$this->url}/plans", ['name' => 'Anggaran 2026', 'fiscal_year_id' => $this->fiscalYearId])->json('data.id');
+    $year = $this->actingAs($this->admin)->getJson("{$this->url}/fiscal-years")->json('data.0');
+    $this->fiscalYearId = $year['id'];
+    $this->planId = $this->actingAs($this->admin)->postJson("{$this->url}/plans", ['name' => 'Anggaran 2026', 'starts_on' => $year['start_date'], 'ends_on' => $year['end_date']])->json('data.id');
 });
 
 function pcAccount(string $code): string
@@ -141,6 +142,28 @@ describe('plan against actual (RP-FR-11, RP-FR-12)', function () {
             ->and($result['columns'][1])->toMatchArray(['kind' => 'plan', 'available' => true, 'plan_version_id' => $forecast]);
 
         expect(pcRows(pcRun($id))['costs']['values']['plan'])->toBe('100.00');
+    });
+
+    it('reads a plan that spans two fiscal years over a report range that does too (ADR-0017)', function () {
+        $this->actingAs($this->admin)->postJson("{$this->url}/fiscal-years", ['start_date' => '2027-01-01'])->assertCreated();
+        $plan = $this->actingAs($this->admin)->postJson("{$this->url}/plans", ['name' => 'Kampanye', 'starts_on' => '2026-11-01', 'ends_on' => '2027-02-28'])->assertCreated()->json('data.id');
+        $version = $this->actingAs($this->admin)->postJson("{$this->url}/plans/{$plan}/versions", ['name' => 'Awal'])->json('data');
+        $period = fn (string $date): string => (string) Period::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->where('start_date', $date)->value('id');
+
+        $this->actingAs($this->admin)->putJson("{$this->url}/plan-versions/{$version['id']}/lines", ['lines' => [
+            ['period_id' => $period('2026-12-01'), 'account_id' => pcAccount('5110'), 'amount' => '100'],
+            ['period_id' => $period('2027-01-01'), 'account_id' => pcAccount('5110'), 'amount' => '40'],
+        ]])->assertOk();
+        $this->actingAs($this->admin)->postJson("{$this->url}/plan-versions/{$version['id']}/publish", ['lock_version' => $version['lock_version']])->assertOk();
+
+        pcPost('2026-12-05', '5110', '1111', '70.00');
+        pcPost('2027-01-05', '5110', '1111', '30.00');
+
+        $result = $this->actingAs($this->viewer)->getJson("{$this->url}/report-definitions/".pcDefinition()."/result?from=2026-11-01&to=2027-02-28&plan_version_id={$version['id']}")
+            ->assertOk()->json('data');
+
+        expect(pcRows($result)['costs']['values'])->toBe(['actual' => '100.00', 'plan' => '140.00', 'variance' => '-40.00'])
+            ->and($result['columns'][1])->toMatchArray(['kind' => 'plan', 'available' => true]);
     });
 
     it('has no plan value rather than zero when no version applies', function () {

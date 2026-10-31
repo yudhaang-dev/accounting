@@ -22,8 +22,8 @@ beforeEach(function () {
     confirmChartOfAccounts($this->admin, $this->companyId);
     setUpFiscalCalendar($this->admin, $this->companyId);
 
-    $fiscalYearId = $this->actingAs($this->admin)->getJson("{$this->url}/fiscal-years")->json('data.0.id');
-    $planId = $this->actingAs($this->admin)->postJson("{$this->url}/plans", ['name' => 'Anggaran 2026', 'fiscal_year_id' => $fiscalYearId])->json('data.id');
+    $year = $this->actingAs($this->admin)->getJson("{$this->url}/fiscal-years")->json('data.0');
+    $planId = $this->actingAs($this->admin)->postJson("{$this->url}/plans", ['name' => 'Anggaran 2026', 'starts_on' => $year['start_date'], 'ends_on' => $year['end_date']])->json('data.id');
     $this->versionId = plVersion($planId, 'Anggaran awal');
     $this->planId = $planId;
 
@@ -310,17 +310,21 @@ describe('copying lines (PL-FR-03)', function () {
             ->and(AuditEntry::where('event', 'plan_version.lines_copied')->count())->toBe(1);
     });
 
-    it('refuses to copy a version into itself or from a plan of another fiscal year', function () {
+    it('refuses to copy a version into itself', function () {
         $this->actingAs($this->admin)->postJson("{$this->url}/plan-versions/{$this->versionId}/lines/copy", ['from_version_id' => $this->versionId])
             ->assertUnprocessable()->assertJsonValidationErrors(['from_version_id']);
+    });
 
+    it('copies from a version of another plan and leaves out the periods the plan does not cover', function () {
         $this->actingAs($this->admin)->postJson("{$this->url}/fiscal-years", ['start_date' => '2027-01-01'])->assertCreated();
-        $nextYear = collect($this->actingAs($this->admin)->getJson("{$this->url}/fiscal-years")->json('data'))->firstWhere('start_date', '2027-01-01')['id'];
-        $otherPlan = $this->actingAs($this->admin)->postJson("{$this->url}/plans", ['name' => 'Anggaran 2027', 'fiscal_year_id' => $nextYear])->json('data.id');
+        $otherPlan = $this->actingAs($this->admin)->postJson("{$this->url}/plans", ['name' => 'Anggaran 2027', 'starts_on' => '2026-12-01', 'ends_on' => '2027-12-31'])->json('data.id');
         $otherVersion = plVersion($otherPlan, 'Awal');
 
+        plEnter($otherVersion, [plRow('4110', '100', 12), plRow('4110', '200', 1, ['period_id' => plPeriodId(1, 2027)])])->assertOk();
+
+        // The plan of 2026 covers December 2026 but not January 2027.
         $this->actingAs($this->admin)->postJson("{$this->url}/plan-versions/{$this->versionId}/lines/copy", ['from_version_id' => $otherVersion])
-            ->assertUnprocessable()->assertJsonValidationErrors(['from_version_id']);
+            ->assertOk()->assertJsonPath('data.created', 1)->assertJsonPath('data.skipped', 1);
     });
 
     it('copies the realization of a period into a period of the plan, in the direction of the normal balance', function () {

@@ -102,7 +102,9 @@ final class ManagePlanningPolicy
 
             $seen[$yearId] = true;
 
-            if ($this->periods->fiscalYear($companyId, $yearId) === null) {
+            $year = $this->periods->fiscalYear($companyId, $yearId);
+
+            if ($year === null) {
                 $errors["default_versions.{$index}.fiscal_year_id"] = [__('plans.fiscal_year_unknown')];
 
                 continue;
@@ -116,7 +118,8 @@ final class ManagePlanningPolicy
             $problem = match (true) {
                 $version === null => (string) __('plans.version_unknown'),
                 $version->status !== PlanVersionStatus::Published => (string) __('plans.default_not_published'),
-                $version->plan->fiscal_year_id !== $yearId => (string) __('plans.default_other_year'),
+                $version->plan->scope_dimension_value_id !== null => (string) __('plans.default_scoped'),
+                $version->plan->starts_on->toDateString() > $year->endDate || $version->plan->ends_on->toDateString() < $year->startDate => (string) __('plans.default_other_year'),
                 default => null,
             };
 

@@ -20,14 +20,25 @@ beforeEach(function () {
     confirmChartOfAccounts($this->admin, $this->companyId);
     setUpFiscalCalendar($this->admin, $this->companyId);
 
-    $this->fiscalYearId = $this->actingAs($this->admin)->getJson("{$this->url}/fiscal-years")->json('data.0.id');
+    $year = $this->actingAs($this->admin)->getJson("{$this->url}/fiscal-years")->json('data.0');
+    $this->fiscalYearId = $year['id'];
+    $this->yearStart = $year['start_date'];
+    $this->yearEnd = $year['end_date'];
 });
 
 function newPlan(array $overrides = [])
 {
     return test()->actingAs(test()->admin)->postJson(test()->url.'/plans', array_merge([
-        'name' => 'Anggaran 2026', 'fiscal_year_id' => test()->fiscalYearId, 'description' => 'Anggaran awal',
+        'name' => 'Anggaran 2026', 'starts_on' => test()->yearStart, 'ends_on' => test()->yearEnd, 'description' => 'Anggaran awal',
     ], $overrides));
+}
+
+function dimensionValue(User $admin, string $companyId): string
+{
+    $url = "/api/v1/companies/{$companyId}";
+    $type = test()->actingAs($admin)->postJson("{$url}/dimension-types", ['key' => 'activity', 'label' => 'Kegiatan'])->assertCreated()->json('data.id');
+
+    return test()->actingAs($admin)->postJson("{$url}/dimension-values", ['dimension_type_id' => $type, 'code' => 'PROMO', 'name' => 'Promosi'])->assertCreated()->json('data.id');
 }
 
 function newVersion(string $planId, string $name = 'Anggaran awal')
@@ -59,11 +70,12 @@ function publishVersion(string $versionId): void
 }
 
 describe('plans (PL-FR-01)', function () {
-    it('creates a plan for a fiscal year of the company and audits it', function () {
-        $plan = newPlan()->assertCreated()->json('data');
+    it('creates a plan with its own period and audits it', function () {
+        $plan = newPlan(['objective' => 'Menguji kampanye'])->assertCreated()->json('data');
 
         expect($plan)->toMatchArray([
-            'name' => 'Anggaran 2026', 'fiscal_year_id' => $this->fiscalYearId, 'description' => 'Anggaran awal', 'lock_version' => 1,
+            'name' => 'Anggaran 2026', 'objective' => 'Menguji kampanye', 'starts_on' => $this->yearStart, 'ends_on' => $this->yearEnd,
+            'scope_dimension_value_id' => null, 'description' => 'Anggaran awal', 'lock_version' => 1,
         ])->and(AuditEntry::where('event', 'plan.created')->where('company_id', $this->companyId)->count())->toBe(1);
 
         $this->actingAs($this->admin)->getJson("{$this->url}/plans/{$plan['id']}")->assertOk()->assertJsonPath('data.id', $plan['id']);
@@ -71,24 +83,64 @@ describe('plans (PL-FR-01)', function () {
         $this->actingAs($this->admin)->getJson("{$this->url}/plans?filter[fiscal_year_id]=".str_repeat('0', 26))->assertOk()->assertJsonCount(0, 'data');
     });
 
-    it('refuses an unknown fiscal year and a name used in the same fiscal year', function () {
-        newPlan(['fiscal_year_id' => str_repeat('0', 26)])->assertUnprocessable()->assertJsonValidationErrors(['fiscal_year_id']);
+    it('accepts a period that is not a fiscal year, one that spans two, and a scope', function () {
+        $value = dimensionValue($this->admin, $this->companyId);
+
+        $short = newPlan(['name' => 'Promosi', 'starts_on' => '2026-03-15', 'ends_on' => '2026-06-30', 'scope_dimension_value_id' => $value])
+            ->assertCreated()->json('data');
+        expect($short)->toMatchArray(['starts_on' => '2026-03-15', 'ends_on' => '2026-06-30', 'scope_dimension_value_id' => $value]);
+
+        newPlan(['name' => 'Lintas tahun', 'starts_on' => '2026-07-01', 'ends_on' => '2027-06-30'])->assertCreated();
+    });
+
+    it('refuses a reversed period, an unknown scope, and a name used in the company', function () {
+        newPlan(['starts_on' => '2026-06-01', 'ends_on' => '2026-05-31'])->assertUnprocessable()->assertJsonValidationErrors(['ends_on']);
+        newPlan(['scope_dimension_value_id' => str_repeat('0', 26)])->assertUnprocessable()->assertJsonValidationErrors(['scope_dimension_value_id']);
+        newPlan(['starts_on' => null])->assertUnprocessable()->assertJsonValidationErrors(['starts_on']);
 
         newPlan()->assertCreated();
         newPlan()->assertUnprocessable()->assertJsonValidationErrors(['name']);
     });
 
-    it('changes the name and description with the lock version, but never the fiscal year', function () {
+    it('changes the name and objective with the lock version', function () {
         $plan = newPlan()->json('data');
 
         $updated = $this->actingAs($this->admin)->patchJson("{$this->url}/plans/{$plan['id']}", [
-            'lock_version' => 1, 'name' => 'Anggaran Final', 'description' => null, 'fiscal_year_id' => str_repeat('0', 26),
+            'lock_version' => 1, 'name' => 'Anggaran Final', 'description' => null, 'objective' => 'Hipotesis',
         ])->assertOk()->json('data');
 
-        expect($updated)->toMatchArray(['name' => 'Anggaran Final', 'description' => null, 'fiscal_year_id' => $this->fiscalYearId, 'lock_version' => 2])
+        expect($updated)->toMatchArray(['name' => 'Anggaran Final', 'description' => null, 'objective' => 'Hipotesis', 'lock_version' => 2])
             ->and(AuditEntry::where('event', 'plan.updated')->count())->toBe(1);
 
         $this->actingAs($this->admin)->patchJson("{$this->url}/plans/{$plan['id']}", ['lock_version' => 1, 'name' => 'Lain'])->assertConflict();
+    });
+
+    it('changes the period and scope until a version is published, then keeps them', function () {
+        $plan = newPlan()->json('data');
+        $value = dimensionValue($this->admin, $this->companyId);
+
+        $plan = $this->actingAs($this->admin)->patchJson("{$this->url}/plans/{$plan['id']}", [
+            'lock_version' => 1, 'ends_on' => '2026-06-30', 'scope_dimension_value_id' => $value,
+        ])->assertOk()->json('data');
+        expect($plan)->toMatchArray(['ends_on' => '2026-06-30', 'scope_dimension_value_id' => $value]);
+
+        $version = newVersion($plan['id'])->json('data');
+        planLine($version['id'], '4110', '100.00', 1);
+        publishVersion($version['id']);
+
+        $this->actingAs($this->admin)->patchJson("{$this->url}/plans/{$plan['id']}", ['lock_version' => 2, 'ends_on' => '2026-12-31'])
+            ->assertUnprocessable()->assertJsonValidationErrors(['starts_on']);
+        $this->actingAs($this->admin)->patchJson("{$this->url}/plans/{$plan['id']}", ['lock_version' => 2, 'scope_dimension_value_id' => null])
+            ->assertUnprocessable()->assertJsonValidationErrors(['starts_on']);
+        $this->actingAs($this->admin)->patchJson("{$this->url}/plans/{$plan['id']}", ['lock_version' => 2, 'name' => 'Baru'])->assertOk();
+    });
+
+    it('does not move a period away from lines that are already planned', function () {
+        $plan = newPlan()->json('data');
+        planLine(newVersion($plan['id'])->json('data.id'), '4110', '100.00', 1);
+
+        $this->actingAs($this->admin)->patchJson("{$this->url}/plans/{$plan['id']}", ['lock_version' => 1, 'starts_on' => '2026-03-01'])
+            ->assertUnprocessable()->assertJsonValidationErrors(['starts_on']);
     });
 
     it('asks for plans.manage to change and plans.read to see', function () {
@@ -96,7 +148,7 @@ describe('plans (PL-FR-01)', function () {
         $plan = newPlan()->json('data');
 
         $this->actingAs($viewer)->getJson("{$this->url}/plans")->assertOk();
-        $this->actingAs($viewer)->postJson("{$this->url}/plans", ['name' => 'X', 'fiscal_year_id' => $this->fiscalYearId])->assertForbidden();
+        $this->actingAs($viewer)->postJson("{$this->url}/plans", ['name' => 'X', 'starts_on' => $this->yearStart, 'ends_on' => $this->yearEnd])->assertForbidden();
         $this->actingAs($viewer)->patchJson("{$this->url}/plans/{$plan['id']}", ['lock_version' => 1, 'name' => 'X'])->assertForbidden();
         $this->actingAs($viewer)->postJson("{$this->url}/plans/{$plan['id']}/versions", ['name' => 'X'])->assertForbidden();
     });

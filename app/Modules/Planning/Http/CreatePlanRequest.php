@@ -13,8 +13,11 @@ class CreatePlanRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            // The fiscal year the plan projects; it cannot change afterwards.
-            'fiscal_year_id' => ['required', 'string', 'size:26'],
+            'objective' => ['nullable', 'string', 'max:2000'],
+            'starts_on' => ['required', 'date_format:Y-m-d'],
+            'ends_on' => ['required', 'date_format:Y-m-d', 'after_or_equal:starts_on'],
+            // The dimension value the plan is measured against; none means the whole company.
+            'scope_dimension_value_id' => ['nullable', 'string', 'size:26'],
             'description' => ['nullable', 'string', 'max:2000'],
         ];
     }

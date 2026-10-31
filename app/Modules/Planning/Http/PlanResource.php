@@ -12,14 +12,17 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class PlanResource extends JsonResource
 {
     /**
-     * @return array{id: string, name: string, fiscal_year_id: string, description: string|null, lock_version: int}
+     * @return array{id: string, name: string, objective: string|null, starts_on: string, ends_on: string, scope_dimension_value_id: string|null, description: string|null, lock_version: int}
      */
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->resource->id,
             'name' => $this->resource->name,
-            'fiscal_year_id' => $this->resource->fiscal_year_id,
+            'objective' => $this->resource->objective,
+            'starts_on' => $this->resource->starts_on->toDateString(),
+            'ends_on' => $this->resource->ends_on->toDateString(),
+            'scope_dimension_value_id' => $this->resource->scope_dimension_value_id,
             'description' => $this->resource->description,
             'lock_version' => $this->resource->lock_version,
         ];

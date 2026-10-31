@@ -109,8 +109,8 @@ final class ManagePlanLines
     }
 
     /**
-     * Copies the lines of another version of the same fiscal year into a draft; cells that already
-     * exist take the amounts of the source (PL-FR-03).
+     * Copies the lines of another version into a draft, leaving out those of periods the plan does
+     * not cover; cells that already exist take the amounts of the source (PL-FR-03).
      *
      * @return array{created: int, updated: int, skipped: int}
      *
@@ -121,19 +121,26 @@ final class ManagePlanLines
     {
         return DB::transaction(function () use ($versionId, $sourceId, $actorId): array {
             [$version, $plan] = $this->draft($versionId);
-            $source = PlanVersion::query()->with('plan')->findOrFail($sourceId);
+            $source = PlanVersion::query()->findOrFail($sourceId);
 
             if ($source->id === $version->id) {
                 throw ValidationException::withMessages(['from_version_id' => [__('plans.copy_same_version')]]);
             }
 
-            if ($source->plan->fiscal_year_id !== $plan->fiscal_year_id) {
-                throw ValidationException::withMessages(['from_version_id' => [__('plans.copy_other_year')]]);
-            }
-
             $cells = [];
+            $skipped = 0;
+            $periods = [];
 
-            PlanLine::query()->where('plan_version_id', $source->id)->orderBy('id')->each(function (PlanLine $line) use (&$cells): void {
+            PlanLine::query()->where('plan_version_id', $source->id)->orderBy('id')->each(function (PlanLine $line) use (&$cells, &$skipped, &$periods, $version, $plan): void {
+                $period = $periods[$line->period_id] ??= $this->periods->find($version->company_id, $line->period_id);
+
+                // A line of a period the target plan does not cover has no place in it.
+                if ($period === null || ! $this->covers($plan, $period)) {
+                    $skipped++;
+
+                    return;
+                }
+
                 $cells[] = [
                     'period_id' => $line->period_id,
                     'account_id' => $line->account_id,
@@ -143,7 +150,7 @@ final class ManagePlanLines
                 ];
             });
 
-            return [...$this->write($version, $cells, $actorId, 'plan_version.lines_copied', ['from_version_id' => $source->id]), 'skipped' => 0];
+            return [...$this->write($version, $cells, $actorId, 'plan_version.lines_copied', ['from_version_id' => $source->id]), 'skipped' => $skipped];
         });
     }
 
@@ -172,7 +179,7 @@ final class ManagePlanLines
 
             if ($target === null) {
                 $errors['to_period_id'] = [__('plans.period_unknown')];
-            } elseif ($target->fiscalYearId !== $plan->fiscal_year_id) {
+            } elseif (! $this->covers($plan, $target)) {
                 $errors['to_period_id'] = [__('plans.period_outside_year')];
             }
 
@@ -228,6 +235,12 @@ final class ManagePlanLines
         return [$version, Plan::query()->findOrFail($version->plan_id)];
     }
 
+    /** A period belongs to the plan when it overlaps the period of the plan, so a plan that starts mid-month still plans that month. */
+    private function covers(Plan $plan, PeriodData $period): bool
+    {
+        return $period->startDate <= $plan->ends_on->toDateString() && $period->endDate >= $plan->starts_on->toDateString();
+    }
+
     /**
      * @param  array<string, mixed>  $row
      * @param  array<string, AccountData|null>  $accounts  looked up so far, by ID
@@ -245,7 +258,7 @@ final class ManagePlanLines
 
         if ($period === null) {
             $problems['period_id'] = [(string) __('plans.period_unknown')];
-        } elseif ($period->fiscalYearId !== $plan->fiscal_year_id) {
+        } elseif (! $this->covers($plan, $period)) {
             $problems['period_id'] = [(string) __('plans.period_outside_year')];
         }
 
