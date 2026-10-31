@@ -154,7 +154,7 @@ Transaksi → Jenis transaksi → **Impor template**. Tinjau tiap jenis, pilih y
 | Template | Jenis |
 | --- | --- |
 | Jenis Transaksi umum | Jurnal Umum, Jurnal Penyesuaian, Ringkasan Payroll, Penjualan Kredit |
-| Transaksi harian | Terima Pembayaran Pelanggan, Tagihan Pemasok, Bayar Pemasok, Kasbon atau Pinjaman ke Pihak, Pinjaman Diterima, Kasbon Karyawan, Pengembalian Kasbon Karyawan, Modal Ditempatkan Belum Disetor, Setoran Modal Pemegang Saham, Bayar Pinjaman, Transfer Antar Kas atau Bank, Terima Pembayaran dan Bayar Pemasok untuk rekening beda mata uang |
+| Transaksi harian | Terima Pembayaran Pelanggan, Tagihan Pemasok, Bayar Pemasok, Kasbon atau Pinjaman ke Pihak, Pinjaman Diterima, Kasbon Karyawan, Pengembalian Kasbon Karyawan, Modal Ditempatkan Belum Disetor, Setoran Modal Pemegang Saham, Bayar Pinjaman, Transfer Antar Kas atau Bank, Biaya Tunai, Penerimaan Tunai Lain, Biaya atau Bunga Bank, Terima Pembayaran dan Bayar Pemasok untuk rekening beda mata uang |
 
 Template tidak mengenal COA Anda, jadi akun biaya, pendapatan, dan payroll berupa **field akun** yang diisi pengguna. **Persempit sebelum dipakai admin:** buka perancang, buat versi baru, dan pada field akun isi *Akun yang boleh dipilih* dengan akun yang relevan saja (misalnya hanya akun pendapatan). Atau ganti field akun dengan **akun tetap** di aturan posting bila akunnya selalu sama.
 
@@ -307,7 +307,7 @@ Gunakan data uji, atau periode yang akan dibatalkan:
 
 > **Uang muka pelanggan.** Pembayaran lewat jenis penerimaan mencatat kas di debit dan akun kontrol piutang di kredit, sehingga uang muka berupa saldo kredit pada akun piutang. Putuskan apakah penyajian neraca cukup, atau Anda perlu jenis tersendiri yang mencatat uang muka ke akun kewajiban dan menerapkannya manual ke faktur.
 
-> **Kas tanpa pihak** (biaya tunai, setoran modal tunai, bunga bank) dirancang dengan rute *Kas tanpa pihak*: satu field rekening kas, tepat satu aturan bersumber rekening kas yang sisinya menentukan arah, dan tanpa field pihak. Akun lain pada jurnalnya harus menerima sumber Subledger; akun biaya yang dibatasi hanya ke sumber Entri akan menolak jenis ini, dengan pesan yang menyebut akunnya.
+> **Kas tanpa pihak** (biaya tunai, setoran modal tunai, bunga bank) dirancang dengan rute *Kas tanpa pihak*: satu field rekening kas, tepat satu aturan bersumber rekening kas yang sisinya menentukan arah, dan tanpa field pihak. Akun lain pada jurnalnya harus menerima sumber Subledger; akun biaya yang dibatasi hanya ke sumber Entri akan menolak jenis ini, dengan pesan yang menyebut akunnya. Template *Transaksi harian* menyediakan tiga jenis siap pakai: **Biaya Tunai**, **Penerimaan Tunai Lain** (pendapatan tunai, bunga bank yang diterima, setoran modal tunai), dan **Biaya atau Bunga Bank** (biaya admin atau bunga yang dipotong bank, dicocokkan dengan baris rekening koran). Ketiganya meminta Anda memilih akun lawan, jadi persempit akun yang boleh dipilih dan pastikan akun itu menerima sumber Subledger. Entri kas tanpa pihak dapat dibalik; kas dikembalikan dengan transaksi berlawanan arah.
 
 ### Setelah berjalan
 

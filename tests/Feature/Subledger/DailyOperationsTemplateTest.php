@@ -48,7 +48,7 @@ beforeEach(function () {
     ])->assertCreated()->json('data.id');
 
     $this->actingAs($this->admin)->postJson("{$this->url}/transaction-types/import-template", [
-        'template' => 'daily-operations', 'confirmed' => true, 'keys' => ['customer_receipt', 'supplier_bill', 'supplier_payment', 'cash_transfer', 'party_loan', 'loan_received', 'employee_advance', 'employee_advance_return', 'capital_subscription', 'capital_payment', 'loan_repayment'],
+        'template' => 'daily-operations', 'confirmed' => true, 'keys' => ['customer_receipt', 'supplier_bill', 'supplier_payment', 'cash_transfer', 'party_loan', 'loan_received', 'employee_advance', 'employee_advance_return', 'capital_subscription', 'capital_payment', 'loan_repayment', 'cash_expense', 'other_cash_receipt', 'bank_charge'],
     ])->assertCreated();
     $this->actingAs($this->admin)->postJson("{$this->url}/transaction-types/import-template", [
         'template' => 'general', 'confirmed' => true, 'keys' => ['credit_sale'],
@@ -200,6 +200,46 @@ describe('a loan repayment', function () {
         docPosted(docEntry('loan_repayment', ['party' => $this->lender, 'bank' => $this->cashAccount, 'total' => '5000000', 'allocations' => [['open_item_id' => $loan->id, 'amount' => '5000000']]])->assertCreated()->json('data.id'));
 
         expect(DB::table('sl_open_items')->where('id', $loan->id)->value('status'))->toBe('settled');
+    });
+});
+
+describe('cash with no party (ADR-0016)', function () {
+    beforeEach(function () {
+        $this->charges = docAccountId('6240');
+        $this->capital = docAccountId('3110');
+
+        foreach ([$this->expense, $this->charges, $this->capital] as $id) {
+            $version = $this->actingAs($this->admin)->getJson("{$this->url}/accounts/{$id}")->json('data.lock_version');
+            $this->actingAs($this->admin)->patchJson("{$this->url}/accounts/{$id}", ['lock_version' => $version, 'allowed_sources' => ['entry', 'subledger']])->assertOk();
+        }
+    });
+
+    it('pays a cash expense out of the cash account with the receipt number as the reference', function () {
+        $posted = docPosted(docEntry('cash_expense', ['bank' => $this->pettyCashAccount, 'receipt_number' => 'KWT-9', 'total' => '85000', 'expense_account' => $this->expense])->assertCreated()->json('data.id'));
+        $lines = DB::table('gl_journal_lines')->where('journal_id', $posted['journal_id'])->get();
+
+        expect((float) $lines->firstWhere('account_id', $this->expense)->debit)->toBe(85000.0)
+            ->and((float) $lines->firstWhere('account_id', $this->pettyCash)->credit)->toBe(85000.0)
+            ->and(DB::table('sl_cash_transactions')->first())->toMatchArray(['direction' => 'out', 'amount' => '85000.000000', 'reference' => 'KWT-9', 'document_id' => null])
+            ->and(DB::table('sl_open_items')->count())->toBe(0);
+    });
+
+    it('receives a cash contribution to capital', function () {
+        $posted = docPosted(docEntry('other_cash_receipt', ['bank' => $this->cashAccount, 'total' => '5000000', 'income_account' => $this->capital])->assertCreated()->json('data.id'));
+
+        expect((float) DB::table('gl_journal_lines')->where('journal_id', $posted['journal_id'])->where('account_id', $this->capital)->value('credit'))->toBe(5000000.0)
+            ->and(DB::table('sl_cash_transactions')->first())->toMatchArray(['direction' => 'in', 'amount' => '5000000.000000', 'reference' => $posted['journal_number'] ?? DB::table('gl_journals')->where('id', $posted['journal_id'])->value('number')]);
+    });
+
+    it('books a bank charge, and a reversal gives the cash back', function () {
+        $posted = docPosted(docEntry('bank_charge', ['bank' => $this->cashAccount, 'statement_reference' => 'ADM-10', 'total' => '6500', 'expense_account' => $this->charges])->assertCreated()->json('data.id'));
+
+        expect(DB::table('sl_cash_transactions')->first())->toMatchArray(['direction' => 'out', 'reference' => 'ADM-10']);
+
+        reversePosted($posted['journal_id']);
+
+        expect(DB::table('sl_cash_transactions')->count())->toBe(2)
+            ->and(functionalBalance($this->bank))->toBe(0.0);
     });
 });
 

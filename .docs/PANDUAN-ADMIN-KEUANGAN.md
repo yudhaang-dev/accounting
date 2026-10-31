@@ -114,6 +114,15 @@ Bila pelanggan membayar sebelum ada faktur, catat sebagai **Terima Pembayaran Pe
 - **Jenis:** Transfer Antar Kas atau Bank.
 - **Isi:** Dari rekening, ke rekening, jumlah keluar, jumlah masuk. Untuk rekening dengan mata uang yang sama, kedua jumlahnya sama.
 
+### Biaya tunai, penerimaan tunai lain, dan biaya bank
+
+Untuk uang yang keluar atau masuk tanpa pihak (tanpa faktur atau tagihan):
+
+- **Biaya Tunai:** biaya yang dibayar dari kas atau rekening bank. Isi rekening, jumlah, akun biaya, dan nomor bukti (menjadi referensi transaksi kas).
+- **Penerimaan Tunai Lain:** pendapatan tunai, bunga bank yang diterima, atau setoran modal tunai. Pilih akun pendapatan atau modalnya.
+- **Biaya atau Bunga Bank:** biaya admin atau bunga yang dipotong bank. Isi referensi dari baris rekening koran agar mudah dicocokkan saat rekonsiliasi bank.
+- Salah catat? Balik jurnalnya; kas dikembalikan otomatis dan saldo rekening tetap sama dengan buku besar.
+
 ### Jurnal umum atau penyesuaian
 
 Jenis *baris bebas* meminta Anda memilih akun dan mengisi debit atau kredit sendiri. **Biasanya ini tugas akuntan.** Bila Anda diminta, pastikan penanda **Seimbang** muncul sebelum menyimpan.

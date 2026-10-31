@@ -360,5 +360,70 @@ return [
                 'counterpart_cash_account_field' => 'to',
             ],
         ],
+        // Cash with no party (ADR-0016): the route records only the cash, so the account of the other side is picked
+        // by the user. The cash account takes the source `subledger`, so the account picked must accept it too.
+        [
+            'key' => 'cash_expense',
+            'label' => 'Biaya Tunai',
+            'description' => 'Biaya yang dibayar langsung dari kas atau rekening bank, tanpa tagihan pemasok.',
+            'mode' => 'structured',
+            'fields' => [
+                ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Dibayar dari rekening'],
+                ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
+                ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah'],
+                ['name' => 'expense_account', 'type' => 'account', 'label' => 'Akun biaya'],
+            ],
+            'posting_rules' => [
+                ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'field', 'field' => 'expense_account'], 'apply_dimensions' => true, 'reuses_field' => true],
+                ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
+            ],
+            'subledger_route' => [
+                'kind' => 'cash',
+                'cash_account_field' => 'bank',
+                'document_number_field' => 'receipt_number',
+            ],
+        ],
+        [
+            'key' => 'other_cash_receipt',
+            'label' => 'Penerimaan Tunai Lain',
+            'description' => 'Uang masuk ke kas atau rekening bank tanpa pihak: pendapatan tunai, bunga bank yang diterima, atau setoran modal tunai.',
+            'mode' => 'structured',
+            'fields' => [
+                ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Diterima di rekening'],
+                ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
+                ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah diterima'],
+                ['name' => 'income_account', 'type' => 'account', 'label' => 'Akun pendapatan atau ekuitas'],
+            ],
+            'posting_rules' => [
+                ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
+                ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'field', 'field' => 'income_account'], 'apply_dimensions' => true, 'reuses_field' => true],
+            ],
+            'subledger_route' => [
+                'kind' => 'cash',
+                'cash_account_field' => 'bank',
+                'document_number_field' => 'receipt_number',
+            ],
+        ],
+        [
+            'key' => 'bank_charge',
+            'label' => 'Biaya atau Bunga Bank',
+            'description' => 'Biaya admin, pajak bunga, atau bunga pinjaman yang dipotong bank. Dicatat sesuai baris rekening koran.',
+            'mode' => 'structured',
+            'fields' => [
+                ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Rekening bank'],
+                ['name' => 'statement_reference', 'type' => 'reference', 'label' => 'Referensi rekening koran', 'required' => false],
+                ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah dipotong'],
+                ['name' => 'expense_account', 'type' => 'account', 'label' => 'Akun biaya atau bunga'],
+            ],
+            'posting_rules' => [
+                ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'field', 'field' => 'expense_account'], 'apply_dimensions' => true, 'reuses_field' => true],
+                ['type' => 'amount', 'side' => 'credit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
+            ],
+            'subledger_route' => [
+                'kind' => 'cash',
+                'cash_account_field' => 'bank',
+                'document_number_field' => 'statement_reference',
+            ],
+        ],
     ],
 ];
