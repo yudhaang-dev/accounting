@@ -71,8 +71,10 @@ final class EntryValidation
                     $errors[$key] = [__('entries.value_scale', ['field' => $field['label'], 'scale' => $scale])];
                 } elseif ($field['type'] === FieldType::Account->value && $this->accounts->find($companyId, $value) === null) {
                     $errors[$key] = [__('entries.field_account_unknown', ['id' => $value])];
-                } elseif ($field['type'] === FieldType::Party->value && $this->parties->find($companyId, $value) === null) {
+                } elseif ($field['type'] === FieldType::Party->value && ($party = $this->parties->find($companyId, $value)) === null) {
                     $errors[$key] = [__('entries.field_party_unknown')];
+                } elseif ($field['type'] === FieldType::Party->value && isset($field['allowed_roles']) && array_intersect($field['allowed_roles'], $party->roles) === []) {
+                    $errors[$key] = [__('entries.field_party_role', ['roles' => implode(', ', $field['allowed_roles'])])];
                 } elseif ($field['type'] === FieldType::CashAccount->value && $this->cashAccounts->find($companyId, $value) === null) {
                     $errors[$key] = [__('entries.field_cash_account_unknown')];
                 }

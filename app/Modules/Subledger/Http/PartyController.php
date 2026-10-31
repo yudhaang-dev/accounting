@@ -14,7 +14,7 @@ class PartyController
 {
     /**
      * Parties of the company, ordered by name. Filters: `filter[status]`, `filter[role]`
-     * (a role key), `filter[search]` (part of the name), and `filter[source_system]`
+     * (a role key), `filter[roles][]` (parties holding any of the role keys), `filter[search]` (part of the name), and `filter[source_system]`
      * with `filter[external_ref]` to find the party a source system refers to. `per_page`
      * defaults to 50, at most 200.
      */
@@ -28,6 +28,9 @@ class PartyController
             ->when(isset($filter['role']), fn ($query) => $query->whereIn('id', PartyRoleAssignment::query()
                 ->select('party_id')
                 ->whereIn('party_role_id', PartyRole::query()->select('id')->where('key', $filter['role']))))
+            ->when(isset($filter['roles']), fn ($query) => $query->whereIn('id', PartyRoleAssignment::query()
+                ->select('party_id')
+                ->whereIn('party_role_id', PartyRole::query()->select('id')->whereIn('key', $filter['roles']))))
             ->when(isset($filter['search']), fn ($query) => $query->where('name', 'ilike', '%'.addcslashes($filter['search'], '%_\\').'%'))
             ->when(isset($filter['source_system']), fn ($query) => $query->whereIn('id', PartyExternalRef::query()
                 ->select('party_id')

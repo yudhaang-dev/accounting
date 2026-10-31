@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int $version
  * @property TransactionTypeMode $mode
  * @property VersionStatus $status
- * @property list<array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, dimension_type?: string}>|null $fields
+ * @property list<array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, dimension_type?: string, allowed_roles?: list<string>}>|null $fields
  * @property list<array{type: string, side?: string, amount_field?: string, account?: array{source: string, account_id?: string, field?: string}, apply_dimensions: bool, reuses_field: bool}>|null $posting_rules
  * @property list<string>|null $allowed_currencies foreign currencies the version accepts; null for any active one
  * @property string|null $rate_type_key rate type to look rates up in; null for the default of the system

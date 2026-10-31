@@ -8,6 +8,7 @@ use App\Modules\MasterData\Contracts\DimensionSets;
 use App\Modules\Subledger\Contracts\ControlAccounts;
 use App\Modules\Subledger\Contracts\ControlRole;
 use App\Modules\Subledger\Contracts\DocumentKind;
+use App\Modules\Subledger\Contracts\PartyDirectory;
 use App\Modules\TransactionEntry\Domain\FieldType;
 use App\Modules\TransactionEntry\Domain\PostingRules;
 use App\Modules\TransactionEntry\Domain\SubledgerRoute;
@@ -39,6 +40,7 @@ final class TransactionTypeVersions
         private readonly DimensionSets $dimensions,
         private readonly Currencies $currencies,
         private readonly ControlAccounts $controlAccounts,
+        private readonly PartyDirectory $parties,
     ) {}
 
     /**
@@ -620,6 +622,18 @@ final class TransactionTypeVersions
                 }
 
                 $definition['account_ids'] = array_values(array_unique($field['account_ids']));
+            }
+
+            if (isset($field['allowed_roles'])) {
+                $roles = array_values(array_unique($field['allowed_roles']));
+
+                if ($type !== FieldType::Party) {
+                    $errors["fields.{$index}.allowed_roles"] = [__('entries.field_roles_not_allowed')];
+                } elseif (($unusable = $this->parties->unusableRoles($companyId, $roles)) !== []) {
+                    $errors["fields.{$index}.allowed_roles"] = array_map(fn (string $key): string => __('entries.field_role_unknown', ['key' => $key]), $unusable);
+                } else {
+                    $definition['allowed_roles'] = $roles;
+                }
             }
 
             if ($type === FieldType::Dimension) {

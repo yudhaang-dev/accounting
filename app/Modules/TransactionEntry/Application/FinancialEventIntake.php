@@ -167,7 +167,7 @@ final class FinancialEventIntake implements FinancialEvents
      * The values of the fields from the sections of the event. What the event carries that no field
      * takes is refused by name, and a dimension without a value is no mistake.
      *
-     * @param  list<array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, dimension_type?: string}>  $fields
+     * @param  list<array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, dimension_type?: string, allowed_roles?: list<string>}>  $fields
      * @return array<string, mixed>
      *
      * @throws ValidationException
@@ -224,7 +224,7 @@ final class FinancialEventIntake implements FinancialEvents
      * entry is a problem with the section of the event that fills it.
      *
      * @param  array<string, list<string>>  $errors
-     * @param  list<array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, dimension_type?: string}>  $fields
+     * @param  list<array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, dimension_type?: string, allowed_roles?: list<string>}>  $fields
      * @return array<string, list<string>>
      */
     private function named(array $errors, array $fields): array
