@@ -51,6 +51,7 @@ import {
     type Party,
 } from '@/modules/subledger/parties';
 import { partyBalancesQuery } from '@/modules/subledger/party-balances';
+import { partyRolesQuery } from '@/modules/subledger/party-roles';
 import { postingProfilesQuery } from '@/modules/subledger/posting-profiles';
 
 const ANY = '__any';
@@ -76,7 +77,7 @@ export function PartiesPage({
     const { t, i18n } = useTranslation();
     const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
-    const [role, setRole] = useState<'customer' | 'supplier' | undefined>();
+    const [role, setRole] = useState<string | undefined>();
     const [status, setStatus] = useState<'active' | 'inactive' | undefined>();
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = usePageSize('parties');
@@ -115,10 +116,16 @@ export function PartiesPage({
         (profiles.data ?? []).map((profile) => [profile.id, profile.name]),
     );
 
+    const roles = useQuery(partyRolesQuery(companyId));
+    const roleLabel = new Map(
+        (roles.data ?? []).map((item) => [item.key, item.label]),
+    );
     const roleItems = [
         { value: ANY, label: t('parties.allRoles') },
-        { value: 'customer', label: t('parties.customer') },
-        { value: 'supplier', label: t('parties.supplier') },
+        ...(roles.data ?? []).map((item) => ({
+            value: item.key,
+            label: item.label,
+        })),
     ];
     const statusItems = [
         { value: ANY, label: t('parties.allStatuses') },
@@ -212,9 +219,7 @@ export function PartiesPage({
                     items={roleItems}
                     onValueChange={(value) => {
                         setRole(
-                            value === 'customer' || value === 'supplier'
-                                ? value
-                                : undefined,
+                            value === ANY || value === null ? undefined : value,
                         );
                         setPage(1);
                     }}
@@ -344,16 +349,15 @@ export function PartiesPage({
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-wrap gap-1">
-                                                {party.is_customer && (
-                                                    <Badge variant="secondary">
-                                                        {t('parties.customer')}
+                                                {party.roles.map((key) => (
+                                                    <Badge
+                                                        key={key}
+                                                        variant="secondary"
+                                                    >
+                                                        {roleLabel.get(key) ??
+                                                            key}
                                                     </Badge>
-                                                )}
-                                                {party.is_supplier && (
-                                                    <Badge variant="secondary">
-                                                        {t('parties.supplier')}
-                                                    </Badge>
-                                                )}
+                                                ))}
                                             </div>
                                         </TableCell>
                                         <TableCell className="font-mono text-xs">

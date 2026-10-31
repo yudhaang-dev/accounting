@@ -207,6 +207,7 @@ function FieldInput({
 
             {field.kind === 'party' && (
                 <PartyInput
+                    allowedRoles={field.allowedRoles}
                     companyId={companyId}
                     id={id}
                     name={name}

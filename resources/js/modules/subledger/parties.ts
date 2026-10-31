@@ -8,7 +8,7 @@ export type UpdatePartyInput = components['schemas']['UpdatePartyRequest'];
 
 export type PartyFilters = {
     status?: 'active' | 'inactive';
-    role?: 'customer' | 'supplier';
+    role?: string;
     search: string;
     page: number;
     perPage: number;

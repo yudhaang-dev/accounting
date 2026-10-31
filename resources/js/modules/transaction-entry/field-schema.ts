@@ -21,6 +21,8 @@ export type SchemaField = {
     accountIds?: string[];
     /** For a dimension field: the key of the dimension type whose values are offered. */
     dimensionType?: string;
+    /** For a party field: the roles a party must hold one of; none means any party (TE-FR-04). */
+    allowedRoles?: string[];
     maxLength?: number;
 };
 
@@ -56,6 +58,10 @@ export function parseSchema(schema: JsonSchema | null): SchemaField[] {
             field.kind = 'allocations';
         } else if (reference === 'party') {
             field.kind = 'party';
+            const roles = property['x-allowed-roles'];
+            field.allowedRoles = Array.isArray(roles)
+                ? (roles as string[])
+                : undefined;
         } else if (reference === 'cash_account') {
             field.kind = 'cash_account';
         } else if (reference === 'account') {

@@ -29,6 +29,7 @@ import {
     FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { actionErrorMessage } from '@/lib/errors';
 import { isApiError, type ApiError } from '@/lib/http';
@@ -51,6 +52,8 @@ import {
     type VersionInput,
     type VersionMode,
 } from '@/modules/transaction-entry/transaction-types';
+import { partyRolesQuery } from '@/modules/subledger/party-roles';
+import { postingProfilesQuery } from '@/modules/subledger/posting-profiles';
 
 type FieldRow = {
     name: string;
@@ -59,6 +62,7 @@ type FieldRow = {
     required: boolean;
     account_ids: string[];
     dimension_type: string;
+    allowed_roles: string[];
 };
 
 type RuleRow = {
@@ -83,6 +87,8 @@ type RouteRow = {
     cash_account_field: string;
     counterpart_cash_account_field: string;
     allocations_field: string;
+    /** The posting profile whose control account the route posts to; empty means the profile of the party. */
+    posting_profile_id: string;
 };
 
 type Values = {
@@ -121,9 +127,33 @@ const blankRoute = (): RouteRow => ({
     cash_account_field: '',
     counterpart_cash_account_field: '',
     allocations_field: '',
+    posting_profile_id: '',
 });
 
 const NAME_PATTERN = /^[a-z][a-z0-9_]*$/;
+
+/** The message of a field error that may sit on the list itself or on one of its items. */
+function errorMessage(error: unknown): string | undefined {
+    if (error === null || typeof error !== 'object') {
+        return undefined;
+    }
+
+    const own = (error as { message?: unknown }).message;
+
+    if (typeof own === 'string') {
+        return own;
+    }
+
+    for (const item of Object.values(error)) {
+        const nested = errorMessage(item);
+
+        if (nested !== undefined) {
+            return nested;
+        }
+    }
+
+    return undefined;
+}
 
 const blankField = (): FieldRow => ({
     name: '',
@@ -132,6 +162,7 @@ const blankField = (): FieldRow => ({
     required: true,
     account_ids: [],
     dimension_type: '',
+    allowed_roles: [],
 });
 
 const blankRule = (): RuleRow => ({
@@ -156,6 +187,7 @@ export function valuesOfVersion(version: TypeVersion): Values {
             required: field.required ?? true,
             account_ids: field.account_ids ?? [],
             dimension_type: field.dimension_type ?? '',
+            allowed_roles: field.allowed_roles ?? [],
         })),
         rules: (version.posting_rules ?? []).map((rule) => ({
             type: rule.type,
@@ -186,6 +218,8 @@ export function valuesOfVersion(version: TypeVersion): Values {
                       '',
                   allocations_field:
                       version.subledger_route.allocations_field ?? '',
+                  posting_profile_id:
+                      version.subledger_route.posting_profile_id ?? '',
               }
             : null,
     };
@@ -218,6 +252,7 @@ function routeInputOf(route: RouteRow): SubledgerRoute {
             route.allocations_field,
             ALLOCATES.includes(route.kind),
         ),
+        posting_profile_id: optional(route.posting_profile_id, !transfer),
     };
 }
 
@@ -238,6 +273,9 @@ export function versionInputOf(values: Values): VersionInput {
                       : {}),
                   ...(field.type === 'dimension' && field.dimension_type
                       ? { dimension_type: field.dimension_type }
+                      : {}),
+                  ...(field.type === 'party' && field.allowed_roles.length > 0
+                      ? { allowed_roles: field.allowed_roles }
                       : {}),
               }))
             : [],
@@ -390,12 +428,75 @@ function AccountSet({
     );
 }
 
+/** The roles a party field accepts, picked from the company's roles; none checked means any party (TE-FR-04). */
+function RoleSet({
+    value,
+    onChange,
+    roles,
+}: {
+    value: string[];
+    onChange: (value: string[]) => void;
+    roles: { key: string; label: string; status: string }[];
+}) {
+    const { t } = useTranslation();
+    // A role the field still names stays visible when it was deactivated, so the publish error is understandable.
+    const shown = roles.filter(
+        (role) => role.status === 'active' || value.includes(role.key),
+    );
+    const unknown = value.filter(
+        (key) => !roles.some((role) => role.key === key),
+    );
+
+    return (
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
+            {[
+                ...shown,
+                ...unknown.map((key) => ({
+                    key,
+                    label: key,
+                    status: 'inactive',
+                })),
+            ].map((role) => (
+                <div key={role.key} className="flex items-center gap-2">
+                    <Checkbox
+                        id={`allowed-role-${role.key}-${shown.length}`}
+                        checked={value.includes(role.key)}
+                        onCheckedChange={(checked) =>
+                            onChange(
+                                checked === true
+                                    ? [...value, role.key]
+                                    : value.filter((key) => key !== role.key),
+                            )
+                        }
+                    />
+                    <Label
+                        htmlFor={`allowed-role-${role.key}-${shown.length}`}
+                        className="font-normal"
+                    >
+                        {role.label}
+                        {role.status === 'active'
+                            ? ''
+                            : ` (${t('transactionTypes.designer.roleInactive')})`}
+                    </Label>
+                </div>
+            ))}
+            {shown.length === 0 && unknown.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                    {t('transactionTypes.designer.noPartyRoles')}
+                </p>
+            )}
+        </div>
+    );
+}
+
 function FieldRows({
     accounts,
     dimensionTypes,
+    partyRoles,
 }: {
     accounts: OptionSelectItem[];
     dimensionTypes: OptionSelectItem[];
+    partyRoles: { key: string; label: string; status: string }[];
 }) {
     const { t } = useTranslation();
     const {
@@ -585,10 +686,31 @@ function FieldRows({
                                     />
                                 </Field>
                             )}
+                            {kind === 'party' && (
+                                <Field>
+                                    <FieldLabel className="text-xs text-muted-foreground">
+                                        {t(
+                                            'transactionTypes.designer.allowedRoles',
+                                        )}
+                                    </FieldLabel>
+                                    <Controller
+                                        control={control}
+                                        name={`fields.${index}.allowed_roles`}
+                                        render={({ field }) => (
+                                            <RoleSet
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                                roles={partyRoles}
+                                            />
+                                        )}
+                                    />
+                                </Field>
+                            )}
                             {[
                                 rowErrors?.name,
                                 rowErrors?.label,
                                 rowErrors?.account_ids,
+                                rowErrors?.allowed_roles,
                             ].some(Boolean) && (
                                 <ul
                                     role="alert"
@@ -602,6 +724,7 @@ function FieldRows({
                                                 | { message?: string }
                                                 | undefined
                                         )?.message,
+                                        errorMessage(rowErrors?.allowed_roles),
                                     ]
                                         .filter((m): m is string => Boolean(m))
                                         .map((message) => (
@@ -633,8 +756,9 @@ function FieldRows({
  * the party in one of its fields, and the posting rules may then use the control account of that party
  * and the account of a cash account field. A `transfer` moves cash between two cash account fields.
  */
-function RouteEditor() {
+function RouteEditor({ companyId }: { companyId: string }) {
     const { t } = useTranslation();
+    const profiles = useQuery(postingProfilesQuery(companyId));
     const {
         control,
         setValue,
@@ -660,7 +784,10 @@ function RouteEditor() {
     }));
     const transfer = route?.kind === 'transfer';
     const picker = (
-        key: Exclude<keyof RouteRow, 'kind' | 'control_role'>,
+        key: Exclude<
+            keyof RouteRow,
+            'kind' | 'control_role' | 'posting_profile_id'
+        >,
         type: FieldType,
         required: boolean,
     ) => (
@@ -780,6 +907,77 @@ function RouteEditor() {
                                                 'transactionTypes.designer.route.role',
                                             )}
                                         />
+                                    </Field>
+                                )}
+                            />
+                        )}
+                        {!transfer && (
+                            <Controller
+                                control={control}
+                                name="subledger_route.posting_profile_id"
+                                render={({ field }) => (
+                                    <Field
+                                        data-invalid={
+                                            routeErrors?.posting_profile_id
+                                                ? true
+                                                : undefined
+                                        }
+                                    >
+                                        <FieldLabel className="text-xs text-muted-foreground">
+                                            {t(
+                                                'transactionTypes.designer.route.postingProfile',
+                                            )}
+                                        </FieldLabel>
+                                        <OptionSelect
+                                            value={field.value ?? ''}
+                                            items={[
+                                                {
+                                                    value: '__none',
+                                                    label: t(
+                                                        'transactionTypes.designer.route.partyProfile',
+                                                    ),
+                                                },
+                                                ...(profiles.data ?? []).map(
+                                                    (profile) => ({
+                                                        value: profile.id,
+                                                        label: profile.name,
+                                                    }),
+                                                ),
+                                            ]}
+                                            placeholder={t(
+                                                'transactionTypes.designer.route.partyProfile',
+                                            )}
+                                            onValueChange={(next) =>
+                                                field.onChange(
+                                                    next === '__none'
+                                                        ? ''
+                                                        : next,
+                                                )
+                                            }
+                                            aria-label={t(
+                                                'transactionTypes.designer.route.postingProfile',
+                                            )}
+                                            aria-invalid={
+                                                routeErrors?.posting_profile_id
+                                                    ? true
+                                                    : undefined
+                                            }
+                                        />
+                                        <FieldDescription>
+                                            {t(
+                                                'transactionTypes.designer.route.postingProfileHint',
+                                            )}
+                                        </FieldDescription>
+                                        {routeErrors?.posting_profile_id
+                                            ?.message && (
+                                            <FieldError>
+                                                {
+                                                    routeErrors
+                                                        .posting_profile_id
+                                                        .message
+                                                }
+                                            </FieldError>
+                                        )}
                                     </Field>
                                 )}
                             />
@@ -1347,6 +1545,7 @@ export function VersionEditor({
     const mode = useWatch({ control, name: 'mode' });
     const accounts = useQuery(lineAccountsQuery(companyId));
     const dimensionTypes = useQuery(dimensionTypeOptionsQuery(companyId));
+    const partyRoles = useQuery(partyRolesQuery(companyId));
     const accountItems = (accounts.data ?? []).map((account) => ({
         value: account.id,
         label: `${account.code} · ${account.name}`,
@@ -1436,6 +1635,7 @@ export function VersionEditor({
                         <>
                             <FieldRows
                                 accounts={accountItems}
+                                partyRoles={partyRoles.data ?? []}
                                 dimensionTypes={(dimensionTypes.data ?? []).map(
                                     (dimension) => ({
                                         value: dimension.key,
@@ -1443,7 +1643,7 @@ export function VersionEditor({
                                     }),
                                 )}
                             />
-                            <RouteEditor />
+                            <RouteEditor companyId={companyId} />
                             <RuleRows accounts={accountItems} />
                         </>
                     )}

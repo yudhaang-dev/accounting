@@ -126,6 +126,7 @@ export const en: Widen<typeof id> = {
         navCurrencies: 'Currencies',
         navRates: 'Exchange rates',
         navParties: 'Parties',
+        navPartyRoles: 'Party roles',
         navPostingProfiles: 'Posting profiles',
         navCashAccounts: 'Cash and bank',
         navCashTransactions: 'Cash transactions',
@@ -1057,6 +1058,51 @@ export const en: Widen<typeof id> = {
             reactivateAction: 'Reactivate',
         },
     },
+    partyRoles: {
+        pageTitle: 'Party roles',
+        title: 'Party roles',
+        description:
+            'What a party is to the company: customer, supplier, employee, lender, shareholder, and so on. A role says nothing about which side of the ledger a document goes to; the posting profile decides that. A role that was used can only be deactivated.',
+        add: 'Add role',
+        importAction: 'Import standard roles',
+        createTitle: 'Add party role',
+        editTitle: 'Edit role {{name}}',
+        empty: 'No party roles yet',
+        emptyDescription:
+            'Import the standard roles after reading them, or add your own.',
+        label: 'Name',
+        key: 'Key',
+        keyHint:
+            'Lowercase letters, digits, and underscores (2–32 characters). Used by integrations and transaction types; it cannot change afterwards.',
+        keyLocked: 'The key never changes.',
+        keyInvalid:
+            'Start with a lowercase letter; use lowercase letters, digits, and underscores (2–32 characters).',
+        status: 'Status',
+        active: 'Active',
+        inactive: 'Inactive',
+        actions: 'Actions',
+        editAction: 'Edit',
+        deactivateAction: 'Deactivate',
+        reactivateAction: 'Activate',
+        created: 'Role {{name}} added.',
+        saved: 'Role {{name}} saved.',
+        deactivated: 'Role {{name}} deactivated.',
+        reactivated: 'Role {{name}} reactivated.',
+        conflict:
+            'The role was changed elsewhere. The latest data has been loaded; review it and try again.',
+        import: {
+            title: 'Import standard roles',
+            intro: 'These roles are only suggestions. Nothing is created until you confirm.',
+            review: 'Roles to create',
+            taken: 'Already exists',
+            confirm:
+                'I have read these roles and want the checked ones created for this company.',
+            action_one: 'Create {{count}} role',
+            action_other: 'Create {{count}} roles',
+            working: 'Creating…',
+            done: 'Roles created.',
+        },
+    },
     parties: {
         balances: {
             asOf: 'Balance as of',
@@ -1080,9 +1126,9 @@ export const en: Widen<typeof id> = {
         name: 'Name',
         roles: 'Role',
         allRoles: 'All roles',
-        customer: 'Customer',
-        supplier: 'Supplier',
-        roleRequired: 'Choose at least one role.',
+        rolesHint:
+            'What this party is to the company. It does not decide the side of the ledger; the posting profile does. Manage the roles under Party roles.',
+        noRoles: 'No active roles yet. Add them under Party roles.',
         taxId: 'Tax ID',
         taxIdInvalid: 'At most 64 characters.',
         profile: 'Posting profile',
@@ -1895,6 +1941,11 @@ export const en: Widen<typeof id> = {
             removeField: 'Remove field {{n}}',
             addField: 'Add field',
             allowedAccounts: 'Accounts that may be picked (empty means all)',
+            allowedRoles:
+                'Roles a party may hold (none checked means any party)',
+            roleInactive: 'inactive',
+            noPartyRoles:
+                'The company has no party roles yet. Add them under Party roles.',
             addAccount: 'Add account',
             removeAccount: 'Remove account {{account}}',
             dimensionType: 'Dimension type',
@@ -1941,6 +1992,10 @@ export const en: Widen<typeof id> = {
                     transfer: 'Transfer between cash accounts',
                 },
                 role: 'Control account',
+                postingProfile: 'Posting profile',
+                partyProfile: "The party's own profile",
+                postingProfileHint:
+                    'Take the control account from this profile instead of the party’s own. This keeps, for example, staff advances apart from supplier payables for the same person.',
                 roles: {
                     receivables_control: 'Receivables',
                     payables_control: 'Payables',

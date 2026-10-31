@@ -31,6 +31,7 @@ import {
     SplitIcon,
     SigmaIcon,
     SlidersHorizontalIcon,
+    TagsIcon,
     TrendingUpIcon,
     UsersIcon,
     UsersRoundIcon,
@@ -186,6 +187,12 @@ const NAV = [
                 to: '/w/$companyId/parties',
                 label: 'app.navParties',
                 icon: UsersRoundIcon,
+                permission: 'parties.read',
+            },
+            {
+                to: '/w/$companyId/party-roles',
+                label: 'app.navPartyRoles',
+                icon: TagsIcon,
                 permission: 'parties.read',
             },
             {

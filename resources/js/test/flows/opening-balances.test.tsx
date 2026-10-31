@@ -620,8 +620,7 @@ describe('opening open items (SL-FR-10, SL-AC-01)', () => {
     const party = {
         id: partyId,
         name: 'PT Maju Jaya',
-        is_customer: true,
-        is_supplier: false,
+        roles: ['customer'],
         tax_id: null,
         posting_profile_id: null,
         status: 'active',

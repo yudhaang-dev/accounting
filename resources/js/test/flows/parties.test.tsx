@@ -15,7 +15,35 @@ const base = `/api/v1/companies/${workspace.company_id}`;
 const home = `/w/${workspace.company_id}`;
 const path = `${home}/parties`;
 
+const roleList = () =>
+    json({
+        data: [
+            {
+                id: '01JROLE0000000000000001',
+                key: 'customer',
+                label: 'Pelanggan',
+                status: 'active',
+                lock_version: 1,
+            },
+            {
+                id: '01JROLE0000000000000002',
+                key: 'supplier',
+                label: 'Pemasok',
+                status: 'active',
+                lock_version: 1,
+            },
+            {
+                id: '01JROLE0000000000000003',
+                key: 'lender',
+                label: 'Pemberi pinjaman',
+                status: 'inactive',
+                lock_version: 1,
+            },
+        ],
+    });
+
 const withPermissions = (permissions: string[]) => ({
+    [`GET ${base}/party-roles`]: roleList,
     'GET /api/v1/me': () => json({ data: account }),
     'GET /api/v1/me/workspaces': () =>
         json({ data: [{ ...workspace, permissions }] }),
@@ -35,8 +63,7 @@ const profileId = '01JPROFILE000000000000001';
 const party = (overrides: Record<string, unknown> = {}) => ({
     id: partyId,
     name: 'PT Maju Jaya',
-    is_customer: true,
-    is_supplier: false,
+    roles: ['customer'],
     tax_id: '01.234.567.8-901.000',
     posting_profile_id: null,
     status: 'active',
@@ -70,8 +97,7 @@ describe('parties', () => {
                     party({
                         id: '01JPARTY00000000000000002',
                         name: 'CV Sentosa',
-                        is_customer: false,
-                        is_supplier: true,
+                        roles: ['supplier', 'lender'],
                         tax_id: null,
                         posting_profile_id: profileId,
                         external_refs: [],
@@ -85,6 +111,8 @@ describe('parties', () => {
         expect(await screen.findByText('PT Maju Jaya')).toBeInTheDocument();
         expect(screen.getByText('C-100')).toBeInTheDocument();
         expect(screen.getByText('CV Sentosa')).toBeInTheDocument();
+        // The badges carry the label of each role, and a role without a label falls back to its key.
+        expect(await screen.findByText('Pemberi pinjaman')).toBeInTheDocument();
         expect(await screen.findByText('Pihak berelasi')).toBeInTheDocument();
         expect(screen.getByText('Profil default')).toBeInTheDocument();
     });
@@ -156,21 +184,20 @@ describe('parties', () => {
         await waitFor(() => expect(api.called(create)).toHaveLength(1));
         expect(api.called(create)[0]?.body).toEqual({
             name: 'PT Maju Jaya',
-            is_customer: true,
-            is_supplier: true,
+            roles: ['supplier'],
             tax_id: null,
             posting_profile_id: null,
             external_refs: [{ source_system: 'erp', external_ref: 'C-100' }],
         });
     });
 
-    it('does not save a party without a role', async () => {
+    it('saves a party without a role, since no role is required', async () => {
         const create = `POST ${base}/parties`;
         const api = mockApi({
             ...withPermissions(manager),
             [`GET ${base}/parties`]: () => list([]),
             [`GET ${base}/posting-profiles`]: profiles,
-            [create]: () => json({ data: party() }, 201),
+            [create]: () => json({ data: party({ roles: [] }) }, 201),
         });
 
         renderApp(path);
@@ -188,17 +215,80 @@ describe('parties', () => {
             'PT Maju Jaya',
         );
         await typist.click(
-            within(dialog).getByRole('checkbox', { name: 'Pelanggan' }),
-        );
-
-        expect(
-            await within(dialog).findByText('Pilih sedikitnya satu peran.'),
-        ).toBeInTheDocument();
-
-        await typist.click(
             within(dialog).getByRole('button', { name: 'Simpan' }),
         );
-        expect(api.called(create)).toHaveLength(0);
+
+        await waitFor(() => expect(api.called(create)).toHaveLength(1));
+        expect(api.called(create)[0]?.body).toMatchObject({ roles: [] });
+    });
+
+    it('offers the active roles of the company, and an inactive one only while the party holds it', async () => {
+        mockApi({
+            ...withPermissions(manager),
+            [`GET ${base}/parties`]: () =>
+                list([
+                    party({ roles: ['lender'] }),
+                    party({
+                        id: '01JPARTY00000000000000002',
+                        name: 'CV Sentosa',
+                    }),
+                ]),
+            [`GET ${base}/posting-profiles`]: profiles,
+        });
+
+        renderApp(path);
+        const typist = userEvent.setup();
+
+        await screen.findByText('CV Sentosa');
+        await rowAction(typist, 'CV Sentosa', 'Ubah');
+        let dialog = await screen.findByRole('dialog');
+
+        expect(
+            await within(dialog).findByRole('checkbox', { name: 'Pelanggan' }),
+        ).toBeChecked();
+        expect(
+            within(dialog).queryByRole('checkbox', {
+                name: 'Pemberi pinjaman',
+            }),
+        ).not.toBeInTheDocument();
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Batal' }),
+        );
+
+        await rowAction(typist, 'PT Maju Jaya', 'Ubah');
+        dialog = await screen.findByRole('dialog');
+
+        expect(
+            await within(dialog).findByRole('checkbox', {
+                name: 'Pemberi pinjaman',
+            }),
+        ).toBeChecked();
+    });
+
+    it('filters the list by a role of the company', async () => {
+        const index = `GET ${base}/parties`;
+        const api = mockApi({
+            ...withPermissions(manager),
+            [index]: () => list([party()]),
+            [`GET ${base}/posting-profiles`]: profiles,
+        });
+
+        renderApp(path);
+        const typist = userEvent.setup();
+
+        await screen.findByText('PT Maju Jaya');
+        await typist.click(screen.getByRole('combobox', { name: 'Peran' }));
+        await typist.click(
+            await screen.findByRole('option', { name: 'Pemasok' }),
+        );
+
+        await waitFor(() =>
+            expect(
+                api
+                    .called(index)
+                    .some((call) => call.query['filter[role]'] === 'supplier'),
+            ).toBe(true),
+        );
     });
 
     it('shows a reference taken by another party next to its field', async () => {
@@ -293,8 +383,7 @@ describe('parties', () => {
         expect(api.called(update)[0]?.body).toEqual({
             lock_version: 1,
             name: 'PT Maju Makmur',
-            is_customer: true,
-            is_supplier: false,
+            roles: ['customer'],
             tax_id: '01.234.567.8-901.000',
             posting_profile_id: null,
             external_refs: [],
@@ -419,8 +508,7 @@ describe('balance of each party (SL-FR-08)', () => {
             party({
                 id: '01JPARTY00000000000000002',
                 name: 'CV Sentosa',
-                is_customer: false,
-                is_supplier: true,
+                roles: ['supplier'],
                 external_refs: [],
             }),
             party({

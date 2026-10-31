@@ -132,8 +132,7 @@ const currencies = () =>
 const customer = {
     id: '01JPARTY000000000000000001',
     name: 'Toko Budi',
-    is_customer: true,
-    is_supplier: false,
+    roles: ['customer'],
     tax_id: null,
     posting_profile_id: null,
     status: 'active',
@@ -286,6 +285,50 @@ describe('structured entry form', () => {
         expect(
             await screen.findByRole('option', { name: 'Toko Budi' }),
         ).toBeInTheDocument();
+    });
+
+    it('offers only the parties that hold a role the field accepts', async () => {
+        const lender = {
+            ...customer,
+            id: '01JPARTY000000000000000002',
+            name: 'Bank Mitra',
+            roles: ['lender'],
+        };
+
+        mockApi(
+            form([payroll()], {
+                [`GET ${base}/transaction-types/${payroll().id}/versions/1/schema`]:
+                    () =>
+                        json({
+                            data: {
+                                ...schema,
+                                properties: {
+                                    ...schema.properties,
+                                    payer: {
+                                        ...schema.properties.payer,
+                                        'x-allowed-roles': ['lender'],
+                                    },
+                                },
+                            },
+                        }),
+                [`GET ${base}/parties`]: () => page([customer, lender]),
+            }),
+        );
+
+        renderApp(`${entriesPath}/new?type=payroll_summary`);
+        const typist = userEvent.setup();
+
+        await screen.findByText('Pihak pembayar');
+        await typist.click(
+            screen.getByRole('combobox', { name: 'Pihak pembayar' }),
+        );
+
+        expect(
+            await screen.findByRole('option', { name: 'Bank Mitra' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('option', { name: 'Toko Budi' }),
+        ).not.toBeInTheDocument();
     });
 
     it('records a payment with its cash account and the open items it settles', async () => {

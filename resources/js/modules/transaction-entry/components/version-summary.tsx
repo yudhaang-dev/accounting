@@ -9,6 +9,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { partyRolesQuery } from '@/modules/subledger/party-roles';
+import { postingProfilesQuery } from '@/modules/subledger/posting-profiles';
 import { postingRuleText } from '@/modules/transaction-entry/components/posting-rule-text';
 import { accountNamesQuery } from '@/modules/transaction-entry/entries';
 import type { TypeVersion } from '@/modules/transaction-entry/transaction-types';
@@ -26,6 +28,16 @@ export function VersionSummary({
 }) {
     const { t } = useTranslation();
     const accounts = useQuery(accountNamesQuery(companyId));
+    const partyRoles = useQuery(partyRolesQuery(companyId));
+    const profiles = useQuery({
+        ...postingProfilesQuery(companyId),
+        enabled: Boolean(version.subledger_route?.posting_profile_id),
+    });
+    const roleLabel = (key: string) =>
+        partyRoles.data?.find((role) => role.key === key)?.label ?? key;
+    const routeProfile = profiles.data?.find(
+        (profile) => profile.id === version.subledger_route?.posting_profile_id,
+    );
     const fields = version.fields ?? [];
     const rules = version.posting_rules ?? [];
     const accountName = (id: string) => {
@@ -66,6 +78,8 @@ export function VersionSummary({
                             {t(
                                 `transactionTypes.designer.route.kinds.${version.subledger_route.kind as RouteKind}`,
                             )}
+                            {routeProfile &&
+                                ` · ${t('transactionTypes.designer.route.postingProfile')}: ${routeProfile.name}`}
                         </dd>
                     </div>
                 )}
@@ -112,6 +126,14 @@ export function VersionSummary({
                                                 {t(
                                                     `transactionTypes.fieldTypes.${field.type}`,
                                                 )}
+                                                {field.type === 'party' &&
+                                                field.allowed_roles?.length ? (
+                                                    <span className="block text-xs text-muted-foreground">
+                                                        {field.allowed_roles
+                                                            .map(roleLabel)
+                                                            .join(', ')}
+                                                    </span>
+                                                ) : null}
                                             </TableCell>
                                             <TableCell>
                                                 {field.required === false ? (

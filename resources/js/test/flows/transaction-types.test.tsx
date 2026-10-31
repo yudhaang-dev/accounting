@@ -177,6 +177,37 @@ const lookups = {
         }),
     [`GET ${base}/rate-types`]: emptyPage,
     [`GET ${base}/dimension-types`]: emptyPage,
+    [`GET ${base}/party-roles`]: () =>
+        json({
+            data: [
+                {
+                    id: '01JROLE0000000000000001',
+                    key: 'customer',
+                    label: 'Pelanggan',
+                    status: 'active',
+                    lock_version: 1,
+                },
+                {
+                    id: '01JROLE0000000000000002',
+                    key: 'employee',
+                    label: 'Karyawan',
+                    status: 'active',
+                    lock_version: 1,
+                },
+            ],
+        }),
+    [`GET ${base}/posting-profiles`]: () =>
+        json({
+            data: [
+                {
+                    id: '01JPROFILE000000000000002',
+                    name: 'Profil Karyawan',
+                    is_default: false,
+                    lock_version: 1,
+                    accounts: [],
+                },
+            ],
+        }),
 };
 
 describe('transaction type list', () => {
@@ -724,6 +755,57 @@ describe('version designer', () => {
                     cash_account_field: 'bank',
                     allocations_field: null,
                     counterpart_cash_account_field: null,
+                },
+            });
+        });
+
+        it('limits a party field to the roles checked, and leaves it open when none is', async () => {
+            const api = open();
+
+            renderApp(designer(sales.id));
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('checkbox', { name: 'Karyawan' }),
+            );
+            await typist.click(
+                screen.getByRole('button', { name: 'Simpan draf' }),
+            );
+
+            await waitFor(() => expect(api.called(save)).toHaveLength(1));
+            const body = api.called(save)[0]?.body as {
+                fields: Record<string, unknown>[];
+            };
+
+            expect(body.fields[0]).toMatchObject({
+                name: 'customer',
+                allowed_roles: ['employee'],
+            });
+            expect(body.fields[1]).not.toHaveProperty('allowed_roles');
+        });
+
+        it('names the posting profile of the route', async () => {
+            const api = open();
+
+            renderApp(designer(sales.id));
+            const typist = userEvent.setup();
+
+            await typist.click(
+                await screen.findByRole('combobox', {
+                    name: 'Profil posting',
+                }),
+            );
+            await typist.click(
+                await screen.findByRole('option', { name: 'Profil Karyawan' }),
+            );
+            await typist.click(
+                screen.getByRole('button', { name: 'Simpan draf' }),
+            );
+
+            await waitFor(() => expect(api.called(save)).toHaveLength(1));
+            expect(api.called(save)[0]?.body).toMatchObject({
+                subledger_route: {
+                    posting_profile_id: '01JPROFILE000000000000002',
                 },
             });
         });

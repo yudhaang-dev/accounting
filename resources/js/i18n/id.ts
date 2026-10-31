@@ -124,6 +124,7 @@ export const id = {
         navCurrencies: 'Mata uang',
         navRates: 'Kurs',
         navParties: 'Pihak',
+        navPartyRoles: 'Peran pihak',
         navPostingProfiles: 'Profil posting',
         navCashAccounts: 'Kas dan bank',
         navCashTransactions: 'Transaksi kas',
@@ -1053,6 +1054,51 @@ export const id = {
             reactivateAction: 'Aktifkan',
         },
     },
+    partyRoles: {
+        pageTitle: 'Peran pihak',
+        title: 'Peran pihak',
+        description:
+            'Siapa pihak itu bagi perusahaan: pelanggan, pemasok, karyawan, pemberi pinjaman, pemegang saham, dan seterusnya. Peran tidak menentukan sisi buku besar dokumen; profil posting yang menentukannya. Peran yang pernah dipakai hanya dapat dinonaktifkan.',
+        add: 'Tambah peran',
+        importAction: 'Impor peran bawaan',
+        createTitle: 'Tambah peran pihak',
+        editTitle: 'Ubah peran {{name}}',
+        empty: 'Belum ada peran pihak',
+        emptyDescription:
+            'Impor peran bawaan setelah membacanya, atau tambahkan sendiri.',
+        label: 'Nama',
+        key: 'Kunci',
+        keyHint:
+            'Huruf kecil, angka, dan garis bawah (2–32 karakter). Dipakai integrasi dan jenis transaksi; tidak dapat diubah setelahnya.',
+        keyLocked: 'Kunci tidak pernah berubah.',
+        keyInvalid:
+            'Mulai dengan huruf kecil; gunakan huruf kecil, angka, dan garis bawah (2–32 karakter).',
+        status: 'Status',
+        active: 'Aktif',
+        inactive: 'Nonaktif',
+        actions: 'Aksi',
+        editAction: 'Ubah',
+        deactivateAction: 'Nonaktifkan',
+        reactivateAction: 'Aktifkan',
+        created: 'Peran {{name}} ditambahkan.',
+        saved: 'Peran {{name}} disimpan.',
+        deactivated: 'Peran {{name}} dinonaktifkan.',
+        reactivated: 'Peran {{name}} diaktifkan kembali.',
+        conflict:
+            'Peran diubah di tempat lain. Data terbaru sudah dimuat; periksa lalu coba lagi.',
+        import: {
+            title: 'Impor peran bawaan',
+            intro: 'Peran ini hanya saran. Tidak ada yang dibuat sebelum Anda mengonfirmasi.',
+            review: 'Peran yang akan dibuat',
+            taken: 'Sudah ada',
+            confirm:
+                'Saya sudah membaca peran ini dan ingin yang tercentang dibuat untuk perusahaan ini.',
+            action_one: 'Buat {{count}} peran',
+            action_other: 'Buat {{count}} peran',
+            working: 'Membuat…',
+            done: 'Peran dibuat.',
+        },
+    },
     parties: {
         balances: {
             asOf: 'Saldo per tanggal',
@@ -1076,9 +1122,9 @@ export const id = {
         name: 'Nama',
         roles: 'Peran',
         allRoles: 'Semua peran',
-        customer: 'Pelanggan',
-        supplier: 'Pemasok',
-        roleRequired: 'Pilih sedikitnya satu peran.',
+        rolesHint:
+            'Siapa pihak ini bagi perusahaan. Peran tidak menentukan sisi buku besar; profil posting yang menentukan. Kelola peran di Peran pihak.',
+        noRoles: 'Belum ada peran aktif. Tambahkan di Peran pihak.',
         taxId: 'NPWP / identitas pajak',
         taxIdInvalid: 'Paling banyak 64 karakter.',
         profile: 'Profil posting',
@@ -1890,6 +1936,11 @@ export const id = {
             removeField: 'Hapus field {{n}}',
             addField: 'Tambah field',
             allowedAccounts: 'Akun yang boleh dipilih (kosong berarti semua)',
+            allowedRoles:
+                'Peran yang boleh dimiliki pihak (tidak ada yang dicentang berarti pihak mana pun)',
+            roleInactive: 'nonaktif',
+            noPartyRoles:
+                'Perusahaan belum punya peran pihak. Tambahkan di Peran pihak.',
             addAccount: 'Tambah akun',
             removeAccount: 'Hapus akun {{account}}',
             dimensionType: 'Tipe dimensi',
@@ -1936,6 +1987,10 @@ export const id = {
                     transfer: 'Transfer antar rekening kas',
                 },
                 role: 'Akun kontrol',
+                postingProfile: 'Profil posting',
+                partyProfile: 'Profil milik pihak',
+                postingProfileHint:
+                    'Ambil akun kontrol dari profil ini, bukan dari profil pihak. Dengan begitu, misalnya, kasbon karyawan terpisah dari utang pemasok untuk orang yang sama.',
                 roles: {
                     receivables_control: 'Piutang',
                     payables_control: 'Utang',

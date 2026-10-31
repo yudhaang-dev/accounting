@@ -14161,7 +14161,7 @@
         "/companies/{companyId}/parties": {
             "get": {
                 "operationId": "parties.index",
-                "summary": "Parties of the company, ordered by name. Filters: `filter[status]`, `filter[role]`\n(`customer` or `supplier`), `filter[search]` (part of the name), and `filter[source_system]`\nwith `filter[external_ref]` to find the party a source system refers to. `per_page`\ndefaults to 50, at most 200",
+                "summary": "Parties of the company, ordered by name. Filters: `filter[status]`, `filter[role]`\n(a role key), `filter[roles][]` (parties holding any of the role keys), `filter[search]` (part of the name), and `filter[source_system]`\nwith `filter[external_ref]` to find the party a source system refers to. `per_page`\ndefaults to 50, at most 200",
                 "tags": [
                     "Party"
                 ],
@@ -14186,10 +14186,18 @@
                         "in": "query",
                         "schema": {
                             "type": "string",
-                            "enum": [
-                                "customer",
-                                "supplier"
-                            ]
+                            "maxLength": 32
+                        }
+                    },
+                    {
+                        "name": "filter[roles][]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "maxLength": 32
+                            }
                         }
                     },
                     {
@@ -14385,7 +14393,7 @@
             },
             "post": {
                 "operationId": "parties.store",
-                "summary": "Adds a party with at least one role, optionally with the references source systems use for it.\nA reference already mapped to another party of the same source system is rejected",
+                "summary": "Adds a party with the roles it holds (keys of the party roles of the company), optionally with the references source systems use for it.\nA reference already mapped to another party of the same source system is rejected",
                 "tags": [
                     "Party"
                 ],
@@ -14718,6 +14726,292 @@
                                                 "functional_currency",
                                                 "parties"
                                             ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/party-roles": {
+            "get": {
+                "operationId": "party-roles.index",
+                "summary": "Party roles of the company, ordered by key. Filter: `filter[status]`",
+                "tags": [
+                    "PartyRole"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[status]",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/PartyStatus"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `PartyRoleResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PartyRoleResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "party-roles.store",
+                "summary": "Adds a role with a key of its own. The key never changes afterwards",
+                "tags": [
+                    "PartyRole"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreatePartyRoleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`PartyRoleResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PartyRoleResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/party-role-templates": {
+            "get": {
+                "operationId": "party-roles.templates",
+                "summary": "Roles the company may adopt, with a label in the language of the request. Only a suggestion until\nthe company confirms the ones it wants",
+                "tags": [
+                    "PartyRole"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "key",
+                                                    "label"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/party-roles/import-template": {
+            "post": {
+                "operationId": "party-roles.import-template",
+                "summary": "Creates the picked roles of the template. `confirmed` must be true. Fails as a whole when the\ncompany already has one of the keys",
+                "tags": [
+                    "PartyRole"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportPartyRolesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Array of `PartyRoleResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PartyRoleResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/party-roles/{id}": {
+            "patch": {
+                "operationId": "party-roles.update",
+                "summary": "Changes the label or deactivates and reactivates the role with `status`. `lock_version` is required",
+                "tags": [
+                    "PartyRole"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePartyRoleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`PartyRoleResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PartyRoleResource"
                                         }
                                     },
                                     "required": [
@@ -26776,12 +27070,15 @@
                         "type": "string",
                         "maxLength": 255
                     },
-                    "is_customer": {
-                        "type": "boolean",
-                        "description": "A party may be both; at least one role is required."
-                    },
-                    "is_supplier": {
-                        "type": "boolean"
+                    "roles": {
+                        "type": "array",
+                        "description": "Keys of the party roles of the company it holds (SL-FR-01); a role says nothing about the side of the ledger.",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 32
+                        },
+                        "maxItems": 20,
+                        "uniqueItems": true
                     },
                     "tax_id": {
                         "type": [
@@ -26833,6 +27130,24 @@
                     "name"
                 ],
                 "title": "CreatePartyRequest"
+            },
+            "CreatePartyRoleRequest": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9_]{1,31}$"
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "key",
+                    "label"
+                ],
+                "title": "CreatePartyRoleRequest"
             },
             "CreatePlanRequest": {
                 "type": "object",
@@ -29064,6 +29379,35 @@
                 ],
                 "title": "ImportOpeningBalancesRequest"
             },
+            "ImportPartyRolesRequest": {
+                "type": "object",
+                "properties": {
+                    "confirmed": {
+                        "enum": [
+                            "yes",
+                            "on",
+                            "1",
+                            1,
+                            "true",
+                            true
+                        ]
+                    },
+                    "keys": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 32
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "confirmed",
+                    "keys"
+                ],
+                "title": "ImportPartyRolesRequest"
+            },
             "ImportReportTemplateRequest": {
                 "type": "object",
                 "properties": {
@@ -30149,11 +30493,11 @@
                     "name": {
                         "type": "string"
                     },
-                    "is_customer": {
-                        "type": "boolean"
-                    },
-                    "is_supplier": {
-                        "type": "boolean"
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     },
                     "tax_id": {
                         "type": [
@@ -30201,8 +30545,7 @@
                 "required": [
                     "id",
                     "name",
-                    "is_customer",
-                    "is_supplier",
+                    "roles",
                     "tax_id",
                     "posting_profile_id",
                     "counterparty_company_id",
@@ -30211,6 +30554,34 @@
                     "lock_version"
                 ],
                 "title": "PartyResource"
+            },
+            "PartyRoleResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "lock_version": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "key",
+                    "label",
+                    "status",
+                    "lock_version"
+                ],
+                "title": "PartyRoleResource"
             },
             "PartyStatus": {
                 "type": "string",
@@ -32707,11 +33078,15 @@
                         "type": "string",
                         "maxLength": 255
                     },
-                    "is_customer": {
-                        "type": "boolean"
-                    },
-                    "is_supplier": {
-                        "type": "boolean"
+                    "roles": {
+                        "type": "array",
+                        "description": "The whole set of roles the party holds.",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 32
+                        },
+                        "maxItems": 20,
+                        "uniqueItems": true
                     },
                     "tax_id": {
                         "type": [
@@ -32761,6 +33136,26 @@
                     "lock_version"
                 ],
                 "title": "UpdatePartyRequest"
+            },
+            "UpdatePartyRoleRequest": {
+                "type": "object",
+                "properties": {
+                    "lock_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/PartyStatus"
+                    }
+                },
+                "required": [
+                    "lock_version"
+                ],
+                "title": "UpdatePartyRoleRequest"
             },
             "UpdatePlanRequest": {
                 "type": "object",
@@ -33302,6 +33697,16 @@
                                 "dimension_type": {
                                     "type": "string",
                                     "maxLength": 64
+                                },
+                                "allowed_roles": {
+                                    "type": "array",
+                                    "description": "The roles a party field accepts (TE-FR-04); that they exist and are active is checked by the application layer.",
+                                    "items": {
+                                        "type": "string",
+                                        "maxLength": 32
+                                    },
+                                    "minItems": 1,
+                                    "maxItems": 50
                                 }
                             },
                             "required": [
@@ -33472,6 +33877,14 @@
                                     "null"
                                 ],
                                 "maxLength": 64
+                            },
+                            "posting_profile_id": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "minLength": 26,
+                                "maxLength": 26
                             }
                         }
                     }

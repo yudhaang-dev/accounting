@@ -174,16 +174,10 @@ export function AgingPage({
                             placeholder={t('aging.allParties')}
                             emptyText={t('aging.noParty')}
                             clearable
-                            items={(parties.data ?? [])
-                                .filter((party) =>
-                                    controlRole === 'receivables_control'
-                                        ? party.is_customer
-                                        : party.is_supplier,
-                                )
-                                .map((party) => ({
-                                    value: party.id,
-                                    label: party.name,
-                                }))}
+                            items={(parties.data ?? []).map((party) => ({
+                                value: party.id,
+                                label: party.name,
+                            }))}
                             value={partyId}
                             onValueChange={setPartyId}
                         />

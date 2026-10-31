@@ -30,14 +30,14 @@ import {
     updateParty,
     type Party,
 } from '@/modules/subledger/parties';
+import { partyRolesQuery } from '@/modules/subledger/party-roles';
 import { postingProfilesQuery } from '@/modules/subledger/posting-profiles';
 
 type Ref = { source_system: string; external_ref: string };
 
 type Values = {
     name: string;
-    is_customer: boolean;
-    is_supplier: boolean;
+    roles: string[];
     tax_id: string;
     posting_profile_id: string;
     /** References to add; the ones the party already has are shown apart and never resent. */
@@ -67,8 +67,7 @@ function PartyForm({
     const form = useForm<Values>({
         defaultValues: {
             name: party?.name ?? '',
-            is_customer: party?.is_customer ?? true,
-            is_supplier: party?.is_supplier ?? false,
+            roles: party?.roles ?? [],
             tax_id: party?.tax_id ?? '',
             posting_profile_id: party?.posting_profile_id ?? '',
             external_refs: [],
@@ -80,6 +79,14 @@ function PartyForm({
         formState: { errors },
     } = form;
     const refs = useFieldArray({ control, name: 'external_refs' });
+    const roles = useQuery(partyRolesQuery(companyId));
+    // An inactive role stays listed while the party still holds it, so saving does not drop it silently.
+    const roleChoices = (roles.data ?? [])
+        .filter(
+            (role) =>
+                role.status === 'active' || party?.roles.includes(role.key),
+        )
+        .map((role) => ({ key: role.key, label: role.label }));
 
     const refresh = () =>
         queryClient.invalidateQueries({
@@ -98,8 +105,7 @@ function PartyForm({
         mutationFn: (values: Values) => {
             const common = {
                 name: values.name.trim(),
-                is_customer: values.is_customer,
-                is_supplier: values.is_supplier,
+                roles: values.roles,
                 tax_id:
                     values.tax_id.trim() === '' ? null : values.tax_id.trim(),
                 external_refs: values.external_refs.map((ref) => ({
@@ -178,59 +184,61 @@ function PartyForm({
                     )}
                 </Field>
 
-                <FieldSet data-invalid={errors.is_customer ? true : undefined}>
+                <FieldSet>
                     <FieldLegend variant="label">
                         {t('parties.roles')}
                     </FieldLegend>
-                    <div className="flex flex-wrap gap-x-6 gap-y-2">
-                        {(['is_customer', 'is_supplier'] as const).map(
-                            (role) => (
-                                <Controller
-                                    key={role}
-                                    control={control}
-                                    name={role}
-                                    rules={
-                                        role === 'is_customer'
-                                            ? {
-                                                  validate: (_, values) =>
-                                                      values.is_customer ||
-                                                      values.is_supplier ||
-                                                      t('parties.roleRequired'),
-                                              }
-                                            : undefined
-                                    }
-                                    render={({ field }) => (
-                                        <div className="flex items-center gap-2">
-                                            <Checkbox
-                                                id={`party-${role}`}
-                                                checked={field.value}
-                                                onCheckedChange={(checked) => {
-                                                    field.onChange(
-                                                        checked === true,
-                                                    );
-                                                    void form.trigger(
-                                                        'is_customer',
-                                                    );
-                                                }}
-                                            />
-                                            <Label
-                                                htmlFor={`party-${role}`}
-                                                className="font-normal"
-                                            >
-                                                {t(
-                                                    role === 'is_customer'
-                                                        ? 'parties.customer'
-                                                        : 'parties.supplier',
-                                                )}
-                                            </Label>
-                                        </div>
-                                    )}
-                                />
-                            ),
+                    <FieldDescription>
+                        {t('parties.rolesHint')}
+                    </FieldDescription>
+                    <Controller
+                        control={control}
+                        name="roles"
+                        render={({ field }) => (
+                            <div className="flex flex-wrap gap-x-6 gap-y-2">
+                                {roleChoices.map((choice) => (
+                                    <div
+                                        key={choice.key}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Checkbox
+                                            id={`party-role-${choice.key}`}
+                                            checked={field.value.includes(
+                                                choice.key,
+                                            )}
+                                            onCheckedChange={(checked) =>
+                                                field.onChange(
+                                                    checked === true
+                                                        ? [
+                                                              ...field.value,
+                                                              choice.key,
+                                                          ]
+                                                        : field.value.filter(
+                                                              (key) =>
+                                                                  key !==
+                                                                  choice.key,
+                                                          ),
+                                                )
+                                            }
+                                        />
+                                        <Label
+                                            htmlFor={`party-role-${choice.key}`}
+                                            className="font-normal"
+                                        >
+                                            {choice.label}
+                                        </Label>
+                                    </div>
+                                ))}
+                                {roleChoices.length === 0 && (
+                                    <p className="text-sm text-muted-foreground">
+                                        {t('parties.noRoles')}
+                                    </p>
+                                )}
+                            </div>
                         )}
-                    </div>
-                    {errors.is_customer && (
-                        <FieldError>{errors.is_customer.message}</FieldError>
+                    />
+                    {errors.roles && (
+                        <FieldError>{errors.roles.message}</FieldError>
                     )}
                 </FieldSet>
 

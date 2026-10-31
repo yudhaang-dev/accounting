@@ -33,7 +33,8 @@ export function PartyInput({
     required,
     rules,
     invalid,
-}: InputProps) {
+    allowedRoles,
+}: InputProps & { allowedRoles?: string[] }) {
     const { t } = useTranslation();
 
     const parties = useQuery(partyOptionsQuery(companyId));
@@ -49,8 +50,13 @@ export function PartyInput({
                     items={(parties.data ?? [])
                         .filter(
                             (party) =>
-                                party.status === 'active' ||
-                                party.id === field.value,
+                                party.id === field.value ||
+                                (party.status === 'active' &&
+                                    (allowedRoles === undefined ||
+                                        allowedRoles.length === 0 ||
+                                        party.roles.some((role) =>
+                                            allowedRoles.includes(role),
+                                        ))),
                         )
                         .map((party) => ({
                             value: party.id,

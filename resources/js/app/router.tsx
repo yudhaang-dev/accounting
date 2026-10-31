@@ -99,6 +99,7 @@ import { versionQuery } from '@/modules/planning/plans';
 import { AgingPage } from '@/modules/subledger/pages/aging-page';
 import { CashBasisPage } from '@/modules/subledger/pages/cash-basis-page';
 import { ReconciliationsPage } from '@/modules/subledger/pages/reconciliations-page';
+import { PartyRolesPage } from '@/modules/subledger/pages/party-roles-page';
 import { PostingProfilesPage } from '@/modules/subledger/pages/posting-profiles-page';
 import { ForgotPasswordPage } from '@/modules/identity-access/pages/forgot-password-page';
 import { LoginPage } from '@/modules/identity-access/pages/login-page';
@@ -801,6 +802,27 @@ const partiesRoute = createRoute({
                 canManage={can(workspace, 'parties.manage')}
                 canReadProfiles={can(workspace, 'posting-profiles.read')}
                 canReadReports={can(workspace, 'reports.read')}
+            />
+        );
+    },
+});
+
+const partyRolesRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/party-roles',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navPartyRoles', href: at(m, '/party-roles') },
+        ],
+    },
+    beforeLoad: requirePermission('parties.read'),
+    component: function PartyRoles() {
+        const { workspace } = partyRolesRoute.useRouteContext();
+
+        return (
+            <PartyRolesPage
+                companyId={workspace.company_id}
+                canManage={can(workspace, 'parties.manage')}
             />
         );
     },
@@ -2186,6 +2208,7 @@ const routeTree = rootRoute.addChildren([
                 openItemsRoute,
                 allocationsRoute,
                 reconciliationsRoute,
+                partyRolesRoute,
                 postingProfilesRoute,
                 entriesRoute,
                 approvalsRoute,

@@ -36,8 +36,7 @@ const allocationId = '01JALLOC0000000000000001';
 const party = {
     id: partyId,
     name: 'PT Maju Jaya',
-    is_customer: true,
-    is_supplier: false,
+    roles: ['customer'],
     tax_id: null,
     posting_profile_id: null,
     status: 'active',

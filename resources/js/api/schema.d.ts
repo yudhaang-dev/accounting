@@ -2478,14 +2478,14 @@ export interface paths {
         };
         /**
          * Parties of the company, ordered by name. Filters: `filter[status]`, `filter[role]`
-         *     (`customer` or `supplier`), `filter[search]` (part of the name), and `filter[source_system]`
+         *     (a role key), `filter[roles][]` (parties holding any of the role keys), `filter[search]` (part of the name), and `filter[source_system]`
          *     with `filter[external_ref]` to find the party a source system refers to. `per_page`
          *     defaults to 50, at most 200
          */
         get: operations["parties.index"];
         put?: never;
         /**
-         * Adds a party with at least one role, optionally with the references source systems use for it.
+         * Adds a party with the roles it holds (keys of the party roles of the company), optionally with the references source systems use for it.
          *     A reference already mapped to another party of the same source system is rejected
          */
         post: operations["parties.store"];
@@ -2565,6 +2565,81 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/party-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Party roles of the company, ordered by key. Filter: `filter[status]` */
+        get: operations["party-roles.index"];
+        put?: never;
+        /** Adds a role with a key of its own. The key never changes afterwards */
+        post: operations["party-roles.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/party-role-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Roles the company may adopt, with a label in the language of the request. Only a suggestion until
+         *     the company confirms the ones it wants
+         */
+        get: operations["party-roles.templates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/party-roles/import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Creates the picked roles of the template. `confirmed` must be true. Fails as a whole when the
+         *     company already has one of the keys
+         */
+        post: operations["party-roles.import-template"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/party-roles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Changes the label or deactivates and reactivates the role with `status`. `lock_version` is required */
+        patch: operations["party-roles.update"];
         trace?: never;
     };
     "/groups/{group}/perimeter/{id}/approve": {
@@ -4425,9 +4500,8 @@ export interface components {
         /** CreatePartyRequest */
         CreatePartyRequest: {
             name: string;
-            /** @description A party may be both; at least one role is required. */
-            is_customer?: boolean;
-            is_supplier?: boolean;
+            /** @description Keys of the party roles of the company it holds (SL-FR-01); a role says nothing about the side of the ledger. */
+            roles?: string[];
             tax_id?: string | null;
             /** @description The profile deciding its control accounts; empty means the default profile (SL-FR-02). */
             posting_profile_id?: string | null;
@@ -4438,6 +4512,11 @@ export interface components {
                 source_system: string;
                 external_ref: string;
             }[];
+        };
+        /** CreatePartyRoleRequest */
+        CreatePartyRoleRequest: {
+            key: string;
+            label: string;
         };
         /** CreatePlanRequest */
         CreatePlanRequest: {
@@ -4974,6 +5053,12 @@ export interface components {
                 exchange_rate?: string | null;
             }[];
         };
+        /** ImportPartyRolesRequest */
+        ImportPartyRolesRequest: {
+            /** @enum {unknown} */
+            confirmed: "yes" | "on" | "1" | 1 | "true" | true;
+            keys: string[];
+        };
         /** ImportReportTemplateRequest */
         ImportReportTemplateRequest: {
             template: string;
@@ -5251,8 +5336,7 @@ export interface components {
         PartyResource: {
             id: string;
             name: string;
-            is_customer: boolean;
-            is_supplier: boolean;
+            roles: string[];
             tax_id: string | null;
             posting_profile_id: string | null;
             counterparty_company_id: string | null;
@@ -5262,6 +5346,14 @@ export interface components {
                 external_ref: string;
             }[];
             lock_version: number;
+        };
+        /** PartyRoleResource */
+        PartyRoleResource: {
+            id: string;
+            key: string;
+            label: string;
+            status: string;
+            lock_version: string;
         };
         /**
          * PartyStatus
@@ -5890,8 +5982,8 @@ export interface components {
         UpdatePartyRequest: {
             lock_version: number;
             name?: string;
-            is_customer?: boolean;
-            is_supplier?: boolean;
+            /** @description The whole set of roles the party holds. */
+            roles?: string[];
             tax_id?: string | null;
             /** @description The profile deciding its control accounts; empty means the default profile (SL-FR-02). */
             posting_profile_id?: string | null;
@@ -5900,6 +5992,12 @@ export interface components {
                 source_system: string;
                 external_ref: string;
             }[];
+        };
+        /** UpdatePartyRoleRequest */
+        UpdatePartyRoleRequest: {
+            lock_version: number;
+            label?: string;
+            status?: components["schemas"]["PartyStatus"];
         };
         /** UpdatePlanRequest */
         UpdatePlanRequest: {
@@ -5994,6 +6092,8 @@ export interface components {
                 required?: boolean;
                 account_ids?: string[];
                 dimension_type?: string;
+                /** @description The roles a party field accepts (TE-FR-04); that they exist and are active is checked by the application layer. */
+                allowed_roles?: string[];
             }[];
             /** @description Currencies and rates of entries (TE-FR-06); whether the currencies are active is checked by the application layer. */
             allowed_currencies?: string[] | null;
@@ -6028,6 +6128,7 @@ export interface components {
                 cash_account_field?: string | null;
                 counterpart_cash_account_field?: string | null;
                 allocations_field?: string | null;
+                posting_profile_id?: string | null;
             };
         };
         /** WaiveReconciliationRequest */
@@ -11656,7 +11757,8 @@ export interface operations {
         parameters: {
             query?: {
                 "filter[status]"?: components["schemas"]["PartyStatus"];
-                "filter[role]"?: "customer" | "supplier";
+                "filter[role]"?: string;
+                "filter[roles][]"?: string[];
                 "filter[search]"?: string;
                 /** @description A reference only identifies a party together with its source system. */
                 "filter[source_system]"?: string;
@@ -11879,6 +11981,152 @@ export interface operations {
                                 payable: string;
                             }[];
                         };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "party-roles.index": {
+        parameters: {
+            query?: {
+                "filter[status]"?: components["schemas"]["PartyStatus"];
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `PartyRoleResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PartyRoleResource"][];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "party-roles.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePartyRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description `PartyRoleResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PartyRoleResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "party-roles.templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            label: string;
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "party-roles.import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportPartyRolesRequest"];
+            };
+        };
+        responses: {
+            /** @description Array of `PartyRoleResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PartyRoleResource"][];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "party-roles.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePartyRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description `PartyRoleResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PartyRoleResource"];
                     };
                 };
             };
