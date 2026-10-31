@@ -42,7 +42,10 @@ const periodId = (n: number) =>
 const plan = {
     id: planId,
     name: 'Anggaran 2026',
-    fiscal_year_id: yearId,
+    objective: null,
+    starts_on: '2026-01-01',
+    ends_on: '2026-12-31',
+    scope_dimension_value_id: null,
     description: 'Rencana tahunan',
     lock_version: 1,
 };

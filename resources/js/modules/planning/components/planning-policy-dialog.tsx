@@ -58,14 +58,20 @@ function PolicyForm({
 
     const planName = new Map(plans.map((plan) => [plan.id, plan]));
 
-    /** Only a published version of a plan of the same fiscal year can be the default (PL-FR-04). */
-    const itemsFor = (yearId: string) =>
+    /** Only a published version of a plan without a scope that overlaps the fiscal year can be the default (PL-FR-04). */
+    const itemsFor = (year: FiscalYear) =>
         versions
-            .filter(
-                (version) =>
+            .filter((version) => {
+                const plan = planName.get(version.plan_id);
+
+                return (
                     version.status === 'published' &&
-                    planName.get(version.plan_id)?.fiscal_year_id === yearId,
-            )
+                    plan !== undefined &&
+                    plan.scope_dimension_value_id === null &&
+                    plan.starts_on <= year.end_date &&
+                    plan.ends_on >= year.start_date
+                );
+            })
             .map((version) => ({
                 value: version.id,
                 label: `${planName.get(version.plan_id)?.name ?? ''} · ${version.name}`,
@@ -161,7 +167,7 @@ function PolicyForm({
                             </FieldLabel>
                             <SearchableSelect
                                 id={`policy-default-${year.id}`}
-                                items={itemsFor(year.id)}
+                                items={itemsFor(year)}
                                 value={defaults[year.id] ?? ''}
                                 onValueChange={(value) =>
                                     setDefaults((current) => ({

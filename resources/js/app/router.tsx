@@ -93,9 +93,10 @@ import { AllocationsPage } from '@/modules/subledger/pages/allocations-page';
 import { DocumentsPage } from '@/modules/subledger/pages/documents-page';
 import { OpenItemsPage } from '@/modules/subledger/pages/open-items-page';
 import { PartiesPage } from '@/modules/subledger/pages/parties-page';
+import { PlanEvaluationPage } from '@/modules/planning/pages/plan-evaluation-page';
 import { PlanVersionPage } from '@/modules/planning/pages/plan-version-page';
 import { PlansPage } from '@/modules/planning/pages/plans-page';
-import { versionQuery } from '@/modules/planning/plans';
+import { planQuery, versionQuery } from '@/modules/planning/plans';
 import { AgingPage } from '@/modules/subledger/pages/aging-page';
 import { CashBasisPage } from '@/modules/subledger/pages/cash-basis-page';
 import { ReconciliationsPage } from '@/modules/subledger/pages/reconciliations-page';
@@ -1817,6 +1818,39 @@ const planVersionRoute = createRoute({
     },
 });
 
+const planEvaluationRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/plans/$planId/evaluation',
+    staticData: {
+        crumbs: (m) => [
+            { labelKey: 'app.navPlans', href: at(m, '/plans') },
+            {
+                label: nameOf(m),
+                href: at(m, `/plans/${m.params.planId}/evaluation`),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('reports.read'),
+    loader: ({ context, params }) =>
+        orNotFound(
+            context.queryClient.ensureQueryData(
+                planQuery(params.companyId, params.planId),
+            ),
+        ),
+    notFoundComponent: RecordNotFound,
+    component: function PlanEvaluationScreen() {
+        const { workspace } = planEvaluationRoute.useRouteContext();
+        const { planId } = planEvaluationRoute.useParams();
+
+        return (
+            <PlanEvaluationPage
+                companyId={workspace.company_id}
+                planId={planId}
+            />
+        );
+    },
+});
+
 const journalRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/journals/$journalId',
@@ -2240,6 +2274,7 @@ const routeTree = rootRoute.addChildren([
                 cashBasisRoute,
                 plansRoute,
                 planVersionRoute,
+                planEvaluationRoute,
                 membersRoute,
                 rolesRoute,
                 securityPolicyRoute,

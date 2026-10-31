@@ -34,7 +34,7 @@ import {
     allAccountsQuery,
     type Account,
 } from '@/modules/general-ledger/accounts';
-import { periodsQuery, type Period } from '@/modules/general-ledger/periods';
+import { type Period } from '@/modules/general-ledger/periods';
 import { CopyLinesDialog } from '@/modules/planning/components/copy-lines-dialog';
 import { LinesImportDialog } from '@/modules/planning/components/lines-import-dialog';
 import { PublishDialog } from '@/modules/planning/components/publish-dialog';
@@ -58,6 +58,7 @@ import {
     enterCells,
     exportLines,
     linesQuery,
+    planPeriodsQuery,
     planQuery,
     plansQuery,
     versionQuery,
@@ -78,7 +79,7 @@ const plannable = (account: Account) =>
 
 /**
  * One version of a plan as a grid: a row per account and set of dimension values, a column per period of
- * the fiscal year (PL-FR-02). A draft is edited in place and saved together; a published or archived
+ * the plan (PL-FR-02). A draft is edited in place and saved together; a published or archived
  * version only shows its values (PL-FR-01). Lines also come in from CSV or a copy, and go out as CSV (PL-FR-03).
  */
 export function PlanVersionPage({
@@ -99,8 +100,7 @@ export function PlanVersionPage({
         enabled: version.data !== undefined,
     });
     const periods = useQuery({
-        ...periodsQuery(companyId, plan.data?.fiscal_year_id ?? ''),
-        enabled: plan.data !== undefined,
+        ...planPeriodsQuery(companyId, plan.data),
     });
     const lines = useQuery(linesQuery(companyId, versionId));
     const accounts = useQuery(allAccountsQuery(companyId));
@@ -131,21 +131,17 @@ export function PlanVersionPage({
         return <Skeleton className="h-96 w-full" />;
     }
 
-    // Lines can be copied from any other version of the same fiscal year, whichever plan it belongs to.
-    const yearPlans = new Map(
-        (plans.data ?? [])
-            .filter(
-                (other) => other.fiscal_year_id === plan.data.fiscal_year_id,
-            )
-            .map((other) => [other.id, other.name]),
+    // Lines can be copied from any other version, whichever plan it belongs to; periods the plan does not cover are skipped.
+    const planNames = new Map(
+        (plans.data ?? []).map((other) => [other.id, other.name]),
     );
     const siblings = (versions.data ?? [])
         .filter(
-            (other) => other.id !== versionId && yearPlans.has(other.plan_id),
+            (other) => other.id !== versionId && planNames.has(other.plan_id),
         )
         .map((other) => ({
             id: other.id,
-            label: `${yearPlans.get(other.plan_id)} · ${other.name}`,
+            label: `${planNames.get(other.plan_id)} · ${other.name}`,
         }));
 
     return (

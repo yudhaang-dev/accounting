@@ -2800,14 +2800,16 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Plans of the company, ordered by name. Filter: `filter[fiscal_year_id]`. `per_page` defaults
-         *     to 50, at most 200
+         * Plans of the company, ordered by name. Filter: `filter[fiscal_year_id]` keeps the plans whose
+         *     period overlaps that fiscal year. `per_page` defaults to 50, at most 200
          */
         get: operations["plans.index"];
         put?: never;
         /**
-         * Adds a plan for a fiscal year. The name is unique within the fiscal year. The versions that hold
-         *     its amounts are added with `POST /plans/{id}/versions`
+         * Adds a plan: a title (`name`), an `objective`, its own period (`starts_on`..`ends_on`, which may
+         *     span fiscal years) and optionally the dimension value it is measured against
+         *     (`scope_dimension_value_id`; none means the whole company). The name is unique in the company.
+         *     The versions that hold its amounts are added with `POST /plans/{id}/versions`
          */
         post: operations["plans.store"];
         delete?: never;
@@ -2829,8 +2831,41 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Changes the name or the description. The fiscal year cannot change. `lock_version` is required */
+        /**
+         * Changes the name, objective or description. The period and the scope change only until a version
+         *     has been published, and a period cannot leave out a period that already has lines.
+         *     `lock_version` is required
+         */
         patch: operations["plans.update"];
+        trace?: never;
+    };
+    "/companies/{companyId}/reports/plan-evaluation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Measures an activity plan against the ledger (RP-FR-11, RP-FR-12). For every period of the plan
+         *     and every income or expense account that has an actual or a plan, the `actual` posted in the
+         *     scope of the plan (its dimension value and the values below it; none means the whole company)
+         *     beside the `initial` estimate (the first published version) and the `revision` (the last
+         *     published version, or `revision_version_id`). Amounts are positive in the direction of the normal
+         *     balance of the account. `variances` give realised minus planned, the percentage of the plan and
+         *     whether the difference is favorable; a version that does not exist gives `null`, never zero.
+         *     `periods` give the result (income minus expense) of each period and its difference from each
+         *     version, where positive is favorable, with the running total in `cumulative_variance`. For a
+         *     user limited to some dimension values only the lines inside that scope count in `actual` and
+         *     `restricted` is true (IA-FR-03)
+         */
+        get: operations["reports.plan-evaluation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/companies/{companyId}/plan-versions/{id}/lines": {
@@ -4521,8 +4556,13 @@ export interface components {
         /** CreatePlanRequest */
         CreatePlanRequest: {
             name: string;
-            /** @description The fiscal year the plan projects; it cannot change afterwards. */
-            fiscal_year_id: string;
+            objective?: string | null;
+            /** Format: date */
+            starts_on: string;
+            /** Format: date */
+            ends_on: string;
+            /** @description The dimension value the plan is measured against; none means the whole company. */
+            scope_dimension_value_id?: string | null;
             description?: string | null;
         };
         /** CreatePlanVersionRequest */
@@ -5415,7 +5455,10 @@ export interface components {
         PlanResource: {
             id: string;
             name: string;
-            fiscal_year_id: string;
+            objective: string | null;
+            starts_on: string;
+            ends_on: string;
+            scope_dimension_value_id: string | null;
             description: string | null;
             lock_version: number;
         };
@@ -6003,6 +6046,12 @@ export interface components {
         UpdatePlanRequest: {
             lock_version: number;
             name?: string;
+            objective?: string | null;
+            /** Format: date */
+            starts_on?: string;
+            /** Format: date */
+            ends_on?: string;
+            scope_dimension_value_id?: string | null;
             description?: string | null;
         };
         /** UpdatePlanVersionRequest */
@@ -12529,6 +12578,91 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["PlanResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reports.plan-evaluation": {
+        parameters: {
+            query: {
+                plan_id: string;
+                revision_version_id?: string | null;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            plan: {
+                                id: string;
+                                name: string;
+                                objective: string | null;
+                                starts_on: string;
+                                ends_on: string;
+                                scope_dimension_value_id: string | null;
+                            };
+                            functional_currency: string;
+                            restricted: boolean;
+                            versions: {
+                                initial: {
+                                    id: string;
+                                    name: string;
+                                } | null;
+                                revision: {
+                                    id: string;
+                                    name: string;
+                                } | null;
+                            };
+                            available_versions: {
+                                id: string;
+                                name: string;
+                            }[];
+                            periods: {
+                                id: string;
+                                name: string;
+                                start_date: string;
+                                end_date: string;
+                                result: {
+                                    actual: string;
+                                    initial: string | null;
+                                    revision: string | null;
+                                };
+                                variance: {
+                                    initial: string | null;
+                                    revision: string | null;
+                                };
+                                cumulative_variance: {
+                                    initial: string | null;
+                                    revision: string | null;
+                                };
+                            }[];
+                            rows: {
+                                account_id: string;
+                                code: string;
+                                name: string;
+                                class: string;
+                                normal_balance: string;
+                                cells: {
+                                    [key: string]: unknown;
+                                }[];
+                                total: {
+                                    [key: string]: unknown;
+                                };
+                            }[];
+                        };
                     };
                 };
             };

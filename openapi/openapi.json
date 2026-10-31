@@ -15636,7 +15636,7 @@
         "/companies/{companyId}/plans": {
             "get": {
                 "operationId": "plans.index",
-                "summary": "Plans of the company, ordered by name. Filter: `filter[fiscal_year_id]`. `per_page` defaults\nto 50, at most 200",
+                "summary": "Plans of the company, ordered by name. Filter: `filter[fiscal_year_id]` keeps the plans whose\nperiod overlaps that fiscal year. `per_page` defaults to 50, at most 200",
                 "tags": [
                     "Plan"
                 ],
@@ -15826,7 +15826,7 @@
             },
             "post": {
                 "operationId": "plans.store",
-                "summary": "Adds a plan for a fiscal year. The name is unique within the fiscal year. The versions that hold\nits amounts are added with `POST /plans/{id}/versions`",
+                "summary": "Adds a plan: a title (`name`), an `objective`, its own period (`starts_on`..`ends_on`, which may\nspan fiscal years) and optionally the dimension value it is measured against\n(`scope_dimension_value_id`; none means the whole company). The name is unique in the company.\nThe versions that hold its amounts are added with `POST /plans/{id}/versions`",
                 "tags": [
                     "Plan"
                 ],
@@ -15931,7 +15931,7 @@
             },
             "patch": {
                 "operationId": "plans.update",
-                "summary": "Changes the name or the description. The fiscal year cannot change. `lock_version` is required",
+                "summary": "Changes the name, objective or description. The period and the scope change only until a version\nhas been published, and a period cannot leave out a period that already has lines.\n`lock_version` is required",
                 "tags": [
                     "Plan"
                 ],
@@ -15987,6 +15987,329 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/reports/plan-evaluation": {
+            "get": {
+                "operationId": "reports.plan-evaluation",
+                "summary": "Measures an activity plan against the ledger (RP-FR-11, RP-FR-12). For every period of the plan\nand every income or expense account that has an actual or a plan, the `actual` posted in the\nscope of the plan (its dimension value and the values below it; none means the whole company)\nbeside the `initial` estimate (the first published version) and the `revision` (the last\npublished version, or `revision_version_id`). Amounts are positive in the direction of the normal\nbalance of the account. `variances` give realised minus planned, the percentage of the plan and\nwhether the difference is favorable; a version that does not exist gives `null`, never zero.\n`periods` give the result (income minus expense) of each period and its difference from each\nversion, where positive is favorable, with the running total in `cumulative_variance`. For a\nuser limited to some dimension values only the lines inside that scope count in `actual` and\n`restricted` is true (IA-FR-03)",
+                "tags": [
+                    "PlanEvaluation"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "plan_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
+                    },
+                    {
+                        "name": "revision_version_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "plan": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "objective": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "starts_on": {
+                                                            "type": "string"
+                                                        },
+                                                        "ends_on": {
+                                                            "type": "string"
+                                                        },
+                                                        "scope_dimension_value_id": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "objective",
+                                                        "starts_on",
+                                                        "ends_on",
+                                                        "scope_dimension_value_id"
+                                                    ]
+                                                },
+                                                "functional_currency": {
+                                                    "type": "string"
+                                                },
+                                                "restricted": {
+                                                    "type": "boolean"
+                                                },
+                                                "versions": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "initial": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "name": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "id",
+                                                                "name"
+                                                            ]
+                                                        },
+                                                        "revision": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "name": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "id",
+                                                                "name"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "initial",
+                                                        "revision"
+                                                    ]
+                                                },
+                                                "available_versions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name"
+                                                        ]
+                                                    }
+                                                },
+                                                "periods": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "start_date": {
+                                                                "type": "string"
+                                                            },
+                                                            "end_date": {
+                                                                "type": "string"
+                                                            },
+                                                            "result": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "actual": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "initial": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "revision": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "actual",
+                                                                    "initial",
+                                                                    "revision"
+                                                                ]
+                                                            },
+                                                            "variance": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "initial": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "revision": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "initial",
+                                                                    "revision"
+                                                                ]
+                                                            },
+                                                            "cumulative_variance": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "initial": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "revision": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "initial",
+                                                                    "revision"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "start_date",
+                                                            "end_date",
+                                                            "result",
+                                                            "variance",
+                                                            "cumulative_variance"
+                                                        ]
+                                                    }
+                                                },
+                                                "rows": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "account_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "class": {
+                                                                "type": "string"
+                                                            },
+                                                            "normal_balance": {
+                                                                "type": "string"
+                                                            },
+                                                            "cells": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "additionalProperties": {}
+                                                                }
+                                                            },
+                                                            "total": {
+                                                                "type": "object",
+                                                                "additionalProperties": {}
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "account_id",
+                                                            "code",
+                                                            "name",
+                                                            "class",
+                                                            "normal_balance",
+                                                            "cells",
+                                                            "total"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "plan",
+                                                "functional_currency",
+                                                "restricted",
+                                                "versions",
+                                                "available_versions",
+                                                "periods",
+                                                "rows"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -27156,9 +27479,27 @@
                         "type": "string",
                         "maxLength": 255
                     },
-                    "fiscal_year_id": {
+                    "objective": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    },
+                    "starts_on": {
                         "type": "string",
-                        "description": "The fiscal year the plan projects; it cannot change afterwards.",
+                        "format": "date"
+                    },
+                    "ends_on": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "scope_dimension_value_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The dimension value the plan is measured against; none means the whole company.",
                         "minLength": 26,
                         "maxLength": 26
                     },
@@ -27172,7 +27513,8 @@
                 },
                 "required": [
                     "name",
-                    "fiscal_year_id"
+                    "starts_on",
+                    "ends_on"
                 ],
                 "title": "CreatePlanRequest"
             },
@@ -30788,8 +31130,23 @@
                     "name": {
                         "type": "string"
                     },
-                    "fiscal_year_id": {
+                    "objective": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "starts_on": {
                         "type": "string"
+                    },
+                    "ends_on": {
+                        "type": "string"
+                    },
+                    "scope_dimension_value_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "description": {
                         "type": [
@@ -30804,7 +31161,10 @@
                 "required": [
                     "id",
                     "name",
-                    "fiscal_year_id",
+                    "objective",
+                    "starts_on",
+                    "ends_on",
+                    "scope_dimension_value_id",
                     "description",
                     "lock_version"
                 ],
@@ -33167,6 +33527,29 @@
                     "name": {
                         "type": "string",
                         "maxLength": 255
+                    },
+                    "objective": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    },
+                    "starts_on": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "ends_on": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "scope_dimension_value_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 26,
+                        "maxLength": 26
                     },
                     "description": {
                         "type": [

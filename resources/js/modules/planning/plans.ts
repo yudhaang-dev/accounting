@@ -1,8 +1,9 @@
 import { queryOptions } from '@tanstack/react-query';
 import { api, unwrap } from '@/api/client';
-import type { components } from '@/api/schema';
+import type { components, paths } from '@/api/schema';
 import { downloadFile } from '@/lib/download';
 import { fetchAll } from '@/lib/fetch-all';
+import type { Period } from '@/modules/general-ledger/periods';
 import {
     ApiError,
     apiErrorFrom,
@@ -72,6 +73,122 @@ export const versionQuery = (companyId: string, id: string) =>
                     }),
                 )
             ).data,
+    });
+
+/** The GL periods a plan covers: those that overlap its own period, across fiscal years (PL-AC-02). */
+export const planPeriodsQuery = (companyId: string, plan: Plan | undefined) =>
+    queryOptions({
+        queryKey: [
+            'companies',
+            companyId,
+            'plans',
+            'periods',
+            plan?.starts_on,
+            plan?.ends_on,
+        ],
+        enabled: plan !== undefined,
+        queryFn: async (): Promise<Period[]> => {
+            if (plan === undefined) {
+                return [];
+            }
+
+            const years = (
+                await unwrap(
+                    api.GET('/companies/{companyId}/fiscal-years', {
+                        params: { path: { companyId } },
+                    }),
+                )
+            ).data.filter(
+                (year) =>
+                    year.start_date <= plan.ends_on &&
+                    year.end_date >= plan.starts_on,
+            );
+
+            const periods = await Promise.all(
+                years.map(async (year) =>
+                    fetchAll((page) =>
+                        unwrap(
+                            api.GET('/companies/{companyId}/periods', {
+                                params: {
+                                    path: { companyId },
+                                    query: {
+                                        'filter[fiscal_year_id]': year.id,
+                                        per_page: 100,
+                                        page,
+                                    },
+                                },
+                            }),
+                        ),
+                    ),
+                ),
+            );
+
+            return periods
+                .flat()
+                .filter(
+                    (period) =>
+                        period.start_date <= plan.ends_on &&
+                        period.end_date >= plan.starts_on,
+                )
+                .sort((a, b) => a.start_date.localeCompare(b.start_date));
+        },
+    });
+
+type EvaluationResponse =
+    paths['/companies/{companyId}/reports/plan-evaluation']['get']['responses'][200]['content']['application/json']['data'];
+
+/** Realised minus planned, with the share of the plan and whether it is favorable (RP-FR-12); none when the version does not exist. */
+export type EvaluationVariance = {
+    amount: string;
+    percentage: string | null;
+    favorable: boolean | null;
+} | null;
+
+export type EvaluationCell = {
+    actual: string;
+    initial: string | null;
+    revision: string | null;
+    variances: { initial: EvaluationVariance; revision: EvaluationVariance };
+};
+
+export type PlanEvaluation = Omit<EvaluationResponse, 'rows'> & {
+    rows: (Omit<EvaluationResponse['rows'][number], 'cells' | 'total'> & {
+        cells: (EvaluationCell & { period_id: string })[];
+        total: EvaluationCell;
+    })[];
+};
+
+/** The plan against the ledger of its scope: the first published version, the last or chosen revision, and the actual (RP-FR-11). */
+export const evaluationQuery = (
+    companyId: string,
+    planId: string,
+    revisionVersionId: string | null,
+) =>
+    queryOptions({
+        queryKey: [
+            'companies',
+            companyId,
+            'plans',
+            'evaluation',
+            planId,
+            revisionVersionId,
+        ],
+        queryFn: async (): Promise<PlanEvaluation> =>
+            (
+                await unwrap(
+                    api.GET('/companies/{companyId}/reports/plan-evaluation', {
+                        params: {
+                            path: { companyId },
+                            query: {
+                                plan_id: planId,
+                                ...(revisionVersionId
+                                    ? { revision_version_id: revisionVersionId }
+                                    : {}),
+                            },
+                        },
+                    }),
+                )
+            ).data as PlanEvaluation,
     });
 
 export const planQuery = (companyId: string, id: string) =>

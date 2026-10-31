@@ -442,7 +442,7 @@ export const en: Widen<typeof id> = {
             'Planned income and expenses by period, account and dimension, in several versions. A plan never becomes a journal.',
         empty: 'No plans yet',
         emptyDescription:
-            'Create a plan for a fiscal year, then fill in its versions by period and account.',
+            'Create a plan for an activity or a budget year, then fill in its versions by period and account.',
         status: {
             draft: 'Draft',
             published: 'Published',
@@ -455,16 +455,61 @@ export const en: Widen<typeof id> = {
             edit: 'Edit plan {{name}}',
             editShort: 'Edit',
             name: 'Plan name',
-            fiscalYear: 'Fiscal year',
-            fiscalYearHint:
-                'The fiscal year the plan projects; it cannot change afterwards.',
-            fiscalYearLocked:
-                'The fiscal year cannot change once the plan exists.',
+            objective: 'Objective or hypothesis',
+            objectiveHint:
+                'What the activity is meant to show, for example "a six-month promotion lifts sales by 15%".',
+            startsOn: 'Starts',
+            endsOn: 'Ends',
+            scope: 'Scope',
+            scopeType: 'Scope dimension type',
+            scopeValue: 'Scope dimension value',
+            scopeWhole: 'Whole company',
+            scopeHint:
+                'Actuals are read from the ledger for this dimension value and the values below it. It cannot change once the first version is published.',
+            fixedAfterPublish:
+                'The period and the scope cannot change once a version is published.',
             description: 'Description',
             created: 'Plan {{name}} created.',
             saved: 'Plan {{name}} saved.',
             conflict:
                 'Someone else changed the plan. The latest values are shown; review and save again.',
+        },
+        evaluation: {
+            open: 'Evaluation',
+            openFor: 'Evaluate {{name}}',
+            pageTitle: 'Evaluation of {{name}}',
+            description:
+                'The initial estimate, the revision and the actual from the ledger side by side. The system shows the numbers; judging whether the problem is execution or the quality of the plan is up to the reader.',
+            objective: 'Objective',
+            period: 'Period',
+            scope: 'Scope',
+            currency: 'Currency: {{code}}',
+            revisionVersion: 'Revision version',
+            revisionLatest: 'Latest published',
+            initial: 'Initial estimate',
+            revision: 'Revision',
+            actual: 'Actual',
+            variance: 'Variance',
+            varianceInitial: 'Variance vs initial',
+            varianceRevision: 'Variance vs revision',
+            cumulativeInitial: 'Cumulative vs initial',
+            cumulativeRevision: 'Cumulative vs revision',
+            result: 'Result (income − expense)',
+            favorable: 'Favorable',
+            unfavorable: 'Unfavorable',
+            account: 'Account',
+            allPeriods: 'All periods',
+            showPeriod: 'Show',
+            total: 'Total',
+            noVersion: 'No published version yet',
+            noVersionDescription:
+                'Publish a version of the plan to make it the initial estimate. The actual is shown meanwhile.',
+            noRows: 'No plan or actual amounts in this period.',
+            restricted:
+                'Your data scope is limited; the actual only counts lines inside that scope.',
+            summary: 'Result by period',
+            byAccount: 'By account',
+            back: 'Back to plans',
         },
         versions: {
             add: 'New version',

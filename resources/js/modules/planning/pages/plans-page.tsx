@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import {
+    ChartNoAxesCombinedIcon,
     ClipboardListIcon,
     PencilIcon,
     PlusIcon,
@@ -38,6 +39,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useDocumentTitle } from '@/hooks/use-document-title';
+import { formatIsoDate } from '@/lib/date';
 import { genericErrorMessage } from '@/lib/errors';
 import { fiscalYearsQuery } from '@/modules/general-ledger/calendar';
 import { PlanDialog } from '@/modules/planning/components/plan-dialog';
@@ -47,6 +49,7 @@ import {
     VersionDialog,
     type VersionDialogMode,
 } from '@/modules/planning/components/version-dialog';
+import { lineDimensionsQuery } from '@/modules/transaction-entry/entries';
 import {
     planningPolicyQuery,
     plansQuery,
@@ -85,8 +88,16 @@ export function PlansPage({
     const versions = useQuery(versionsQuery(companyId));
     const years = useQuery(fiscalYearsQuery(companyId));
     const policy = useQuery(planningPolicyQuery(companyId));
+    const dimensions = useQuery(lineDimensionsQuery(companyId));
 
-    const yearName = new Map((years.data ?? []).map((y) => [y.id, y.name]));
+    const scopeName = new Map(
+        (dimensions.data ?? []).flatMap((type) =>
+            type.values.map((value) => [
+                value.id,
+                `${type.label}: ${value.name}`,
+            ]),
+        ),
+    );
     const defaultIds = new Set(
         (policy.data?.default_versions ?? []).map((d) => d.plan_version_id),
     );
@@ -156,7 +167,13 @@ export function PlansPage({
                             key={plan.id}
                             companyId={companyId}
                             plan={plan}
-                            yearName={yearName.get(plan.fiscal_year_id)}
+                            scope={
+                                plan.scope_dimension_value_id
+                                    ? scopeName.get(
+                                          plan.scope_dimension_value_id,
+                                      )
+                                    : undefined
+                            }
                             versions={versions.data.filter(
                                 (version) => version.plan_id === plan.id,
                             )}
@@ -174,6 +191,11 @@ export function PlansPage({
             <PlanDialog
                 companyId={companyId}
                 plan={planDialog?.plan}
+                locked={versions.data?.some(
+                    (version) =>
+                        version.plan_id === planDialog?.plan?.id &&
+                        version.status !== 'draft',
+                )}
                 open={planDialog !== undefined}
                 onOpenChange={(open) => !open && setPlanDialog(undefined)}
             />
@@ -211,7 +233,7 @@ const STATUS_VARIANT = {
 function PlanCard({
     companyId,
     plan,
-    yearName,
+    scope,
     versions,
     defaultIds,
     canManage,
@@ -222,7 +244,7 @@ function PlanCard({
 }: {
     companyId: string;
     plan: Plan;
-    yearName: string | undefined;
+    scope: string | undefined;
     versions: PlanVersion[];
     defaultIds: Set<string>;
     canManage: boolean;
@@ -231,42 +253,69 @@ function PlanCard({
     onVersion: (mode: VersionDialogMode) => void;
     onPublish: (version: PlanVersion) => void;
 }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     return (
         <Card>
             <CardHeader>
                 <CardTitle>{plan.name}</CardTitle>
                 <CardDescription>
-                    {[yearName, plan.description].filter(Boolean).join(' · ')}
+                    {[
+                        `${formatIsoDate(plan.starts_on, i18n.language)} – ${formatIsoDate(plan.ends_on, i18n.language)}`,
+                        scope ?? t('plans.plan.scopeWhole'),
+                        plan.objective,
+                    ]
+                        .filter(Boolean)
+                        .join(' · ')}
                 </CardDescription>
-                {canManage && (
-                    <CardAction className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            aria-label={t('plans.plan.edit', {
-                                name: plan.name,
-                            })}
-                            onClick={onEdit}
-                        >
-                            <PencilIcon data-icon="inline-start" />
-                            {t('plans.plan.editShort')}
-                        </Button>
-                        <Button
-                            size="sm"
-                            aria-label={t('plans.versions.addFor', {
-                                name: plan.name,
-                            })}
-                            onClick={() =>
-                                onVersion({ kind: 'create', planId: plan.id })
-                            }
-                        >
-                            <PlusIcon data-icon="inline-start" />
-                            {t('plans.versions.add')}
-                        </Button>
-                    </CardAction>
-                )}
+                <CardAction className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        aria-label={t('plans.evaluation.openFor', {
+                            name: plan.name,
+                        })}
+                        render={
+                            <Link
+                                to="/w/$companyId/plans/$planId/evaluation"
+                                params={{ companyId, planId: plan.id }}
+                            />
+                        }
+                    >
+                        <ChartNoAxesCombinedIcon data-icon="inline-start" />
+                        {t('plans.evaluation.open')}
+                    </Button>
+                    {canManage && (
+                        <>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                aria-label={t('plans.plan.edit', {
+                                    name: plan.name,
+                                })}
+                                onClick={onEdit}
+                            >
+                                <PencilIcon data-icon="inline-start" />
+                                {t('plans.plan.editShort')}
+                            </Button>
+                            <Button
+                                size="sm"
+                                aria-label={t('plans.versions.addFor', {
+                                    name: plan.name,
+                                })}
+                                onClick={() =>
+                                    onVersion({
+                                        kind: 'create',
+                                        planId: plan.id,
+                                    })
+                                }
+                            >
+                                <PlusIcon data-icon="inline-start" />
+                                {t('plans.versions.add')}
+                            </Button>
+                        </>
+                    )}
+                </CardAction>
             </CardHeader>
             <CardContent>
                 {versions.length === 0 ? (

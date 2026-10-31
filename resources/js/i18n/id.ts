@@ -437,7 +437,7 @@ export const id = {
             'Rencana pendapatan dan biaya per periode, akun, dan dimensi, dalam beberapa versi. Rencana tidak pernah menjadi jurnal.',
         empty: 'Belum ada rencana',
         emptyDescription:
-            'Buat rencana untuk satu tahun buku, lalu isi versinya per periode dan akun.',
+            'Buat rencana untuk satu kegiatan atau tahun anggaran, lalu isi versinya per periode dan akun.',
         status: {
             draft: 'Draf',
             published: 'Terbit',
@@ -450,16 +450,61 @@ export const id = {
             edit: 'Ubah rencana {{name}}',
             editShort: 'Ubah',
             name: 'Nama rencana',
-            fiscalYear: 'Tahun buku',
-            fiscalYearHint:
-                'Tahun buku yang diproyeksikan; tidak dapat diubah kemudian.',
-            fiscalYearLocked:
-                'Tahun buku tidak dapat diubah setelah rencana dibuat.',
+            objective: 'Tujuan atau hipotesis',
+            objectiveHint:
+                'Apa yang ingin dinilai oleh kegiatan ini, misalnya "promosi enam bulan menaikkan penjualan 15%".',
+            startsOn: 'Mulai',
+            endsOn: 'Selesai',
+            scope: 'Ruang lingkup',
+            scopeType: 'Jenis dimensi ruang lingkup',
+            scopeValue: 'Nilai dimensi ruang lingkup',
+            scopeWhole: 'Seluruh perusahaan',
+            scopeHint:
+                'Realisasi dibaca dari buku besar pada nilai dimensi ini beserta turunannya. Tidak dapat diubah setelah versi pertama terbit.',
+            fixedAfterPublish:
+                'Periode dan ruang lingkup tidak dapat diubah setelah ada versi terbit.',
             description: 'Deskripsi',
             created: 'Rencana {{name}} dibuat.',
             saved: 'Rencana {{name}} disimpan.',
             conflict:
                 'Rencana diubah orang lain. Nilai terbaru ditampilkan; periksa lalu simpan lagi.',
+        },
+        evaluation: {
+            open: 'Evaluasi',
+            openFor: 'Evaluasi {{name}}',
+            pageTitle: 'Evaluasi {{name}}',
+            description:
+                'Estimasi awal, revisi, dan realisasi dari buku besar berdampingan. Sistem menyajikan angka; menilai apakah masalahnya eksekusi atau mutu rencana adalah tugas pembaca.',
+            objective: 'Tujuan',
+            period: 'Periode',
+            scope: 'Ruang lingkup',
+            currency: 'Mata uang: {{code}}',
+            revisionVersion: 'Versi revisi',
+            revisionLatest: 'Terbit terakhir',
+            initial: 'Estimasi awal',
+            revision: 'Revisi',
+            actual: 'Aktual',
+            variance: 'Selisih',
+            varianceInitial: 'Selisih vs awal',
+            varianceRevision: 'Selisih vs revisi',
+            cumulativeInitial: 'Kumulatif vs awal',
+            cumulativeRevision: 'Kumulatif vs revisi',
+            result: 'Hasil (pendapatan − biaya)',
+            favorable: 'Menguntungkan',
+            unfavorable: 'Merugikan',
+            account: 'Akun',
+            allPeriods: 'Seluruh periode',
+            showPeriod: 'Tampilkan',
+            total: 'Total',
+            noVersion: 'Belum ada versi terbit',
+            noVersionDescription:
+                'Terbitkan satu versi rencana untuk menjadikannya estimasi awal. Realisasi tetap tampil.',
+            noRows: 'Tidak ada angka rencana atau realisasi pada periode ini.',
+            restricted:
+                'Cakupan data Anda dibatasi; realisasi hanya memuat baris dalam cakupan itu.',
+            summary: 'Hasil per periode',
+            byAccount: 'Per akun',
+            back: 'Kembali ke rencana',
         },
         versions: {
             add: 'Versi baru',

@@ -20,7 +20,7 @@ final class DemoPlanning
         $defaults = [];
 
         foreach ([2025, 2026] as $year) {
-            $plan = $api->post($this->f->url('/plans'), ['name' => "Anggaran {$year}", 'fiscal_year_id' => $years[$year]['id'], 'description' => "Anggaran tahunan {$year} yang disetujui direksi"])['data'];
+            $plan = $api->post($this->f->url('/plans'), ['name' => "Anggaran {$year}", 'starts_on' => $years[$year]['start_date'], 'ends_on' => $years[$year]['end_date'], 'description' => "Anggaran tahunan {$year} yang disetujui direksi"])['data'];
             $version = $api->post($this->f->url("/plans/{$plan['id']}/versions"), ['name' => 'Anggaran awal'])['data'];
             $periods = collect($api->get($this->f->url('/periods'), ['filter[fiscal_year_id]' => $years[$year]['id'], 'per_page' => 50])['data'])->sortBy('number')->values();
 

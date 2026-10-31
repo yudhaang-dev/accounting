@@ -26,7 +26,7 @@ function CopyForm({
 }: {
     companyId: string;
     version: PlanVersion;
-    /** Other versions of the same fiscal year that can be copied from. */
+    /** Other versions that can be copied from; periods the plan does not cover are skipped. */
     siblings: { id: string; label: string }[];
     periods: Period[];
     onDone: () => void;
