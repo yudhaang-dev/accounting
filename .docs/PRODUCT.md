@@ -85,6 +85,7 @@ Proses dan perhitungan operasional milik sistem sumber — persediaan/HPP, payro
 | Definisi laporan | `ReportDefinition` | Baris dan kolom laporan sebagai data berversi. |
 | Klasifikasi mutasi | `MovementClassification` | Pemetaan akun × Jenis Transaksi ke baris laporan (arus kas, perubahan ekuitas). |
 | Proyeksi | `Plan`, `PlanVersion` | Rencana pendapatan/biaya; versi bernama (mis. anggaran, forecast) berstatus draf atau terbit. |
+| Rencana kegiatan | `Plan` | Rencana dengan judul, tujuan, periode sendiri, dan ruang lingkup satu nilai dimensi; tolok ukur evaluasi keputusan, bukan batas pencatatan (ADR-0017). |
 | Realisasi | `actual` | Nilai dari jurnal posted. |
 | Kebijakan perusahaan | `CompanyPolicy` | Konfigurasi bertipe dan berversi milik modul yang menegakkannya. |
 | Klien integrasi | `IntegrationClient` | Principal mesin OAuth; terscope perusahaan, `source_system`, dan allowlist Jenis Transaksi. |
