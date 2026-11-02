@@ -210,9 +210,34 @@ describe('closing the year with a difference (SL-AC-05, GL-AC-09)', function () 
         $this->actingAs($this->admin)->postJson("{$this->url}/fiscal-years/{$this->year}/close")->assertStatus(409);
     });
 
-    it('does not let a balanced run be waived', function () {
+    it('does not keep a balanced account, so there is nothing to waive', function () {
         $balanced = reconciled()['1115'];
 
-        $this->actingAs($this->admin)->postJson("{$this->url}/reconciliations/{$balanced['id']}/waive", ['reason' => 'Tidak perlu'])->assertStatus(409)->assertJsonPath('code', 'INVALID_STATE_TRANSITION');
+        expect($balanced)->toMatchArray(['id' => null, 'status' => 'balanced'])
+            ->and(DB::table('sl_reconciliation_runs')->where('status', 'balanced')->count())->toBe(0)
+            ->and(DB::table('sl_reconciliation_runs')->where('account_code', '1121')->count())->toBe(1);
+    });
+
+    it('keeps an unchanged difference once however often it runs, and again when it changes', function () {
+        $first = reconciled()['1121'];
+        $this->actingAs($this->admin)->postJson("{$this->url}/reconciliations/{$first['id']}/waive", ['reason' => 'Koreksi manual'])->assertOk();
+
+        $again = reconciled()['1121'];
+
+        expect($again)->toMatchArray(['id' => $first['id'], 'status' => 'waived'])
+            ->and(DB::table('sl_reconciliation_runs')->count())->toBe(1)
+            // Every run is audited, kept or not.
+            ->and(AuditEntry::where('event', 'reconciliation.run')->where('company_id', $this->companyId)->count())->toBe(2);
+
+        app(PostingService::class)->post(new PostJournal(
+            companyId: $this->companyId, accountingDate: '2026-07-10', description: 'Another manual receivable', source: JournalSource::Entry,
+            lines: [new PostJournalLine($this->receivables, '10000', '0'), new PostJournalLine($this->sales, '0', '10000')],
+            postedBy: $this->admin->id, actorPermissions: ['journals.override-source'], sourceOverrideReason: 'Lagi',
+        ));
+        $changed = reconciled()['1121'];
+
+        expect($changed['id'])->not->toBe($first['id'])
+            ->and($changed)->toMatchArray(['status' => 'difference', 'difference' => '260000.000000'])
+            ->and(DB::table('sl_reconciliation_runs')->count())->toBe(2);
     });
 });

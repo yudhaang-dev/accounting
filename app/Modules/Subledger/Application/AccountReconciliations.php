@@ -35,7 +35,10 @@ final class AccountReconciliations implements ReconciliationStatus
     ) {}
 
     /**
-     * Reconciles every account and keeps what it found.
+     * Reconciles every account and returns what it found for all of them, but keeps only the differences: an
+     * account that balanced is returned unsaved, and a difference identical to the last one kept for the
+     * account, currency and date (same ledger balance and subledger total, waived or not) is returned as that
+     * one instead of being kept again.
      *
      * @return list<ReconciliationRun>
      */
@@ -45,18 +48,27 @@ final class AccountReconciliations implements ReconciliationStatus
             $runs = [];
 
             foreach ($this->compute($companyId, $asOf) as $row) {
-                $runs[] = ReconciliationRun::create([
-                    ...$row,
-                    'as_of' => $asOf,
-                    'status' => $row['difference']->isZero() ? 'balanced' : 'difference',
-                    'run_by' => $userId,
-                ])->refresh();
+                $attributes = [...$row, 'as_of' => $asOf, 'run_by' => $userId];
+
+                if ($row['difference']->isZero()) {
+                    $runs[] = (new ReconciliationRun([...$attributes, 'status' => 'balanced']))->forceFill(['company_id' => $companyId]);
+
+                    continue;
+                }
+
+                $last = ReconciliationRun::query()->withoutGlobalScopes()
+                    ->where('company_id', $companyId)->where('account_id', $row['account_id'])->where('currency', $row['currency'])->whereDate('as_of', $asOf)
+                    ->latest('created_at')->latest('id')->first();
+
+                $runs[] = $last !== null && $last->ledger_balance->isEqualTo($row['ledger_balance']) && $last->detail_total->isEqualTo($row['detail_total'])
+                    ? $last
+                    : ReconciliationRun::create([...$attributes, 'status' => 'difference'])->refresh();
             }
 
             $this->audit->record(
                 'reconciliation.run',
                 "Reconciliation of the control and cash accounts on {$asOf}.",
-                properties: ['as_of' => $asOf, 'accounts' => count($runs), 'differences' => count(array_filter($runs, fn (ReconciliationRun $run): bool => $run->status === 'difference'))],
+                properties: ['as_of' => $asOf, 'accounts' => count($runs), 'differences' => count(array_filter($runs, fn (ReconciliationRun $run): bool => $run->status !== 'balanced'))],
                 companyId: $companyId,
             );
 

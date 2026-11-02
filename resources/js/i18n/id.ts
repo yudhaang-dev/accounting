@@ -393,7 +393,7 @@ export const id = {
         ran_other: '{{count}} akun direkonsiliasi, {{differences}} berselisih.',
         empty: 'Belum ada rekonsiliasi',
         emptyDescription:
-            'Jalankan rekonsiliasi per tanggal untuk membandingkan buku besar dengan subledger.',
+            'Jalankan rekonsiliasi per tanggal untuk membandingkan buku besar dengan subledger. Hanya selisih yang disimpan, jadi daftar tetap kosong bila semua akun sesuai.',
         statusLabel: 'Status',
         allStatuses: 'Semua status',
         status: {

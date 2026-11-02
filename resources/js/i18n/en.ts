@@ -398,7 +398,7 @@ export const en: Widen<typeof id> = {
             'Reconciled {{count}} accounts, {{differences}} with a difference.',
         empty: 'No reconciliation yet',
         emptyDescription:
-            'Run a reconciliation as of a date to compare the ledger with the subledger.',
+            'Run a reconciliation as of a date to compare the ledger with the subledger. Only differences are kept, so the list stays empty when every account balances.',
         statusLabel: 'Status',
         allStatuses: 'All statuses',
         status: {

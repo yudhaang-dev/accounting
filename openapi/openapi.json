@@ -18898,7 +18898,7 @@
             },
             "post": {
                 "operationId": "reconciliations.store",
-                "summary": "Compares the ledger balance of every control and cash account with the total of its subledger on a\ndate, and keeps the result. A difference lists the journals the subledger did not post to the account",
+                "summary": "Compares the ledger balance of every control and cash account with the total of its subledger on a\ndate. The response has every account; only differences are kept, so an account that balanced has no\n`id`. A difference lists the journals the subledger did not post to the account",
                 "tags": [
                     "Reconciliation"
                 ],

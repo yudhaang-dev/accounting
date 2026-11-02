@@ -404,7 +404,7 @@ Syarat: jenis kurs penutup dan peran selisih kurs belum terealisasi sudah diatur
 
 ### 8.3 Rekonsiliasi
 
-*Subledger → Rekonsiliasi*. Pilih **Per tanggal** lalu **Jalankan rekonsiliasi**. Sistem membandingkan saldo buku besar setiap akun kontrol dan akun kas/bank dengan total subledgernya.
+*Subledger → Rekonsiliasi*. Pilih **Per tanggal** lalu **Jalankan rekonsiliasi**. Sistem membandingkan saldo buku besar setiap akun kontrol dan akun kas/bank dengan total subledgernya. Daftar hanya menyimpan akun yang berselisih; akun yang sesuai tidak muncul, dan menjalankan ulang tanpa perubahan tidak menambah baris. Pesan setelah proses menyebut berapa akun yang diperiksa.
 
 | Status | Arti |
 | --- | --- |

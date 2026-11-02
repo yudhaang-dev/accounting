@@ -7,12 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
+ * A balanced account is not kept, so it has no `id` (SL-FR-09).
+ *
  * @property-read ReconciliationRun $resource
  */
 class ReconciliationResource extends JsonResource
 {
     /**
-     * @return array{id: string, kind: string, account_id: string, account_code: string, currency: string, as_of: string, ledger_balance: string, detail_total: string, difference: string, status: string, causes: list<array{journal_id: string, number: string, accounting_date: string, source: string, debit: string, credit: string, description: string|null}>, waiver_reason: string|null, waived_by: int|null, waived_at: string|null, run_by: int|null, created_at: string|null}
+     * @return array{id: string|null, kind: string, account_id: string, account_code: string, currency: string, as_of: string, ledger_balance: string, detail_total: string, difference: string, status: string, causes: list<array{journal_id: string, number: string, accounting_date: string, source: string, debit: string, credit: string, description: string|null}>, waiver_reason: string|null, waived_by: int|null, waived_at: string|null, run_by: int|null, created_at: string|null}
      */
     public function toArray(Request $request): array
     {

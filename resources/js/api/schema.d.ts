@@ -3287,7 +3287,8 @@ export interface paths {
         put?: never;
         /**
          * Compares the ledger balance of every control and cash account with the total of its subledger on a
-         *     date, and keeps the result. A difference lists the journals the subledger did not post to the account
+         *     date. The response has every account; only differences are kept, so an account that balanced has no
+         *     `id`. A difference lists the journals the subledger did not post to the account
          */
         post: operations["reconciliations.store"];
         delete?: never;
