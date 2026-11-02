@@ -131,7 +131,7 @@ Peran menyimpan ID akun, versi, tanggal efektif, dan aktor; saran wajib dikonfir
 
 ## Saran definisi laporan
 
-Saran berikut menjadi `ReportDefinition` template; perusahaan dapat mengubahnya.
+Saran berikut menjadi `ReportDefinition` template; perusahaan dapat mengubahnya. Baris kumpulan akun pada template Neraca, Laba Rugi, dan Arus Kas menyalakan `account_detail` (RP-FR-01) agar laporan terbaca sampai tingkat akun; pada arus kas tidak langsung hanya baris `cash_equivalents` yang dirinci.
 
 1. **Laba rugi:** pendapatan (4100) dikurangi pengurang pendapatan (4190) dan biaya langsung (5000) untuk laba kotor; dikurangi beban operasi (6000); penghasilan dan beban lain (7100, 7200); pajak penghasilan (7300). Bagian OCI memakai mutasi akun 3160.
 2. **Neraca:** aset (1000), liabilitas (2000), ekuitas (3000), ditambah baris terhitung laba tahun berjalan.
