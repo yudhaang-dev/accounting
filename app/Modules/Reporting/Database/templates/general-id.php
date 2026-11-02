@@ -14,7 +14,8 @@
 $parent = fn (string $code): array => ['code' => $code];
 $class = fn (string $class): array => ['class' => $class];
 
-$accounts = fn (string $key, string $label, array $selectors, string $sign = 'debit'): array => ['key' => $key, 'label' => $label, 'type' => 'accounts', 'sign' => $sign, 'accounts' => $selectors];
+// Every account row lists its accounts (RP-FR-01); the indirect cash flow does so for cash only.
+$accounts = fn (string $key, string $label, array $selectors, string $sign = 'debit', bool $detail = true): array => ['key' => $key, 'label' => $label, 'type' => 'accounts', 'sign' => $sign, 'accounts' => $selectors, 'account_detail' => $detail];
 
 $subtotal = fn (string $key, string $label, array $terms): array => [
     'key' => $key, 'label' => $label, 'type' => 'subtotal', 'sign' => 'debit',
@@ -82,17 +83,17 @@ return [
             'structure' => [
                 'basis' => 'movement',
                 'rows' => [
-                    $accounts('profit', 'Laba Bersih', [$class('income'), $class('expense')], 'credit'),
-                    $accounts('operating_assets', 'Perubahan Aset Operasi', [$parent('1120'), $parent('1130'), $parent('1140'), $parent('1150'), $parent('1160'), $parent('1170')], 'credit'),
-                    $accounts('operating_liabilities', 'Perubahan Liabilitas Operasi', [$parent('2110'), $parent('2120'), $parent('2130'), $parent('2140'), $parent('2150')], 'credit'),
+                    $accounts('profit', 'Laba Bersih', [$class('income'), $class('expense')], 'credit', false),
+                    $accounts('operating_assets', 'Perubahan Aset Operasi', [$parent('1120'), $parent('1130'), $parent('1140'), $parent('1150'), $parent('1160'), $parent('1170')], 'credit', false),
+                    $accounts('operating_liabilities', 'Perubahan Liabilitas Operasi', [$parent('2110'), $parent('2120'), $parent('2130'), $parent('2140'), $parent('2150')], 'credit', false),
                     $subtotal('operating_cash', 'Arus Kas dari Aktivitas Operasi', [['profit', 1], ['operating_assets', 1], ['operating_liabilities', 1]]),
-                    $accounts('investing_assets', 'Perubahan Aset Tidak Lancar', [$parent('1200')], 'credit'),
-                    $accounts('financing_debt', 'Perubahan Pinjaman dan Liabilitas Sewa', [$parent('2160'), $parent('2170'), $parent('2200')], 'credit'),
-                    $accounts('financing_equity', 'Perubahan Ekuitas', [$parent('3000')], 'credit'),
+                    $accounts('investing_assets', 'Perubahan Aset Tidak Lancar', [$parent('1200')], 'credit', false),
+                    $accounts('financing_debt', 'Perubahan Pinjaman dan Liabilitas Sewa', [$parent('2160'), $parent('2170'), $parent('2200')], 'credit', false),
+                    $accounts('financing_equity', 'Perubahan Ekuitas', [$parent('3000')], 'credit', false),
                     $subtotal('financing_cash', 'Arus Kas dari Aktivitas Pendanaan', [['financing_debt', 1], ['financing_equity', 1]]),
                     $subtotal('net_increase', 'Kenaikan (Penurunan) Bersih Kas', [['operating_cash', 1], ['investing_assets', 1], ['financing_cash', 1]]),
-                    ['key' => 'cash_opening', 'label' => 'Kas dan Setara Kas Awal', 'type' => 'cash_equivalents', 'sign' => 'debit', 'basis' => 'opening'],
-                    ['key' => 'cash_closing', 'label' => 'Kas dan Setara Kas Akhir', 'type' => 'cash_equivalents', 'sign' => 'debit', 'basis' => 'closing'],
+                    ['key' => 'cash_opening', 'label' => 'Kas dan Setara Kas Awal', 'type' => 'cash_equivalents', 'sign' => 'debit', 'basis' => 'opening', 'account_detail' => true],
+                    ['key' => 'cash_closing', 'label' => 'Kas dan Setara Kas Akhir', 'type' => 'cash_equivalents', 'sign' => 'debit', 'basis' => 'closing', 'account_detail' => true],
                 ],
                 'columns' => [
                     ['key' => 'period', 'label' => 'Periode', 'kind' => 'period'],

@@ -218,6 +218,14 @@ final class ReportStructure
                 }
             }
 
+            if (in_array($type, ['accounts', 'cash_equivalents'], true) && isset($row['account_detail'])) {
+                if (! is_bool($row['account_detail'])) {
+                    $errors["{$at}.account_detail"][] = __('reports.account_detail_invalid');
+                } elseif ($row['account_detail']) {
+                    $normalized['account_detail'] = true;
+                }
+            }
+
             if ($type === 'cash_equivalents') {
                 $normalized['basis'] = isset($row['basis']) ? self::basis($row['basis'], "{$at}.basis", $errors) : $defaultBasis;
             }

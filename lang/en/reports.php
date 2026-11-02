@@ -49,6 +49,7 @@ return [
     'column_label_invalid' => 'A column needs a label of at most 255 characters.',
     'column_kind_invalid' => 'The column kind must be one of: :allowed.',
     'column_ref_unknown' => 'A difference refers to a column above it.',
+    'account_detail_invalid' => 'Account detail must be true or false.',
     'favorable_invalid' => 'The favorable direction is `higher` or `lower`.',
     'plan_span_invalid' => 'A plan column adds up a `period` or a `ytd` range.',
     'plan_version_invalid' => 'A plan version is a 26-character ID.',

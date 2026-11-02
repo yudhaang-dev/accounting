@@ -3486,6 +3486,10 @@ export interface paths {
          *     date it is only as complete as a history by transactions.
          *
          *     An `accounts` or `cash_equivalents` row lists the `accounts` it claims, to follow into the ledger (X-FR-02).
+         *     A row whose definition sets `account_detail` also has `account_lines` (RP-FR-01): its leaf accounts in
+         *     code order with `level`, `is_leaf` and a value per column (`null` where the column has none), parents
+         *     that the row claims as headings with the subtotal of what is below them, and no account that is zero
+         *     in every column. The leaf lines add up to the value of the row in each column.
          *
          *     With `Accept: text/csv` the rows and column values are downloaded instead, under the same permission (X-FR-02).
          */
@@ -14150,6 +14154,16 @@ export interface operations {
                                     account_id: string;
                                     code: string;
                                     name: string;
+                                }[];
+                                account_lines?: {
+                                    account_id: string;
+                                    code: string;
+                                    name: string;
+                                    level: number;
+                                    is_leaf: boolean;
+                                    values: {
+                                        [key: string]: string | null;
+                                    };
                                 }[];
                                 values: {
                                     [key: string]: string | null;

@@ -49,6 +49,7 @@ return [
     'column_label_invalid' => 'Kolom memerlukan label paling banyak 255 karakter.',
     'column_kind_invalid' => 'Jenis kolom harus salah satu dari: :allowed.',
     'column_ref_unknown' => 'Selisih merujuk kolom di atasnya.',
+    'account_detail_invalid' => 'Rincian akun harus bernilai benar atau salah.',
     'favorable_invalid' => 'Arah menguntungkan adalah `higher` atau `lower`.',
     'plan_span_invalid' => 'Kolom rencana menjumlahkan rentang `period` atau `ytd`.',
     'plan_version_invalid' => 'Versi rencana adalah ID 26 karakter.',

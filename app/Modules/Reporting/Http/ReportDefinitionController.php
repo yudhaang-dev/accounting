@@ -113,10 +113,14 @@ class ReportDefinitionController
      * date it is only as complete as a history by transactions.
      *
      * An `accounts` or `cash_equivalents` row lists the `accounts` it claims, to follow into the ledger (X-FR-02).
+     * A row whose definition sets `account_detail` also has `account_lines` (RP-FR-01): its leaf accounts in
+     * code order with `level`, `is_leaf` and a value per column (`null` where the column has none), parents
+     * that the row claims as headings with the subtotal of what is below them, and no account that is zero
+     * in every column. The leaf lines add up to the value of the row in each column.
      *
      * With `Accept: text/csv` the rows and column values are downloaded instead, under the same permission (X-FR-02).
      *
-     * @response array{data: array{definition: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array{key: string, label: string, kind: string, from: string|null, to: string|null, available: bool}>, rows: list<array{key: string, label: string, type: string, accounts?: list<array{account_id: string, code: string, name: string}>, values: array<string, string|null>}>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}}
+     * @response array{data: array{definition: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array{key: string, label: string, kind: string, from: string|null, to: string|null, available: bool}>, rows: list<array{key: string, label: string, type: string, accounts?: list<array{account_id: string, code: string, name: string}>, account_lines?: list<array{account_id: string, code: string, name: string, level: int, is_leaf: bool, values: array<string, string|null>}>, values: array<string, string|null>}>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}}
      */
     public function evaluate(EvaluateReportRequest $request, ReportEngine $engine, DataScopeContext $scope, string $companyId, string $id): JsonResponse|Response
     {

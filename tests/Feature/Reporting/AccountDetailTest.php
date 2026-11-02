@@ -142,3 +142,76 @@ describe('account detail of a report row (RP-FR-01, RP-AC-12)', function () {
             ->and($detailed['costs']['values'])->toBe($plain['costs']['values']);
     });
 });
+
+/** @return array<string, mixed> a definition of revenue and costs for February */
+function adStructure(bool $detail): array
+{
+    return [
+        'basis' => 'movement',
+        'rows' => [
+            ['key' => 'revenue', 'label' => 'Revenue', 'type' => 'accounts', 'sign' => 'credit', 'accounts' => [['type' => 'class', 'class' => 'income']], ...($detail ? ['account_detail' => true] : [])],
+        ],
+        'columns' => [['key' => 'month', 'label' => 'Month', 'kind' => 'period']],
+    ];
+}
+
+describe('account detail in the definition (RP-FR-01)', function () {
+    it('is saved with the structure, off unless asked for, and refuses anything but a boolean', function () {
+        $body = ['key' => 'revenue_report', 'name' => 'Revenue', 'structure' => adStructure(true)];
+
+        $created = $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions", $body)->assertCreated()->json('data');
+        expect($created['structure']['rows'][0]['account_detail'])->toBeTrue();
+
+        $plain = $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions", [...$body, 'key' => 'plain', 'structure' => adStructure(false)])->assertCreated()->json('data');
+        expect($plain['structure']['rows'][0])->not->toHaveKey('account_detail');
+
+        $wrong = adStructure(false);
+        $wrong['rows'][0]['account_detail'] = 'yes';
+        $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions", [...$body, 'key' => 'wrong', 'structure' => $wrong])
+            ->assertUnprocessable()->assertJsonValidationErrors(['structure.rows.0.account_detail']);
+
+        // It belongs to rows that list accounts only.
+        $heading = adStructure(false);
+        $heading['rows'][] = ['key' => 'title', 'label' => 'Title', 'type' => 'heading', 'account_detail' => true];
+        $saved = $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions", [...$body, 'key' => 'heading', 'structure' => $heading])->assertCreated()->json('data');
+        expect($saved['structure']['rows'][1])->not->toHaveKey('account_detail');
+    });
+
+    it('turns on in a new version, leaves the old version and its snapshot without lines, and keeps lines in a new snapshot (RP-AC-08)', function () {
+        adPost('2026-02-10', $this->bank, $this->goods, '500000.00');
+
+        $created = $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions", ['key' => 'revenue_report', 'name' => 'Revenue', 'structure' => adStructure(false)])->assertCreated()->json('data');
+        $id = $created['id'];
+        $period = 'from=2026-02-01&to=2026-02-28';
+
+        $old = $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions/{$id}/snapshots", ['from' => '2026-02-01', 'to' => '2026-02-28'])->assertCreated()->json('data');
+
+        $updated = $this->actingAs($this->admin)->putJson("{$this->url}/report-definitions/{$id}", ['structure' => adStructure(true), 'lock_version' => $created['lock_version']])->assertOk()->json('data');
+        expect($updated['current_version'])->toBe(2);
+
+        $first = $this->actingAs($this->admin)->getJson("{$this->url}/report-definitions/{$id}/result?{$period}&version=1")->assertOk()->json('data.rows.0');
+        $second = $this->actingAs($this->admin)->getJson("{$this->url}/report-definitions/{$id}/result?{$period}")->assertOk()->json('data.rows.0');
+
+        expect($first)->not->toHaveKey('account_lines')
+            ->and($second['account_lines'])->not->toBeEmpty()
+            ->and($second['values'])->toBe($first['values']);
+
+        $oldRead = $this->actingAs($this->admin)->getJson("{$this->url}/report-snapshots/{$old['id']}")->assertOk()->json('data');
+        expect($oldRead['result']['rows'][0])->not->toHaveKey('account_lines');
+
+        $new = $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions/{$id}/snapshots", ['from' => '2026-02-01', 'to' => '2026-02-28'])->assertCreated()->json('data');
+        expect($new['result']['rows'][0]['account_lines'])->toEqual($second['account_lines']);
+    });
+
+    it('is on for the account rows of the template statements, and for the cash rows only of the indirect cash flow', function () {
+        $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions/import-template", ['template' => 'general-id', 'confirmed' => true, 'keys' => ['income_statement', 'balance_sheet', 'cash_flow_indirect']])->assertCreated();
+
+        $definitions = collect($this->actingAs($this->admin)->getJson("{$this->url}/report-definitions")->json('data'))->keyBy('key');
+        $detailed = fn (string $key): array => collect($this->actingAs($this->admin)->getJson("{$this->url}/report-definitions/{$definitions[$key]['id']}")->json('data.structure.rows'))
+            ->filter(fn (array $row): bool => ($row['account_detail'] ?? false) === true)->pluck('key')->all();
+
+        expect($detailed('income_statement'))->toBe(['revenue', 'revenue_deductions', 'cost_of_sales', 'operating_expenses', 'other_income', 'other_expenses', 'income_tax'])
+            ->and($detailed('balance_sheet'))->toBe(['current_assets', 'non_current_assets', 'current_liabilities', 'non_current_liabilities', 'equity'])
+            ->and($detailed('cash_flow_indirect'))->toBe(['cash_opening', 'cash_closing']);
+    });
+});
