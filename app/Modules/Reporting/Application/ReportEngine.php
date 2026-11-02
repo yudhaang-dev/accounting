@@ -62,6 +62,7 @@ final class ReportEngine
 
         $columns = [];
         $values = [];
+        $detail = [];
         $unmapped = [];
         $checks = [];
         $cashChecks = [];
@@ -78,6 +79,7 @@ final class ReportEngine
 
                 if ($plan['balances'] !== null) {
                     $values[$column['key']] = $this->evaluate($structure, $claims, $plan['balances'], $unmapped);
+                    $detail[$column['key']] = $this->detail($structure['rows'], $claims, $plan['balances']);
                 }
 
                 continue;
@@ -103,6 +105,7 @@ final class ReportEngine
             }
 
             $values[$column['key']] = $this->evaluate($structure, $claims, $balances, $unmapped);
+            $detail[$column['key']] = $this->detail($structure['rows'], $claims, $balances);
 
             if ($kind === ReportStructure::BALANCE_SHEET && $column['kind'] === 'as_of') {
                 $checks[$column['key']] = $this->balanceCheck($balances);
@@ -118,6 +121,10 @@ final class ReportEngine
             $status = HistoryCoverage::combine($columns[$column['minuend']]['coverage_status'], $columns[$column['subtrahend']]['coverage_status']);
             $columns[$column['key']] = ['key' => $column['key'], 'label' => $column['label'], 'kind' => 'difference', 'from' => null, 'to' => null, 'available' => $available, 'coverage_status' => $available ? $status : HistoryCoverage::UNAVAILABLE];
             $values[$column['key']] = $this->difference($structure['rows'], $values[$column['minuend']] ?? null, $values[$column['subtrahend']] ?? null, $unmapped !== []);
+
+            if ($available) {
+                $detail[$column['key']] = $this->detailDifference($detail[$column['minuend']], $detail[$column['subtrahend']]);
+            }
         }
 
         $scale = $this->currencies->functionalScale($companyId);
@@ -153,6 +160,7 @@ final class ReportEngine
             $rows[] = [
                 'key' => $row['key'], 'label' => $row['label'], 'type' => $row['type'],
                 ...(in_array($row['type'], ['accounts', 'cash_equivalents'], true) ? ['accounts' => $claimedBy[$row['key']] ?? []] : []),
+                ...($this->hasDetail($row) ? ['account_lines' => $this->accountLines($row['key'], $claimedBy[$row['type'] === 'cash_equivalents' ? $this->cashRowKey($structure['rows']) : $row['key']] ?? [], $accountsById, array_column($structure['columns'], 'key'), $detail, $scale)] : []),
                 'values' => $cells,
                 ...($variances === [] ? [] : ['variances' => $variances]),
             ];
@@ -516,15 +524,7 @@ final class ReportEngine
         $perRow = [];
 
         // Every cash row reads the same accounts, whatever its basis; the first of them holds the claim.
-        $cashRowKey = '';
-
-        foreach ($structure['rows'] as $row) {
-            if ($row['type'] === 'cash_equivalents') {
-                $cashRowKey = $row['key'];
-
-                break;
-            }
-        }
+        $cashRowKey = $this->cashRowKey($structure['rows']);
 
         foreach ($balances as $id => $balance) {
             if (isset($claims[$id])) {
@@ -543,6 +543,152 @@ final class ReportEngine
         }
 
         return $values;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function cashRowKey(array $rows): string
+    {
+        foreach ($rows as $row) {
+            if ($row['type'] === 'cash_equivalents') {
+                return $row['key'];
+            }
+        }
+
+        return '';
+    }
+
+    /** @param  array<string, mixed>  $row */
+    private function hasDetail(array $row): bool
+    {
+        return ($row['account_detail'] ?? false) === true && in_array($row['type'], ['accounts', 'cash_equivalents'], true);
+    }
+
+    /**
+     * The value of every account a detailed row claims, with the row's basis and sign, so that the
+     * accounts add up to the row (RP-FR-01, RP-AC-12). An account without a balance in the range is zero.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @param  array<string, string>  $claims
+     * @param  array<string, array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal, class: AccountClass}>  $balances
+     * @return array<string, array<string, BigDecimal>> row key => account ID => value
+     */
+    private function detail(array $rows, array $claims, array $balances): array
+    {
+        $cashRowKey = $this->cashRowKey($rows);
+        $detail = [];
+
+        foreach ($rows as $row) {
+            if (! $this->hasDetail($row)) {
+                continue;
+            }
+
+            $owner = $row['type'] === 'cash_equivalents' ? $cashRowKey : $row['key'];
+            $detail[$row['key']] = [];
+
+            foreach ($balances as $id => $balance) {
+                if (($claims[$id] ?? null) === $owner) {
+                    $detail[$row['key']][$id] = $this->signed($row['sign'], $this->pick($balance, $row['basis']));
+                }
+            }
+        }
+
+        return $detail;
+    }
+
+    /**
+     * @param  array<string, array<string, BigDecimal>>  $minuend
+     * @param  array<string, array<string, BigDecimal>>  $subtrahend
+     * @return array<string, array<string, BigDecimal>>
+     */
+    private function detailDifference(array $minuend, array $subtrahend): array
+    {
+        $detail = [];
+
+        foreach ($minuend as $rowKey => $accounts) {
+            $detail[$rowKey] = [];
+
+            foreach (array_unique([...array_keys($accounts), ...array_keys($subtrahend[$rowKey] ?? [])]) as $id) {
+                $detail[$rowKey][$id] = ($accounts[$id] ?? BigDecimal::zero())->minus($subtrahend[$rowKey][$id] ?? BigDecimal::zero());
+            }
+        }
+
+        return $detail;
+    }
+
+    /**
+     * The leaf accounts of a detailed row in tree order, each parent that the row claims as a heading
+     * with the subtotal of what is below it. An account that is zero (or without a value) in every
+     * column is left out; a column that has no value has none for any account (RP-FR-01).
+     *
+     * @param  list<array{account_id: string, code: string, name: string}>  $claimed
+     * @param  array<string, AccountData>  $accountsById
+     * @param  list<string>  $columnKeys
+     * @param  array<string, array<string, array<string, BigDecimal>>>  $detail  column key => row key => account ID => value
+     * @param  int<0, max>  $scale
+     * @return list<array{account_id: string, code: string, name: string, level: int, is_leaf: bool, values: array<string, string|null>}>
+     */
+    private function accountLines(string $rowKey, array $claimed, array $accountsById, array $columnKeys, array $detail, int $scale): array
+    {
+        $claimedIds = array_flip(array_column($claimed, 'account_id'));
+        $totals = [];
+        $shown = [];
+
+        foreach (array_keys($claimedIds) as $id) {
+            $account = $accountsById[$id] ?? null;
+
+            if ($account === null || ! $account->isLeaf) {
+                continue;
+            }
+
+            $perColumn = [];
+            $visible = false;
+
+            foreach ($columnKeys as $key) {
+                $value = isset($detail[$key]) ? ($detail[$key][$rowKey][$id] ?? BigDecimal::zero()) : null;
+                $perColumn[$key] = $value;
+                $visible = $visible || ($value !== null && ! $value->isZero());
+            }
+
+            if (! $visible) {
+                continue;
+            }
+
+            // The account and each parent above it that the row claims add the value to their subtotal.
+            for ($node = $id; $node !== null; $node = isset($claimedIds[$accountsById[$node]->parentId ?? '']) ? $accountsById[$node]->parentId : null) {
+                $shown[$node] = true;
+
+                foreach ($columnKeys as $key) {
+                    $totals[$node][$key] = $perColumn[$key] === null ? null : ($totals[$node][$key] ?? BigDecimal::zero())->plus($perColumn[$key]);
+                }
+            }
+        }
+
+        $children = [];
+
+        foreach (array_keys($shown) as $id) {
+            $parent = $accountsById[$id]->parentId ?? '';
+            $children[isset($shown[$parent]) ? $parent : ''][] = $id;
+        }
+
+        $lines = [];
+        $walk = function (string $parent, int $level) use (&$walk, &$lines, $children, $accountsById, $totals, $scale): void {
+            $ids = $children[$parent] ?? [];
+            usort($ids, fn (string $a, string $b): int => strcmp($accountsById[$a]->code, $accountsById[$b]->code));
+
+            foreach ($ids as $id) {
+                $lines[] = [
+                    'account_id' => $id, 'code' => $accountsById[$id]->code, 'name' => $accountsById[$id]->name,
+                    'level' => $level, 'is_leaf' => $accountsById[$id]->isLeaf,
+                    'values' => array_map(fn (?BigDecimal $value): ?string => $value === null ? null : $this->format($value, $scale), $totals[$id]),
+                ];
+                $walk($id, $level + 1);
+            }
+        };
+        $walk('', 0);
+
+        return $lines;
     }
 
     /** @param  array{opening: BigDecimal, movement: BigDecimal, closing: BigDecimal, class: AccountClass}  $balance */
