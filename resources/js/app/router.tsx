@@ -1148,6 +1148,10 @@ const schedulesRoute = createRoute({
 const newScheduleRoute = createRoute({
     getParentRoute: () => companyRoute,
     path: '/recurring-schedules/new',
+    validateSearch: (search: Record<string, unknown>): { type?: string } =>
+        typeof search.type === 'string' && search.type !== ''
+            ? { type: search.type }
+            : {},
     staticData: {
         crumbs: (m) => [
             {
@@ -1160,10 +1164,22 @@ const newScheduleRoute = createRoute({
     beforeLoad: requirePermission('recurring-schedules.manage'),
     component: function NewSchedule() {
         const { workspace } = newScheduleRoute.useRouteContext();
+        const { type } = newScheduleRoute.useSearch();
+
+        if (type === undefined) {
+            return (
+                <EntryCatalogPage
+                    companyId={workspace.company_id}
+                    canManageTypes={can(workspace, 'policies.manage')}
+                    purpose="schedule"
+                />
+            );
+        }
 
         return (
             <ScheduleFormPage
                 companyId={workspace.company_id}
+                typeKey={type}
                 canUseDimensions={can(workspace, 'dimensions.read')}
             />
         );

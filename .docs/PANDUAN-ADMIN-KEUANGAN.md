@@ -228,7 +228,7 @@ Bila akses Anda dibatasi pada cabang atau proyek tertentu, laporan hanya memuat 
 
 ## 8. Jurnal berulang
 
-**Transaksi → Jurnal berulang** menampung jadwal untuk transaksi yang sama tiap periode (sewa, penyusutan, dan sejenisnya), dengan nilai tetap. Entri yang dibuat jadwal melewati validasi dan persetujuan seperti entri lain. Anda bisa membuat jadwal baru, mengubah, atau melewati satu kejadian. Kegagalan ditampilkan di daftar; cek rutin di awal bulan.
+**Transaksi → Jurnal berulang** menampung jadwal untuk transaksi yang sama tiap periode (sewa, penyusutan, dan sejenisnya), dengan nilai tetap. Entri yang dibuat jadwal melewati validasi dan persetujuan seperti entri lain. Anda bisa membuat jadwal baru (jenis transaksinya dipilih dari katalog, seperti entri baru), mengubah, atau melewati satu kejadian. Kegagalan ditampilkan di daftar; cek rutin di awal bulan.
 
 ---
 

@@ -130,12 +130,15 @@ const valuesOf = (typeKey: string, schedule?: Schedule): ScheduleValues => {
 function ScheduleFields({
     companyId,
     schedule,
+    typeKey: chosenType,
     types,
     accounts,
     dimensionTypes,
 }: {
     companyId: string;
     schedule?: Schedule;
+    /** The type chosen in the catalog; the form is made for it and the type cannot change here. */
+    typeKey?: string;
     types: TransactionType[];
     accounts: LineAccount[];
     dimensionTypes: LineDimensionType[];
@@ -145,7 +148,7 @@ function ScheduleFields({
     const navigate = useNavigate();
     const [formError, setFormError] = useState<string | null>(null);
     const form = useForm<ScheduleValues>({
-        defaultValues: valuesOf(types[0]?.key ?? '', schedule),
+        defaultValues: valuesOf(chosenType ?? types[0]?.key ?? '', schedule),
     });
     const {
         register,
@@ -332,11 +335,22 @@ function ScheduleFields({
                                         id="schedule-type"
                                         value={field.value}
                                         items={typeItems}
-                                        disabled={Boolean(schedule)}
+                                        disabled={Boolean(
+                                            schedule || chosenType,
+                                        )}
                                         onValueChange={field.onChange}
                                     />
                                 )}
                             />
+                            {chosenType && !schedule && (
+                                <Link
+                                    to="/w/$companyId/recurring-schedules/new"
+                                    params={{ companyId }}
+                                    className="w-fit text-sm underline-offset-4 hover:underline"
+                                >
+                                    {t('entries.form.changeType')}
+                                </Link>
+                            )}
                         </Field>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-4">
@@ -575,10 +589,13 @@ function ScheduleFields({
 export function ScheduleForm({
     companyId,
     schedule,
+    typeKey,
     canUseDimensions,
 }: {
     companyId: string;
     schedule?: Schedule;
+    /** The type chosen in the catalog for a new schedule. */
+    typeKey?: string;
     canUseDimensions: boolean;
 }) {
     const { t } = useTranslation();
@@ -615,10 +632,28 @@ export function ScheduleForm({
         return <FormAlert>{t('entries.types.noneUsable')}</FormAlert>;
     }
 
+    if (typeKey !== undefined && !usable.some((type) => type.key === typeKey)) {
+        return (
+            <div className="flex flex-col items-start gap-3">
+                <FormAlert>
+                    {t('entries.form.typeUnavailable', { key: typeKey })}
+                </FormAlert>
+                <Link
+                    to="/w/$companyId/recurring-schedules/new"
+                    params={{ companyId }}
+                    className="text-sm underline-offset-4 hover:underline"
+                >
+                    {t('entries.form.changeType')}
+                </Link>
+            </div>
+        );
+    }
+
     return (
         <ScheduleFields
             companyId={companyId}
             schedule={schedule}
+            typeKey={typeKey}
             types={usable}
             accounts={accounts.data}
             dimensionTypes={dimensions.data ?? []}

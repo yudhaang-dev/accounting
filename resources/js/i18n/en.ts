@@ -2206,6 +2206,11 @@ export const en: Widen<typeof id> = {
         title: 'Recurring journals',
         description:
             'Schedules that make an entry on a rhythm, using fixed values. The entries they make go through validation and approval like any other.',
+        catalog: {
+            title: 'Choose a transaction type for the schedule',
+            description:
+                'A schedule makes entries of one transaction type; choose the one that fits the recurring event.',
+        },
         new: 'New schedule',
         empty: 'No schedules yet',
         emptyDescription:

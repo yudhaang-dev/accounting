@@ -270,7 +270,7 @@ Di detail entri, lampirkan berkas pendukung. Lampiran ikut tersimpan sebagai jej
 
 ### 5.8 Jurnal berulang
 
-*Transaksi → Jurnal berulang* untuk transaksi yang sama setiap periode, misalnya sewa atau penyusutan. Klik **Jadwal baru**, pilih jenis dan irama, dan isi nilai tetapnya. Entri yang dibuat jadwal melewati validasi dan persetujuan seperti entri lain. Jadwal bisa diubah atau dilewati; kegagalan ditampilkan di daftar.
+*Transaksi → Jurnal berulang* untuk transaksi yang sama setiap periode, misalnya sewa atau penyusutan. Klik **Jadwal baru**, pilih jenis transaksi dari katalog (jenis yang belum terbit tidak muncul; **Ganti jenis** kembali ke katalog), lalu atur irama dan isi nilai tetapnya. Entri yang dibuat jadwal melewati validasi dan persetujuan seperti entri lain. Jadwal bisa diubah atau dilewati; kegagalan ditampilkan di daftar.
 
 ---
 

@@ -2201,6 +2201,11 @@ export const id = {
         title: 'Jurnal berulang',
         description:
             'Jadwal yang membuat entri sesuai irama tertentu, memakai nilai tetap. Entri yang dibuat melewati validasi dan persetujuan seperti entri lain.',
+        catalog: {
+            title: 'Pilih jenis transaksi untuk jadwal',
+            description:
+                'Jadwal membuat entri dari satu jenis transaksi; pilih jenis yang sesuai dengan kejadian yang berulang.',
+        },
         new: 'Jadwal baru',
         empty: 'Belum ada jadwal',
         emptyDescription:

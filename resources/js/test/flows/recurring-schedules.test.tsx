@@ -328,7 +328,7 @@ describe('recurring schedule form', () => {
             [`GET ${base}/recurring-schedules`]: () => page([schedule()]),
         });
 
-        renderApp(`${listPath}/new`);
+        renderApp(`${listPath}/new?type=general`);
         const typist = userEvent.setup();
 
         await typist.type(
@@ -392,16 +392,10 @@ describe('recurring schedule form', () => {
             [`GET ${base}/recurring-schedules`]: () => page([]),
         });
 
-        renderApp(`${listPath}/new`);
+        renderApp(`${listPath}/new?type=payroll_summary`);
         const typist = userEvent.setup();
 
         await typist.type(await screen.findByLabelText('Nama jadwal'), 'Gaji');
-        await typist.click(
-            screen.getByRole('combobox', { name: 'Jenis transaksi' }),
-        );
-        await typist.click(
-            await screen.findByRole('option', { name: 'Ringkasan Payroll' }),
-        );
         await typist.type(screen.getByLabelText('Keterangan'), 'Gaji bulanan');
         await typist.type(
             await screen.findByLabelText('Total gaji bruto'),
@@ -441,7 +435,7 @@ describe('recurring schedule form', () => {
                 ),
         });
 
-        renderApp(`${listPath}/new`);
+        renderApp(`${listPath}/new?type=general`);
         const typist = userEvent.setup();
 
         await typist.type(await screen.findByLabelText('Nama jadwal'), 'Sewa');
@@ -486,6 +480,74 @@ describe('recurring schedule form', () => {
         // What cannot change after creation is not sent.
         expect(body).not.toHaveProperty('frequency');
         expect(body).not.toHaveProperty('start_date');
+    });
+
+    it('starts from the catalog of types, and the form is made for the type chosen', async () => {
+        const described = {
+            ...generalType,
+            description: 'Jurnal bebas untuk akuntan.',
+        };
+        const unfinished = {
+            ...generalType,
+            id: '01JTYPE000000000000000003',
+            key: 'unfinished',
+            label: 'Belum Terbit',
+            versions: [{ ...generalType.versions[0], status: 'draft' }],
+        };
+
+        mockApi({
+            ...withPermissions(manage),
+            ...lookups,
+            [`GET ${base}/transaction-types`]: () =>
+                json({ data: [described, payrollType, unfinished] }),
+        });
+
+        renderApp(`${listPath}/new`);
+        const typist = userEvent.setup();
+
+        expect(
+            await screen.findByRole('heading', {
+                name: 'Pilih jenis transaksi untuk jadwal',
+            }),
+        ).toBeInTheDocument();
+        expect(
+            await screen.findByText('Jurnal bebas untuk akuntan.'),
+        ).toBeVisible();
+        // A type without a published version cannot be scheduled, and nothing is chosen for the operator.
+        expect(screen.queryByText('Belum Terbit')).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Nama jadwal')).not.toBeInTheDocument();
+
+        await typist.click(
+            screen.getByRole('link', { name: /Ringkasan Payroll/ }),
+        );
+
+        expect(await screen.findByLabelText('Nama jadwal')).toBeInTheDocument();
+        expect(
+            screen.getByRole('combobox', { name: 'Jenis transaksi' }),
+        ).toBeDisabled();
+        expect(screen.getByText('Ringkasan Payroll')).toBeVisible();
+
+        await typist.click(screen.getByRole('link', { name: 'Ganti jenis' }));
+
+        expect(
+            await screen.findByRole('heading', {
+                name: 'Pilih jenis transaksi untuk jadwal',
+            }),
+        ).toBeInTheDocument();
+    });
+
+    it('says so when the type in the address cannot be scheduled', async () => {
+        mockApi({ ...withPermissions(manage), ...lookups });
+
+        renderApp(`${listPath}/new?type=missing`);
+
+        expect(
+            await screen.findByText(
+                'Jenis transaksi "missing" tidak ada atau belum diterbitkan.',
+            ),
+        ).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Ganti jenis' })).toBeVisible();
+        expect(screen.queryByLabelText('Nama jadwal')).not.toBeInTheDocument();
     });
 
     it('is closed to a reader', async () => {

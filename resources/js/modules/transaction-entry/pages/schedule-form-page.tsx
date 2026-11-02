@@ -43,10 +43,13 @@ function EditSchedule({
 export function ScheduleFormPage({
     companyId,
     scheduleId,
+    typeKey,
     canUseDimensions,
 }: {
     companyId: string;
     scheduleId?: string;
+    /** The type chosen in the catalog for a new schedule. */
+    typeKey?: string;
     canUseDimensions: boolean;
 }) {
     const { t } = useTranslation();
@@ -73,6 +76,7 @@ export function ScheduleFormPage({
             <CardContent>
                 <ScheduleForm
                     companyId={companyId}
+                    typeKey={typeKey}
                     canUseDimensions={canUseDimensions}
                 />
             </CardContent>
