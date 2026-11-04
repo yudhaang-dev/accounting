@@ -34,7 +34,7 @@
   - `journals/{id}/reverse` membuat entri `system.reversal` yang tunduk pada approval dan mengembalikan entri tersebut.
   - `periods`: `soft-close`, `close`, `reopen`; `fiscal-years`: `close`, `reopen`; `plan-versions`: `publish`, `archive`; `opening-balance-imports` dan `revaluation-runs`: `post`.
   - `PATCH` hanya untuk draf dan konfigurasi; resource yang sudah final tidak dapat diubah.
-- **API-TR-09 Laporan dan ekspor.** Parameter: `from`/`to` atau `as_of`, `account_id`, `dimensions[<type_key>]`, `transaction_type_keys[]`, `source`, `plan_version_id`, `basis`, `compare`. Respons memuat parameter efektif, mata uang fungsional, total, cakupan histori (RP-FR-13), versi definisi, dan rincian. Ekspor CSV memakai endpoint yang sama dengan `Accept: text/csv` dan otorisasi yang sama (X-FR-02); ekspor besar SHOULD diproses asinkron dan menghasilkan tautan unduh.
+- **API-TR-09 Laporan dan ekspor.** Parameter: `from`/`to` atau `as_of`, `account_id`, `dimensions[<type_key>]`, `transaction_type_keys[]`, `source`, `plan_version_id`, `basis`, `compare`. Respons memuat parameter efektif, mata uang fungsional, total, cakupan histori (RP-FR-13), versi definisi, dan rincian. Ekspor CSV memakai endpoint yang sama dengan `Accept: text/csv` dan otorisasi yang sama (X-FR-02); PDF dan Excel memakai endpoint dan otorisasi yang sama dengan `Accept: application/pdf` atau `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` (ADR-0018); ekspor di atas batas baris ditolak dengan 422 dan saran memakai CSV atau rentang lebih sempit; ekspor besar SHOULD diproses asinkron dan menghasilkan tautan unduh (belum, lihat ADR-0018).
 
 ## 3. Bentuk respons dan error
 

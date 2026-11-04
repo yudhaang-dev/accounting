@@ -98,7 +98,7 @@ Proses dan perhitungan operasional milik sistem sumber — persediaan/HPP, payro
 ## 6. Kebutuhan lintas modul
 
 - **X-FR-01 Audit.** Catat perubahan konfigurasi dan versinya, siklus entri (submit, approve, reject, post), pembalikan, penerimaan/penolakan event, tutup/buka periode, waiver, serta perubahan akses user dan klien integrasi. Simpan aktor (user atau klien integrasi), waktu, hasil, dan nilai sebelum/sesudah yang relevan. Log bersifat append-only.
-- **X-FR-02 Ekspor.** Setiap laporan dan daftar dapat diekspor ke CSV dengan filter dan otorisasi yang sama dengan sumbernya.
+- **X-FR-02 Ekspor.** Setiap laporan dan daftar dapat diekspor ke CSV dengan filter dan otorisasi yang sama dengan sumbernya. Laporan keuangan, neraca saldo, dan buku besar juga dapat diekspor ke PDF dan Excel (ADR-0018): angka sama dengan layar, Excel berupa sel angka, dan kop memuat perusahaan, laporan, periode, mata uang fungsional, filter, dan waktu pembuatan.
 - **X-FR-03 Hasil berversi.** Hasil tersimpan (jurnal penutup, snapshot laporan yang diterbitkan, snapshot konsolidasi) mencatat versi konfigurasi yang dipakai. Perhitungan ulang membuat hasil baru; akun yang belum dipetakan tampil sebagai pengecualian, tidak hilang.
 - **X-FR-04 Lampiran.** Entri dan dokumen subledger dapat memiliki lampiran. Simpan metadata dan hash isi; lampiran tidak dapat diganti setelah entri diposting.
 - **X-FR-05 Retensi.** Data keuangan, lampiran, dan audit disimpan selama masa retensi menurut kebijakan perusahaan (default dari konfigurasi; Indonesia 10 tahun [R10]). Tidak ada hard delete sebelum masa itu berakhir.
