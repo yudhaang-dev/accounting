@@ -365,6 +365,8 @@ Semua laporan bisa difilter menurut rentang tanggal atau **Per tanggal**. Bagian
 
 - Hasil per kolom: periode, YTD, per tanggal, pembanding, dan selisih.
 - Klik baris untuk menelusuri ke akun penyusunnya, lalu ke buku besar dan jurnal.
+- Baris yang **dirinci per akun** (Laba rugi, Neraca, dan baris kas awal dan akhir di Arus kas tidak langsung pada template bawaan) menampilkan setiap akun di bawahnya dengan nilai di semua kolom. Akun induk menjadi sub-judul bersubtotal, akun yang nilainya nol di semua kolom disembunyikan, dan jumlah rincian selalu sama dengan nilai baris. Kode kecil di samping nama akun membuka buku besarnya. Ekspor CSV memuat baris akun itu bertipe `account` atau `account_group`; jumlahkan hanya baris bertipe lain.
+- Akuntan menyalakan rincian ini per baris di editor definisi (**Rinci akun pada baris n**, hanya untuk baris akun dan kas). Mengubahnya menerbitkan versi definisi baru; snapshot lama tetap tanpa rincian.
 - **Neraca** menampilkan pemeriksaan *Aset sama dengan liabilitas dan ekuitas*. **Arus kas tidak langsung** menampilkan pemeriksaan kas awal ditambah kenaikan bersih sama dengan kas akhir. Bila tidak cocok, pesannya menyebut angkanya.
 - *Akun yang belum dipetakan* adalah akun yang belum diklaim baris mana pun. Nilainya tetap dihitung di baris pengecualian supaya total cocok. Minta akuntan memetakannya.
 - Kolom di luar cakupan histori (sebelum cutover) ditandai *Tidak tersedia*, bukan nol.

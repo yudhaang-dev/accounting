@@ -194,7 +194,7 @@ Entri bertahap menampilkan *Tahap 1 dari 2* dan seterusnya. Anda hanya melihat e
 - **Jurnal.** Pembukuan → Jurnal untuk melihat jurnal yang sudah diposting, terbaru dulu. Detail jurnal menautkan ke entri asalnya.
 - **Neraca saldo.** Pelaporan → Neraca saldo: saldo awal, mutasi, dan saldo akhir tiap akun pada rentang tanggal. Klik kode akun untuk melihat rinciannya.
 - **Buku besar.** Pelaporan → Buku besar: satu akun, dengan saldo berjalan dan tautan ke jurnal. Pilih akunnya dulu.
-- **Laporan keuangan.** Pelaporan → Laporan: pilih laporan (laba rugi, neraca, arus kas), atur tanggal, lalu jalankan. Klik baris untuk menelusuri sampai jurnal.
+- **Laporan keuangan.** Pelaporan → Laporan: pilih laporan (laba rugi, neraca, arus kas), atur tanggal, lalu jalankan. Klik baris untuk menelusuri sampai jurnal. Neraca dan laba rugi menampilkan tiap akun di bawah barisnya, jadi angka bisa dibaca sampai akun tanpa membuka buku besar.
 - **Ekspor.** Tombol **Ekspor CSV** tersedia di neraca saldo, buku besar, umur piutang, dan laporan.
 
 Bila akses Anda dibatasi pada cabang atau proyek tertentu, laporan hanya memuat data itu dan ditandai *Dibatasi cakupan data Anda*. Totalnya bisa lebih kecil dari total perusahaan; itu wajar.
