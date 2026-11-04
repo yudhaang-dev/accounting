@@ -42,6 +42,8 @@ export type RowForm = {
     favorable: string;
     /** Empty means the basis of the whole definition. */
     basis: string;
+    /** List the accounts of the row, each with its value in every column (RP-FR-01). */
+    account_detail: boolean;
     accounts: SelectorRow[];
     terms: TermRow[];
 };
@@ -78,6 +80,7 @@ export const blankRow = (): RowForm => ({
     sign: 'debit',
     favorable: '',
     basis: '',
+    account_detail: false,
     accounts: [{ type: 'class', id: '', class: 'asset' }],
     terms: [],
 });
@@ -136,6 +139,7 @@ export function toForm(definition: ReportDefinition): DefinitionForm {
             sign: row.sign === 'credit' ? 'credit' : 'debit',
             favorable: text(row.favorable),
             basis: text(row.basis),
+            account_detail: row.account_detail === true,
             accounts: (
                 (row.accounts as Record<string, string>[] | undefined) ?? []
             ).map((selector) => ({
@@ -200,6 +204,10 @@ export function toStructure(form: DefinitionForm) {
             if (row.type === 'accounts' || row.type === 'cash_equivalents') {
                 if (row.basis) {
                     out.basis = row.basis;
+                }
+
+                if (row.account_detail) {
+                    out.account_detail = true;
                 }
             }
 

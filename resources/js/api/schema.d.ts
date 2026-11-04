@@ -3491,7 +3491,9 @@ export interface paths {
          *     that the row claims as headings with the subtotal of what is below them, and no account that is zero
          *     in every column. The leaf lines add up to the value of the row in each column.
          *
-         *     With `Accept: text/csv` the rows and column values are downloaded instead, under the same permission (X-FR-02).
+         *     With `Accept: text/csv` the rows and column values are downloaded instead, under the same permission (X-FR-02);
+         *     the accounts of a detailed row follow it, typed `account` (a leaf) or `account_group` (a parent) and keyed
+         *     `<row key>:<account code>`, so that only the rows of the other types add up to the statement.
          */
         get: operations["report-definitions.result"];
         put?: never;

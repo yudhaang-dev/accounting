@@ -28,18 +28,32 @@ final class ReportCsv
     {
         /** @var list<array{key: string, label: string}> $columns */
         $columns = $result['columns'];
-        /** @var list<array{key: string, label: string, type: string, values: array<string, string|null>}> $rows */
+        /** @var list<array{key: string, label: string, type: string, values: array<string, string|null>, account_lines?: list<array{code: string, name: string, is_leaf: bool, values: array<string, string|null>}>}> $rows */
         $rows = $result['rows'];
         /** @var array{from: string, to: string} $parameters */
         $parameters = $result['parameters'];
 
+        $lines = [];
+
+        foreach ($rows as $row) {
+            $lines[] = [
+                $row['key'], $row['label'], $row['type'],
+                ...array_map(fn (array $column): string => $row['values'][$column['key']] ?? '', $columns),
+            ];
+
+            // The accounts of a detailed row follow it, typed apart so that a sum over the rows is not doubled.
+            foreach ($row['account_lines'] ?? [] as $line) {
+                $lines[] = [
+                    "{$row['key']}:{$line['code']}", $line['name'], $line['is_leaf'] ? 'account' : 'account_group',
+                    ...array_map(fn (array $column): string => $line['values'][$column['key']] ?? '', $columns),
+                ];
+            }
+        }
+
         return CsvExport::download(
             "report_{$key}_{$parameters['from']}_{$parameters['to']}.csv",
             ['row', 'label', 'type', ...array_column($columns, 'key')],
-            array_map(fn (array $row): array => [
-                $row['key'], $row['label'], $row['type'],
-                ...array_map(fn (array $column): string => $row['values'][$column['key']] ?? '', $columns),
-            ], $rows),
+            $lines,
         );
     }
 

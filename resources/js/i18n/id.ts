@@ -2456,6 +2456,11 @@ export const id = {
         rowSign: 'Sisi normal baris {{n}}',
         rowFavorable: 'Arah menguntungkan baris {{n}}',
         rowBasis: 'Dasar nilai baris {{n}}',
+        accountDetail: 'Rinci akun pada baris {{n}}',
+        accountDetailHint:
+            'Menampilkan tiap akun di bawah baris beserta nilainya di setiap kolom; jumlah akun sama dengan nilai baris.',
+        accountDetailCashHint:
+            'Menampilkan tiap rekening kas di bawah baris beserta nilainya di setiap kolom; jumlah rekening sama dengan nilai baris.',
         rowTypes: {
             heading: 'Judul',
             accounts: 'Kumpulan akun',

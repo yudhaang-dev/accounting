@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { AlertTriangleIcon, CheckIcon } from 'lucide-react';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form-alert';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -362,8 +362,8 @@ export function ResultView({
                     </TableHeader>
                     <TableBody>
                         {result.rows.map((row) => (
+                            <Fragment key={row.key}>
                             <TableRow
-                                key={row.key}
                                 data-row-type={row.type}
                                 className={
                                     row.type === 'unmapped'
@@ -380,11 +380,13 @@ export function ResultView({
                                     }
                                 >
                                     {row.label}
-                                    <AccountLinks
-                                        companyId={companyId}
-                                        result={result}
-                                        accounts={row.accounts}
-                                    />
+                                    {row.account_lines === undefined && (
+                                        <AccountLinks
+                                            companyId={companyId}
+                                            result={result}
+                                            accounts={row.accounts}
+                                        />
+                                    )}
                                 </TableCell>
                                 {result.columns.map((column) => (
                                     <TableCell
@@ -409,6 +411,52 @@ export function ResultView({
                                     </TableCell>
                                 ))}
                             </TableRow>
+                            {row.account_lines?.map((line) => (
+                                <TableRow
+                                    key={`${row.key}:${line.account_id}`}
+                                    data-account-line={line.account_id}
+                                    data-leaf={line.is_leaf}
+                                >
+                                    <TableCell
+                                        className={
+                                            line.is_leaf
+                                                ? 'text-muted-foreground'
+                                                : 'font-medium'
+                                        }
+                                        style={{
+                                            paddingInlineStart: `${1 + (line.level + 1) * 1.25}rem`,
+                                        }}
+                                    >
+                                        {line.name}
+                                        {line.is_leaf && (
+                                            <Link
+                                                to="/w/$companyId/reports/general-ledger"
+                                                params={{ companyId }}
+                                                search={ledgerRange(
+                                                    result,
+                                                    line.account_id,
+                                                )}
+                                                aria-label={t(
+                                                    'trialBalance.ledger',
+                                                    { code: line.code },
+                                                )}
+                                                className="ms-2 font-mono text-xs font-normal underline underline-offset-4"
+                                            >
+                                                {line.code}
+                                            </Link>
+                                        )}
+                                    </TableCell>
+                                    {result.columns.map((column) => (
+                                        <TableCell
+                                            key={column.key}
+                                            className={`text-end tabular-nums ${line.is_leaf ? 'text-muted-foreground' : 'font-medium'}`}
+                                        >
+                                            {money(line.values[column.key])}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))}
+                            </Fragment>
                         ))}
                     </TableBody>
                 </Table>

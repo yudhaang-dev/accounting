@@ -467,6 +467,71 @@ describe('report viewer export and drill-down (X-FR-02, API-AC-07)', () => {
         expect(csv?.query.from).toMatch(/^\d{4}-01-01$/);
     });
 
+    it('lists the accounts of a detailed row under it, parents as subtotals and leaves linked to their ledger (RP-AC-12)', async () => {
+        mockApi(
+            routes(
+                result({
+                    rows: [
+                        {
+                            key: 'sales',
+                            label: 'Penjualan',
+                            type: 'accounts',
+                            accounts: [
+                                {
+                                    account_id: 'a0',
+                                    code: '4100',
+                                    name: 'Pendapatan Usaha',
+                                },
+                                {
+                                    account_id: 'a1',
+                                    code: '4110',
+                                    name: 'Penjualan Barang',
+                                },
+                            ],
+                            account_lines: [
+                                {
+                                    account_id: 'a0',
+                                    code: '4100',
+                                    name: 'Pendapatan Usaha',
+                                    level: 0,
+                                    is_leaf: false,
+                                    values: { current: '1500000.50' },
+                                },
+                                {
+                                    account_id: 'a1',
+                                    code: '4110',
+                                    name: 'Penjualan Barang',
+                                    level: 1,
+                                    is_leaf: true,
+                                    values: { current: '1500000.50' },
+                                },
+                            ],
+                            values: { current: '1500000.50' },
+                        },
+                    ],
+                }),
+            ),
+        );
+
+        renderApp(viewPath);
+
+        const leaf = (await screen.findByText('Penjualan Barang')).closest(
+            'tr',
+        ) as HTMLElement;
+        const parent = screen
+            .getByText('Pendapatan Usaha')
+            .closest('tr') as HTMLElement;
+
+        expect(within(leaf).getByText('1.500.000,50')).toBeInTheDocument();
+        expect(
+            within(leaf).getByRole('link', { name: /4110/ }),
+        ).toBeInTheDocument();
+        expect(within(parent).getByText('1.500.000,50')).toBeInTheDocument();
+        expect(within(parent).queryByRole('link')).not.toBeInTheDocument();
+        // The accounts are in the rows below, so the row itself does not repeat them as a list.
+        expect(screen.queryByText('Buku besar (2)')).not.toBeInTheDocument();
+    });
+
     it('links a row of one account to its ledger and a row of several to a list', async () => {
         mockApi(
             routes(

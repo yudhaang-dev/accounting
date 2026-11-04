@@ -2459,6 +2459,11 @@ export const en: Widen<typeof id> = {
         rowSign: 'Normal side of row {{n}}',
         rowFavorable: 'Favorable direction of row {{n}}',
         rowBasis: 'Value basis of row {{n}}',
+        accountDetail: 'List the accounts of row {{n}}',
+        accountDetailHint:
+            'Shows each account under the row with its value in every column; the accounts add up to the row.',
+        accountDetailCashHint:
+            'Shows each cash account under the row with its value in every column; the accounts add up to the row.',
         rowTypes: {
             heading: 'Heading',
             accounts: 'Account set',

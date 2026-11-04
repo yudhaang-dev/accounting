@@ -207,6 +207,46 @@ describe('report definition editor', () => {
         expect(body.structure.columns[1]?.shift.years).toBe(-1);
     });
 
+    it('turns the account detail of a row on and sends it only for rows that list accounts (RP-FR-01)', async () => {
+        const api = mockApi({
+            ...routes(),
+            [`PUT ${base}/report-definitions/${defId}`]: () =>
+                json({ data: definition }),
+        });
+
+        renderApp(editPath);
+        const typist = userEvent.setup();
+
+        const detail = await screen.findByRole('checkbox', {
+            name: 'Rinci akun pada baris 1',
+        });
+
+        expect(detail).not.toBeChecked();
+        // A subtotal has nothing to list.
+        expect(
+            screen.queryByRole('checkbox', { name: 'Rinci akun pada baris 2' }),
+        ).not.toBeInTheDocument();
+
+        await typist.click(detail);
+        await typist.click(
+            screen.getByRole('button', { name: 'Simpan perubahan' }),
+        );
+
+        await waitFor(() =>
+            expect(
+                api.called(`PUT ${base}/report-definitions/${defId}`),
+            ).toHaveLength(1),
+        );
+
+        const body = api.called(`PUT ${base}/report-definitions/${defId}`)[0]
+            ?.body as {
+            structure: { rows: { account_detail?: boolean }[] };
+        };
+
+        expect(body.structure.rows[0]?.account_detail).toBe(true);
+        expect(body.structure.rows[1]).not.toHaveProperty('account_detail');
+    });
+
     it('shows when the definition is published automatically and saves the change (RP-FR-14)', async () => {
         const api = mockApi({
             ...routes(),

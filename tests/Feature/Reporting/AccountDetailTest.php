@@ -203,6 +203,21 @@ describe('account detail in the definition (RP-FR-01)', function () {
         expect($new['result']['rows'][0]['account_lines'])->toEqual($second['account_lines']);
     });
 
+    it('follows a detailed row in the CSV with its accounts, typed apart from the rows (X-FR-02)', function () {
+        adPost('2026-02-10', $this->bank, $this->goods, '500000.00');
+        adPost('2026-02-12', $this->cash, $this->services, '200000.00');
+
+        $id = $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions", ['key' => 'revenue_report', 'name' => 'Revenue', 'structure' => adStructure(true)])->assertCreated()->json('data.id');
+
+        $csv = $this->actingAs($this->admin)->get("{$this->url}/report-definitions/{$id}/result?from=2026-02-01&to=2026-02-28", ['Accept' => 'text/csv'])
+            ->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8')->streamedContent();
+
+        expect($csv)->toContain('row,label,type,month')
+            ->toContain('revenue,Revenue,accounts,700000.00')
+            ->toContain('revenue:4110,')->toContain(',account,500000.00')
+            ->toContain('revenue:4120,')->toContain(',account,200000.00');
+    });
+
     it('is on for the account rows of the template statements, and for the cash rows only of the indirect cash flow', function () {
         $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions/import-template", ['template' => 'general-id', 'confirmed' => true, 'keys' => ['income_statement', 'balance_sheet', 'cash_flow_indirect']])->assertCreated();
 

@@ -183,7 +183,7 @@ function Editor({
     // Messages for paths the form has no field for (the number of rows, for one) still need to be read.
     const orphans = Object.entries(errors).filter(
         ([path]) =>
-            !/\.(key|label|type|sign|favorable|basis|accounts|terms|kind|shift|span|plan_version_id|minuend|subtrahend)(\.|$)/.test(
+            !/\.(key|label|type|sign|favorable|basis|account_detail|accounts|terms|kind|shift|span|plan_version_id|minuend|subtrahend)(\.|$)/.test(
                 path,
             ),
     );
@@ -596,6 +596,42 @@ function RowCard({
                                 )}
                             />
                             {err('basis')}
+                        </Field>
+                    )}
+                    {(type === 'accounts' || type === 'cash_equivalents') && (
+                        <Field>
+                            <Controller
+                                control={control}
+                                name={`rows.${index}.account_detail`}
+                                render={({ field }) => (
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox
+                                            id={`row-${index}-account-detail`}
+                                            checked={field.value}
+                                            onCheckedChange={(checked) =>
+                                                field.onChange(checked === true)
+                                            }
+                                        />
+                                        <FieldLabel
+                                            htmlFor={`row-${index}-account-detail`}
+                                            className="font-normal"
+                                        >
+                                            {t(
+                                                'definitionEditor.accountDetail',
+                                                { n },
+                                            )}
+                                        </FieldLabel>
+                                    </div>
+                                )}
+                            />
+                            <FieldDescription>
+                                {t(
+                                    type === 'cash_equivalents'
+                                        ? 'definitionEditor.accountDetailCashHint'
+                                        : 'definitionEditor.accountDetailHint',
+                                )}
+                            </FieldDescription>
+                            {err('account_detail')}
                         </Field>
                     )}
                 </div>
