@@ -27,6 +27,7 @@ return [
         'EXCHANGE_RATE_NOT_FOUND' => 'Kurs tidak tersedia.',
         'TRANSACTION_TYPE_VERSION_RETIRED' => 'Versi Jenis Transaksi ini sudah dihentikan.',
         'MAPPING_REQUIRED' => 'Pemetaan atau kebijakan yang wajib belum dikonfigurasi.',
+        'EXPORT_TOO_LARGE' => 'Laporan terlalu besar untuk format ini. Persempit rentang atau unduh CSV.',
         'TRANSACTION_TYPE_NOT_ALLOWED' => 'Klien ini tidak diizinkan memakai Jenis Transaksi ini.',
         'SEGREGATION_OF_DUTIES' => 'Anda tidak dapat menyetujui entri Anda sendiri.',
         'TWO_FACTOR_REQUIRED' => 'Aksi ini memerlukan autentikasi dua faktor.',

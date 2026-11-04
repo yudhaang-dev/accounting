@@ -78,6 +78,7 @@
 | `EXCHANGE_RATE_NOT_FOUND` | 422 | Kurs tidak tersedia (MD-FR-08) |
 | `TRANSACTION_TYPE_VERSION_RETIRED` | 422 | Versi Jenis Transaksi sudah dihentikan |
 | `MAPPING_REQUIRED` | 422 | Pemetaan peran atau kebijakan wajib belum lengkap |
+| `EXPORT_TOO_LARGE` | 422 | Laporan melebihi batas baris ekspor PDF atau Excel (ADR-0018); persempit rentang atau pakai CSV |
 | `TRANSACTION_TYPE_NOT_ALLOWED` | 403 | Di luar allowlist klien integrasi |
 | `SEGREGATION_OF_DUTIES` | 403 | Pembuat tidak boleh menyetujui entrinya sendiri |
 | `TWO_FACTOR_REQUIRED` | 403 | Aksi memerlukan 2FA |

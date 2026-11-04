@@ -26,6 +26,7 @@ enum ErrorCode: string
     case ExchangeRateNotFound = 'EXCHANGE_RATE_NOT_FOUND';
     case TransactionTypeVersionRetired = 'TRANSACTION_TYPE_VERSION_RETIRED';
     case MappingRequired = 'MAPPING_REQUIRED';
+    case ExportTooLarge = 'EXPORT_TOO_LARGE';
     case TransactionTypeNotAllowed = 'TRANSACTION_TYPE_NOT_ALLOWED';
     case SegregationOfDuties = 'SEGREGATION_OF_DUTIES';
     case TwoFactorRequired = 'TWO_FACTOR_REQUIRED';
@@ -57,6 +58,7 @@ enum ErrorCode: string
             self::ExchangeRateNotFound => 422,
             self::TransactionTypeVersionRetired => 422,
             self::MappingRequired => 422,
+            self::ExportTooLarge => 422,
             self::TransactionTypeNotAllowed => 403,
             self::SegregationOfDuties => 403,
             self::TwoFactorRequired => 403,

@@ -28,6 +28,7 @@ return [
         'EXCHANGE_RATE_NOT_FOUND' => 'No exchange rate is available.',
         'TRANSACTION_TYPE_VERSION_RETIRED' => 'This transaction type version is retired.',
         'MAPPING_REQUIRED' => 'A required mapping or policy is not configured.',
+        'EXPORT_TOO_LARGE' => 'The report is too large for this format. Narrow the range or download CSV.',
         'TRANSACTION_TYPE_NOT_ALLOWED' => 'This client may not use this transaction type.',
         'SEGREGATION_OF_DUTIES' => 'You cannot approve your own entry.',
         'TWO_FACTOR_REQUIRED' => 'This action requires two-factor authentication.',
