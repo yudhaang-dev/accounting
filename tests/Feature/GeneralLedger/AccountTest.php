@@ -236,8 +236,8 @@ describe('chart of accounts template (X-AC-03)', function () {
     });
 
     it('can be reviewed before it is confirmed', function () use ($template) {
-        $this->actingAs($this->admin)->getJson("{$this->url}/account-templates")
-            ->assertOk()->assertJsonPath('data.0.key', 'general-id')->assertJsonPath('data.0.account_count', count($template['accounts']));
+        $listed = collect($this->actingAs($this->admin)->getJson("{$this->url}/account-templates")->assertOk()->json('data'))->firstWhere('key', 'general-id');
+        expect($listed['account_count'])->toBe(count($template['accounts']));
 
         $this->actingAs($this->admin)->getJson("{$this->url}/account-templates/general-id")
             ->assertOk()->assertJsonCount(count($template['accounts']), 'data.accounts');

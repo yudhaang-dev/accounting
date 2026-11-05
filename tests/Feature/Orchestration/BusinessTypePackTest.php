@@ -153,10 +153,44 @@ describe('packs of a business type (B-11e, ADR-0019)', function () {
             ->and($values)->not->toHaveKey('unmapped');
     });
 
+    // Each pack: revenue on a variant account, a cost on another, and a balance sheet that still balances.
+    $scenarios = [
+        'contractor' => ['types' => ['progress_invoice', 'project_cost_cash'], 'posts' => [['1112', '3110', '10000000.00'], ['1121', '4124', '6000000.00'], ['1124', '4124', '1000000.00'], ['5260', '1112', '2500000.00'], ['5270', '1112', '500000.00']], 'revenue' => '7000000.00', 'profit' => '4000000.00'],
+        'manufacturing' => ['types' => ['production_journal', 'factory_cost_cash'], 'posts' => [['1112', '3110', '10000000.00'], ['1133', '1112', '3000000.00'], ['5150', '1133', '2000000.00'], ['5160', '1112', '500000.00'], ['1112', '4114', '4000000.00']], 'revenue' => '4000000.00', 'profit' => '1500000.00'],
+        'fnb' => ['types' => ['fnb_daily_sales', 'delivery_platform_sale'], 'posts' => [['1112', '3110', '10000000.00'], ['1112', '4116', '2000000.00'], ['1124', '4118', '1000000.00'], ['5150', '1112', '900000.00'], ['6296', '1112', '100000.00'], ['6140', '1124', '150000.00']], 'revenue' => '3000000.00', 'profit' => '1850000.00'],
+    ];
+
+    foreach ($scenarios as $key => $scenario) {
+        it("installs the {$key} pack, activates the company, and reports its variant accounts with no unmapped row", function () use ($key, $scenario) {
+            btpInstall($key)->assertCreated();
+
+            $types = TransactionType::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->pluck('key')->all();
+            expect($types)->toContain(...$scenario['types']);
+
+            setUpFiscalCalendar($this->admin, $this->companyId);
+            $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();
+
+            foreach ($scenario['posts'] as [$debit, $credit, $amount]) {
+                btpPost($debit, $credit, $amount);
+            }
+
+            [, $values] = btpValues('income_statement', 'from=2026-03-01&to=2026-03-31');
+            expect($values['revenue']['period'])->toBe($scenario['revenue'])
+                ->and($values['net_profit']['period'])->toBe($scenario['profit'])
+                ->and($values)->not->toHaveKey('unmapped');
+
+            [$balance, $values] = btpValues('balance_sheet', 'from=2026-03-31&to=2026-03-31');
+            expect($balance['balance_checks']['at']['balanced'])->toBeTrue()->and($values)->not->toHaveKey('unmapped');
+
+            [$cash, $values] = btpValues('cash_flow_indirect', 'from=2026-03-01&to=2026-03-31');
+            expect($cash['cash_checks']['period']['reconciled'])->toBeTrue()->and($values)->not->toHaveKey('unmapped');
+        });
+    }
+
     it('keeps every account of the variants in CHART-OF-ACCOUNTS.md', function () {
         $doc = file_get_contents(base_path('.docs/CHART-OF-ACCOUNTS.md'));
 
-        foreach (['retail-id' => 'Dagang atau ritel', 'services-id' => 'Jasa'] as $key => $heading) {
+        foreach (['retail-id' => 'Dagang atau ritel', 'services-id' => 'Jasa', 'contractor-id' => 'Kontraktor atau proyek', 'manufacturing-id' => 'Manufaktur ringan', 'fnb-id' => 'Makanan dan minuman'] as $key => $heading) {
             $section = explode('### ', explode("### {$heading} (`{$key}`)", $doc, 2)[1], 2)[0];
             preg_match_all('/^\|\s*(\d{4})\s*\|\s*([^|]+?)\s*\|\s*`(\w+)`\s*\|\s*([DK])\s*\|\s*(\d{4})\s*\|/m', $section, $rows, PREG_SET_ORDER);
             $template = require app_path("Modules/GeneralLedger/Database/templates/{$key}.php");

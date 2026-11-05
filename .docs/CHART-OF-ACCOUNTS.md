@@ -177,3 +177,48 @@ Varian menyatakan `extends: general-id` dan hanya memuat akun tambahan; bagan da
 | 4123 | Penggantian Biaya dari Pelanggan | `income` | K | 4120 | Opsional; daun |
 | 5250 | Biaya Perjalanan dan Akomodasi Proyek | `expense` | D | 5200 | Opsional; daun |
 | 6295 | Pelatihan dan Sertifikasi Staf | `expense` | D | 6200 | Opsional; daun |
+
+### Kontraktor atau proyek (`contractor-id`)
+
+| Kode | Nama | Kelas | Normal | Induk | Catatan |
+| --- | --- | --- | --- | --- | --- |
+| 1124 | Piutang Retensi | `asset` | D | 1120 | Tahanan pemberi kerja sampai masa pemeliharaan selesai |
+| 1125 | Tagihan Belum Diterbitkan | `asset` | D | 1120 | Opsional; pekerjaan selesai yang belum ditagih |
+| 1134 | Pekerjaan dalam Proses | `asset` | D | 1130 | Opsional; biaya proyek yang belum diakui sebagai biaya |
+| 2141 | Uang Muka Proyek dari Pemberi Kerja | `liability` | K | 2140 | Daun |
+| 2142 | Utang Retensi kepada Subkontraktor | `liability` | K | 2140 | Opsional; daun |
+| 4124 | Pendapatan Kontrak Proyek | `income` | K | 4120 | Daun |
+| 4125 | Pendapatan Pekerjaan Tambah | `income` | K | 4120 | Opsional; daun |
+| 5260 | Material Proyek | `expense` | D | 5200 | Daun |
+| 5270 | Sewa dan Operasi Alat Proyek | `expense` | D | 5200 | Daun |
+| 5280 | Upah Harian dan Mandor | `expense` | D | 5200 | Opsional; daun |
+
+### Manufaktur ringan (`manufacturing-id`)
+
+| Kode | Nama | Kelas | Normal | Induk | Catatan |
+| --- | --- | --- | --- | --- | --- |
+| 1133 | Persediaan Bahan Baku | `asset` | D | 1130 | Nilai dari sistem sumber [R4] |
+| 1134 | Persediaan Barang dalam Proses | `asset` | D | 1130 | Nilai dari sistem sumber [R4] |
+| 1135 | Persediaan Barang Jadi | `asset` | D | 1130 | Nilai dari sistem sumber [R4] |
+| 1215 | Mesin dan Peralatan Produksi | `asset` | D | 1210 | Opsional |
+| 4114 | Penjualan Produk Jadi | `income` | K | 4110 | Daun |
+| 4115 | Penjualan Sisa Produksi | `income` | K | 4110 | Opsional; daun |
+| 5150 | Pemakaian Bahan Baku | `expense` | D | 5100 | Daun |
+| 5160 | Tenaga Kerja Langsung Produksi | `expense` | D | 5100 | Daun |
+| 5170 | Overhead Pabrik | `expense` | D | 5100 | Daun |
+
+### Makanan dan minuman (`fnb-id`)
+
+| Kode | Nama | Kelas | Normal | Induk | Catatan |
+| --- | --- | --- | --- | --- | --- |
+| 1124 | Piutang Platform Pesan-Antar | `asset` | D | 1120 | Penjualan lewat aplikasi yang belum dicairkan |
+| 1133 | Persediaan Bahan Makanan dan Minuman | `asset` | D | 1130 | Nilai dari sistem sumber [R4] |
+| 1134 | Persediaan Kemasan | `asset` | D | 1130 | Opsional |
+| 4116 | Penjualan Makan di Tempat | `income` | K | 4110 | Daun |
+| 4117 | Penjualan Bawa Pulang | `income` | K | 4110 | Daun |
+| 4118 | Penjualan Pesan-Antar | `income` | K | 4110 | Opsional; daun |
+| 5150 | Pemakaian Bahan Makanan dan Minuman | `expense` | D | 5100 | Daun |
+| 5160 | Pemakaian Kemasan | `expense` | D | 5100 | Opsional; daun |
+| 6140 | Komisi Platform Pesan-Antar | `expense` | D | 6100 | Opsional; daun |
+| 6150 | Biaya Merchant Kartu dan QRIS | `expense` | D | 6100 | Opsional; daun |
+| 6296 | Gas dan Bahan Bakar Dapur | `expense` | D | 6200 | Daun |
