@@ -24664,13 +24664,20 @@
                                                                         },
                                                                         "optional": {
                                                                             "type": "boolean"
+                                                                        },
+                                                                        "conflict": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
                                                                         }
                                                                     },
                                                                     "required": [
                                                                         "key",
                                                                         "label",
                                                                         "exists",
-                                                                        "optional"
+                                                                        "optional",
+                                                                        "conflict"
                                                                     ]
                                                                 }
                                                             }

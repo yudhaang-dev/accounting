@@ -82,6 +82,13 @@ final class InstallTemplatePack
                 foreach ($preview->items as $item) {
                     if ($item->exists) {
                         $skipped[] = $item->key;
+                    } elseif ($item->conflict !== null) {
+                        // Something else of the company stands in the way; only the caller may decide to leave it out.
+                        if (! in_array($item->key, $left, true)) {
+                            throw ValidationException::withMessages(["exclude.{$entry['id']}" => [__('template_packs.item_conflict', ['key' => $item->key, 'id' => $entry['id'], 'reason' => $item->conflict])]]);
+                        }
+
+                        $skipped[] = $item->key;
                     } elseif (! in_array($item->key, $left, true)) {
                         $create[] = $item->key;
                     }

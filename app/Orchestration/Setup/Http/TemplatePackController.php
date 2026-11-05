@@ -30,7 +30,7 @@ class TemplatePackController
      * What the pack would create in this company, component by component, with the items the company already
      * has marked `exists`. Nothing is created.
      *
-     * @response array{data: array{key: string, name: string, description: string, version: int, components: list<array{id: string, kind: string, template: string, name: string, version: int, items: list<array{key: string, label: string, exists: bool, optional: bool}>}>}}
+     * @response array{data: array{key: string, name: string, description: string, version: int, components: list<array{id: string, kind: string, template: string, name: string, version: int, items: list<array{key: string, label: string, exists: bool, optional: bool, conflict: string|null}>}>}}
      */
     public function show(TemplatePacks $packs, DescribeTemplatePack $describe, string $companyId, string $key): JsonResponse
     {

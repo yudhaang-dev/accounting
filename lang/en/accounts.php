@@ -33,5 +33,7 @@ return [
     'role_account_missing' => 'Account :code for role :account_role is not in the chart of accounts.',
     'posting_template_name' => 'Control accounts from the subledger only',
     'posting_subledger_only' => 'Account :code accepts postings from the subledger only',
+    'template_conflict' => 'Code :code is already used by the company for account :name (:class).',
+    'template_parent_missing' => 'Account :code needs parent :parent, which is not in the chart of accounts.',
 
 ];

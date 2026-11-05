@@ -9,7 +9,7 @@ namespace App\Orchestration\Setup;
  *
  * @phpstan-import-type Pack from TemplatePacks
  *
- * @phpstan-type DescribedComponent array{id: string, kind: string, template: string, name: string, version: int, items: list<array{key: string, label: string, exists: bool, optional: bool}>}
+ * @phpstan-type DescribedComponent array{id: string, kind: string, template: string, name: string, version: int, items: list<array{key: string, label: string, exists: bool, optional: bool, conflict: string|null}>}
  */
 final class DescribeTemplatePack
 {
@@ -32,7 +32,7 @@ final class DescribeTemplatePack
                 'template' => $preview->templateKey,
                 'name' => $preview->name,
                 'version' => $preview->version,
-                'items' => array_map(fn ($item): array => ['key' => $item->key, 'label' => $item->label, 'exists' => $item->exists, 'optional' => $item->optional], $preview->items),
+                'items' => array_map(fn ($item): array => ['key' => $item->key, 'label' => $item->label, 'exists' => $item->exists, 'optional' => $item->optional, 'conflict' => $item->conflict], $preview->items),
             ];
         }
 

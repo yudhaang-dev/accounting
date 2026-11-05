@@ -15613,6 +15613,7 @@ export interface operations {
                                     label: string;
                                     exists: boolean;
                                     optional: boolean;
+                                    conflict: string | null;
                                 }[];
                             }[];
                         };

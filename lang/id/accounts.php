@@ -33,5 +33,7 @@ return [
     'role_account_missing' => 'Akun :code untuk peran :account_role tidak ada di bagan akun.',
     'posting_template_name' => 'Akun kontrol hanya dari Subledger',
     'posting_subledger_only' => 'Akun :code hanya menerima posting dari Subledger',
+    'template_conflict' => 'Kode :code sudah dipakai perusahaan untuk akun :name (:class).',
+    'template_parent_missing' => 'Akun :code butuh induk :parent, yang tidak ada di bagan akun.',
 
 ];
