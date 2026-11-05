@@ -6,6 +6,7 @@ use App\Modules\TransactionEntry\Application\EloquentApprovalPolicies;
 use App\Modules\TransactionEntry\Application\EloquentTransactionTypeKeys;
 use App\Modules\TransactionEntry\Application\EloquentUnfinishedEntries;
 use App\Modules\TransactionEntry\Application\FinancialEventIntake;
+use App\Modules\TransactionEntry\Application\TransactionTypeTemplateComponent;
 use App\Modules\TransactionEntry\Console\ReverseScheduledEntries;
 use App\Modules\TransactionEntry\Console\RunRecurringSchedules;
 use App\Modules\TransactionEntry\Contracts\ApprovalPolicies;
@@ -13,6 +14,7 @@ use App\Modules\TransactionEntry\Contracts\FinancialEvents;
 use App\Modules\TransactionEntry\Contracts\TransactionTypeKeys;
 use App\Modules\TransactionEntry\Contracts\UnfinishedEntries;
 use App\Support\Modules\ModuleServiceProvider;
+use App\Support\Template\TemplateComponent;
 use Illuminate\Console\Scheduling\Schedule;
 
 class TransactionEntryServiceProvider extends ModuleServiceProvider
@@ -42,5 +44,6 @@ class TransactionEntryServiceProvider extends ModuleServiceProvider
         $this->app->bind(FinancialEvents::class, FinancialEventIntake::class);
         $this->app->bind(TransactionTypeKeys::class, EloquentTransactionTypeKeys::class);
         $this->app->bind(UnfinishedEntries::class, EloquentUnfinishedEntries::class);
+        $this->app->tag(TransactionTypeTemplateComponent::class, TemplateComponent::TAG);
     }
 }

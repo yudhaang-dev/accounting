@@ -7,6 +7,7 @@ use App\Modules\Subledger\Application\DocumentPosting;
 use App\Modules\Subledger\Application\EloquentCashAccountDirectory;
 use App\Modules\Subledger\Application\EloquentControlAccounts;
 use App\Modules\Subledger\Application\EloquentPartyDirectory;
+use App\Modules\Subledger\Application\PartyRoleTemplateComponent;
 use App\Modules\Subledger\Application\RecordOpeningOpenItems;
 use App\Modules\Subledger\Contracts\CashAccountDirectory;
 use App\Modules\Subledger\Contracts\ControlAccounts;
@@ -15,6 +16,7 @@ use App\Modules\Subledger\Contracts\PartyDirectory;
 use App\Modules\Subledger\Contracts\ReconciliationStatus;
 use App\Modules\Subledger\Contracts\SubledgerPosting;
 use App\Support\Modules\ModuleServiceProvider;
+use App\Support\Template\TemplateComponent;
 
 class SubledgerServiceProvider extends ModuleServiceProvider
 {
@@ -31,5 +33,6 @@ class SubledgerServiceProvider extends ModuleServiceProvider
         $this->app->bind(SubledgerPosting::class, DocumentPosting::class);
         $this->app->bind(OpeningOpenItems::class, RecordOpeningOpenItems::class);
         $this->app->bind(ReconciliationStatus::class, AccountReconciliations::class);
+        $this->app->tag(PartyRoleTemplateComponent::class, TemplateComponent::TAG);
     }
 }

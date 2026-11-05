@@ -7,11 +7,13 @@ use App\Orchestration\Company\ActivateCompany;
 use App\Orchestration\Company\ChartOfAccountsRequirement;
 use App\Orchestration\Company\FiscalCalendarRequirement;
 use App\Orchestration\Ledger\CloseFiscalYear;
+use App\Orchestration\Setup\TemplateComponents;
 use App\Orchestration\Webhooks\DeliverFinancialEventWebhook;
 use App\Orchestration\Webhooks\RecordFailedWebhook;
 use App\Platform\Outbox\Outbox;
 use App\Platform\Outbox\OutboxMessage;
 use App\Support\Ledger\ClosingListener;
+use App\Support\Template\TemplateComponent;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -32,6 +34,7 @@ class OrchestrationServiceProvider extends ServiceProvider
             ->giveTagged(ActivateCompany::REQUIREMENTS_TAG);
 
         $this->app->when(CloseFiscalYear::class)->needs('$listeners')->giveTagged(ClosingListener::TAG);
+        $this->app->when(TemplateComponents::class)->needs('$components')->giveTagged(TemplateComponent::TAG);
     }
 
     public function boot(): void

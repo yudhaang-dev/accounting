@@ -3861,6 +3861,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{companyId}/template-packs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The template packs released for use. A pack is only a suggestion: nothing is created until the
+         *     company reviews it and confirms the install
+         */
+        get: operations["template-packs.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/template-packs/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What the pack would create in this company, component by component, with the items the company already
+         *     has marked `exists`. Nothing is created
+         */
+        get: operations["template-packs.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{companyId}/template-packs/{key}/install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Creates the picked components of the pack in one transaction: all or none. `confirmed` must be true. The
+         *     caller needs the permission of every picked component. Items the company already has are skipped and
+         *     reported, never overwritten. `exclude` lists, per component id, items to leave out
+         */
+        post: operations["template-packs.install"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/transaction-types": {
         parameters: {
             query?: never;
@@ -5134,6 +5195,13 @@ export interface components {
             /** @enum {unknown} */
             confirmed: "yes" | "on" | "1" | 1 | "true" | true;
             keys: string[];
+        };
+        /** InstallTemplatePackRequest */
+        InstallTemplatePackRequest: {
+            /** @enum {unknown} */
+            confirmed: "yes" | "on" | "1" | 1 | "true" | true;
+            components: string[];
+            exclude?: string[][];
         };
         /** IntegrationClientResource */
         IntegrationClientResource: {
@@ -15474,6 +15542,113 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "template-packs.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            name: string;
+                            description: string;
+                            version: number;
+                            components: {
+                                id: string;
+                                kind: string;
+                                template: string;
+                            }[];
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "template-packs.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            name: string;
+                            description: string;
+                            version: number;
+                            components: {
+                                id: string;
+                                kind: string;
+                                template: string;
+                                name: string;
+                                version: number;
+                                items: {
+                                    key: string;
+                                    label: string;
+                                    exists: boolean;
+                                    optional: boolean;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["NotFoundHttpException"];
+        };
+    };
+    "template-packs.install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstallTemplatePackRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": 201;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["NotFoundHttpException"];
             422: components["responses"]["ValidationException"];
         };
     };

@@ -8,6 +8,7 @@ use App\Orchestration\Ledger\Http\FiscalYearClosingController;
 use App\Orchestration\Ledger\Http\HistoryImportController;
 use App\Orchestration\Ledger\Http\LedgerPolicyController;
 use App\Orchestration\Ledger\Http\OpeningBalanceImportController;
+use App\Orchestration\Setup\Http\TemplatePackController;
 use App\Orchestration\Workspace\Http\WorkspaceController;
 use App\Platform\Api\ApiServiceProvider;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +36,14 @@ Route::companyScoped(function () {
         ->middleware('permission:financial-events.read|financial-events.read-own')->name('financial-events.changes');
     Route::get('financial-events/{eventId}', [FinancialEventController::class, 'show'])
         ->middleware('permission:financial-events.read|financial-events.read-own')->where('eventId', ApiServiceProvider::ULID)->name('financial-events.show');
+
+    // A pack puts together the templates of several modules (ADR-0019); installing it also takes the permission of each picked component.
+    Route::get('template-packs', [TemplatePackController::class, 'index'])
+        ->middleware('permission:accounts.manage|policies.manage|report-definitions.manage|parties.manage')->name('template-packs.index');
+    Route::get('template-packs/{key}', [TemplatePackController::class, 'show'])
+        ->middleware('permission:accounts.manage|policies.manage|report-definitions.manage|parties.manage')->where('key', '[a-z0-9-]+')->name('template-packs.show');
+    Route::post('template-packs/{key}/install', [TemplatePackController::class, 'install'])
+        ->middleware('permission:accounts.manage|policies.manage|report-definitions.manage|parties.manage')->where('key', '[a-z0-9-]+')->name('template-packs.install');
 
     Route::get('approval-policy', [ApprovalPolicyController::class, 'show'])->middleware('permission:policies.manage')->name('approval-policy.show');
     Route::put('approval-policy', [ApprovalPolicyController::class, 'update'])->middleware('permission:policies.manage')->name('approval-policy.update');
