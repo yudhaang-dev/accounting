@@ -20,7 +20,7 @@ Pilihan yang ditimbang: (a) cetak dari browser dengan stylesheet cetak, (b) rend
 
 ### Yang perlu dibuktikan saat implementasi, bukan diasumsikan
 
-- Dompdf memuat huruf Latin dengan benar untuk nama akun berbahasa Indonesia dan tidak memerlukan font tambahan; tabel lebar (banyak kolom pembanding) dicetak lanskap tanpa terpotong.
+- Dompdf memuat huruf Latin dengan benar untuk nama akun berbahasa Indonesia dan tidak memerlukan font tambahan; tabel lebar (banyak kolom pembanding) dicetak lanskap tanpa terpotong. Terbukti di penampil PDF Chrome: Latin beraksen, Yunani, dan Sirilik tampil benar; Arab tampil tetapi hurufnya tidak tersambung, dan huruf CJK tampil sebagai kotak kosong karena DejaVu Sans tidak memuatnya. Nama akun dengan huruf CJK atau Arab perlu Excel atau CSV, atau font tambahan (keputusan baru).
 - Hasil XLSX dibuka tanpa peringatan, sel angka berupa angka, dan sel teks yang diawali `=`, `+`, `-`, `@` tidak dieksekusi sebagai rumus (sama seperti perlindungan di `CsvExport`).
 - Jumlah sel rincian akun sama dengan nilai baris di berkas (RP-AC-12).
 - Memori dan waktu pada neraca saldo dan buku besar mendekati batas baris.

@@ -65,6 +65,19 @@ describe('table export (ADR-0018, X-FR-02)', function () {
             ->and($sheet)->not->toContain('<f>');
     });
 
+    it('writes an amount of a trillion with cents to Excel without rounding it', function () {
+        $table = new ExportTable('Neraca', [], [new ExportColumn('Baris'), new ExportColumn('Saldo', numeric: true)], [
+            new ExportRow(['Kas', '1234567890123.45']),
+            new ExportRow(['Utang', '-9876543210987.65']),
+        ]);
+        $precision = ini_get('precision');
+
+        $sheet = implode('', teSheets(teContent($table, ExportFormat::Xlsx)));
+
+        expect($sheet)->toContain('1234567890123.45')->and($sheet)->toContain('-9876543210987.65')
+            ->and(ini_get('precision'))->toBe($precision);
+    });
+
     it('renders a PDF, and one that spans pages repeats nothing it should not', function () {
         $short = teContent(teTable(), ExportFormat::Pdf);
         $long = teContent(teTable(150), ExportFormat::Pdf);
