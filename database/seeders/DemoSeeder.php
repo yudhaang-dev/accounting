@@ -17,7 +17,6 @@ use Database\Seeders\Demo\DemoReports;
 use Database\Seeders\Demo\DemoShowcase;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use RuntimeException;
 
 /**
  * A presentable demo: one company, PT Sinar Nusantara Perkasa, with books from 1 January 2025 to today in
@@ -40,13 +39,15 @@ class DemoSeeder extends Seeder
             return;
         }
 
-        if (DB::table('users')->count() > 0 && ! $this->command?->confirm('Database ini sudah berisi data. Data demo ditambahkan di samping data itu tanpa mengubahnya. Lanjutkan?', true)) {
+        if (DB::table('users')->count() > 0 && ! $this->command->confirm('Database ini sudah berisi data. Data demo ditambahkan di samping data itu tanpa mengubahnya. Lanjutkan?', true)) {
             return;
         }
 
+        CarbonImmutable::setLocale('id');
+
         $started = microtime(true);
         // `DEMO_TODAY` (YYYY-MM-DD) shortens a trial run; by default the books run up to today.
-        $today = CarbonImmutable::parse(env('DEMO_TODAY') ?: 'now', 'Asia/Jakarta')->startOfDay();
+        $today = CarbonImmutable::parse(config('demo.today') ?: 'now', 'Asia/Jakarta')->startOfDay();
         $api = new DemoApi;
 
         $foundation = new DemoFoundation($api, $today, fn (string $line) => $this->say($line));
@@ -76,7 +77,7 @@ class DemoSeeder extends Seeder
             $until = $last->min($today);
             $lap = microtime(true);
             $took = function (string $what) use (&$lap, $month) {
-                if (env('DEMO_TIMING')) {
+                if (config('demo.timing')) {
                     $this->say(sprintf('   %s %s: %.1f detik', $month->format('Y-m'), $what, microtime(true) - $lap));
                 }
                 $lap = microtime(true);
@@ -115,7 +116,7 @@ class DemoSeeder extends Seeder
         (new DemoIntegration($foundation, $operations->books(), $today))->run();
         (new DemoShowcase($foundation, $operations->books(), $today))->run();
 
-        $this->command?->table(['Peran', 'Email', 'Kata sandi'], [
+        $this->command->table(['Peran', 'Email', 'Kata sandi'], [
             ['Direktur (pemilik, pengaturan, penyetuju tahap akhir)', 'direktur@demo.test', self::PASSWORD],
             ['Akuntan (penutupan, rekonsiliasi, anggaran, laporan)', 'akuntan@demo.test', self::PASSWORD],
             ['Admin keuangan (mencatat dan mengajukan)', 'admin.keuangan@demo.test', self::PASSWORD],
@@ -129,12 +130,6 @@ class DemoSeeder extends Seeder
 
     private function say(string $line): void
     {
-        if ($this->command !== null) {
-            $this->command->info($line);
-
-            return;
-        }
-
-        throw new RuntimeException('Seeder harus dijalankan lewat artisan: '.$line);
+        $this->command->info($line);
     }
 }

@@ -47,8 +47,8 @@ final class DemoApi
     public function as(User $user): self
     {
         unset($this->defaultHeaders['Authorization']);
-        $this->app['auth']->forgetGuards();
-        $this->app['auth']->shouldUse('web');
+        $this->app->make('auth')->forgetGuards();
+        $this->app->make('auth')->shouldUse('web');
         $this->actingAs($user);
 
         return $this;
@@ -62,7 +62,7 @@ final class DemoApi
     public function clientToken(string $clientId, string $secret, array $scopes): string
     {
         $this->requests++;
-        $this->app['auth']->forgetGuards();
+        $this->app->make('auth')->forgetGuards();
         $response = $this->call('POST', '/api/v1/oauth/token', ['grant_type' => 'client_credentials', 'scope' => implode(' ', $scopes)], [], [], [
             'HTTP_AUTHORIZATION' => 'Basic '.base64_encode("{$clientId}:{$secret}"),
             'HTTP_ACCEPT' => 'application/json',
@@ -75,13 +75,14 @@ final class DemoApi
      * Calls as an integration client: only the token, no session user.
      *
      * @param  array<string, mixed>  $data
+     * @param  int|list<int>  $expect
      * @return array<string, mixed>
      */
     public function asClient(string $token, string $method, string $uri, array $data = [], int|array $expect = [200, 201]): array
     {
         $this->requests++;
-        $this->app['auth']->forgetGuards();
-        $this->app['auth']->shouldUse('web');
+        $this->app->make('auth')->forgetGuards();
+        $this->app->make('auth')->shouldUse('web');
         $response = $this->json($method, $uri, $data, ['Authorization' => "Bearer {$token}", 'Idempotency-Key' => (string) Str::uuid()]);
 
         if (! in_array($response->getStatusCode(), (array) $expect, true)) {
@@ -93,6 +94,7 @@ final class DemoApi
 
     /**
      * @param  array<string, mixed>  $data
+     * @param  int|list<int>  $expect
      * @return array<string, mixed>
      */
     public function send(string $method, string $uri, array $data = [], int|array $expect = [200, 201, 204]): array
@@ -117,25 +119,51 @@ final class DemoApi
         return is_array($body) ? $body : [];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * The rows of a list endpoint.
+     *
+     * @param  array<string, mixed>  $query
+     * @return list<array<string, mixed>>
+     */
+    public function rows(string $uri, array $query = []): array
+    {
+        return $this->get($uri, $query)['data'];
+    }
+
+    /**
+     * @param  array<string, mixed>  $query
+     * @return array<string, mixed>
+     */
     public function get(string $uri, array $query = []): array
     {
         return $this->send('GET', $uri.($query === [] ? '' : '?'.http_build_query($query)));
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  int|list<int>  $expect
+     * @return array<string, mixed>
+     */
     public function post(string $uri, array $data = [], int|array $expect = [200, 201, 204]): array
     {
         return $this->send('POST', $uri, $data, $expect);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  int|list<int>  $expect
+     * @return array<string, mixed>
+     */
     public function put(string $uri, array $data = [], int|array $expect = [200, 201]): array
     {
         return $this->send('PUT', $uri, $data, $expect);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  int|list<int>  $expect
+     * @return array<string, mixed>
+     */
     public function patch(string $uri, array $data = [], int|array $expect = [200]): array
     {
         return $this->send('PATCH', $uri, $data, $expect);

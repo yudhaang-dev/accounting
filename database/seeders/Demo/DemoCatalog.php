@@ -30,11 +30,13 @@ final class DemoCatalog
         $this->approvalPolicy();
     }
 
+    /** @return array<string, mixed> */
     private function fixed(string $code): array
     {
         return ['source' => 'fixed', 'account_id' => $this->f->account($code)];
     }
 
+    /** @return array<string, mixed> */
     private function control(string $partyField): array
     {
         return ['source' => 'control_account', 'party_field' => $partyField];
@@ -133,7 +135,11 @@ final class DemoCatalog
         ];
     }
 
-    /** The sale an ERP sends as a financial event: who, which branch, and the amounts. @return array<string, mixed> */
+    /**
+     * The sale an ERP sends as a financial event: who, which branch, and the amounts.
+     *
+     * @return array<string, mixed>
+     */
     private function erpSales(): array
     {
         return [
@@ -161,7 +167,7 @@ final class DemoCatalog
         $api = $this->f->api;
         $type = $api->post($this->f->url('/transaction-types'), ['key' => $key, 'label' => $label])['data'];
         $draft = $api->post($this->f->url("/transaction-types/{$type['id']}/versions"), $body)['data'];
-        $version = (int) collect($draft['versions'])->max('version');
+        $version = (int) max(0, ...array_column($draft['versions'], 'version'));
         $api->post($this->f->url("/transaction-types/{$type['id']}/versions/{$version}/publish"));
     }
 
@@ -169,7 +175,7 @@ final class DemoCatalog
     {
         $this->f->say('Penomoran dokumen per jenis');
 
-        $types = collect($this->f->api->get($this->f->url('/transaction-types'))['data'])->keyBy('key');
+        $types = collect($this->f->api->rows($this->f->url('/transaction-types')))->keyBy('key');
 
         foreach ([
             'sales_invoice' => ['INV/{yyyy}/{mm}/{seq}', 4, 'monthly'],

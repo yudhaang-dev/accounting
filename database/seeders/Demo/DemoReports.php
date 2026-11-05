@@ -10,9 +10,6 @@ namespace Database\Seeders\Demo;
  */
 final class DemoReports
 {
-    /** @var array<string, array{id: string, lock_version: int}> */
-    private array $definitions = [];
-
     public function __construct(private readonly DemoFoundation $f) {}
 
     public function run(): void
@@ -38,7 +35,7 @@ final class DemoReports
     /** @return list<array{type: string, id: string}> */
     private function accounts(string ...$codes): array
     {
-        return array_map(fn (string $code) => ['type' => 'account', 'id' => $this->f->account($code)], $codes);
+        return array_values(array_map(fn (string $code) => ['type' => 'account', 'id' => $this->f->account($code)], $codes));
     }
 
     private function classifications(): void

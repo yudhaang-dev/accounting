@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
  */
 final class DemoBank
 {
-    /** @var list<array{date: string, direction: string, amount: string, reference: string}> */
+    /** @var list<array{direction: string, amount: string, reference: string}|array{date: string, direction: string, amount: string, reference: string}> */
     private array $carry = [];
 
     public function __construct(private readonly DemoFoundation $f) {}
@@ -113,7 +113,7 @@ final class DemoBank
             $page++;
         } while (($list['meta']['current_page'] ?? 1) < ($list['meta']['last_page'] ?? 1));
 
-        $candidates = collect($api->get($this->f->url("/bank-statements/{$statementId}/suggestions"), ['window_days' => 45])['data'])
+        $candidates = collect($api->rows($this->f->url("/bank-statements/{$statementId}/suggestions"), ['window_days' => 45]))
             ->mapWithKeys(fn (array $row) => [$row['line_id'] => $row['candidates'][0]['cash_transaction_id'] ?? null]);
 
         $used = [];

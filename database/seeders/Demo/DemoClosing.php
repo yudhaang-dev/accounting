@@ -96,7 +96,7 @@ final class DemoClosing
     {
         $this->f->say("Tutup tahun buku {$year}");
 
-        $years = $this->f->api->get($this->f->url('/fiscal-years'))['data'];
+        $years = $this->f->api->rows($this->f->url('/fiscal-years'));
         $id = collect($years)->first(fn (array $y) => str_starts_with($y['start_date'], (string) $year))['id'];
 
         $this->f->api->as($this->f->users['accountant'])->post($this->f->url("/fiscal-years/{$id}/close"));

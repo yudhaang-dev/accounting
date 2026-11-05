@@ -40,9 +40,9 @@ final class DemoOpening
             'source_key' => 'sistem-lama-2024-12',
             'source_system' => 'erp',
             'cutover_date' => DemoFoundation::START,
-            'account_mapping' => array_map(fn (string $code) => ['source_code' => "L-{$code}", 'account_code' => $code], array_keys($balances)),
+            'account_mapping' => array_map(fn (int|string $code) => ['source_code' => "L-{$code}", 'account_code' => (string) $code], array_keys($balances)),
             'lines' => array_map(
-                fn (string $code, array $amounts) => ['source_account_code' => "L-{$code}", 'debit' => $amounts[0], 'credit' => $amounts[1]],
+                fn (int|string $code, array $amounts) => ['source_account_code' => "L-{$code}", 'debit' => $amounts[0], 'credit' => $amounts[1]],
                 array_keys($balances),
                 $balances,
             ),

@@ -242,7 +242,11 @@ final class DemoFoundation
         $this->api->as($this->users['owner'])->post($this->url('/activate'));
     }
 
-    /** Updates posting attributes of accounts, one request each. */
+    /**
+     * Updates posting attributes of accounts, one request each.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
     public function patchAccount(string $code, array $attributes): void
     {
         $account = $this->accounts[$code] ?? throw new \RuntimeException("Account {$code} is not in the chart.");

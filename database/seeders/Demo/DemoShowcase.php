@@ -40,7 +40,7 @@ final class DemoShowcase
             return;
         }
 
-        $this->books->post('adjustment', $softClosed->endOfMonth()->toDateString(), 'Akrual perlengkapan kantor yang belum ditagih '.$softClosed->locale('id')->translatedFormat('F Y'), lines: [
+        $this->books->post('adjustment', $softClosed->endOfMonth()->toDateString(), 'Akrual perlengkapan kantor yang belum ditagih '.$softClosed->translatedFormat('F Y'), lines: [
             ['account_id' => $this->f->account('6240'), 'debit' => '4200000'],
             ['account_id' => $this->f->account('2120'), 'credit' => '4200000'],
         ], by: 'accountant');
@@ -77,7 +77,7 @@ final class DemoShowcase
         $advance('univ', '30000000', $this->day(6), 'TT-UM-UNIV-01');
 
         $party = $this->f->customers['apotek'];
-        $items = $api->as($this->f->users['preparer'])->get($this->f->url('/open-items'), ['filter[party_id]' => $party, 'filter[status]' => 'open', 'per_page' => 200])['data'];
+        $items = $api->as($this->f->users['preparer'])->rows($this->f->url('/open-items'), ['filter[party_id]' => $party, 'filter[status]' => 'open', 'per_page' => 200]);
         $payment = collect($items)->first(fn (array $i) => $i['kind'] === 'payment');
         $invoice = collect($items)->first(fn (array $i) => $i['kind'] === 'invoice');
 
@@ -182,7 +182,7 @@ trailer
         $api = $this->f->api->as($this->f->users['owner']);
 
         // The branch head sees Surabaya only, in every report and list (IA-FR-03).
-        $memberships = $api->get($this->f->url('/memberships'))['data'];
+        $memberships = $api->rows($this->f->url('/memberships'));
         $mine = collect($memberships)->first(fn (array $m) => (int) ($m['user']['id'] ?? $m['user_id'] ?? 0) === (int) $this->f->users['branch']->id);
 
         if ($mine !== null) {

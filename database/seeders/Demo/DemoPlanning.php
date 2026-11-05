@@ -16,15 +16,15 @@ final class DemoPlanning
         $this->f->say('Anggaran 2025 dan 2026 beserta versi default');
 
         $api = $this->f->api->as($this->f->users['accountant']);
-        $years = collect($api->get($this->f->url('/fiscal-years'))['data'])->keyBy(fn (array $y) => (int) substr($y['start_date'], 0, 4));
+        $years = collect($api->rows($this->f->url('/fiscal-years')))->keyBy(fn (array $y) => (int) substr($y['start_date'], 0, 4));
         $defaults = [];
 
         foreach ([2025, 2026] as $year) {
             $plan = $api->post($this->f->url('/plans'), ['name' => "Anggaran {$year}", 'starts_on' => $years[$year]['start_date'], 'ends_on' => $years[$year]['end_date'], 'description' => "Anggaran tahunan {$year} yang disetujui direksi"])['data'];
             $version = $api->post($this->f->url("/plans/{$plan['id']}/versions"), ['name' => 'Anggaran awal'])['data'];
-            $periods = collect($api->get($this->f->url('/periods'), ['filter[fiscal_year_id]' => $years[$year]['id'], 'per_page' => 50])['data'])->sortBy('number')->values();
+            $periods = collect($api->rows($this->f->url('/periods'), ['filter[fiscal_year_id]' => $years[$year]['id'], 'per_page' => 50]))->sortBy('number')->values();
 
-            $api->put($this->f->url("/plan-versions/{$version['id']}/lines"), ['lines' => $this->lines($year, $periods->pluck('id')->all(), 1.0)]);
+            $api->put($this->f->url("/plan-versions/{$version['id']}/lines"), ['lines' => $this->lines($year, array_values($periods->pluck('id')->all()), 1.0)]);
 
             $version = $api->get($this->f->url("/plan-versions/{$version['id']}"))['data'];
             $this->f->api->as($this->f->users['owner'])->post($this->f->url("/plan-versions/{$version['id']}/publish"), ['lock_version' => $version['lock_version']]);
@@ -34,7 +34,7 @@ final class DemoPlanning
 
             if ($year === 2026) {
                 $scenario = $api->post($this->f->url("/plans/{$plan['id']}/versions"), ['name' => 'Skenario pertumbuhan tinggi (draf)'])['data'];
-                $api->put($this->f->url("/plan-versions/{$scenario['id']}/lines"), ['lines' => $this->lines($year, $periods->pluck('id')->all(), 1.12)]);
+                $api->put($this->f->url("/plan-versions/{$scenario['id']}/lines"), ['lines' => $this->lines($year, array_values($periods->pluck('id')->all()), 1.12)]);
             }
         }
 
@@ -58,7 +58,7 @@ final class DemoPlanning
         $this->f->say('Rencana kegiatan: promosi semester II 2026, strategi dan taktik iklan digital');
 
         $api = $this->f->api->as($this->f->users['accountant']);
-        $periods = collect($api->get($this->f->url('/periods'), ['filter[fiscal_year_id]' => $fiscalYearId, 'per_page' => 50])['data'])->sortBy('number')->values();
+        $periods = collect($api->rows($this->f->url('/periods'), ['filter[fiscal_year_id]' => $fiscalYearId, 'per_page' => 50]))->sortBy('number')->values();
         $window = $periods->slice((int) substr(DemoFoundation::PROMO_FROM, 5) - 1, 6)->values();
 
         $plans = [
@@ -81,13 +81,13 @@ final class DemoPlanning
             ])['data'];
 
             $initial = $api->post($this->f->url("/plans/{$plan['id']}/versions"), ['name' => 'Estimasi awal'])['data'];
-            $api->put($this->f->url("/plan-versions/{$initial['id']}/lines"), ['lines' => $this->promotionLines($window->pluck('id')->all(), $amounts, false)]);
+            $api->put($this->f->url("/plan-versions/{$initial['id']}/lines"), ['lines' => $this->promotionLines(array_values($window->pluck('id')->all()), $amounts, false)]);
             $initial = $api->get($this->f->url("/plan-versions/{$initial['id']}"))['data'];
             $this->f->api->as($this->f->users['owner'])->post($this->f->url("/plan-versions/{$initial['id']}/publish"), ['lock_version' => $initial['lock_version']]);
 
             $api->as($this->f->users['accountant']);
             $revision = $api->post($this->f->url("/plan-versions/{$initial['id']}/revise"), ['name' => 'Revisi Agustus'])['data'];
-            $api->put($this->f->url("/plan-versions/{$revision['id']}/lines"), ['lines' => $this->promotionLines($window->pluck('id')->all(), $amounts, true)]);
+            $api->put($this->f->url("/plan-versions/{$revision['id']}/lines"), ['lines' => $this->promotionLines(array_values($window->pluck('id')->all()), $amounts, true)]);
             $revision = $api->get($this->f->url("/plan-versions/{$revision['id']}"))['data'];
             $this->f->api->as($this->f->users['owner'])->post($this->f->url("/plan-versions/{$revision['id']}/publish"), ['lock_version' => $revision['lock_version']]);
             $api->as($this->f->users['accountant']);
@@ -96,7 +96,7 @@ final class DemoPlanning
 
     /**
      * @param  list<string>  $periodIds
-     * @param  callable(int, bool): array<string, int>  $amounts  by account code for the month at that index
+     * @param  callable(int, bool): array<int|string, int>  $amounts  by account code for the month at that index
      * @return list<array<string, string>>
      */
     private function promotionLines(array $periodIds, callable $amounts, bool $revised): array

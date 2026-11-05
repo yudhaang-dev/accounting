@@ -28,7 +28,8 @@ final class DemoIntegration
         ])['data'];
 
         $token = $api->clientToken($client['client_id'], $client['client_secret'], $client['scopes']);
-        $version = (int) collect(collect($api->as($this->f->users['owner'])->get($this->f->url('/transaction-types'))['data'])->firstWhere('key', 'erp_sales')['versions'])->where('status', 'published')->max('version');
+        $erpSales = collect($api->as($this->f->users['owner'])->rows($this->f->url('/transaction-types')))->firstWhere('key', 'erp_sales');
+        $version = (int) max(0, ...array_column(array_filter($erpSales['versions'], fn (array $v) => $v['status'] === 'published'), 'version'));
 
         $events = [];
 

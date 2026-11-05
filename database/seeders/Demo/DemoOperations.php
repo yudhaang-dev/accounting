@@ -269,11 +269,15 @@ final class DemoOperations
                 'payroll' => $this->payroll($event),
                 'transfer' => $this->transfer($event),
                 'vat' => $this->vatSettlement($event),
+                default => throw new \LogicException("Unknown demo event kind {$event['kind']}."),
             };
         }
     }
 
-    /** @param array<string, mixed> $data */
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
     private function push(CarbonImmutable $date, int $order, string $kind, array $data): array
     {
         static $n = 0;
@@ -482,7 +486,7 @@ final class DemoOperations
         $number = 'GAJI-'.$date->format('Y-m');
         $gross = (int) $e['gross'];
 
-        $this->post('payroll', $e['date'], 'Gaji dan tunjangan karyawan '.$date->locale('id')->translatedFormat('F Y'), [
+        $this->post('payroll', $e['date'], 'Gaji dan tunjangan karyawan '.$date->translatedFormat('F Y'), [
             'payroll' => $this->f->suppliers['payroll'],
             'reference' => $number,
             'pay_date' => $payDate->toDateString(),
@@ -516,7 +520,7 @@ final class DemoOperations
         $number = 'SSP-'.$e['month'];
         $kpp = $this->f->suppliers['kpp'];
 
-        $this->post('vat_settlement', $e['date'], 'Penyelesaian PPN masa '.CarbonImmutable::parse($e['month'].'-01')->locale('id')->translatedFormat('F Y'), [
+        $this->post('vat_settlement', $e['date'], 'Penyelesaian PPN masa '.CarbonImmutable::parse($e['month'].'-01')->translatedFormat('F Y'), [
             'tax_office' => $kpp,
             'reference' => $number,
             'due_date' => $date->setDay(20)->toDateString(),
@@ -540,7 +544,7 @@ final class DemoOperations
         $this->books->post(
             'adjustment',
             $until->toDateString(),
-            'Harga pokok penjualan '.$first->locale('id')->translatedFormat('F Y'),
+            'Harga pokok penjualan '.$first->translatedFormat('F Y'),
             lines: [
                 ['account_id' => $this->f->account('5110'), 'debit' => (string) $cogs, 'description' => 'HPP barang terjual'],
                 ['account_id' => $this->f->account('1131'), 'credit' => (string) $cogs, 'description' => 'Pengurang persediaan'],
