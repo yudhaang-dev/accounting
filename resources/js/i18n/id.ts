@@ -3182,6 +3182,43 @@ export const id = {
             conflict:
                 'Profil sudah diubah di tempat lain. Data terbaru telah dimuat; periksa lalu simpan lagi.',
         },
+        packs: {
+            mode: 'Cara memasang',
+            modePack: 'Paket jenis usaha',
+            modeChart: 'Hanya bagan akun',
+            intro: 'Pilih paket sebagai titik awal: bagan akun, peran pihak, jenis transaksi, dan laporan dipasang sekaligus. Paket hanya saran: tidak ada yang dibuat sebelum Anda meninjau dan mengonfirmasinya, dan semuanya dapat diubah sesudahnya.',
+            pack: 'Paket',
+            review: 'Tinjau isi paket',
+            reviewHint:
+                'Hapus centang komponen yang tidak dipakai, atau item opsional yang ingin dilewati. Yang sudah ada dilewati, tidak pernah ditimpa; item yang bentrok dengan data perusahaan tidak dipasang.',
+            installComponent: 'Pasang komponen {{name}}',
+            componentSummary: '{{create}} dari {{total}} item akan dibuat.',
+            componentSkipped: 'Komponen ini dilewati.',
+            showItems: 'Lihat {{count}} item',
+            includeItem: 'Pasang {{label}}',
+            exists: 'Sudah ada',
+            optional: 'Opsional',
+            conflict: 'Bentrok, tidak dipasang: {{reason}}',
+            conflicts: '{{count}} bentrok',
+            confirm:
+                'Saya telah meninjau isi paket ini dan ingin memasangnya.',
+            submit: 'Pasang paket',
+            submitting: 'Memasang…',
+            forbidden:
+                'Anda tidak memiliki izin untuk memasang salah satu komponen yang dipilih. Hapus centang komponen itu atau minta izin kepada pengelola.',
+            installed: 'Paket terpasang',
+            result: '{{created}} dibuat, {{skipped}} dilewati.',
+            kinds: {
+                chart_of_accounts: 'Bagan akun',
+                account_posting: 'Batas posting akun',
+                party_roles: 'Peran pihak',
+                account_roles: 'Peran akun',
+                posting_profiles: 'Profil posting',
+                cash_equivalents: 'Setara kas',
+                transaction_types: 'Jenis transaksi',
+                report_definitions: 'Definisi laporan',
+            },
+        },
         chart: {
             doneTitle: 'Bagan akun terpasang',
             doneDescription: '{{count}} akun siap dipakai.',

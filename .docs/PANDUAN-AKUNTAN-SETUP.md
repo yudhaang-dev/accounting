@@ -39,6 +39,13 @@ Perusahaan baru berstatus **Penyiapan** dan belum bisa dipakai mencatat transaks
 - Nama dan kode bisa disesuaikan setelah dipasang, tetapi **kelas akun tidak bisa diubah** setelah dibuat. Cek kelas dan saldo normal sekarang.
 - Pastikan struktur induk dan daun sesuai pelaporan Anda. Hanya akun daun yang menerima posting.
 
+**Paket jenis usaha.** Bila ada paket yang sudah dirilis, langkah ini menawarkannya di samping *Hanya bagan akun*. Satu paket memasang sekaligus bagan akun, batas posting akun, peran pihak, peran akun, profil posting, setara kas, jenis transaksi, dan laporan, sehingga perusahaan siap diaktifkan bersama kalender.
+
+- Tiap komponen tampil dengan jumlah item yang akan dibuat; buka daftarnya untuk meninjau. Hapus centang komponen yang tidak dipakai, atau item **opsional** yang ingin dilewati.
+- Item yang **sudah ada** dilewati dan tidak pernah ditimpa. Item yang **bentrok** (kode sama dengan akun lain yang namanya atau kelasnya beda) tidak dipasang dan alasannya tampil; putuskan sendiri lewat layar akun sesudahnya.
+- Pemasangan berjalan sekali, semua atau tidak sama sekali. Anda perlu izin untuk setiap komponen yang dicentang; bila kurang, sistem menolak sebelum membuat apa pun.
+- Paket hanya saran: semua hasilnya data perusahaan yang bisa diubah, dan paket yang lebih baru tidak mengubah perusahaan yang sudah memasang. Paket yang belum ditinjau akuntan tidak muncul.
+
 **Kalender fiskal.** Pilih bulan awal tahun fiskal (Januari bila sama dengan tahun kalender), lalu buat tahun fiskal pertama. Periode bulanan terbentuk otomatis tanpa celah. Wizard hanya membuat kalender bulanan; pola lain dibuat lewat API.
 
 **Aktivasi.** Aktif setelah bagan akun dan kalender terpasang.

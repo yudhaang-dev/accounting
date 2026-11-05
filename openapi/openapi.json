@@ -24759,8 +24759,60 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "integer",
-                                    "const": 201
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pack": {
+                                                    "type": "string"
+                                                },
+                                                "version": {
+                                                    "type": "integer"
+                                                },
+                                                "components": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "template": {
+                                                                "type": "string"
+                                                            },
+                                                            "created": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "skipped": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "template",
+                                                            "created",
+                                                            "skipped"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "pack",
+                                                "version",
+                                                "components"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }

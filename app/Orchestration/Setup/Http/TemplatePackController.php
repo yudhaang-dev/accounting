@@ -44,7 +44,9 @@ class TemplatePackController
      * caller needs the permission of every picked component. Items the company already has are skipped and
      * reported, never overwritten. `exclude` lists, per component id, items to leave out.
      *
-     * @response 201 array{data: array{pack: string, version: int, components: list<array{id: string, template: string, created: list<string>, skipped: list<string>}>}}
+     * @status 201
+     *
+     * @response array{data: array{pack: string, version: int, components: list<array{id: string, template: string, created: list<string>, skipped: list<string>}>}}
      */
     public function install(
         InstallTemplatePackRequest $request,

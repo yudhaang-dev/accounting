@@ -9,6 +9,12 @@ import { CheckIcon } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { PackResult, TemplatePackStep } from '@/app/template-pack-step';
+import {
+    templatePacksQuery,
+    type InstallResult,
+    type Pack,
+} from '@/app/template-packs';
 import { WizardProgress } from '@/app/wizard-progress';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FormAlert } from '@/components/form-alert';
@@ -16,6 +22,7 @@ import { SubmitButton } from '@/components/submit-button';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { genericErrorMessage } from '@/lib/errors';
 import { isApiError } from '@/lib/http';
@@ -227,6 +234,74 @@ function ActivateStep({
 }
 
 /**
+ * Chart step with the choice of a template pack for the type of business (X-AC-06) next to the chart
+ * alone. Without a released pack, or for someone who may not install one, it is the chart step as before.
+ */
+function ChartSetup({ companyId }: { companyId: string }) {
+    const { t } = useTranslation();
+    const size = useQuery(chartSizeQuery(companyId));
+    const packs = useQuery(templatePacksQuery(companyId));
+    const [mode, setMode] = useState<'pack' | 'chart'>('pack');
+    const [installed, setInstalled] = useState<{
+        result: InstallResult;
+        pack: Pack;
+    } | null>(null);
+
+    if (installed) {
+        return <PackResult result={installed.result} pack={installed.pack} />;
+    }
+
+    if ((size.data ?? 0) > 0 || packs.isError || packs.data?.length === 0) {
+        return <ChartStep companyId={companyId} />;
+    }
+
+    if (packs.data === undefined) {
+        return <Skeleton className="h-24 w-full" />;
+    }
+
+    return (
+        <div className="flex flex-col gap-5">
+            <div
+                className="flex gap-2"
+                role="group"
+                aria-label={t('setup.packs.mode')}
+            >
+                <Button
+                    type="button"
+                    size="sm"
+                    variant={mode === 'pack' ? 'default' : 'outline'}
+                    aria-pressed={mode === 'pack'}
+                    onClick={() => setMode('pack')}
+                >
+                    {t('setup.packs.modePack')}
+                </Button>
+                <Button
+                    type="button"
+                    size="sm"
+                    variant={mode === 'chart' ? 'default' : 'outline'}
+                    aria-pressed={mode === 'chart'}
+                    onClick={() => setMode('chart')}
+                >
+                    {t('setup.packs.modeChart')}
+                </Button>
+            </div>
+
+            {mode === 'pack' ? (
+                <TemplatePackStep
+                    companyId={companyId}
+                    packs={packs.data}
+                    onInstalled={(result, pack) =>
+                        setInstalled({ result, pack })
+                    }
+                />
+            ) : (
+                <ChartStep companyId={companyId} />
+            )}
+        </div>
+    );
+}
+
+/**
  * Setup wizard of a company in `setup` (MD-FR-01, X-AC-03): profile, chart of accounts, fiscal
  * calendar, activation. Every step's state comes from the server, so it can be left and resumed.
  */
@@ -265,7 +340,7 @@ export function CompanySetupPage({ companyId }: { companyId: string }) {
                     title={t('setup.steps.chart')}
                     state={chartDone ? 'done' : 'todo'}
                 >
-                    <ChartStep companyId={companyId} />
+                    <ChartSetup companyId={companyId} />
                 </Step>
                 <Step
                     number={3}

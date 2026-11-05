@@ -15645,7 +15645,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": 201;
+                    "application/json": {
+                        data: {
+                            pack: string;
+                            version: number;
+                            components: {
+                                id: string;
+                                template: string;
+                                created: string[];
+                                skipped: string[];
+                            }[];
+                        };
+                    };
                 };
             };
             401: components["responses"]["AuthenticationException"];
