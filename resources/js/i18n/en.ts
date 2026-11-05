@@ -2611,9 +2611,6 @@ export const en: Widen<typeof id> = {
         noAccountDescription:
             'The general ledger shows one account at a time. Pick an account above, or open it from an account code in the trial balance.',
         currency: 'In {{currency}}',
-        export: 'Export CSV',
-        exporting: 'Downloading…',
-        exportFailed: 'The export failed. Try again.',
         date: 'Date',
         journal: 'Journal',
         entry: 'View entry',
@@ -2628,6 +2625,8 @@ export const en: Widen<typeof id> = {
         export: 'Export CSV',
         exporting: 'Downloading…',
         exportFailed: 'The export failed. Try again.',
+        exportMenu: 'Export',
+        formats: { csv: 'CSV', xlsx: 'Excel', pdf: 'PDF' },
         ledgerLinks: 'Ledger',
         pageTitle: 'Reports',
         title: 'Reports',
@@ -2766,9 +2765,6 @@ export const en: Widen<typeof id> = {
         title: 'Trial balance',
         description:
             'Opening balance, movement and closing balance per account over a date range. Total debit must equal total credit. The opening balance is not entered: it is calculated from every journal before the start date.',
-        export: 'Export CSV',
-        exporting: 'Downloading…',
-        exportFailed: 'The export failed. Try again.',
         code: 'Code',
         account: 'Account',
         opening: 'Opening balance',

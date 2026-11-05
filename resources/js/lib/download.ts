@@ -59,3 +59,29 @@ export async function downloadFile(
     link.remove();
     URL.revokeObjectURL(objectUrl);
 }
+
+/** The formats a report can be downloaded in (ADR-0018); `Accept` picks one. */
+export type ExportFormat = 'csv' | 'xlsx' | 'pdf';
+
+export const EXPORT_FORMATS: Record<
+    ExportFormat,
+    { accept: string; extension: string }
+> = {
+    csv: { accept: 'text/csv', extension: 'csv' },
+    xlsx: {
+        accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        extension: 'xlsx',
+    },
+    pdf: { accept: 'application/pdf', extension: 'pdf' },
+};
+
+/** Downloads `address` in `format`; `baseName` is the file name without extension, used when the API names none. */
+export function downloadReport(
+    address: string,
+    format: ExportFormat,
+    baseName: string,
+): Promise<void> {
+    const { accept, extension } = EXPORT_FORMATS[format];
+
+    return downloadFile(address, accept, `${baseName}.${extension}`);
+}

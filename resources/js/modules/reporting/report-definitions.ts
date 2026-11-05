@@ -1,7 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 import { api, unwrap } from '@/api/client';
 import type { components, operations } from '@/api/schema';
-import { downloadFile } from '@/lib/download';
+import { downloadReport, type ExportFormat } from '@/lib/download';
 import { fetchAll } from '@/lib/fetch-all';
 import {
     filterParams,
@@ -131,16 +131,17 @@ export const reportResultQuery = (
             ).data,
     });
 
-/** The same result as CSV, under the same permission and filters (X-FR-02). */
+/** The same result as a file, under the same permission and filters (X-FR-02). */
 export function exportReportResult(
     companyId: string,
     definition: { id: string; key: string },
     filter: ReportFilter,
     mode: 'range' | 'as_of',
+    format: ExportFormat = 'csv',
 ) {
-    return downloadFile(
+    return downloadReport(
         `/api/v1/companies/${companyId}/report-definitions/${definition.id}/result?${filterParams(filter, mode)}`,
-        'text/csv',
-        `report_${definition.key}_${filter.from}_${filter.to}.csv`,
+        format,
+        `report_${definition.key}_${filter.from}_${filter.to}`,
     );
 }

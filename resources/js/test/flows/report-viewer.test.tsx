@@ -453,7 +453,10 @@ describe('report viewer export and drill-down (X-FR-02, API-AC-07)', () => {
         const typist = userEvent.setup();
 
         await screen.findByText('Penjualan');
-        await typist.click(screen.getByRole('button', { name: 'Ekspor CSV' }));
+        await typist.click(screen.getByRole('button', { name: 'Ekspor' }));
+        await typist.click(
+            await screen.findByRole('menuitem', { name: 'CSV' }),
+        );
 
         await waitFor(() => expect(downloaded).toBeDefined());
         expect(downloaded).toBe(

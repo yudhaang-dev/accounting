@@ -255,6 +255,6 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
   - [x] **B-16a** Dokumen: ADR-0018, X-FR-02, API-TR-09
   - [x] **B-16b** Platform/Export: model tabel netral dengan penerjemah CSV, XLSX, dan PDF, kop, batas baris, dan pembuktian hal-hal di ADR (huruf, rumus, lanskap) — X-FR-02 — `ExportTable` dan `TableExport::download`; kode `EXPORT_TOO_LARGE`; kop (perusahaan, periode, filter, penanda) diisi pemanggil lewat `meta` di B-16c; huruf Latin DejaVu Sans terbukti, huruf non-Latin belum
   - [x] **B-16c** Negosiasi `Accept` pada definisi laporan, neraca saldo, dan buku besar; kode kesalahan batas baris; OpenAPI dan tipe — X-FR-02, API-TR-09, RP-AC-12 — pemetaan hasil ke `ExportTable` ada di `ReportTables`; CSV tidak berubah. Klasifikasi mutasi, arus kas langsung, dan perubahan ekuitas masih CSV saja (di luar cakupan ADR-0018). Belum dibuka di Excel atau penampil PDF (B-16e)
-  - [ ] **B-16d** SPA: tombol ekspor menawarkan CSV, Excel, dan PDF; pesan batas baris; label dua bahasa
+  - [x] **B-16d** SPA: tombol ekspor menawarkan CSV, Excel, dan PDF; pesan batas baris; label dua bahasa — `ExportButton` menerima `formats`; neraca saldo, buku besar, dan penampil definisi memakai tiga format, laporan klasifikasi tetap CSV; pesan batas baris datang dari API (`EXPORT_TOO_LARGE`) dan tampil sebagai toast
   - [ ] **B-16e** Panduan dan pembuktian di browser dengan berkas yang dibuka di Excel dan penampil PDF
 - [x] **B-17** Rekonsiliasi akun kontrol hanya menyimpan selisih — SL-FR-09

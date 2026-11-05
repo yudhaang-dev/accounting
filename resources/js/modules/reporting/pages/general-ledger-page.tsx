@@ -1,12 +1,11 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { ExportButton } from '@/modules/reporting/components/export-button';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { BookOpenIcon, DownloadIcon } from 'lucide-react';
+import { BookOpenIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 import { FormAlert } from '@/components/form-alert';
 import { SearchableSelect } from '@/components/searchable-select';
-import { Button } from '@/components/ui/button';
 import {
     Empty,
     EmptyDescription,
@@ -16,7 +15,6 @@ import {
 } from '@/components/ui/empty';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Spinner } from '@/components/ui/spinner';
 import {
     Table,
     TableBody,
@@ -88,22 +86,6 @@ export function GeneralLedgerPage({
         enabled: accountId !== '',
     });
 
-    const download = useMutation({
-        mutationFn: () =>
-            exportGeneralLedger(
-                companyId,
-                accountId,
-                filter,
-                report.data?.account.code ?? 'account',
-            ),
-        onError: (error) =>
-            toast.error(
-                isApiError(error) && error.status !== 0
-                    ? error.message
-                    : t('generalLedger.exportFailed'),
-            ),
-    });
-
     const money = (value: string) =>
         isPositive(value) ? formatDecimal(value, i18n.language) : '';
     const amount = (value: string) => formatDecimal(value, i18n.language);
@@ -119,21 +101,19 @@ export function GeneralLedgerPage({
                         {t('generalLedger.description')}
                     </p>
                 </div>
-                <Button
-                    variant="outline"
-                    disabled={download.isPending || !report.data}
-                    aria-busy={download.isPending}
-                    onClick={() => download.mutate()}
-                >
-                    {download.isPending ? (
-                        <Spinner data-icon="inline-start" aria-hidden />
-                    ) : (
-                        <DownloadIcon data-icon="inline-start" />
-                    )}
-                    {download.isPending
-                        ? t('generalLedger.exporting')
-                        : t('generalLedger.export')}
-                </Button>
+                <ExportButton
+                    disabled={!report.data}
+                    formats={['csv', 'xlsx', 'pdf']}
+                    onExport={(format) =>
+                        exportGeneralLedger(
+                            companyId,
+                            accountId,
+                            filter,
+                            report.data?.account.code ?? 'account',
+                            format,
+                        )
+                    }
+                />
             </div>
 
             {canReadAccounts && (

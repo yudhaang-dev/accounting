@@ -2,7 +2,7 @@ import { queryOptions } from '@tanstack/react-query';
 import { api, unwrap } from '@/api/client';
 import type { operations } from '@/api/schema';
 import type { Coverage } from '@/modules/reporting/components/coverage-notice';
-import { downloadFile } from '@/lib/download';
+import { downloadReport, type ExportFormat } from '@/lib/download';
 import {
     filterParams,
     type ReportFilter,
@@ -38,11 +38,15 @@ export const trialBalanceQuery = (companyId: string, filter: ReportFilter) =>
             ).data as TrialBalance,
     });
 
-/** The same report as CSV, under the same permission and filters (X-FR-02). */
-export function exportTrialBalance(companyId: string, filter: ReportFilter) {
-    return downloadFile(
+/** The same report as a file, under the same permission and filters (X-FR-02). */
+export function exportTrialBalance(
+    companyId: string,
+    filter: ReportFilter,
+    format: ExportFormat = 'csv',
+) {
+    return downloadReport(
         `/api/v1/companies/${companyId}/reports/trial-balance?${filterParams(filter, 'range')}`,
-        'text/csv',
-        `trial-balance_${filter.from}_${filter.to}.csv`,
+        format,
+        `trial-balance_${filter.from}_${filter.to}`,
     );
 }

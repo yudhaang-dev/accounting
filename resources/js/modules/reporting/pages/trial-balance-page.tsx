@@ -1,13 +1,12 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { ExportButton } from '@/modules/reporting/components/export-button';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { CheckIcon, DownloadIcon, FileSpreadsheetIcon } from 'lucide-react';
+import { CheckIcon, FileSpreadsheetIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 import { FormAlert } from '@/components/form-alert';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
     Empty,
     EmptyDescription,
@@ -16,7 +15,6 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Spinner } from '@/components/ui/spinner';
 import {
     Table,
     TableBody,
@@ -84,16 +82,6 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
 
     const report = useQuery(trialBalanceQuery(companyId, filter));
 
-    const download = useMutation({
-        mutationFn: () => exportTrialBalance(companyId, filter),
-        onError: (error) =>
-            toast.error(
-                isApiError(error) && error.status !== 0
-                    ? error.message
-                    : t('trialBalance.exportFailed'),
-            ),
-    });
-
     const workpaper = report.data?.workpaper;
     const groups = workpaper ? WORKPAPER : STANDARD;
     const columns = groups.flatMap((group) => group.keys);
@@ -117,21 +105,13 @@ export function TrialBalancePage({ companyId }: { companyId: string }) {
                         {t('trialBalance.description')}
                     </p>
                 </div>
-                <Button
-                    variant="outline"
-                    disabled={download.isPending || !report.data}
-                    aria-busy={download.isPending}
-                    onClick={() => download.mutate()}
-                >
-                    {download.isPending ? (
-                        <Spinner data-icon="inline-start" aria-hidden />
-                    ) : (
-                        <DownloadIcon data-icon="inline-start" />
-                    )}
-                    {download.isPending
-                        ? t('trialBalance.exporting')
-                        : t('trialBalance.export')}
-                </Button>
+                <ExportButton
+                    disabled={!report.data}
+                    formats={['csv', 'xlsx', 'pdf']}
+                    onExport={(format) =>
+                        exportTrialBalance(companyId, filter, format)
+                    }
+                />
             </div>
 
             <ReportFilterBar

@@ -367,7 +367,10 @@ describe('general ledger', () => {
         const typist = userEvent.setup();
 
         await screen.findByText('Setoran');
-        await typist.click(screen.getByRole('button', { name: 'Ekspor CSV' }));
+        await typist.click(screen.getByRole('button', { name: 'Ekspor' }));
+        await typist.click(
+            await screen.findByRole('menuitem', { name: 'CSV' }),
+        );
 
         await waitFor(() =>
             expect(downloaded).toMatch(/^general-ledger_1111_/),

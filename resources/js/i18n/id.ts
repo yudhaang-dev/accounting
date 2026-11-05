@@ -2608,9 +2608,6 @@ export const id = {
         noAccountDescription:
             'Buku besar menampilkan satu akun dalam satu waktu. Pilih akun di atas, atau buka dari kode akun di neraca saldo.',
         currency: 'Dalam {{currency}}',
-        export: 'Ekspor CSV',
-        exporting: 'Mengunduh…',
-        exportFailed: 'Ekspor gagal. Coba lagi.',
         date: 'Tanggal',
         journal: 'Jurnal',
         entry: 'Lihat entri',
@@ -2625,6 +2622,8 @@ export const id = {
         export: 'Ekspor CSV',
         exporting: 'Mengunduh…',
         exportFailed: 'Ekspor gagal. Coba lagi.',
+        exportMenu: 'Ekspor',
+        formats: { csv: 'CSV', xlsx: 'Excel', pdf: 'PDF' },
         ledgerLinks: 'Buku besar',
         pageTitle: 'Laporan',
         title: 'Laporan',
@@ -2764,9 +2763,6 @@ export const id = {
         title: 'Neraca saldo',
         description:
             'Saldo awal, mutasi, dan saldo akhir per akun pada rentang tanggal. Total debit harus sama dengan kredit. Saldo awal tidak diinput: ia dihitung dari semua jurnal sebelum tanggal awal.',
-        export: 'Ekspor CSV',
-        exporting: 'Mengunduh…',
-        exportFailed: 'Ekspor gagal. Coba lagi.',
         code: 'Kode',
         account: 'Akun',
         opening: 'Saldo awal',

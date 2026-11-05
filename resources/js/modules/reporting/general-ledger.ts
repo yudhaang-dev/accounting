@@ -1,7 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 import { api, unwrap } from '@/api/client';
 import type { operations } from '@/api/schema';
-import { downloadFile } from '@/lib/download';
+import { downloadReport, type ExportFormat } from '@/lib/download';
 import type { Coverage } from '@/modules/reporting/components/coverage-notice';
 import {
     filterParams,
@@ -58,16 +58,17 @@ export const generalLedgerQuery = (
             ).data as GeneralLedger,
     });
 
-/** The same report as CSV, under the same permission and filters (X-FR-02). */
+/** The same report as a file, under the same permission and filters (X-FR-02). */
 export function exportGeneralLedger(
     companyId: string,
     accountId: string,
     filter: ReportFilter,
     code: string,
+    format: ExportFormat = 'csv',
 ) {
-    return downloadFile(
+    return downloadReport(
         `/api/v1/companies/${companyId}/reports/general-ledger?${params(accountId, filter)}`,
-        'text/csv',
-        `general-ledger_${code}_${filter.from}_${filter.to}.csv`,
+        format,
+        `general-ledger_${code}_${filter.from}_${filter.to}`,
     );
 }

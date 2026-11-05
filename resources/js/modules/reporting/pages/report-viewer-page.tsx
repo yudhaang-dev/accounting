@@ -135,12 +135,14 @@ function Viewer({
                 <div className="flex flex-wrap gap-2">
                     <ExportButton
                         disabled={result.data === undefined}
-                        onExport={() =>
+                        formats={['csv', 'xlsx', 'pdf']}
+                        onExport={(format) =>
                             exportReportResult(
                                 companyId,
                                 definition,
                                 filter,
                                 mode,
+                                format,
                             )
                         }
                     />
@@ -363,99 +365,101 @@ export function ResultView({
                     <TableBody>
                         {result.rows.map((row) => (
                             <Fragment key={row.key}>
-                            <TableRow
-                                data-row-type={row.type}
-                                className={
-                                    row.type === 'unmapped'
-                                        ? 'bg-muted/50'
-                                        : undefined
-                                }
-                            >
-                                <TableCell
+                                <TableRow
+                                    data-row-type={row.type}
                                     className={
-                                        row.type === 'heading' ||
-                                        row.type === 'subtotal'
-                                            ? 'font-semibold'
+                                        row.type === 'unmapped'
+                                            ? 'bg-muted/50'
                                             : undefined
                                     }
                                 >
-                                    {row.label}
-                                    {row.account_lines === undefined && (
-                                        <AccountLinks
-                                            companyId={companyId}
-                                            result={result}
-                                            accounts={row.accounts}
-                                        />
-                                    )}
-                                </TableCell>
-                                {result.columns.map((column) => (
-                                    <TableCell
-                                        key={column.key}
-                                        className={`text-end tabular-nums ${row.type === 'subtotal' ? 'font-semibold' : ''}`}
-                                    >
-                                        {row.type === 'heading' ? (
-                                            ''
-                                        ) : (
-                                            <>
-                                                {money(row.values[column.key])}
-                                                <Variance
-                                                    variance={
-                                                        row.variances?.[
-                                                            column.key
-                                                        ]
-                                                    }
-                                                    locale={locale}
-                                                />
-                                            </>
-                                        )}
-                                    </TableCell>
-                                ))}
-                            </TableRow>
-                            {row.account_lines?.map((line) => (
-                                <TableRow
-                                    key={`${row.key}:${line.account_id}`}
-                                    data-account-line={line.account_id}
-                                    data-leaf={line.is_leaf}
-                                >
                                     <TableCell
                                         className={
-                                            line.is_leaf
-                                                ? 'text-muted-foreground'
-                                                : 'font-medium'
+                                            row.type === 'heading' ||
+                                            row.type === 'subtotal'
+                                                ? 'font-semibold'
+                                                : undefined
                                         }
-                                        style={{
-                                            paddingInlineStart: `${1 + (line.level + 1) * 1.25}rem`,
-                                        }}
                                     >
-                                        {line.name}
-                                        {line.is_leaf && (
-                                            <Link
-                                                to="/w/$companyId/reports/general-ledger"
-                                                params={{ companyId }}
-                                                search={ledgerRange(
-                                                    result,
-                                                    line.account_id,
-                                                )}
-                                                aria-label={t(
-                                                    'trialBalance.ledger',
-                                                    { code: line.code },
-                                                )}
-                                                className="ms-2 font-mono text-xs font-normal underline underline-offset-4"
-                                            >
-                                                {line.code}
-                                            </Link>
+                                        {row.label}
+                                        {row.account_lines === undefined && (
+                                            <AccountLinks
+                                                companyId={companyId}
+                                                result={result}
+                                                accounts={row.accounts}
+                                            />
                                         )}
                                     </TableCell>
                                     {result.columns.map((column) => (
                                         <TableCell
                                             key={column.key}
-                                            className={`text-end tabular-nums ${line.is_leaf ? 'text-muted-foreground' : 'font-medium'}`}
+                                            className={`text-end tabular-nums ${row.type === 'subtotal' ? 'font-semibold' : ''}`}
                                         >
-                                            {money(line.values[column.key])}
+                                            {row.type === 'heading' ? (
+                                                ''
+                                            ) : (
+                                                <>
+                                                    {money(
+                                                        row.values[column.key],
+                                                    )}
+                                                    <Variance
+                                                        variance={
+                                                            row.variances?.[
+                                                                column.key
+                                                            ]
+                                                        }
+                                                        locale={locale}
+                                                    />
+                                                </>
+                                            )}
                                         </TableCell>
                                     ))}
                                 </TableRow>
-                            ))}
+                                {row.account_lines?.map((line) => (
+                                    <TableRow
+                                        key={`${row.key}:${line.account_id}`}
+                                        data-account-line={line.account_id}
+                                        data-leaf={line.is_leaf}
+                                    >
+                                        <TableCell
+                                            className={
+                                                line.is_leaf
+                                                    ? 'text-muted-foreground'
+                                                    : 'font-medium'
+                                            }
+                                            style={{
+                                                paddingInlineStart: `${1 + (line.level + 1) * 1.25}rem`,
+                                            }}
+                                        >
+                                            {line.name}
+                                            {line.is_leaf && (
+                                                <Link
+                                                    to="/w/$companyId/reports/general-ledger"
+                                                    params={{ companyId }}
+                                                    search={ledgerRange(
+                                                        result,
+                                                        line.account_id,
+                                                    )}
+                                                    aria-label={t(
+                                                        'trialBalance.ledger',
+                                                        { code: line.code },
+                                                    )}
+                                                    className="ms-2 font-mono text-xs font-normal underline underline-offset-4"
+                                                >
+                                                    {line.code}
+                                                </Link>
+                                            )}
+                                        </TableCell>
+                                        {result.columns.map((column) => (
+                                            <TableCell
+                                                key={column.key}
+                                                className={`text-end tabular-nums ${line.is_leaf ? 'text-muted-foreground' : 'font-medium'}`}
+                                            >
+                                                {money(line.values[column.key])}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))}
                             </Fragment>
                         ))}
                     </TableBody>

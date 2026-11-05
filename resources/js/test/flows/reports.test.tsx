@@ -15,6 +15,10 @@ const base = `/api/v1/companies/${workspace.company_id}`;
 const tbPath = `/w/${workspace.company_id}/reports/trial-balance`;
 const journalsPath = `/w/${workspace.company_id}/journals`;
 
+const toastError = vi.hoisted(() => vi.fn());
+
+vi.mock('sonner', () => ({ toast: { error: toastError, success: vi.fn() } }));
+
 const cash = '01JACCOUNT0000000000000001';
 const sales = '01JACCOUNT0000000000000002';
 
@@ -216,7 +220,10 @@ describe('trial balance', () => {
         const typist = userEvent.setup();
 
         await screen.findByText('Kas Kecil');
-        await typist.click(screen.getByRole('button', { name: 'Ekspor CSV' }));
+        await typist.click(screen.getByRole('button', { name: 'Ekspor' }));
+        await typist.click(
+            await screen.findByRole('menuitem', { name: 'CSV' }),
+        );
 
         await waitFor(() => expect(downloaded).toBeDefined());
         expect(downloaded).toBe('trial-balance_2026-01-01_2026-10-02.csv');
@@ -227,6 +234,66 @@ describe('trial balance', () => {
 
         expect(csv?.query.from).toMatch(/^\d{4}-01-01$/);
         expect(csv?.query.to).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it('offers Excel and PDF with the same filters, and shows the refusal of a report over the row limit (ADR-0018)', async () => {
+        const downloaded: string[] = [];
+
+        URL.createObjectURL = vi.fn(() => 'blob:file');
+        URL.revokeObjectURL = vi.fn();
+        vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(
+            function (this: HTMLAnchorElement) {
+                downloaded.push(this.download);
+            },
+        );
+
+        const api = mockApi({
+            ...tbRoutes(['reports.read']),
+            [`GET ${base}/reports/trial-balance`]: (call) =>
+                call.accept === 'application/pdf'
+                    ? json(
+                          {
+                              message:
+                                  'Laporan terlalu besar untuk format ini.',
+                              code: 'EXPORT_TOO_LARGE',
+                          },
+                          422,
+                      )
+                    : call.accept?.includes('spreadsheetml')
+                      ? new Response('xlsx')
+                      : json({ data: report() }),
+        });
+
+        renderApp(tbPath);
+        const typist = userEvent.setup();
+
+        await screen.findByText('Kas Kecil');
+        await typist.click(screen.getByRole('button', { name: 'Ekspor' }));
+        await typist.click(
+            await screen.findByRole('menuitem', { name: 'Excel' }),
+        );
+
+        await waitFor(() => expect(downloaded).toHaveLength(1));
+        expect(downloaded[0]).toMatch(
+            /^trial-balance_\d{4}-01-01_\d{4}-\d{2}-\d{2}\.xlsx$/,
+        );
+
+        await typist.click(screen.getByRole('button', { name: 'Ekspor' }));
+        await typist.click(
+            await screen.findByRole('menuitem', { name: 'PDF' }),
+        );
+
+        await waitFor(() =>
+            expect(toastError).toHaveBeenCalledWith(
+                'Laporan terlalu besar untuk format ini.',
+            ),
+        );
+        expect(downloaded).toHaveLength(1);
+        expect(
+            api
+                .called(`GET ${base}/reports/trial-balance`)
+                .some((call) => call.accept === 'application/pdf'),
+        ).toBe(true);
     });
 
     it('sends someone without reports.read to the company home', async () => {
