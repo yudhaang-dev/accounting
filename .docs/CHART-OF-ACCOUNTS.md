@@ -222,3 +222,39 @@ Varian menyatakan `extends: general-id` dan hanya memuat akun tambahan; bagan da
 | 6140 | Komisi Platform Pesan-Antar | `expense` | D | 6100 | Opsional; daun |
 | 6150 | Biaya Merchant Kartu dan QRIS | `expense` | D | 6100 | Opsional; daun |
 | 6296 | Gas dan Bahan Bakar Dapur | `expense` | D | 6200 | Daun |
+
+## Modul tambahan
+
+Modul tambahan hanya menambah akun ke bagan yang sudah ada dan hanya dipasang lewat paket (ADR-0019). Kode yang sudah dipakai perusahaan dengan nama dan kelas yang sama dilewati; dengan nama atau kelas berbeda dilaporkan sebagai konflik dan tidak pernah ditimpa. Induknya harus sudah ada di bagan perusahaan.
+
+### Modul tambahan — Kasbon dan pinjaman (`loans-addon`)
+
+| Kode | Nama | Kelas | Normal | Induk | Catatan |
+| --- | --- | --- | --- | --- | --- |
+| 1171 | Piutang Kasbon Karyawan | `asset` | D | 1170 | Daun; profil posting Karyawan |
+| 1172 | Piutang Pemegang Saham | `asset` | D | 1170 | Opsional; daun |
+| 2161 | Pinjaman dari Pemegang Saham atau Pihak Lain | `liability` | K | 2160 | Daun |
+
+### Modul tambahan — Pajak (`tax-addon`)
+
+| Kode | Nama | Kelas | Normal | Induk | Catatan |
+| --- | --- | --- | --- | --- | --- |
+| 1143 | Pajak Dipotong Pihak Lain (Kredit Pajak) | `asset` | D | 1140 | Opsional; daun |
+| 2154 | Utang PPh Final | `liability` | K | 2150 | Daun |
+| 2155 | Utang PPN Kurang Bayar | `liability` | K | 2150 | Opsional; daun |
+| 7330 | Beban Pajak Final | `expense` | D | 7300 | Daun |
+
+### Modul tambahan — Persediaan dan HPP (`inventory-addon`)
+
+| Kode | Nama | Kelas | Normal | Induk | Catatan |
+| --- | --- | --- | --- | --- | --- |
+| 1138 | Cadangan Penurunan Nilai Persediaan | `asset` | K | 1130 | Kontra |
+| 5125 | Beban Penurunan Nilai Persediaan | `expense` | D | 5100 | Daun |
+
+### Modul tambahan — Proyek (`project-addon`)
+
+| Kode | Nama | Kelas | Normal | Induk | Catatan |
+| --- | --- | --- | --- | --- | --- |
+| 1137 | Biaya Proyek Belum Ditagih | `asset` | D | 1130 | Opsional; daun |
+| 2143 | Uang Muka Proyek | `liability` | K | 2140 | Daun |
+| 4126 | Pendapatan Proyek | `income` | K | 4120 | Daun |

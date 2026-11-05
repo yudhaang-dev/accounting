@@ -187,10 +187,63 @@ describe('packs of a business type (B-11e, ADR-0019)', function () {
         });
     }
 
+    // An add-on goes on top of a chart the company already has and only adds to it.
+    $addons = [
+        'addon-loans' => ['codes' => ['1171', '1172', '2161'], 'types' => ['employee_advance', 'party_loan'], 'posts' => [['1171', '1112', '500000.00'], ['1112', '2161', '2000000.00']]],
+        'addon-tax' => ['codes' => ['1143', '2154', '2155', '7330'], 'types' => ['tax_accrual', 'tax_payment'], 'posts' => [['7330', '2154', '100000.00'], ['2154', '1112', '100000.00']]],
+        'addon-inventory' => ['codes' => ['1138', '5125'], 'types' => ['stock_count_adjustment', 'inventory_write_down'], 'posts' => [['5125', '1138', '300000.00']]],
+        'addon-project' => ['codes' => ['1137', '2143', '4126'], 'types' => ['progress_invoice', 'project_cost_cash'], 'posts' => [['1112', '2143', '1000000.00'], ['1121', '4126', '800000.00']]],
+    ];
+
+    foreach ($addons as $key => $addon) {
+        it("adds the {$key} accounts and types to an existing chart, skips them on a second install, and keeps the statements mapped", function () use ($key, $addon) {
+            btpInstall('general')->assertCreated();
+            setUpFiscalCalendar($this->admin, $this->companyId);
+            btpPost('1112', '3110', '10000000.00');
+
+            $result = btpInstall($key)->assertCreated()->json('data.components');
+            $chart = collect($result)->firstWhere('id', 'chart_of_accounts');
+            $codes = Account::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->pluck('code')->all();
+            $types = TransactionType::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->pluck('key')->all();
+
+            expect($chart['created'])->toBe($addon['codes'])->and($codes)->toContain(...$addon['codes'])->and($types)->toContain(...$addon['types']);
+
+            $again = collect(btpInstall($key)->assertCreated()->json('data.components'))->firstWhere('id', 'chart_of_accounts');
+            expect($again['created'])->toBe([])->and($again['skipped'])->toBe($addon['codes']);
+
+            foreach ($addon['posts'] as [$debit, $credit, $amount]) {
+                btpPost($debit, $credit, $amount);
+            }
+
+            [, $values] = btpValues('income_statement', 'from=2026-03-01&to=2026-03-31');
+            expect($values)->not->toHaveKey('unmapped');
+            [$balance, $values] = btpValues('balance_sheet', 'from=2026-03-31&to=2026-03-31');
+            expect($balance['balance_checks']['at']['balanced'])->toBeTrue()->and($values)->not->toHaveKey('unmapped');
+            [$cash, $values] = btpValues('cash_flow_indirect', 'from=2026-03-01&to=2026-03-31');
+            expect($cash['cash_checks']['period']['reconciled'])->toBeTrue()->and($values)->not->toHaveKey('unmapped');
+        });
+    }
+
+    it('reports an add-on account whose code the company uses for something else as a conflict and never overwrites it', function () {
+        btpInstall('general')->assertCreated();
+        $this->actingAs($this->admin)->postJson("{$this->url}/accounts", ['code' => '2154', 'name' => 'Utang Lain Milik Perusahaan', 'class' => 'liability', 'parent_id' => btpAccountId('2150')])->assertCreated();
+
+        $components = array_column(app(TemplatePacks::class)->find('addon-tax')['components'], 'id');
+        $this->actingAs($this->admin)->postJson("{$this->url}/template-packs/addon-tax/install", ['components' => $components, 'confirmed' => true])
+            ->assertUnprocessable()->assertJsonValidationErrors('exclude.chart_of_accounts');
+        expect(Account::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->where('code', '7330')->exists())->toBeFalse();
+
+        $result = $this->actingAs($this->admin)->postJson("{$this->url}/template-packs/addon-tax/install", ['components' => $components, 'confirmed' => true, 'exclude' => ['chart_of_accounts' => ['2154']]])->assertCreated()->json('data.components');
+        $chart = collect($result)->firstWhere('id', 'chart_of_accounts');
+
+        expect($chart['skipped'])->toBe(['2154'])->and($chart['created'])->toContain('7330')
+            ->and(Account::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->where('code', '2154')->value('name'))->toBe('Utang Lain Milik Perusahaan');
+    });
+
     it('keeps every account of the variants in CHART-OF-ACCOUNTS.md', function () {
         $doc = file_get_contents(base_path('.docs/CHART-OF-ACCOUNTS.md'));
 
-        foreach (['retail-id' => 'Dagang atau ritel', 'services-id' => 'Jasa', 'contractor-id' => 'Kontraktor atau proyek', 'manufacturing-id' => 'Manufaktur ringan', 'fnb-id' => 'Makanan dan minuman'] as $key => $heading) {
+        foreach (['retail-id' => 'Dagang atau ritel', 'services-id' => 'Jasa', 'contractor-id' => 'Kontraktor atau proyek', 'manufacturing-id' => 'Manufaktur ringan', 'fnb-id' => 'Makanan dan minuman', 'loans-addon' => 'Modul tambahan — Kasbon dan pinjaman', 'tax-addon' => 'Modul tambahan — Pajak', 'inventory-addon' => 'Modul tambahan — Persediaan dan HPP', 'project-addon' => 'Modul tambahan — Proyek'] as $key => $heading) {
             $section = explode('### ', explode("### {$heading} (`{$key}`)", $doc, 2)[1], 2)[0];
             preg_match_all('/^\|\s*(\d{4})\s*\|\s*([^|]+?)\s*\|\s*`(\w+)`\s*\|\s*([DK])\s*\|\s*(\d{4})\s*\|/m', $section, $rows, PREG_SET_ORDER);
             $template = require app_path("Modules/GeneralLedger/Database/templates/{$key}.php");
