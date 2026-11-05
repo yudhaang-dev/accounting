@@ -10,7 +10,7 @@ php artisan db:seed --class=DemoSeeder
 
 Seeder hanya **menambah** data dan tidak pernah menghapus atau mengubah yang sudah ada, jadi aman dijalankan di samping data lain. Bila `direktur@demo.test` sudah ada, seeder berhenti tanpa mengubah apa pun. Untuk mengulang dari awal, pakai database kosong, misalnya `DB_DATABASE=accounting_demo php artisan migrate --force` lalu seeder yang sama dengan `DB_DATABASE` itu. Data keuangan tidak boleh dihapus (X-FR-05), jadi tidak ada perintah "reset" di dalam seeder.
 
-Lama jalan sekitar 4 sampai 6 menit untuk pembukuan sampai hari ini (sekitar 4.000 panggilan API). `DEMO_TODAY=2025-06-30` memendekkan pembukuan sampai tanggal itu untuk uji coba.
+Lama jalan sekitar sekitar 6 menit untuk pembukuan sampai hari ini (sekitar 4.000 panggilan API). `DEMO_TODAY=2025-06-30` memendekkan pembukuan sampai tanggal itu untuk uji coba.
 
 Perlu `php artisan passport:keys` bila kunci belum ada (klien integrasi).
 
