@@ -28,6 +28,7 @@ return [
     'trial_balance' => 'Trial Balance',
     'general_ledger' => 'General Ledger',
     'account' => 'Account: :account',
+    'as_of' => 'As of: :date',
     'period' => 'Period: :from to :to',
     'currency_line' => 'Currency: :currency',
     'filter' => 'Filter: :filters',

@@ -28,6 +28,7 @@ return [
     'trial_balance' => 'Neraca Saldo',
     'general_ledger' => 'Buku Besar',
     'account' => 'Akun: :account',
+    'as_of' => 'Per tanggal: :date',
     'period' => 'Periode: :from s/d :to',
     'currency_line' => 'Mata uang: :currency',
     'filter' => 'Filter: :filters',

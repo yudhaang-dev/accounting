@@ -10,7 +10,6 @@ use App\Modules\Reporting\Application\TrialBalance;
 use App\Platform\Export\ExportColumn;
 use App\Platform\Export\ExportRow;
 use App\Platform\Export\ExportTable;
-use App\Platform\Export\TableExport;
 
 /**
  * Maps the results of the reports to the table every export format reads (ADR-0018, X-FR-02): the
@@ -130,12 +129,13 @@ final class ReportTables
         return array_values(array_filter([
             app(CompanyDirectory::class)->find($companyId)?->name,
             ...$extra,
-            (string) __('export.period', ['from' => $parameters['from'], 'to' => $parameters['to']]),
+            $parameters['from'] === $parameters['to']
+                ? (string) __('export.as_of', ['date' => $parameters['to']])
+                : (string) __('export.period', ['from' => $parameters['from'], 'to' => $parameters['to']]),
             (string) __('export.currency_line', ['currency' => (string) $result['functional_currency']]),
             $filters === [] ? null : (string) __('export.filter', ['filters' => implode('; ', $filters)]),
             ($result['restricted'] ?? false) === true ? (string) __('export.restricted') : null,
             ($result['coverage_status'] ?? HistoryCoverage::COMPLETE) === HistoryCoverage::COMPLETE ? null : (string) __('export.coverage', ['status' => (string) $result['coverage_status']]),
-            TableExport::generatedLine(),
         ], fn (?string $line): bool => $line !== null && $line !== ''));
     }
 }

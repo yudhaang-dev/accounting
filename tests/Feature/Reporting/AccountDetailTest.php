@@ -237,6 +237,7 @@ describe('account detail in the definition (RP-FR-01)', function () {
 
         expect($sheet)->toContain('Revenue')->toContain('4110')->toContain('4120')
             ->toContain('<v>700000</v>')->toContain('<v>500000</v>')->toContain('<v>200000</v>');
+        expect(substr_count($sheet, 'Generated:'))->toBe(1);
 
         $pdf = $this->actingAs($this->admin)->get($url, ['Accept' => 'application/pdf'])->assertOk()->assertHeader('content-type', 'application/pdf')->streamedContent();
         expect($pdf)->toStartWith('%PDF');
