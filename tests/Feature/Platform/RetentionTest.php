@@ -145,7 +145,7 @@ describe('no hard delete of financial data (X-FR-05)', function () {
         Schema::create('te_scratch', function (Blueprint $table) {
             $table->ulid('id')->primary();
         });
-        config(['retention.unprotected_tables' => ['te_scratch']]);
+        config(['retention.unprotected_tables' => [...config('retention.unprotected_tables'), 'te_scratch']]);
 
         expect(RetentionGuard::unprotectedFinancialTables())->toBe([]);
     });
