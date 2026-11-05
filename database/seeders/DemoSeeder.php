@@ -94,10 +94,10 @@ class DemoSeeder extends Seeder
             $bank->statement($month, $until, $recent);
             $took('rekening koran');
             $closing->reconcile($until);
+            $closing->waiveOpeningCash($until);
             $took('rekonsiliasi');
 
             if ($month->month === 12 && $month < $current) {
-                $closing->waiveOpeningCash($until);
                 $closing->closeYear($month->year);
                 $took('tutup tahun');
             }
@@ -110,8 +110,6 @@ class DemoSeeder extends Seeder
                 $took('tutup sementara');
             }
         }
-
-        $closing->waiveOpeningCash($today);
 
         (new DemoIntegration($foundation, $operations->books(), $today))->run();
         (new DemoShowcase($foundation, $operations->books(), $today))->run();
