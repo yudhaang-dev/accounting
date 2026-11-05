@@ -30,6 +30,7 @@ import {
     ShieldCheckIcon,
     SplitIcon,
     SigmaIcon,
+    PackagePlusIcon,
     SlidersHorizontalIcon,
     TagsIcon,
     TrendingUpIcon,
@@ -107,6 +108,12 @@ const NAV = [
                 label: 'app.navLedgerSettings',
                 icon: SlidersHorizontalIcon,
                 permission: 'accounts.read',
+            },
+            {
+                to: '/w/$companyId/template-packs',
+                label: 'app.navTemplatePacks',
+                icon: PackagePlusIcon,
+                permission: 'accounts.manage',
             },
             {
                 to: '/w/$companyId/opening-balances',

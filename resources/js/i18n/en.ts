@@ -120,6 +120,7 @@ export const en: Widen<typeof id> = {
         navGroupAccess: 'Access',
         navAccounts: 'Accounts',
         navLedgerSettings: 'Ledger settings',
+        navTemplatePacks: 'Template packs',
         navOpeningBalances: 'Opening balances',
         navPeriods: 'Periods',
         navDimensions: 'Dimensions',
@@ -3276,6 +3277,14 @@ export const en: Widen<typeof id> = {
                 fiscal_calendar: 'Fiscal calendar',
             },
         },
+    },
+    templatePacks: {
+        pageTitle: 'Template packs',
+        title: 'Template packs',
+        description:
+            'Add a business type pack or an add-on (staff advances and loans, tax, inventory, projects) to a running company. It only adds: what exists is skipped and a clash is reported, never overwritten.',
+        empty: 'No pack has been released yet.',
+        another: 'Install another pack',
     },
     notFound: {
         pageTitle: 'Page not found',

@@ -118,6 +118,7 @@ export const id = {
         navGroupAccess: 'Akses',
         navAccounts: 'Akun',
         navLedgerSettings: 'Pengaturan buku besar',
+        navTemplatePacks: 'Paket template',
         navOpeningBalances: 'Saldo konversi',
         navPeriods: 'Periode',
         navDimensions: 'Dimensi',
@@ -3277,6 +3278,14 @@ export const id = {
                 fiscal_calendar: 'Kalender fiskal',
             },
         },
+    },
+    templatePacks: {
+        pageTitle: 'Paket template',
+        title: 'Paket template',
+        description:
+            'Tambahkan paket jenis usaha atau modul tambahan (kasbon dan pinjaman, pajak, persediaan, proyek) ke perusahaan yang sudah berjalan. Hanya menambah: yang sudah ada dilewati dan yang bentrok dilaporkan, tidak pernah ditimpa.',
+        empty: 'Belum ada paket yang dirilis.',
+        another: 'Pasang paket lain',
     },
     notFound: {
         pageTitle: 'Halaman tidak ditemukan',

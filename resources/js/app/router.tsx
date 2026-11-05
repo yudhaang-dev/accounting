@@ -61,6 +61,7 @@ import { ReportsPage } from '@/modules/reporting/pages/reports-page';
 import { reportDefinitionQuery } from '@/modules/reporting/report-definitions';
 import { TrialBalancePage } from '@/modules/reporting/pages/trial-balance-page';
 import { AccountsPage } from '@/modules/general-ledger/pages/accounts-page';
+import { TemplatePacksPage } from '@/app/template-packs-page';
 import { LedgerSettingsPage } from '@/modules/general-ledger/pages/ledger-settings-page';
 import { OpeningBalancesPage } from '@/modules/general-ledger/pages/opening-balances-page';
 import { PeriodsPage } from '@/modules/general-ledger/pages/periods-page';
@@ -432,6 +433,25 @@ const ledgerSettingsRoute = createRoute({
                 canManagePolicy={can(workspace, 'policies.manage')}
             />
         );
+    },
+});
+
+const templatePacksRoute = createRoute({
+    getParentRoute: () => companyRoute,
+    path: '/template-packs',
+    staticData: {
+        crumbs: (m) => [
+            {
+                labelKey: 'app.navTemplatePacks',
+                href: at(m, '/template-packs'),
+            },
+        ],
+    },
+    beforeLoad: requirePermission('accounts.manage'),
+    component: function TemplatePacks() {
+        const { workspace } = templatePacksRoute.useRouteContext();
+
+        return <TemplatePacksPage companyId={workspace.company_id} />;
     },
 });
 
@@ -2244,6 +2264,7 @@ const routeTree = rootRoute.addChildren([
                 accountsRoute,
                 periodsRoute,
                 ledgerSettingsRoute,
+                templatePacksRoute,
                 openingBalancesRoute,
                 dimensionsRoute,
                 currenciesRoute,
