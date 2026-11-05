@@ -1,6 +1,6 @@
 # ADR-0019 — Paket Template per Jenis Usaha
 
-Status: Diusulkan (2026-11-05)
+Status: Diterima (2026-11-05)
 
 ## Konteks
 

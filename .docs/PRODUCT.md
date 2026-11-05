@@ -33,7 +33,7 @@ Proses dan perhitungan operasional milik sistem sumber — persediaan/HPP, payro
 
 ## 3. Prinsip
 
-- **P-01 Tanpa hardcode.** Nilai dan kebijakan yang dapat berbeda antarperusahaan adalah data per perusahaan yang berversi: kode/nama akun, penyajian laporan, klasifikasi mutasi, kalender fiskal, akun target peran, approval/SoD, penomoran, skala dan pembulatan mata uang, jenis kurs, tipe dan kewajiban dimensi, retensi, kewajiban 2FA. Template hanya saran yang wajib dikonfirmasi. Yang boleh ada di kode: invarian akuntansi, mekanisme, key peran akun, status sistem, dan key Jenis Transaksi sistem. Otorisasi memeriksa permission, bukan nama role.
+- **P-01 Tanpa hardcode.** Nilai dan kebijakan yang dapat berbeda antarperusahaan adalah data per perusahaan yang berversi: kode/nama akun, penyajian laporan, klasifikasi mutasi, kalender fiskal, akun target peran, approval/SoD, penomoran, skala dan pembulatan mata uang, jenis kurs, tipe dan kewajiban dimensi, retensi, kewajiban 2FA. Template hanya saran yang wajib dikonfirmasi; paket template per jenis usaha merangkai template tiap modul dan tunduk pada aturan yang sama (X-AC-06, [ADR-0019](adr/0019-business-type-template-packs.md)). Yang boleh ada di kode: invarian akuntansi, mekanisme, key peran akun, status sistem, dan key Jenis Transaksi sistem. Otorisasi memeriksa permission, bukan nama role.
 - **P-02 Nilai operasional vs pengukuran akuntansi.** Sistem tidak menghitung nilai operasional (HPP dari kuantitas, payroll, pajak, penyusutan dari register aset); nilai itu dipasok sistem sumber atau input user. Sistem wajib melakukan pengukuran akuntansi atas data buku besar: selisih kurs terealisasi dan revaluasi, jurnal penutup, pembalikan, dan laba tahun berjalan.
 - **P-03 Imutabilitas.** Jurnal posted tidak pernah diubah atau dihapus; koreksi memakai pembalikan dan entri pengganti yang tertaut. Audit bersifat append-only.
 - **P-04 Versi.** Perubahan konfigurasi membuat versi baru dengan tanggal efektif dan aktor. Hasil tersimpan mencatat versi yang dipakai; versi baru tidak mengubah hasil lama.
@@ -59,6 +59,7 @@ Proses dan perhitungan operasional milik sistem sumber — persediaan/HPP, payro
 | Dimensi | `DimensionType`, `DimensionValue` | Tipe analisis per perusahaan; `department` dan `project` adalah seed. |
 | Set dimensi | `DimensionSet`, `dimension_set_id` | Kombinasi unik nilai dimensi yang disimpan pada baris. |
 | Pihak | `Party` | Lawan transaksi pada subledger (pelanggan, pemasok, karyawan, pemegang saham, dan seterusnya). |
+| Paket template | `TemplatePack` | Manifes saran per jenis usaha atau modul tambahan yang merujuk template bagan akun, peran pihak, profil posting, jenis transaksi, dan laporan menurut kunci dan versi; dipasang sekali setelah konfirmasi (X-AC-06). Bukan data perusahaan. |
 | Peran pihak | `PartyRole` | Jenis pihak per perusahaan sebagai data (`key`, label); satu pihak boleh banyak peran. Berbeda dari peran akun (`AccountRole`), peran akun kontrol (`ControlRole`), dan role IAM. |
 | Profil posting | `PostingProfile` | Penentu akun kontrol piutang/utang bagi pihak, atau bagi rute subledger yang menamainya. |
 | Rekening kas/bank | `CashAccount` | Kas atau rekening bank beserta mata uang dan akun GL-nya. |
@@ -110,3 +111,4 @@ Proses dan perhitungan operasional milik sistem sumber — persediaan/HPP, payro
 - **X-AC-03** Fitur yang membutuhkan konfigurasi wajib (pemetaan peran, kebijakan) menolak aktivasi bila konfigurasi hilang atau tidak valid, dan menyebutkan apa yang perlu diperbaiki. Saran template tidak pernah dipakai tanpa konfirmasi.
 - **X-AC-04** Mengubah konfigurasi tidak mengubah hasil tersimpan; perhitungan ulang menghasilkan versi hasil baru.
 - **X-AC-05** Aplikasi tidak dapat mengubah atau menghapus catatan audit maupun jurnal posted.
+- **X-AC-06** Paket template dipasang hanya setelah satu konfirmasi atas ringkasan per komponen (apa yang akan dibuat, apa yang sudah ada). Pemasangan berjalan dalam satu transaksi: bila satu komponen gagal, tidak ada yang tersisa. Akun yang sudah ada tidak pernah ditimpa; perbedaan nama atau kelas dilaporkan sebagai konflik. Pemanggil harus memegang permission pengelolaan tiap komponen yang dipilih, dan kekurangannya ditolak sebelum apa pun dibuat. Pemasangan dicatat di audit dengan kunci dan versi paket.
