@@ -1690,7 +1690,9 @@ export interface paths {
          *     `closing_balance`. Balances are debit minus credit, so a credit balance is negative. The
          *     filters of the trial balance apply (`dimensions`, `transaction_type_keys`, `source`); for a user
          *     limited to some dimension values only the lines inside that scope count (IA-FR-03). With
-         *     `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02)
+         *     `Accept: text/csv`, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` (Excel) or `application/pdf`
+         *     the same report is downloaded, under the same permission (X-FR-02); Excel and PDF are refused with 422
+         *     `EXPORT_TOO_LARGE` beyond the row limit, CSV is not
          */
         get: operations["reports.general-ledger"];
         put?: never;
@@ -3494,6 +3496,10 @@ export interface paths {
          *     With `Accept: text/csv` the rows and column values are downloaded instead, under the same permission (X-FR-02);
          *     the accounts of a detailed row follow it, typed `account` (a leaf) or `account_group` (a parent) and keyed
          *     `<row key>:<account code>`, so that only the rows of the other types add up to the statement.
+         *     With `Accept: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` (Excel) or `application/pdf` the
+         *     statement is downloaded as a formatted file under a heading with the company, period, currency, filters and
+         *     notices; the numbers are the same, in Excel as numeric cells. 422 `EXPORT_TOO_LARGE` when it holds more rows
+         *     than the file can (CSV has no limit).
          */
         get: operations["report-definitions.result"];
         put?: never;
@@ -4103,7 +4109,9 @@ export interface paths {
          *     the `adjustment_*` they add as a net debit or credit, and the balance `after_*` them, which is the
          *     closing balance, so before + adjustment = after for every account. The download is always the plain
          *     trial balance.
-         *     With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).
+         *     With `Accept: text/csv`, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` (Excel) or
+         *     `application/pdf` the same report is downloaded, under the same permission (X-FR-02); Excel and PDF are
+         *     refused with 422 `EXPORT_TOO_LARGE` beyond the row limit, CSV is not.
          *     For a user limited to some dimension values only the lines inside that scope are added up and
          *     `restricted` is true (IA-FR-03); the download is limited the same way
          */

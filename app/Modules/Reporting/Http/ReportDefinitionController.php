@@ -7,6 +7,8 @@ use App\Modules\Reporting\Application\ReportEngine;
 use App\Modules\Reporting\Application\ReportFilter;
 use App\Modules\Reporting\Domain\ReportDefinition;
 use App\Modules\Reporting\Domain\ReportDefinitionVersion;
+use App\Platform\Export\ExportFormat;
+use App\Platform\Export\TableExport;
 use App\Support\Access\DataScopeContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -121,6 +123,10 @@ class ReportDefinitionController
      * With `Accept: text/csv` the rows and column values are downloaded instead, under the same permission (X-FR-02);
      * the accounts of a detailed row follow it, typed `account` (a leaf) or `account_group` (a parent) and keyed
      * `<row key>:<account code>`, so that only the rows of the other types add up to the statement.
+     * With `Accept: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` (Excel) or `application/pdf` the
+     * statement is downloaded as a formatted file under a heading with the company, period, currency, filters and
+     * notices; the numbers are the same, in Excel as numeric cells. 422 `EXPORT_TOO_LARGE` when it holds more rows
+     * than the file can (CSV has no limit).
      *
      * @response array{data: array{definition: array{id: string, key: string, version: int}, parameters: array{from: string, to: string, account_id: string|null, dimensions: array<string, string>, transaction_type_keys: list<string>, source: string|null}, functional_currency: string, restricted: bool, columns: list<array{key: string, label: string, kind: string, from: string|null, to: string|null, available: bool}>, rows: list<array{key: string, label: string, type: string, accounts?: list<array{account_id: string, code: string, name: string}>, account_lines?: list<array{account_id: string, code: string, name: string, level: int, is_leaf: bool, values: array<string, string|null>}>, values: array<string, string|null>}>, unmapped_accounts: list<array{account_id: string, code: string, name: string}>}}
      */
@@ -139,8 +145,18 @@ class ReportDefinitionController
 
         $result = $engine($companyId, $structure, $from, $to, $scope->current(), ReportFilter::fromParameters($params), $definition->kind);
 
-        if (ReportCsv::wanted($request)) {
+        $format = ExportFormat::wanted($request);
+
+        if ($format === ExportFormat::Csv) {
             return ReportCsv::definition($definition->key, $result);
+        }
+
+        if ($format !== null) {
+            return TableExport::download(
+                ReportTables::definition($companyId, $definition->name, $result),
+                $format,
+                "report_{$definition->key}_{$from}_{$to}",
+            );
         }
 
         return new JsonResponse(['data' => [

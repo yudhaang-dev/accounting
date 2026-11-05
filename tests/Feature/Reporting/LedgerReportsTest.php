@@ -59,6 +59,15 @@ describe('general ledger (RP-FR-06)', function () {
             ->and($data['closing_balance'])->toBe('1300.00');
     });
 
+    it('downloads as Excel and PDF too (ADR-0018)', function () {
+        lrPost('2026-04-05', $this->cash, $this->sales, '500.00', 'sales.receipt');
+        $url = "{$this->url}/reports/general-ledger?account_id={$this->cash}&from=2026-04-01&to=2026-04-30";
+        $xlsx = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+        $this->actingAs($this->viewer)->get($url, ['Accept' => $xlsx])->assertOk()->assertHeader('content-type', $xlsx);
+        expect($this->actingAs($this->viewer)->get($url, ['Accept' => 'application/pdf'])->assertOk()->streamedContent())->toStartWith('%PDF');
+    });
+
     it('requires an account and downloads as CSV', function () {
         $this->actingAs($this->viewer)->getJson("{$this->url}/reports/general-ledger?from=2026-04-01&to=2026-04-30")->assertUnprocessable()->assertJsonValidationErrors(['account_id']);
 

@@ -5,9 +5,10 @@ namespace App\Modules\Reporting\Http;
 use App\Modules\Reporting\Application\ReportFilter;
 use App\Modules\Reporting\Application\TrialBalance;
 use App\Platform\Export\CsvExport;
+use App\Platform\Export\ExportFormat;
+use App\Platform\Export\TableExport;
 use App\Support\Access\DataScopeContext;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class TrialBalanceController
@@ -26,7 +27,9 @@ class TrialBalanceController
      * the `adjustment_*` they add as a net debit or credit, and the balance `after_*` them, which is the
      * closing balance, so before + adjustment = after for every account. The download is always the plain
      * trial balance.
-     * With `Accept: text/csv` the same report is downloaded, under the same permission (X-FR-02).
+     * With `Accept: text/csv`, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` (Excel) or
+     * `application/pdf` the same report is downloaded, under the same permission (X-FR-02); Excel and PDF are
+     * refused with 422 `EXPORT_TOO_LARGE` beyond the row limit, CSV is not.
      * For a user limited to some dimension values only the lines inside that scope are added up and
      * `restricted` is true (IA-FR-03); the download is limited the same way.
      *
@@ -39,8 +42,14 @@ class TrialBalanceController
 
         $result = $report($companyId, $params['from'], $params['to'], ReportFilter::fromParameters($params), $scope->current(), array_values(array_unique($params['adjustment_keys'] ?? [])));
 
-        if (! $this->wantsCsv($request)) {
+        $format = ExportFormat::wanted($request);
+
+        if ($format === null) {
             return new JsonResponse(['data' => $result]);
+        }
+
+        if ($format !== ExportFormat::Csv) {
+            return TableExport::download(ReportTables::trialBalance($companyId, $result), $format, "trial-balance_{$params['from']}_{$params['to']}");
         }
 
         $rows = array_map(fn (array $row): array => [
@@ -55,10 +64,5 @@ class TrialBalanceController
             ['code', 'name', 'class', 'opening_debit', 'opening_credit', 'debit', 'credit', 'closing_debit', 'closing_credit'],
             $rows,
         );
-    }
-
-    private function wantsCsv(Request $request): bool
-    {
-        return str_contains((string) $request->header('Accept'), 'text/csv');
     }
 }

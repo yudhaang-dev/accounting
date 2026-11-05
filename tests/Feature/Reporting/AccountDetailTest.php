@@ -218,6 +218,34 @@ describe('account detail in the definition (RP-FR-01)', function () {
             ->toContain('revenue:4120,')->toContain(',account,200000.00');
     });
 
+    it('downloads the statement as Excel and PDF with the accounts under their row, and refuses one over the row limit (X-FR-02, ADR-0018)', function () {
+        adPost('2026-02-10', $this->bank, $this->goods, '500000.00');
+        adPost('2026-02-12', $this->cash, $this->services, '200000.00');
+
+        $id = $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions", ['key' => 'revenue_report', 'name' => 'Revenue', 'structure' => adStructure(true)])->assertCreated()->json('data.id');
+        $url = "{$this->url}/report-definitions/{$id}/result?from=2026-02-01&to=2026-02-28";
+        $xlsx = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+        $content = $this->actingAs($this->admin)->get($url, ['Accept' => $xlsx])->assertOk()->assertHeader('content-type', $xlsx)->streamedContent();
+        $path = tempnam(sys_get_temp_dir(), 'xlsx');
+        file_put_contents($path, $content);
+        $zip = new ZipArchive;
+        $zip->open($path);
+        $sheet = (string) $zip->getFromName('xl/worksheets/sheet1.xml');
+        $zip->close();
+        unlink($path);
+
+        expect($sheet)->toContain('Revenue')->toContain('4110')->toContain('4120')
+            ->toContain('<v>700000</v>')->toContain('<v>500000</v>')->toContain('<v>200000</v>');
+
+        $pdf = $this->actingAs($this->admin)->get($url, ['Accept' => 'application/pdf'])->assertOk()->assertHeader('content-type', 'application/pdf')->streamedContent();
+        expect($pdf)->toStartWith('%PDF');
+
+        config(['export.max_rows' => 2]);
+        $this->actingAs($this->admin)->get($url, ['Accept' => 'application/pdf'])->assertUnprocessable()->assertJsonPath('code', 'EXPORT_TOO_LARGE');
+        $this->actingAs($this->admin)->get($url, ['Accept' => 'text/csv'])->assertOk();
+    });
+
     it('is on for the account rows of the template statements, and for the cash rows only of the indirect cash flow', function () {
         $this->actingAs($this->admin)->postJson("{$this->url}/report-definitions/import-template", ['template' => 'general-id', 'confirmed' => true, 'keys' => ['income_statement', 'balance_sheet', 'cash_flow_indirect']])->assertCreated();
 

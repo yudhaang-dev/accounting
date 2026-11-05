@@ -118,6 +118,20 @@ describe('CSV export (X-FR-02, API-AC-07)', function () {
             ->and(end($lines))->toBe(',Total,,1000.00,1000.00,700.00,700.00,1500.00,1500.00');
     });
 
+    it('downloads the same report as Excel and PDF under the same authorization (ADR-0018)', function () {
+        $xlsx = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        $url = "{$this->url}/reports/trial-balance?from=2026-02-01&to=2026-02-28";
+
+        $this->actingAs($this->viewer)->get($url, ['Accept' => $xlsx])->assertOk()->assertHeader('content-type', $xlsx);
+        expect($this->actingAs($this->viewer)->get($url, ['Accept' => 'application/pdf'])->assertOk()->assertHeader('content-type', 'application/pdf')->streamedContent())->toStartWith('%PDF');
+
+        $this->actingAs(User::factory()->create())->get($url, ['Accept' => 'application/pdf'])->assertForbidden();
+        $this->actingAs($this->viewer)->get("{$this->url}/reports/trial-balance", ['Accept' => $xlsx])->assertUnprocessable();
+
+        config(['export.max_rows' => 1]);
+        $this->actingAs($this->viewer)->get($url, ['Accept' => 'application/pdf'])->assertUnprocessable()->assertJsonPath('code', 'EXPORT_TOO_LARGE');
+    });
+
     it('applies the same authorization and validation as the JSON report', function () {
         $this->actingAs(User::factory()->create())->get("{$this->url}/reports/trial-balance?from=2026-02-01&to=2026-02-28", ['Accept' => 'text/csv'])->assertForbidden();
         $this->actingAs($this->viewer)->get("{$this->url}/reports/trial-balance", ['Accept' => 'text/csv'])->assertUnprocessable();
