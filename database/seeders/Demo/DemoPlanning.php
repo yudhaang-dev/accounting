@@ -55,14 +55,14 @@ final class DemoPlanning
      */
     private function promotion(string $fiscalYearId): void
     {
-        $this->f->say('Rencana kegiatan: promosi semester II 2026, strategi dan taktik iklan digital');
+        $this->f->say('Rencana kegiatan: promosi Mei–Oktober 2026, strategi dan taktik iklan digital');
 
         $api = $this->f->api->as($this->f->users['accountant']);
         $periods = collect($api->rows($this->f->url('/periods'), ['filter[fiscal_year_id]' => $fiscalYearId, 'per_page' => 50]))->sortBy('number')->values();
         $window = $periods->slice((int) substr(DemoFoundation::PROMO_FROM, 5) - 1, 6)->values();
 
         $plans = [
-            ['PROMO', 'Promosi semester II 2026', 'Menaikkan penjualan alat kesehatan lewat promo enam bulan. Hipotesis: tambahan penjualan lebih besar daripada biaya promosinya.', fn (int $i, bool $revised) => [
+            ['PROMO', 'Promosi Mei–Oktober 2026', 'Menaikkan penjualan alat kesehatan lewat promo enam bulan. Hipotesis: tambahan penjualan lebih besar daripada biaya promosinya.', fn (int $i, bool $revised) => [
                 '4110' => $revised && $i >= 3 ? 230_000_000 : 250_000_000,
                 '6110' => $revised && $i >= 3 ? 40_000_000 : 28_000_000,
             ]],

@@ -200,8 +200,8 @@ final class DemoOperations
         // exhibitions (the strategy itself) stay flat.
         if ($this->inPromotion($first)) {
             $step = $first->month - (int) substr(DemoFoundation::PROMO_FROM, 5);
-            $this->push($first->addDays(8), 0, 'bill', ['supplier' => 'iklan', 'account' => '6110', 'subtotal' => (18 + 4 * $step) * 1_000_000, 'ppn' => true, 'terms' => 21, 'what' => 'Kampanye iklan digital promo semester II', 'dept' => 'SALES', 'activity' => 'PROMO-DIG']);
-            $this->push($first->addDays(12), 0, 'bill', ['supplier' => 'iklan', 'account' => '6110', 'subtotal' => 8_000_000, 'ppn' => true, 'terms' => 21, 'what' => 'Materi cetak dan pameran promo semester II', 'dept' => 'SALES', 'activity' => 'PROMO']);
+            $this->push($first->addDays(8), 0, 'bill', ['supplier' => 'iklan', 'account' => '6110', 'subtotal' => (18 + 4 * $step) * 1_000_000, 'ppn' => true, 'terms' => 21, 'what' => 'Kampanye iklan digital promo Mei–Oktober', 'dept' => 'SALES', 'activity' => 'PROMO-DIG']);
+            $this->push($first->addDays(12), 0, 'bill', ['supplier' => 'iklan', 'account' => '6110', 'subtotal' => 8_000_000, 'ppn' => true, 'terms' => 21, 'what' => 'Materi cetak dan pameran promo Mei–Oktober', 'dept' => 'SALES', 'activity' => 'PROMO']);
         }
 
         $this->push($first->addDays(2), 0, 'bill', ['supplier' => 'atk', 'account' => '6240', 'subtotal' => $this->round(mt_rand(1_800_000, 3_100_000), 1000), 'ppn' => false, 'terms' => 0, 'what' => 'Alat tulis dan perlengkapan kantor', 'dept' => 'ADM', 'from' => 'petty']);
