@@ -54,7 +54,7 @@ Pemisahan tugas biasanya berlaku: Anda tidak bisa menyetujui entri buatan sendir
 
 ## 3. Mencatat transaksi
 
-Nama jenis bisa berbeda sedikit di perusahaan Anda, karena akuntan yang mengaturnya. Tanyakan akuntan bila jenis yang Anda butuhkan tidak ada.
+Nama jenis bisa berbeda sedikit di perusahaan Anda, karena akuntan yang mengaturnya. Tanyakan akuntan bila jenis yang Anda butuhkan tidak ada: jenis transaksi baru, misalnya untuk persediaan, pajak, kasbon, atau proyek, dipasang akuntan dari menu **Pembukuan → Paket template**, dan baru bisa Anda pakai sesudahnya.
 
 ### Penjualan kredit
 
