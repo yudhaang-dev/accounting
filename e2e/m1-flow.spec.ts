@@ -77,6 +77,9 @@ test('from sign-in to a posted journal in the trial balance', async ({
     });
 
     await test.step('install the chart of accounts only after confirming it', async () => {
+        // Packs are released, so the step opens on them; this scenario takes the chart alone.
+        await page.getByRole('button', { name: 'Hanya bagan akun' }).click();
+
         const install = page.getByRole('button', { name: 'Pasang bagan akun' });
 
         await expect(install).toBeDisabled();
@@ -361,9 +364,11 @@ test('from sign-in to a posted journal in the trial balance', async ({
     });
 
     await test.step('export the same report as CSV', async () => {
+        await page.getByRole('button', { name: 'Ekspor', exact: true }).click();
+
         const [download] = await Promise.all([
             page.waitForEvent('download'),
-            page.getByRole('button', { name: 'Ekspor CSV' }).click(),
+            page.getByRole('menuitem', { name: 'CSV' }).click(),
         ]);
 
         expect(download.suggestedFilename()).toMatch(

@@ -27,7 +27,12 @@ final class ChartTemplates
      */
     public function all(): array
     {
-        return array_filter($this->load(), fn (array $template): bool => ! ($template['additive'] ?? false));
+        $whole = array_filter($this->load(), fn (array $template): bool => ! ($template['additive'] ?? false));
+
+        // The chart a company gets when it picks the first one: a whole chart comes before the variants of it.
+        uasort($whole, fn (array $a, array $b): int => isset($a['extends']) <=> isset($b['extends']));
+
+        return $whole;
     }
 
     /**

@@ -57,6 +57,14 @@ describe('chart variants and add-ons (ADR-0019)', function () {
         $this->actingAs($this->admin)->getJson("{$this->url}/account-templates/addon-test")->assertNotFound();
     });
 
+    it('lists the whole charts before the variants, so the first template offered is never a variant', function () {
+        cvWrite("{$this->dir}/charts/variant.php", ['key' => 'aaa-variant', 'name' => 'Variant', 'version' => 1, 'extends' => 'general-id', 'accounts' => [cvAccount('1133', 'Barang Konsinyasi', 'asset', '1130')]]);
+
+        $keys = array_column($this->actingAs($this->admin)->getJson("{$this->url}/account-templates")->assertOk()->json('data'), 'key');
+
+        expect($keys[0])->not->toBe('aaa-variant')->and(array_search('general-id', $keys, true))->toBeLessThan(array_search('aaa-variant', $keys, true));
+    });
+
     it('refuses a template that extends an unknown one or repeats a code', function () {
         cvWrite("{$this->dir}/charts/bad.php", ['key' => 'bad', 'name' => 'Bad', 'version' => 1, 'extends' => 'nowhere', 'accounts' => []]);
         expect(fn () => (new ChartTemplates)->all())->toThrow(LogicException::class, 'unknown template');
