@@ -148,3 +148,32 @@ Saran berikut menjadi `ReportDefinition` template; perusahaan dapat mengubahnya.
 | Subkontraktor proyek 200 secara kredit | 5220 Subkontraktor 200 | 2110 Utang Usaha 200 | Departemen dan proyek |
 | Pelanggan membayar invoice 800 | 1112 Bank 800 | 1121 Piutang 800 | Alokasi ke open item |
 | Pelunasan invoice USD 1.000 (kurs invoice 15.000, kurs bayar 15.500) | 1115 Bank Valas 15.500.000 (USD 1.000) | 1121 Piutang 15.000.000 (USD 1.000); 7130 Laba Selisih Kurs 500.000 | Selisih kurs terealisasi (SL-FR-06) |
+
+## Varian jenis usaha
+
+Varian menyatakan `extends: general-id` dan hanya memuat akun tambahan; bagan dasar tidak digandakan (ADR-0019). Setiap akun tambahan berinduk pada akun yang sudah dipilih templat laporan `general-id`, sehingga Laba Rugi, Neraca, dan Arus Kas tidak mendapat baris `unmapped`. Induk daun di bagan dasar (mis. `4110`) menjadi induk bila varian menambah anak di bawahnya. Varian dirilis setelah ditinjau akuntan (ADR-0019, butir 8).
+
+### Dagang atau ritel (`retail-id`)
+
+| Kode | Nama | Kelas | Normal | Induk | Catatan |
+| --- | --- | --- | --- | --- | --- |
+| 1124 | Piutang Marketplace dan Penyelesaian Pembayaran | `asset` | D | 1120 | Penjualan online atau kartu yang belum dicairkan |
+| 1133 | Barang dalam Perjalanan | `asset` | D | 1130 | Opsional; pembelian yang belum diterima |
+| 4111 | Penjualan Toko | `income` | K | 4110 | Daun |
+| 4112 | Penjualan Online dan Marketplace | `income` | K | 4110 | Daun |
+| 4113 | Penjualan Grosir | `income` | K | 4110 | Opsional; daun |
+| 5130 | Biaya Angkut Pembelian | `expense` | D | 5100 | Daun |
+| 5140 | Potongan dan Retur Pembelian | `expense` | K | 5100 | Kontra |
+| 6140 | Komisi dan Biaya Layanan Marketplace | `expense` | D | 6100 | Daun |
+| 6150 | Biaya Merchant Kartu dan QRIS | `expense` | D | 6100 | Opsional; daun |
+
+### Jasa (`services-id`)
+
+| Kode | Nama | Kelas | Normal | Induk | Catatan |
+| --- | --- | --- | --- | --- | --- |
+| 1125 | Tagihan Belum Diterbitkan | `asset` | D | 1120 | Opsional; jasa selesai yang belum ditagih |
+| 4121 | Pendapatan Jasa Proyek | `income` | K | 4120 | Daun |
+| 4122 | Pendapatan Jasa Berulang atau Retainer | `income` | K | 4120 | Daun |
+| 4123 | Penggantian Biaya dari Pelanggan | `income` | K | 4120 | Opsional; daun |
+| 5250 | Biaya Perjalanan dan Akomodasi Proyek | `expense` | D | 5200 | Opsional; daun |
+| 6295 | Pelatihan dan Sertifikasi Staf | `expense` | D | 6200 | Opsional; daun |

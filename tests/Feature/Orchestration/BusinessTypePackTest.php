@@ -1,0 +1,168 @@
+<?php
+
+use App\Models\User;
+use App\Modules\GeneralLedger\Contracts\JournalSource;
+use App\Modules\GeneralLedger\Contracts\PostingService;
+use App\Modules\GeneralLedger\Contracts\PostJournal;
+use App\Modules\GeneralLedger\Contracts\PostJournalLine;
+use App\Modules\GeneralLedger\Domain\Account;
+use App\Modules\TransactionEntry\Domain\TransactionType;
+use App\Orchestration\Setup\TemplatePacks;
+use App\Support\Company\CompanyScope;
+
+// The packs of a business type wait for the review of an accountant (ADR-0019, point 8), so they are not offered
+// yet. The cash and receivable accounts take only the subledger as a source, so the activity is posted as such. These tests install copies of the manifests marked as reviewed, which proves the content installs.
+beforeEach(function () {
+    $this->admin = User::factory()->create();
+    [$this->companyId] = createWorkspaceAs($this->admin);
+    $this->url = "/api/v1/companies/{$this->companyId}";
+    $this->dir = sys_get_temp_dir().'/btp-'.uniqid();
+    mkdir($this->dir);
+
+    foreach (glob(app_path('Orchestration/Setup/packs/*.php')) as $file) {
+        $pack = require $file;
+        $pack['reviewed'] = true;
+        file_put_contents("{$this->dir}/".basename($file), '<?php return '.var_export($pack, true).';');
+    }
+
+    config(['templates.packs_path' => $this->dir]);
+    app()->forgetInstance(TemplatePacks::class);
+});
+
+afterEach(function () {
+    array_map('unlink', glob("{$this->dir}/*.php"));
+    rmdir($this->dir);
+});
+
+function btpInstall(string $key)
+{
+    $pack = app(TemplatePacks::class)->find($key);
+    $components = array_column($pack['components'], 'id');
+
+    return test()->actingAs(test()->admin)->postJson(test()->url."/template-packs/{$key}/install", ['components' => $components, 'confirmed' => true]);
+}
+
+function btpAccountId(string $code): string
+{
+    return (string) Account::withoutGlobalScope(CompanyScope::class)->where('company_id', test()->companyId)->where('code', $code)->value('id');
+}
+
+function btpPost(string $debit, string $credit, string $amount): void
+{
+    app(PostingService::class)->post(new PostJournal(
+        companyId: test()->companyId,
+        accountingDate: '2026-03-10',
+        description: 'Activity',
+        source: JournalSource::Subledger,
+        lines: [new PostJournalLine(btpAccountId($debit), $amount, '0'), new PostJournalLine(btpAccountId($credit), '0', $amount)],
+    ));
+}
+
+function btpValues(string $key, string $query): array
+{
+    $id = collect(test()->actingAs(test()->admin)->getJson(test()->url.'/report-definitions')->json('data'))->firstWhere('key', $key)['id'];
+    $data = test()->actingAs(test()->admin)->getJson(test()->url."/report-definitions/{$id}/result?{$query}")->assertOk()->json('data');
+
+    return [$data, collect($data['rows'])->mapWithKeys(fn (array $row): array => [$row['key'] => $row['values']])->all()];
+}
+
+describe('packs of a business type (B-11e, ADR-0019)', function () {
+    it('lists the packs only once an accountant has reviewed them', function () {
+        config(['templates.packs_path' => app_path('Orchestration/Setup/packs')]);
+        app()->forgetInstance(TemplatePacks::class);
+
+        $keys = array_column($this->actingAs($this->admin)->getJson("{$this->url}/template-packs")->assertOk()->json('data'), 'key');
+
+        expect($keys)->toContain('general')->not->toContain('retail', 'services');
+    });
+
+    it('installs the retail pack into an empty company with the variant accounts under the base chart', function () {
+        btpInstall('retail')->assertCreated();
+
+        $codes = Account::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->pluck('code')->all();
+        $types = TransactionType::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->pluck('key')->all();
+
+        expect($codes)->toContain('1131', '5110', '4111', '4112', '5130', '6140')
+            ->and($types)->toContain('daily_cash_sale', 'sales_return', 'purchase_return', 'credit_sale', 'general_journal');
+
+        setUpFiscalCalendar($this->admin, $this->companyId);
+        $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();
+    });
+
+    it('installs the services pack into an empty company with the variant accounts under the base chart', function () {
+        btpInstall('services')->assertCreated();
+
+        $codes = Account::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->pluck('code')->all();
+        $types = TransactionType::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->pluck('key')->all();
+
+        expect($codes)->toContain('4120', '4121', '4122', '5220', '6295')
+            ->and($types)->toContain('service_invoice', 'service_cash_receipt', 'customer_receipt');
+
+        setUpFiscalCalendar($this->admin, $this->companyId);
+        $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();
+    });
+
+    it('reports the retail variant accounts in the statements, with no unmapped row', function () {
+        btpInstall('retail')->assertCreated();
+        setUpFiscalCalendar($this->admin, $this->companyId);
+
+        btpPost('1112', '3110', '10000000.00');
+        btpPost('1124', '4112', '2000000.00');
+        btpPost('1112', '4111', '3000000.00');
+        btpPost('5110', '1131', '1500000.00');
+        btpPost('5130', '1112', '100000.00');
+        btpPost('6140', '1124', '200000.00');
+
+        [$income, $values] = btpValues('income_statement', 'from=2026-03-01&to=2026-03-31');
+        expect($values['revenue']['period'])->toBe('5000000.00')
+            ->and($values['cost_of_sales']['period'])->toBe('1600000.00')
+            ->and($values['operating_expenses']['period'])->toBe('200000.00')
+            ->and($values['net_profit']['period'])->toBe('3200000.00')
+            ->and($values)->not->toHaveKey('unmapped');
+
+        [$balance, $values] = btpValues('balance_sheet', 'from=2026-03-31&to=2026-03-31');
+        expect($balance['balance_checks']['at']['balanced'])->toBeTrue()
+            ->and($values)->not->toHaveKey('unmapped');
+
+        [$cash, $values] = btpValues('cash_flow_indirect', 'from=2026-03-01&to=2026-03-31');
+        expect($cash['cash_checks']['period']['reconciled'])->toBeTrue()
+            ->and($values)->not->toHaveKey('unmapped');
+    });
+
+    it('reports the services variant accounts in the statements, with no unmapped row', function () {
+        btpInstall('services')->assertCreated();
+        setUpFiscalCalendar($this->admin, $this->companyId);
+
+        btpPost('1112', '3110', '10000000.00');
+        btpPost('1121', '4121', '4000000.00');
+        btpPost('1125', '4122', '1000000.00');
+        btpPost('5220', '1112', '700000.00');
+        btpPost('6295', '1112', '50000.00');
+
+        [$income, $values] = btpValues('income_statement', 'from=2026-03-01&to=2026-03-31');
+        expect($values['revenue']['period'])->toBe('5000000.00')
+            ->and($values['net_profit']['period'])->toBe('4250000.00')
+            ->and($values)->not->toHaveKey('unmapped');
+
+        [$balance, $values] = btpValues('balance_sheet', 'from=2026-03-31&to=2026-03-31');
+        expect($balance['balance_checks']['at']['balanced'])->toBeTrue()
+            ->and($values)->not->toHaveKey('unmapped');
+
+        [$cash, $values] = btpValues('cash_flow_indirect', 'from=2026-03-01&to=2026-03-31');
+        expect($cash['cash_checks']['period']['reconciled'])->toBeTrue()
+            ->and($values)->not->toHaveKey('unmapped');
+    });
+
+    it('keeps every account of the variants in CHART-OF-ACCOUNTS.md', function () {
+        $doc = file_get_contents(base_path('.docs/CHART-OF-ACCOUNTS.md'));
+
+        foreach (['retail-id' => 'Dagang atau ritel', 'services-id' => 'Jasa'] as $key => $heading) {
+            $section = explode('### ', explode("### {$heading} (`{$key}`)", $doc, 2)[1], 2)[0];
+            preg_match_all('/^\|\s*(\d{4})\s*\|\s*([^|]+?)\s*\|\s*`(\w+)`\s*\|\s*([DK])\s*\|\s*(\d{4})\s*\|/m', $section, $rows, PREG_SET_ORDER);
+            $template = require app_path("Modules/GeneralLedger/Database/templates/{$key}.php");
+
+            expect(array_map(fn (array $row): array => [$row[1], $row[2], $row[3], $row[4] === 'D' ? 'debit' : 'credit', $row[5]], $rows))
+                ->toBe(array_map(fn (array $account): array => [$account['code'], $account['name'], $account['class'], $account['normal'], $account['parent']], $template['accounts']));
+        }
+    });
+});

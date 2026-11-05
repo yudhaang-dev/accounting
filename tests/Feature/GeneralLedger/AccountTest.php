@@ -298,7 +298,7 @@ describe('chart of accounts template (X-AC-03)', function () {
     });
 
     it('keeps every account of CHART-OF-ACCOUNTS.md and a consistent hierarchy', function () use ($template) {
-        preg_match_all('/^\|\s*(\d{4})\s*\|/m', explode('## Akun', file_get_contents(base_path('.docs/CHART-OF-ACCOUNTS.md')), 2)[1], $matches);
+        preg_match_all('/^\|\s*(\d{4})\s*\|/m', explode('## Varian jenis usaha', explode('## Akun', file_get_contents(base_path('.docs/CHART-OF-ACCOUNTS.md')), 2)[1], 2)[0], $matches);
         $codes = array_column($template['accounts'], 'code');
 
         expect($codes)->toBe($matches[1])->and(array_unique($codes))->toBe($codes);
