@@ -29,5 +29,9 @@ return [
         'income' => 'income',
         'expense' => 'expenses',
     ],
+    'roles_template_name' => 'Ledger role accounts',
+    'role_account_missing' => 'Account :code for role :account_role is not in the chart of accounts.',
+    'posting_template_name' => 'Control accounts from the subledger only',
+    'posting_subledger_only' => 'Account :code accepts postings from the subledger only',
 
 ];

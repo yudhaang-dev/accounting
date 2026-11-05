@@ -7,7 +7,8 @@ use LogicException;
 /**
  * Template packs shipped as manifest files (ADR-0019). A manifest only names the template of each module
  * by key; it holds no content of its own and is not company data. Components are listed in the order they
- * must be installed: accounts, party roles, posting profiles, transaction types, report definitions.
+ * must be installed: accounts, account posting attributes, party roles, account roles, posting profiles, cash equivalents, transaction types, report
+ * definitions.
  *
  * @phpstan-type PackComponent array{id: string, kind: string, template: string}
  * @phpstan-type Pack array{key: string, name: string, description: string, version: int, reviewed: bool, components: list<PackComponent>}
@@ -15,7 +16,7 @@ use LogicException;
 final class TemplatePacks
 {
     /** The install order of the kinds; a manifest that lists them differently is a programming error. */
-    public const KIND_ORDER = ['chart_of_accounts', 'party_roles', 'posting_profiles', 'transaction_types', 'report_definitions'];
+    public const KIND_ORDER = ['chart_of_accounts', 'account_posting', 'party_roles', 'account_roles', 'posting_profiles', 'cash_equivalents', 'transaction_types', 'report_definitions'];
 
     /** @var array<string, Pack>|null */
     private ?array $packs = null;

@@ -54,5 +54,7 @@ return [
     'plan_span_invalid' => 'A plan column adds up a `period` or a `ytd` range.',
     'plan_version_invalid' => 'A plan version is a 26-character ID.',
     'shift_invalid' => 'The shift is a whole number of years and months, zero or negative.',
+    'cash_equivalents_template_name' => 'Cash and cash equivalent accounts',
+    'cash_equivalents_template_accounts_missing' => 'The chart of accounts has none of the suggested cash or bank accounts (1111 to 1115).',
 
 ];

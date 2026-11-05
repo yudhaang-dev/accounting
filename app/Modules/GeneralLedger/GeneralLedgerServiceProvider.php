@@ -2,7 +2,9 @@
 
 namespace App\Modules\GeneralLedger;
 
+use App\Modules\GeneralLedger\Application\AccountRoleTemplateComponent;
 use App\Modules\GeneralLedger\Application\ChartTemplateComponent;
+use App\Modules\GeneralLedger\Application\ControlAccountSourcesTemplateComponent;
 use App\Modules\GeneralLedger\Application\EloquentAccountDirectory;
 use App\Modules\GeneralLedger\Application\EloquentAccountRoles;
 use App\Modules\GeneralLedger\Application\EloquentCurrencyUsage;
@@ -49,7 +51,7 @@ class GeneralLedgerServiceProvider extends ModuleServiceProvider
         $this->app->bind(ForeignCurrencyRequirements::class, EloquentForeignCurrencyRequirements::class);
         $this->app->when(SetPeriodStatus::class)->needs('$listeners')->giveTagged(ClosingListener::TAG);
         $this->app->bind(PeriodDirectory::class, EloquentPeriodDirectory::class);
-        $this->app->tag(ChartTemplateComponent::class, TemplateComponent::TAG);
+        $this->app->tag([ChartTemplateComponent::class, ControlAccountSourcesTemplateComponent::class, AccountRoleTemplateComponent::class], TemplateComponent::TAG);
         $this->app->bind(LedgerReader::class, EloquentLedgerReader::class);
         $this->app->bind(JournalDirectory::class, EloquentJournalDirectory::class);
         $this->app->bind(PostingValidator::class, EloquentPostingValidator::class);

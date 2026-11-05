@@ -30,15 +30,15 @@ function tpCount(string $model): int
 /** @return list<string> */
 function tpAllComponents(): array
 {
-    return ['chart_of_accounts', 'party_roles', 'transaction_types.general', 'transaction_types.daily-operations', 'report_definitions'];
+    return ['chart_of_accounts', 'account_posting', 'party_roles', 'account_roles', 'posting_profiles', 'cash_equivalents', 'transaction_types.general', 'transaction_types.daily-operations', 'report_definitions'];
 }
 
 describe('template packs (X-AC-06, ADR-0019)', function () {
     it('lists the released packs with the templates they put together', function () {
         $pack = collect($this->actingAs($this->admin)->getJson("{$this->url}/template-packs")->assertOk()->json('data'))->firstWhere('key', 'general');
 
-        expect($pack['components'])->toHaveCount(5)
-            ->and(array_column($pack['components'], 'kind'))->toBe(['chart_of_accounts', 'party_roles', 'transaction_types', 'transaction_types', 'report_definitions']);
+        expect($pack['components'])->toHaveCount(9)
+            ->and(array_column($pack['components'], 'kind'))->toBe(['chart_of_accounts', 'account_posting', 'party_roles', 'account_roles', 'posting_profiles', 'cash_equivalents', 'transaction_types', 'transaction_types', 'report_definitions']);
     });
 
     it('shows what a pack would create without creating anything, and marks what the company has', function () {
@@ -67,7 +67,43 @@ describe('template packs (X-AC-06, ADR-0019)', function () {
         $entry = AuditEntry::query()->where('event', 'template_pack.installed')->latest('id')->first();
         expect($entry)->not->toBeNull()
             ->and($entry->properties['pack'])->toBe('general')
-            ->and($entry->properties['components'])->toHaveCount(5);
+            ->and($entry->properties['components'])->toHaveCount(9);
+    });
+
+    it('maps the ledger roles, the control accounts of the default profile and the cash accounts, so the company can activate', function () {
+        tpInstall(tpAllComponents())->assertCreated();
+        setUpFiscalCalendar($this->admin, $this->companyId);
+
+        $roles = collect($this->actingAs($this->admin)->getJson("{$this->url}/account-roles")->assertOk()->json('data'))->keyBy('key');
+        expect($roles->every(fn (array $role) => $role['account_id'] !== null && $role['valid']))->toBeTrue()
+            ->and($roles->keys()->all())->toContain('retained_earnings', 'fx_realized_gain', 'fx_rounding');
+
+        $profiles = $this->actingAs($this->admin)->getJson("{$this->url}/posting-profiles")->assertOk()->json('data');
+        expect($profiles)->toHaveCount(1)->and($profiles[0]['is_default'])->toBeTrue();
+        $profile = $this->actingAs($this->admin)->getJson("{$this->url}/posting-profiles/{$profiles[0]['id']}")->assertOk()->json('data');
+        expect(collect($profile['accounts'])->every(fn (array $account) => $account['account_id'] !== null && $account['valid']))->toBeTrue()
+            ->and(collect($profile['accounts'])->pluck('key')->sort()->values()->all())->toBe(['payables_control', 'receivables_control']);
+
+        $cash = $this->actingAs($this->admin)->getJson("{$this->url}/reporting/account-role-mappings")->assertOk()->json('data');
+        expect(json_encode($cash))->toContain('cash_equivalents');
+
+        $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();
+    });
+
+    it('fails the install of a role whose account the chart lacks, and keeps the company clean', function () {
+        tpInstall(['account_roles'])->assertUnprocessable()->assertJsonValidationErrors('roles.retained_earnings');
+        tpInstall(['posting_profiles'])->assertUnprocessable()->assertJsonValidationErrors('profile.receivables_control');
+
+        expect(tpCount(Account::class))->toBe(0);
+    });
+
+    it('restricts the control accounts to the subledger and leaves out the optional ones the company dropped', function () {
+        $optional = collect($this->actingAs($this->admin)->getJson("{$this->url}/template-packs/general")->json('data.components.0.items'))->where('optional', true)->pluck('key')->all();
+        tpInstall(['chart_of_accounts', 'account_posting'], ['chart_of_accounts' => $optional])->assertCreated();
+
+        $sources = fn (string $code) => Account::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->where('code', $code)->value('allowed_sources');
+
+        expect($sources('1121'))->toBe(['subledger'])->and($sources('2110'))->toBe(['subledger'])->and($sources('1111'))->toBe(['subledger']);
     });
 
     it('creates nothing without a confirmation or for a component the pack lacks', function () {

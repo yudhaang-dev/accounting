@@ -9,5 +9,8 @@ return [
     'role_unmapped' => 'The control role :key is not mapped to an account in this posting profile.',
     'no_default' => 'The company has no default posting profile.',
     'unknown_profile' => 'The posting profile does not exist in this company.',
+    'template_name' => 'Default posting profile',
+    'template_profile_name' => 'Default profile',
+    'template_account_missing' => 'Account :code for role :account_role is not in the chart of accounts.',
 
 ];

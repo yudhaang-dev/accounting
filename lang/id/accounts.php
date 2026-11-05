@@ -29,5 +29,9 @@ return [
         'income' => 'pendapatan',
         'expense' => 'beban',
     ],
+    'roles_template_name' => 'Akun peran buku besar',
+    'role_account_missing' => 'Akun :code untuk peran :account_role tidak ada di bagan akun.',
+    'posting_template_name' => 'Akun kontrol hanya dari Subledger',
+    'posting_subledger_only' => 'Akun :code hanya menerima posting dari Subledger',
 
 ];

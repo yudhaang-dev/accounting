@@ -54,5 +54,7 @@ return [
     'plan_span_invalid' => 'Kolom rencana menjumlahkan rentang `period` atau `ytd`.',
     'plan_version_invalid' => 'Versi rencana adalah ID 26 karakter.',
     'shift_invalid' => 'Pergeseran adalah bilangan bulat tahun dan bulan, nol atau negatif.',
+    'cash_equivalents_template_name' => 'Akun kas dan setara kas',
+    'cash_equivalents_template_accounts_missing' => 'Bagan akun tidak memuat akun kas atau bank yang disarankan (1111 sampai 1115).',
 
 ];

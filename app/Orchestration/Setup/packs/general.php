@@ -12,7 +12,11 @@ return [
     'reviewed' => true,
     'components' => [
         ['id' => 'chart_of_accounts', 'kind' => 'chart_of_accounts', 'template' => 'general-id'],
+        ['id' => 'account_posting', 'kind' => 'account_posting', 'template' => 'general-id'],
         ['id' => 'party_roles', 'kind' => 'party_roles', 'template' => 'default'],
+        ['id' => 'account_roles', 'kind' => 'account_roles', 'template' => 'general-id'],
+        ['id' => 'posting_profiles', 'kind' => 'posting_profiles', 'template' => 'general-id'],
+        ['id' => 'cash_equivalents', 'kind' => 'cash_equivalents', 'template' => 'general-id'],
         ['id' => 'transaction_types.general', 'kind' => 'transaction_types', 'template' => 'general'],
         ['id' => 'transaction_types.daily-operations', 'kind' => 'transaction_types', 'template' => 'daily-operations'],
         ['id' => 'report_definitions', 'kind' => 'report_definitions', 'template' => 'general-id'],

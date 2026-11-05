@@ -9,5 +9,8 @@ return [
     'role_unmapped' => 'Peran kontrol :key belum dipetakan ke akun pada profil posting ini.',
     'no_default' => 'Perusahaan belum memiliki profil posting default.',
     'unknown_profile' => 'Profil posting tidak ada di perusahaan ini.',
+    'template_name' => 'Profil posting default',
+    'template_profile_name' => 'Profil default',
+    'template_account_missing' => 'Akun :code untuk peran :account_role tidak ada di bagan akun.',
 
 ];
