@@ -22,9 +22,7 @@ export type Pack =
 export type PackComponent = Pack extends { components: (infer C)[] }
     ? C
     : never;
-export type PackItem = PackComponent extends { items: (infer I)[] }
-    ? I
-    : never;
+export type PackItem = PackComponent extends { items: (infer I)[] } ? I : never;
 export type InstallResult =
     Json<'template-packs.install', 200> extends { data: infer Data }
         ? Data

@@ -241,6 +241,8 @@ function ChartSetup({ companyId }: { companyId: string }) {
     const { t } = useTranslation();
     const size = useQuery(chartSizeQuery(companyId));
     const packs = useQuery(templatePacksQuery(companyId));
+    // An add-on only adds to a chart that exists, so it is not a starting point for an empty company.
+    const basePacks = packs.data?.filter((pack) => !pack.additive);
     const [mode, setMode] = useState<'pack' | 'chart'>('pack');
     const [installed, setInstalled] = useState<{
         result: InstallResult;
@@ -251,11 +253,11 @@ function ChartSetup({ companyId }: { companyId: string }) {
         return <PackResult result={installed.result} pack={installed.pack} />;
     }
 
-    if ((size.data ?? 0) > 0 || packs.isError || packs.data?.length === 0) {
+    if ((size.data ?? 0) > 0 || packs.isError || basePacks?.length === 0) {
         return <ChartStep companyId={companyId} />;
     }
 
-    if (packs.data === undefined) {
+    if (basePacks === undefined) {
         return <Skeleton className="h-24 w-full" />;
     }
 
@@ -289,7 +291,7 @@ function ChartSetup({ companyId }: { companyId: string }) {
             {mode === 'pack' ? (
                 <TemplatePackStep
                     companyId={companyId}
-                    packs={packs.data}
+                    packs={basePacks}
                     onInstalled={(result, pack) =>
                         setInstalled({ result, pack })
                     }

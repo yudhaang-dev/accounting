@@ -120,9 +120,7 @@ function ComponentReview({
                                     <Checkbox
                                         checked={isIncluded}
                                         disabled={
-                                            !picked ||
-                                            stuck ||
-                                            !item.optional
+                                            !picked || stuck || !item.optional
                                         }
                                         aria-label={t(
                                             'setup.packs.includeItem',
@@ -206,7 +204,9 @@ function PackReview({
                             (item) =>
                                 !item.exists &&
                                 (item.conflict !== null ||
-                                    leftOut.has(itemId(component.id, item.key))),
+                                    leftOut.has(
+                                        itemId(component.id, item.key),
+                                    )),
                         )
                         .map((item) => item.key),
                 ])
@@ -342,10 +342,7 @@ export function PackResult({
 }) {
     const { t } = useTranslation();
     const kinds = new Map(
-        pack.components.map((component) => [
-            component.id,
-            component.kind,
-        ]),
+        pack.components.map((component) => [component.id, component.kind]),
     );
 
     return (
@@ -405,9 +402,7 @@ export function TemplatePackStep({
                             id={`pack-${pack.key}`}
                             value={pack.key}
                         />
-                        <Label htmlFor={`pack-${pack.key}`}>
-                            {pack.name}
-                        </Label>
+                        <Label htmlFor={`pack-${pack.key}`}>{pack.name}</Label>
                     </div>
                 ))}
             </RadioGroup>

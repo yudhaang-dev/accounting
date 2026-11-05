@@ -19,7 +19,7 @@ class TemplatePackController
      * The template packs released for use. A pack is only a suggestion: nothing is created until the
      * company reviews it and confirms the install.
      *
-     * @response array{data: list<array{key: string, name: string, description: string, version: int, components: list<array{id: string, kind: string, template: string}>}>}
+     * @response array{data: list<array{key: string, name: string, description: string, version: int, additive: bool, components: list<array{id: string, kind: string, template: string}>}>}
      */
     public function index(TemplatePacks $packs): JsonResponse
     {
@@ -30,7 +30,7 @@ class TemplatePackController
      * What the pack would create in this company, component by component, with the items the company already
      * has marked `exists`. Nothing is created.
      *
-     * @response array{data: array{key: string, name: string, description: string, version: int, components: list<array{id: string, kind: string, template: string, name: string, version: int, items: list<array{key: string, label: string, exists: bool, optional: bool, conflict: string|null}>}>}}
+     * @response array{data: array{key: string, name: string, description: string, version: int, additive: bool, components: list<array{id: string, kind: string, template: string, name: string, version: int, items: list<array{key: string, label: string, exists: bool, optional: bool, conflict: string|null}>}>}}
      */
     public function show(TemplatePacks $packs, DescribeTemplatePack $describe, string $companyId, string $key): JsonResponse
     {
@@ -71,7 +71,7 @@ class TemplatePackController
 
     /**
      * @param  Pack  $pack
-     * @return array{key: string, name: string, description: string, version: int, components: list<array{id: string, kind: string, template: string}>}
+     * @return array{key: string, name: string, description: string, version: int, additive: bool, components: list<array{id: string, kind: string, template: string}>}
      */
     private function summary(array $pack): array
     {
@@ -80,6 +80,7 @@ class TemplatePackController
             'name' => $pack['name'],
             'description' => $pack['description'],
             'version' => $pack['version'],
+            'additive' => $pack['additive'] ?? false,
             'components' => $pack['components'],
         ];
     }

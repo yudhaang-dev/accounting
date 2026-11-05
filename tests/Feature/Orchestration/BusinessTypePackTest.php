@@ -75,6 +75,13 @@ describe('packs of a business type (B-11e, ADR-0019)', function () {
         expect($keys)->toContain('general', 'retail', 'services', 'contractor', 'manufacturing', 'fnb', 'addon-loans', 'addon-tax', 'addon-inventory', 'addon-project');
     });
 
+    it('marks the add-on packs as additive so a wizard does not offer them to an empty company', function () {
+        $packs = collect($this->actingAs($this->admin)->getJson("{$this->url}/template-packs")->assertOk()->json('data'))->pluck('additive', 'key');
+
+        expect($packs['addon-loans'])->toBeTrue()->and($packs['addon-tax'])->toBeTrue()->and($packs['addon-inventory'])->toBeTrue()->and($packs['addon-project'])->toBeTrue()
+            ->and($packs['general'])->toBeFalse()->and($packs['retail'])->toBeFalse();
+    });
+
     it('installs the retail pack into an empty company with the variant accounts under the base chart', function () {
         btpInstall('retail')->assertCreated();
 

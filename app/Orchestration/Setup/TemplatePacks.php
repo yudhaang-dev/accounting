@@ -11,7 +11,7 @@ use LogicException;
  * definitions.
  *
  * @phpstan-type PackComponent array{id: string, kind: string, template: string}
- * @phpstan-type Pack array{key: string, name: string, description: string, version: int, reviewed: bool, components: list<PackComponent>}
+ * @phpstan-type Pack array{key: string, name: string, description: string, version: int, reviewed: bool, additive?: bool, components: list<PackComponent>}
  */
 final class TemplatePacks
 {

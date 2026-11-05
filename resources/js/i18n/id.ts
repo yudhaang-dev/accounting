@@ -3201,8 +3201,7 @@ export const id = {
             optional: 'Opsional',
             conflict: 'Bentrok, tidak dipasang: {{reason}}',
             conflicts: '{{count}} bentrok',
-            confirm:
-                'Saya telah meninjau isi paket ini dan ingin memasangnya.',
+            confirm: 'Saya telah meninjau isi paket ini dan ingin memasangnya.',
             submit: 'Pasang paket',
             submitting: 'Memasang…',
             forbidden:

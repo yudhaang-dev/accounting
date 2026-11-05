@@ -107,7 +107,9 @@ describe('template packs of a running company', () => {
                 name: 'Saya telah meninjau isi paket ini dan ingin memasangnya.',
             }),
         );
-        await typist.click(screen.getByRole('button', { name: 'Pasang paket' }));
+        await typist.click(
+            screen.getByRole('button', { name: 'Pasang paket' }),
+        );
 
         expect(await screen.findByText('Paket terpasang')).toBeInTheDocument();
         expect(

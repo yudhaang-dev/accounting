@@ -24534,6 +24534,9 @@
                                                     "version": {
                                                         "type": "integer"
                                                     },
+                                                    "additive": {
+                                                        "type": "boolean"
+                                                    },
                                                     "components": {
                                                         "type": "array",
                                                         "items": {
@@ -24562,6 +24565,7 @@
                                                     "name",
                                                     "description",
                                                     "version",
+                                                    "additive",
                                                     "components"
                                                 ]
                                             }
@@ -24627,6 +24631,9 @@
                                                 },
                                                 "version": {
                                                     "type": "integer"
+                                                },
+                                                "additive": {
+                                                    "type": "boolean"
                                                 },
                                                 "components": {
                                                     "type": "array",
@@ -24698,6 +24705,7 @@
                                                 "name",
                                                 "description",
                                                 "version",
+                                                "additive",
                                                 "components"
                                             ]
                                         }

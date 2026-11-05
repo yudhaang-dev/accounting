@@ -9,6 +9,7 @@ return [
     'description' => 'Akun utang dan kredit pajak serta jenis transaksi mencatat dan menyetor pajak. Bukan mesin pajak: nilai pajak dihitung di luar sistem.',
     'version' => 1,
     'reviewed' => true,
+    'additive' => true,
     'components' => [
         ['id' => 'chart_of_accounts', 'kind' => 'chart_of_accounts', 'template' => 'tax-addon'],
         ['id' => 'transaction_types.tax-operations', 'kind' => 'transaction_types', 'template' => 'tax-operations'],

@@ -9,6 +9,7 @@ return [
     'description' => 'Akun kasbon karyawan, piutang pemegang saham, dan pinjaman dari pihak lain, ditambah jenis transaksi kasbon, pinjaman, dan setoran modal.',
     'version' => 1,
     'reviewed' => true,
+    'additive' => true,
     'components' => [
         ['id' => 'chart_of_accounts', 'kind' => 'chart_of_accounts', 'template' => 'loans-addon'],
         ['id' => 'party_roles', 'kind' => 'party_roles', 'template' => 'default'],

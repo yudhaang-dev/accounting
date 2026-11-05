@@ -15567,6 +15567,7 @@ export interface operations {
                             name: string;
                             description: string;
                             version: number;
+                            additive: boolean;
                             components: {
                                 id: string;
                                 kind: string;
@@ -15602,6 +15603,7 @@ export interface operations {
                             name: string;
                             description: string;
                             version: number;
+                            additive: boolean;
                             components: {
                                 id: string;
                                 kind: string;

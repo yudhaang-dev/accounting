@@ -9,6 +9,7 @@ return [
     'description' => 'Akun penurunan nilai persediaan dan jenis transaksi penyesuaian stok opname. Tanpa stok per item: nilainya dari hitungan di luar sistem.',
     'version' => 1,
     'reviewed' => true,
+    'additive' => true,
     'components' => [
         ['id' => 'chart_of_accounts', 'kind' => 'chart_of_accounts', 'template' => 'inventory-addon'],
         ['id' => 'transaction_types.inventory-operations', 'kind' => 'transaction_types', 'template' => 'inventory-operations'],
