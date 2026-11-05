@@ -1,14 +1,13 @@
 <?php
 
 // The services pack: the general pack with the chart variant and the transaction types of a service company
-// (ADR-0019). It names the template of each module by key and holds no content of its own. Not released
-// (`reviewed` false) until an accountant has gone through the accounts, the transaction types, and the reports.
+// (ADR-0019). It names the template of each module by key and holds no content of its own. Released against the references of ADR-0020 (`reviewed`).
 return [
     'key' => 'services',
     'name' => 'Jasa',
     'description' => 'Bagan akun usaha jasa (pendapatan per jenis jasa, tagihan belum diterbitkan, biaya proyek), peran pihak, transaksi harian dan faktur jasa, serta laba rugi, neraca, dan arus kas.',
     'version' => 1,
-    'reviewed' => false,
+    'reviewed' => true,
     'components' => [
         ['id' => 'chart_of_accounts', 'kind' => 'chart_of_accounts', 'template' => 'services-id'],
         ['id' => 'account_posting', 'kind' => 'account_posting', 'template' => 'general-id'],

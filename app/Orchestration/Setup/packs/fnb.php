@@ -1,14 +1,13 @@
 <?php
 
 // The fnb pack: the general pack with the chart variant and the transaction types of a food and beverage business
-// (ADR-0019). It names the template of each module by key and holds no content of its own. Not released
-// (`reviewed` false) until an accountant has gone through the accounts, the transaction types, and the reports.
+// (ADR-0019). It names the template of each module by key and holds no content of its own. Released against the references of ADR-0020 (`reviewed`).
 return [
     'key' => 'fnb',
     'name' => 'Makanan dan Minuman',
     'description' => 'Bagan akun makanan dan minuman (bahan makanan, penjualan di tempat dan pesan-antar, biaya platform dan dapur), peran pihak, rekap harian kedai dan transaksi harian, serta laba rugi, neraca, dan arus kas.',
     'version' => 1,
-    'reviewed' => false,
+    'reviewed' => true,
     'components' => [
         ['id' => 'chart_of_accounts', 'kind' => 'chart_of_accounts', 'template' => 'fnb-id'],
         ['id' => 'account_posting', 'kind' => 'account_posting', 'template' => 'general-id'],

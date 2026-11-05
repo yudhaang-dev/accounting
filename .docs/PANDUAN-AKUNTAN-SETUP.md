@@ -44,7 +44,7 @@ Perusahaan baru berstatus **Penyiapan** dan belum bisa dipakai mencatat transaks
 - Tiap komponen tampil dengan jumlah item yang akan dibuat; buka daftarnya untuk meninjau. Hapus centang komponen yang tidak dipakai, atau item **opsional** yang ingin dilewati.
 - Item yang **sudah ada** dilewati dan tidak pernah ditimpa. Item yang **bentrok** (kode sama dengan akun lain yang namanya atau kelasnya beda) tidak dipasang dan alasannya tampil; putuskan sendiri lewat layar akun sesudahnya.
 - Pemasangan berjalan sekali, semua atau tidak sama sekali. Anda perlu izin untuk setiap komponen yang dicentang; bila kurang, sistem menolak sebelum membuat apa pun.
-- Paket hanya saran: semua hasilnya data perusahaan yang bisa diubah, dan paket yang lebih baru tidak mengubah perusahaan yang sudah memasang. Paket yang belum ditinjau akuntan tidak muncul.
+- Paket hanya saran: semua hasilnya data perusahaan yang bisa diubah, dan paket yang lebih baru tidak mengubah perusahaan yang sudah memasang. Paket yang belum diperiksa terhadap standar (`reviewed: false`) tidak muncul.
 - Sesudah perusahaan aktif, paket jenis usaha atau modul tambahan dipasang dari **Akuntansi → Paket template** dengan tinjauan yang sama; hanya menambah, dan bentrok dilaporkan.
 
 **Kalender fiskal.** Pilih bulan awal tahun fiskal (Januari bila sama dengan tahun kalender), lalu buat tahun fiskal pertama. Periode bulanan terbentuk otomatis tanpa celah. Wizard hanya membuat kalender bulanan; pola lain dibuat lewat API.

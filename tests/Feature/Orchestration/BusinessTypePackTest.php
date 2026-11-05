@@ -10,8 +10,7 @@ use App\Modules\TransactionEntry\Domain\TransactionType;
 use App\Orchestration\Setup\TemplatePacks;
 use App\Support\Company\CompanyScope;
 
-// The packs of a business type wait for the review of an accountant (ADR-0019, point 8), so they are not offered
-// yet. The cash and receivable accounts take only the subledger as a source, so the activity is posted as such. These tests install copies of the manifests marked as reviewed, which proves the content installs.
+// The cash and receivable accounts take only the subledger as a source, so the activity is posted as such. These tests install copies of the manifests marked as reviewed, which proves the content installs.
 beforeEach(function () {
     $this->admin = User::factory()->create();
     [$this->companyId] = createWorkspaceAs($this->admin);
@@ -67,13 +66,13 @@ function btpValues(string $key, string $query): array
 }
 
 describe('packs of a business type (B-11e, ADR-0019)', function () {
-    it('lists the packs only once an accountant has reviewed them', function () {
+    it('lists the released packs of every business type', function () {
         config(['templates.packs_path' => app_path('Orchestration/Setup/packs')]);
         app()->forgetInstance(TemplatePacks::class);
 
         $keys = array_column($this->actingAs($this->admin)->getJson("{$this->url}/template-packs")->assertOk()->json('data'), 'key');
 
-        expect($keys)->toContain('general')->not->toContain('retail', 'services');
+        expect($keys)->toContain('general', 'retail', 'services', 'contractor', 'manufacturing', 'fnb', 'addon-loans', 'addon-tax', 'addon-inventory', 'addon-project');
     });
 
     it('installs the retail pack into an empty company with the variant accounts under the base chart', function () {

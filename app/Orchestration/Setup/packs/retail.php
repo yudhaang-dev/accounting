@@ -1,14 +1,13 @@
 <?php
 
 // The retail pack: the general pack with the chart variant and the transaction types of a trading or retail
-// company (ADR-0019). It names the template of each module by key and holds no content of its own. Not released
-// (`reviewed` false) until an accountant has gone through the accounts, the transaction types, and the reports.
+// company (ADR-0019). It names the template of each module by key and holds no content of its own. Released against the references of ADR-0020 (`reviewed`).
 return [
     'key' => 'retail',
     'name' => 'Dagang atau Ritel',
     'description' => 'Bagan akun dagang atau ritel (persediaan, HPP, penjualan toko dan online, biaya marketplace), peran pihak, transaksi harian dan retur, serta laba rugi, neraca, dan arus kas.',
     'version' => 1,
-    'reviewed' => false,
+    'reviewed' => true,
     'components' => [
         ['id' => 'chart_of_accounts', 'kind' => 'chart_of_accounts', 'template' => 'retail-id'],
         ['id' => 'account_posting', 'kind' => 'account_posting', 'template' => 'general-id'],

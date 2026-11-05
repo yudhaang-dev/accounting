@@ -1,14 +1,13 @@
 <?php
 
 // The contractor pack: the general pack with the chart variant and the transaction types of a contractor or project company
-// (ADR-0019). It names the template of each module by key and holds no content of its own. Not released
-// (`reviewed` false) until an accountant has gone through the accounts, the transaction types, and the reports.
+// (ADR-0019). It names the template of each module by key and holds no content of its own. Released against the references of ADR-0020 (`reviewed`).
 return [
     'key' => 'contractor',
     'name' => 'Kontraktor atau Proyek',
     'description' => 'Bagan akun kontraktor atau proyek (piutang retensi, uang muka proyek, pendapatan kontrak, biaya material dan alat), peran pihak, tagihan termin dan transaksi harian, serta laba rugi, neraca, dan arus kas.',
     'version' => 1,
-    'reviewed' => false,
+    'reviewed' => true,
     'components' => [
         ['id' => 'chart_of_accounts', 'kind' => 'chart_of_accounts', 'template' => 'contractor-id'],
         ['id' => 'account_posting', 'kind' => 'account_posting', 'template' => 'general-id'],
