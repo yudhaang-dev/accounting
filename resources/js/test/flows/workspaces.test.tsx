@@ -182,4 +182,20 @@ describe('workspace selection', () => {
             api.calls.filter((c) => c.path.includes('/companies/')),
         ).toHaveLength(0);
     });
+
+    it('says the page is missing, not the workspace, for an unknown address inside a workspace the user belongs to', async () => {
+        mockApi({
+            ...signedInWithWorkspace,
+            [`GET /api/v1/companies/${workspace.company_id}`]: () =>
+                json({ data: company }),
+        });
+        renderApp(`/w/${workspace.company_id}/no-such-page`);
+
+        expect(
+            await screen.findByText('Halaman tidak ditemukan'),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByText('Ruang kerja tidak ditemukan'),
+        ).not.toBeInTheDocument();
+    });
 });

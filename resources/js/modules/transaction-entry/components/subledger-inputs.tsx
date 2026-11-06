@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { MoneyInput } from '@/components/money-input';
 import { SearchableSelect } from '@/components/searchable-select';
 import { Button } from '@/components/ui/button';
-import { formatDecimal } from '@/lib/decimal';
+import { formatMoney } from '@/lib/decimal';
 import { cashAccountsQuery } from '@/modules/subledger/cash';
 import {
     partyOpenItemsQuery,
@@ -198,7 +198,7 @@ export function AllocationsInput({
                                                         {
                                                             number: item.document_number,
                                                             remaining:
-                                                                formatDecimal(
+                                                                formatMoney(
                                                                     item.remaining_amount,
                                                                     i18n.language,
                                                                 ),

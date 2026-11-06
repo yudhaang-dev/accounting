@@ -458,7 +458,7 @@ describe('structured entry form', () => {
         );
         await typist.click(
             await screen.findByRole('option', {
-                name: 'INV-001 · sisa 1.000.000 IDR',
+                name: 'INV-001 · sisa 1.000.000,00 IDR',
             }),
         );
         await typist.type(screen.getByLabelText('Nominal alokasi 1'), '500000');

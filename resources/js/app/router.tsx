@@ -312,7 +312,8 @@ const companyRoute = createRoute({
         );
 
         if (!workspace) {
-            throw notFound();
+            // The marker tells "this workspace is not yours" from "this page does not exist inside it".
+            throw notFound({ data: { workspace: true } });
         }
 
         rememberLastCompany(context.me.id, params.companyId);
