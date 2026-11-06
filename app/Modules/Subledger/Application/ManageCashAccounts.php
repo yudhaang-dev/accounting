@@ -9,6 +9,7 @@ use App\Modules\MasterData\Contracts\Currencies;
 use App\Modules\Subledger\Domain\CashAccount;
 use App\Modules\Subledger\Domain\CashAccountKind;
 use App\Modules\Subledger\Domain\PartyStatus;
+use App\Modules\Subledger\Domain\PostingProfileAccount;
 use App\Platform\Api\ApiException;
 use App\Platform\Api\ErrorCode;
 use App\Platform\Audit\Audit;
@@ -150,6 +151,11 @@ final class ManageCashAccounts
 
             if (CashAccount::query()->where('account_id', $accountId)->exists()) {
                 $problems[] = __('cash.ledger_account_taken', ['account' => $account->code]);
+            }
+
+            // A receivable or payable control account carries party balances; cash on it would mix the two reconciliations.
+            if (PostingProfileAccount::query()->where('account_id', $accountId)->exists()) {
+                $problems[] = __('cash.ledger_account_is_control', ['account' => $account->code]);
             }
         }
 

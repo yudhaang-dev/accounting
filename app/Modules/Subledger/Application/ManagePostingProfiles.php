@@ -3,6 +3,7 @@
 namespace App\Modules\Subledger\Application;
 
 use App\Modules\Subledger\Contracts\ControlRole;
+use App\Modules\Subledger\Domain\CashAccount;
 use App\Modules\Subledger\Domain\PostingProfile;
 use App\Modules\Subledger\Domain\PostingProfileAccount;
 use App\Platform\Api\ApiException;
@@ -93,6 +94,10 @@ final class ManagePostingProfiles
                 $profile = PostingProfile::query()->lockForUpdate()->findOrFail($profileId);
 
                 $problems = $this->rules->problems($profile->company_id, $accountId, $role);
+
+                if (CashAccount::query()->where('account_id', $accountId)->exists()) {
+                    $problems[] = __('posting_profiles.account_is_cash');
+                }
 
                 if ($problems !== []) {
                     throw ValidationException::withMessages(['account_id' => $problems]);

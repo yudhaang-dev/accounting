@@ -91,6 +91,24 @@ describe('cash accounts (SL-FR-03)', function () {
         newBank(['account_id' => $this->pettyCash])->assertUnprocessable()->assertJsonValidationErrors(['name']);
     });
 
+    it('keeps control accounts and cash accounts apart in both directions', function () {
+        $receivables = cashLedgerAccount($this->companyId, '1121');
+        $version = $this->actingAs($this->admin)->getJson("{$this->url}/accounts/{$receivables}")->json('data.lock_version');
+        $this->actingAs($this->admin)->patchJson("{$this->url}/accounts/{$receivables}", ['lock_version' => $version, 'allowed_sources' => ['subledger']])->assertOk();
+
+        $profile = $this->actingAs($this->admin)->postJson("{$this->url}/posting-profiles", ['name' => 'Third parties'])->assertCreated()->json('data.id');
+        $this->actingAs($this->admin)->putJson("{$this->url}/posting-profiles/{$profile}/accounts/receivables_control", ['lock_version' => 0, 'account_id' => $receivables])->assertOk();
+
+        // The receivable control account cannot become a cash account.
+        newBank(['name' => 'Piutang', 'account_id' => $receivables])->assertUnprocessable()->assertJsonValidationErrors(['account_id']);
+
+        // The ledger account of a cash account cannot become a control account.
+        newBank()->assertCreated();
+        $other = $this->actingAs($this->admin)->postJson("{$this->url}/posting-profiles", ['name' => 'Related parties'])->assertCreated()->json('data.id');
+        $this->actingAs($this->admin)->putJson("{$this->url}/posting-profiles/{$other}/accounts/receivables_control", ['lock_version' => 0, 'account_id' => $this->bank])
+            ->assertUnprocessable()->assertJsonValidationErrors(['account_id']);
+    });
+
     it('needs a currency activated for the company that the ledger account accepts', function () {
         newBank(['currency' => 'USD', 'account_id' => $this->foreignBank])->assertUnprocessable()->assertJsonValidationErrors(['currency']);
 
