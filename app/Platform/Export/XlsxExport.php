@@ -33,6 +33,7 @@ final class XlsxExport
     private static function write(ExportTable $table): void
     {
         $writer = new Writer;
+        self::fitColumns($writer, $table);
         $writer->openToFile('php://output');
 
         $bold = new Style(fontBold: true);
@@ -66,6 +67,29 @@ final class XlsxExport
         }
 
         $writer->close();
+    }
 
+    /**
+     * Excel shows `########` for a number wider than its column, so each column is as wide as its longest
+     * value (a number counts its thousands separators and sign), within a floor and a ceiling.
+     */
+    private static function fitColumns(Writer $writer, ExportTable $table): void
+    {
+        foreach ($table->columns as $index => $column) {
+            $longest = mb_strlen($column->label);
+
+            foreach ($table->rows as $row) {
+                $value = (string) ($row->cells[$index] ?? '');
+                $length = mb_strlen($value) + ($index === 0 ? $row->indent * 2 : 0);
+
+                if ($column->numeric && is_numeric($value)) {
+                    $length += intdiv(max(strlen(explode('.', $value)[0]) - 1, 0), 3) + 1;
+                }
+
+                $longest = max($longest, $length);
+            }
+
+            $writer->getOptions()->setColumnWidth((float) min(max($longest + 2, 12), 70), $index + 1);
+        }
     }
 }
