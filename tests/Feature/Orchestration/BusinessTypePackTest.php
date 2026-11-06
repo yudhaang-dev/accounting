@@ -281,6 +281,18 @@ describe('the simple profile (B-11i, ADR-0019 item 6)', function () {
         $this->actingAs($this->admin)->getJson("{$this->url}/template-packs/retail?profile=nope")->assertNotFound();
     });
 
+    it('previews the chart without the optional accounts the install leaves out, so the count is what gets created', function () {
+        $items = fn (string $query) => collect($this->actingAs($this->admin)->getJson("{$this->url}/template-packs/retail{$query}")->json('data.components'))->firstWhere('id', 'chart_of_accounts')['items'];
+        $full = $items('');
+        $preview = $items('?profile=simple');
+        $left = collect($full)->where('optional', true)->pluck('key')->diff(['2160', '2170'])->all();
+
+        expect($left)->not->toBe([])
+            ->and(array_column($preview, 'key'))->not->toContain(...$left)
+            ->and(array_column($preview, 'key'))->toContain('2160', '2170')
+            ->and(count($preview))->toBe(count($full) - count($left));
+    });
+
     it('installs without the optional accounts and still activates and reports with no unmapped row', function () {
         $full = collect($this->actingAs($this->admin)->getJson("{$this->url}/template-packs/retail")->json('data.components'))->firstWhere('id', 'chart_of_accounts')['items'];
         $optional = collect($full)->where('optional', true)->pluck('key')->all();

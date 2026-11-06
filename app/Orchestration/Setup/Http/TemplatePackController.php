@@ -39,12 +39,23 @@ class TemplatePackController
         $pack = $packs->find($key) ?? throw new NotFoundHttpException;
         $profile = $request->query('profile');
 
+        $components = null;
+
         if (is_string($profile) && $profile !== '') {
-            // With a profile only its components are described; the optional items stay marked `optional` and the install leaves them out.
+            // With a profile only its components are described, and without the optional items the install leaves out.
             $pack['components'] = $packs->profileComponents($pack, $profile) ?? throw new NotFoundHttpException;
+            $components = array_map(function (array $component) use ($pack, $profile): array {
+                $keep = $pack['profiles'][$profile]['keep'][$component['id']] ?? [];
+                $component['items'] = array_values(array_filter(
+                    $component['items'],
+                    fn (array $item): bool => $item['exists'] || $item['conflict'] !== null || ! $item['optional'] || in_array($item['key'], $keep, true),
+                ));
+
+                return $component;
+            }, $describe($pack));
         }
 
-        return response()->json(['data' => [...$this->summary($pack), 'components' => $describe($pack)]]);
+        return response()->json(['data' => [...$this->summary($pack), 'components' => $components ?? $describe($pack)]]);
     }
 
     /**
