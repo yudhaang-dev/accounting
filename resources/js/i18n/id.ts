@@ -3188,6 +3188,9 @@ export const id = {
             modePack: 'Paket jenis usaha',
             modeChart: 'Hanya bagan akun',
             intro: 'Pilih paket sebagai titik awal: bagan akun, peran pihak, jenis transaksi, dan laporan dipasang sekaligus. Paket hanya saran: tidak ada yang dibuat sebelum Anda meninjau dan mengonfirmasinya, dan semuanya dapat diubah sesudahnya.',
+            simple: 'Pilihan sederhana untuk usaha kecil tanpa akuntan: hanya jenis transaksi harian, tanpa akun opsional.',
+            simpleHint:
+                'Pilihan sederhana: jenis transaksi jurnal bebas dan akun opsional dilewati, kecuali akun yang dibutuhkan laporan. Persetujuan, periode, dan pemisahan tugas tidak berubah.',
             pack: 'Paket',
             review: 'Tinjau isi paket',
             reviewHint:

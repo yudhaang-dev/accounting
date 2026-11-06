@@ -736,6 +736,7 @@ function packServer() {
                     description: pack.description,
                     version: 1,
                     additive: false,
+                    profiles: [],
                     components: pack.components.map(
                         ({ id, kind, template }) => ({
                             id,
@@ -911,6 +912,7 @@ describe('template pack step', () => {
                         description: pack.description,
                         version: 1,
                         additive: false,
+                        profiles: [],
                         components: [],
                     },
                     {
@@ -919,6 +921,7 @@ describe('template pack step', () => {
                         description: 'Tambahan',
                         version: 1,
                         additive: true,
+                        profiles: [],
                         components: [],
                     },
                 ],

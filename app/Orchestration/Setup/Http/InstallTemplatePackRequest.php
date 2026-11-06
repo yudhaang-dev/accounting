@@ -15,7 +15,8 @@ class InstallTemplatePackRequest extends FormRequest
     {
         return [
             'confirmed' => ['required', 'accepted'],
-            'components' => ['required', 'array', 'list', 'min:1'],
+            'profile' => ['sometimes', 'string', 'max:32'],
+            'components' => ['required_without:profile', 'array', 'list', 'min:1'],
             'components.*' => ['string', 'max:64', 'distinct'],
             'exclude' => ['sometimes', 'array'],
             'exclude.*' => ['array', 'list'],

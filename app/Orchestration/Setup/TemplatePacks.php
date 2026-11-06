@@ -11,7 +11,7 @@ use LogicException;
  * definitions.
  *
  * @phpstan-type PackComponent array{id: string, kind: string, template: string}
- * @phpstan-type Pack array{key: string, name: string, description: string, version: int, reviewed: bool, additive?: bool, components: list<PackComponent>}
+ * @phpstan-type Pack array{key: string, name: string, description: string, version: int, reviewed: bool, additive?: bool, components: list<PackComponent>, profiles?: array<string, array{components: list<string>, keep?: array<string, list<string>>}>}
  */
 final class TemplatePacks
 {
@@ -35,6 +35,19 @@ final class TemplatePacks
     public function find(string $key): ?array
     {
         return $this->all()[$key] ?? null;
+    }
+
+    /**
+     * The components a profile of the pack installs, in install order (ADR-0019 item 6).
+     *
+     * @param  Pack  $pack
+     * @return list<PackComponent>|null null when the pack has no such profile
+     */
+    public function profileComponents(array $pack, string $profile): ?array
+    {
+        $ids = $pack['profiles'][$profile]['components'] ?? null;
+
+        return $ids === null ? null : array_values(array_filter($pack['components'], fn (array $entry): bool => in_array($entry['id'], $ids, true)));
     }
 
     /** @return array<string, Pack> */
@@ -81,6 +94,14 @@ final class TemplatePacks
 
             $ids[$component['id']] = true;
             $last = $position;
+        }
+
+        foreach ($pack['profiles'] ?? [] as $name => $profile) {
+            foreach ($profile['components'] as $id) {
+                if (! isset($ids[$id])) {
+                    throw new LogicException("Template pack {$pack['key']} ({$file}): profile {$name} names unknown component {$id}.");
+                }
+            }
         }
     }
 }

@@ -6,5 +6,6 @@ return [
     'exclude_not_picked' => 'Komponen :id tidak dipilih, jadi item di dalamnya tidak bisa dikecualikan.',
     'item_unknown' => 'Item :key tidak ada di komponen :id.',
     'item_conflict' => 'Item :key di komponen :id bentrok dengan data perusahaan: :reason Kecualikan item itu.',
-
+    'component_not_in_profile' => 'Komponen :id tidak termasuk profil :profile paket ini.',
+    'profile_unknown' => 'Paket ini tidak punya profil :profile.',
 ];

@@ -20,4 +20,12 @@ return [
         ['id' => 'transaction_types.contractor-operations', 'kind' => 'transaction_types', 'template' => 'contractor-operations'],
         ['id' => 'report_definitions', 'kind' => 'report_definitions', 'template' => 'general-id'],
     ],
+    // Small company without an accountant (ADR-0019 item 6): no free-form journal type; the optional accounts are left out by the install.
+    'profiles' => [
+        'simple' => [
+            'components' => ['chart_of_accounts', 'account_posting', 'party_roles', 'account_roles', 'posting_profiles', 'cash_equivalents', 'transaction_types.daily-operations', 'transaction_types.contractor-operations', 'report_definitions'],
+            // Optional accounts the report definitions name, which the profile installs anyway.
+            'keep' => ['chart_of_accounts' => ['2160', '2170']],
+        ],
+    ],
 ];

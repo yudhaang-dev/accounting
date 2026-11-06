@@ -23,7 +23,7 @@
 | Pencatatan | `transaction-types`, `entries`, `financial-events`, `recurring-schedules` |
 | Subledger | `parties` (peran lewat `roles`, daftar key), `party-roles`, `posting-profiles`, `cash-accounts`, `documents`, `open-items`, `allocations`, `reconciliations`, `subledger/account-role-mappings`, `reports/aging` |
 | Perencanaan | `plans`, `plan-versions` |
-| Lintas modul | `template-packs` (daftar paket; `GET .../{key}` memuat ringkasan per komponen untuk perusahaan itu; `POST .../{key}/install` memasang setelah `confirmed: true` dan daftar komponen terpilih, X-AC-06) |
+| Lintas modul | `template-packs` (daftar paket; `GET .../{key}` memuat ringkasan per komponen untuk perusahaan itu; `POST .../{key}/install` memasang setelah `confirmed: true` dan daftar komponen terpilih, X-AC-06; paket jenis usaha menyebut `profiles` (`simple`): `?profile=simple` pada `GET` dan `profile` pada `POST` membatasi komponen ke profil itu dan melewati akun opsional, ADR-0019 butir 6) |
 | Pelaporan | `report-definitions`, `report-definitions/{id}/results`, `movement-classifications`, `reporting/account-role-mappings`, `reports/trial-balance`, `reports/general-ledger`, `report-snapshots` |
 | Lintas modul | `policies/{key}` (kebijakan per modul, mis. `approval`, `ledger`, `security`), `account-role-catalog` |
 

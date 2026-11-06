@@ -8,6 +8,7 @@ use App\Orchestration\Setup\DescribeTemplatePack;
 use App\Orchestration\Setup\InstallTemplatePack;
 use App\Orchestration\Setup\TemplatePacks;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -19,7 +20,7 @@ class TemplatePackController
      * The template packs released for use. A pack is only a suggestion: nothing is created until the
      * company reviews it and confirms the install.
      *
-     * @response array{data: list<array{key: string, name: string, description: string, version: int, additive: bool, components: list<array{id: string, kind: string, template: string}>}>}
+     * @response array{data: list<array{key: string, name: string, description: string, version: int, additive: bool, profiles: list<string>, components: list<array{id: string, kind: string, template: string}>}>}
      */
     public function index(TemplatePacks $packs): JsonResponse
     {
@@ -28,13 +29,20 @@ class TemplatePackController
 
     /**
      * What the pack would create in this company, component by component, with the items the company already
-     * has marked `exists`. Nothing is created.
+     * has marked `exists`. Nothing is created. `profile` (a name from `profiles`, such as `simple`) narrows the
+     * pack to the components of that profile.
      *
-     * @response array{data: array{key: string, name: string, description: string, version: int, additive: bool, components: list<array{id: string, kind: string, template: string, name: string, version: int, items: list<array{key: string, label: string, exists: bool, optional: bool, conflict: string|null}>}>}}
+     * @response array{data: array{key: string, name: string, description: string, version: int, additive: bool, profiles: list<string>, components: list<array{id: string, kind: string, template: string, name: string, version: int, items: list<array{key: string, label: string, exists: bool, optional: bool, conflict: string|null}>}>}}
      */
-    public function show(TemplatePacks $packs, DescribeTemplatePack $describe, string $companyId, string $key): JsonResponse
+    public function show(Request $request, TemplatePacks $packs, DescribeTemplatePack $describe, string $companyId, string $key): JsonResponse
     {
         $pack = $packs->find($key) ?? throw new NotFoundHttpException;
+        $profile = $request->query('profile');
+
+        if (is_string($profile) && $profile !== '') {
+            // With a profile only its components are described; the optional items stay marked `optional` and the install leaves them out.
+            $pack['components'] = $packs->profileComponents($pack, $profile) ?? throw new NotFoundHttpException;
+        }
 
         return response()->json(['data' => [...$this->summary($pack), 'components' => $describe($pack)]]);
     }
@@ -42,7 +50,9 @@ class TemplatePackController
     /**
      * Creates the picked components of the pack in one transaction: all or none. `confirmed` must be true. The
      * caller needs the permission of every picked component. Items the company already has are skipped and
-     * reported, never overwritten. `exclude` lists, per component id, items to leave out.
+     * reported, never overwritten. `exclude` lists, per component id, items to leave out. With `profile` (such as `simple`, for a small company
+     * without an accountant) only that profile's components may be picked (all of them when `components` is omitted)
+     * and the optional items are left out.
      *
      * @status 201
      *
@@ -60,18 +70,24 @@ class TemplatePackController
         /** @var User $user */
         $user = $request->user();
         /** @var list<string> $components */
-        $components = $request->validated('components');
+        $components = $request->validated('components') ?? [];
+        $profile = $request->validated('profile');
+
+        if ($profile !== null && $components === []) {
+            $components = array_column($packs->profileComponents($pack, $profile) ?? [], 'id');
+        }
+
         /** @var array<string, list<string>> $exclude */
         $exclude = $request->validated('exclude') ?? [];
 
-        $results = $install($pack, $components, $exclude, $contexts->current($request), $user->id);
+        $results = $install($pack, $components, $exclude, $contexts->current($request), $user->id, $profile);
 
         return response()->json(['data' => ['pack' => $pack['key'], 'version' => $pack['version'], 'components' => $results]], 201);
     }
 
     /**
      * @param  Pack  $pack
-     * @return array{key: string, name: string, description: string, version: int, additive: bool, components: list<array{id: string, kind: string, template: string}>}
+     * @return array{key: string, name: string, description: string, version: int, additive: bool, profiles: list<string>, components: list<array{id: string, kind: string, template: string}>}
      */
     private function summary(array $pack): array
     {
@@ -81,6 +97,7 @@ class TemplatePackController
             'description' => $pack['description'],
             'version' => $pack['version'],
             'additive' => $pack['additive'] ?? false,
+            'profiles' => array_keys($pack['profiles'] ?? []),
             'components' => $pack['components'],
         ];
     }

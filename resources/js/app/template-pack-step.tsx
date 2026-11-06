@@ -173,16 +173,18 @@ function ComponentReview({
 function PackReview({
     companyId,
     packKey,
+    profile,
     onInstalled,
 }: {
     companyId: string;
     packKey: string;
+    profile?: string;
     onInstalled: (result: InstallResult, pack: Pack) => void;
 }) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const { data: pack } = useSuspenseQuery(
-        templatePackQuery(companyId, packKey),
+        templatePackQuery(companyId, packKey, profile),
     );
     const [unpicked, setUnpicked] = useState<ReadonlySet<string>>(new Set());
     const [leftOut, setLeftOut] = useState<ReadonlySet<string>>(new Set());
@@ -218,6 +220,7 @@ function PackReview({
             installPack(companyId, pack.key, {
                 components: picked.map((component) => component.id),
                 exclude: excludes(),
+                profile,
             }),
         onSuccess: async (result) => {
             await queryClient.invalidateQueries({
@@ -235,7 +238,8 @@ function PackReview({
             // Someone else changed the company meanwhile: show what is there now.
             if (isApiError(error) && error.status === 409) {
                 void queryClient.invalidateQueries({
-                    queryKey: templatePackQuery(companyId, pack.key).queryKey,
+                    queryKey: templatePackQuery(companyId, pack.key, profile)
+                        .queryKey,
                 });
             }
         },
@@ -277,6 +281,11 @@ function PackReview({
                     <p className="text-sm text-muted-foreground">
                         {t('setup.packs.reviewHint')}
                     </p>
+                    {profile && (
+                        <p className="text-sm text-muted-foreground">
+                            {t('setup.packs.simpleHint')}
+                        </p>
+                    )}
                 </div>
 
                 <ul className="flex flex-col gap-2">
@@ -384,6 +393,12 @@ export function TemplatePackStep({
     const { t } = useTranslation();
     const [chosen, setChosen] = useState<string | null>(null);
     const selected = chosen ?? packs[0]?.key ?? null;
+    const [simple, setSimple] = useState(false);
+    const hasSimple =
+        packs
+            .find((pack) => pack.key === selected)
+            ?.profiles.includes('simple') ?? false;
+    const profile = simple && hasSimple ? 'simple' : undefined;
 
     return (
         <div className="flex flex-col gap-5">
@@ -407,11 +422,25 @@ export function TemplatePackStep({
                 ))}
             </RadioGroup>
 
+            {hasSimple && (
+                <Field orientation="horizontal">
+                    <Checkbox
+                        id="pack-simple"
+                        checked={simple}
+                        onCheckedChange={(value) => setSimple(value === true)}
+                    />
+                    <FieldLabel htmlFor="pack-simple" className="font-normal">
+                        {t('setup.packs.simple')}
+                    </FieldLabel>
+                </Field>
+            )}
+
             {selected && (
                 <Suspense fallback={<Skeleton className="h-48 w-full" />}>
                     {/* Keyed so switching packs starts from a clean review. */}
                     <PackReview
-                        key={selected}
+                        key={`${selected}:${profile ?? ''}`}
+                        profile={profile}
                         companyId={companyId}
                         packKey={selected}
                         onInstalled={onInstalled}

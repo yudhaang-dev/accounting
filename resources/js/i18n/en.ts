@@ -3187,6 +3187,9 @@ export const en: Widen<typeof id> = {
             modePack: 'Business type pack',
             modeChart: 'Chart of accounts only',
             intro: 'Pick a pack as a starting point: the chart of accounts, party roles, transaction types and reports are installed together. A pack is only a suggestion: nothing is created until you review and confirm it, and everything can be changed afterwards.',
+            simple: 'Simple choice for a small business without an accountant: daily transaction types only, and optional accounts left out.',
+            simpleHint:
+                'Simple choice: the free-form journal type and the optional accounts are left out, except the ones the reports need. Approval, periods and separation of duties are not changed.',
             pack: 'Pack',
             review: 'Review the pack',
             reviewHint:

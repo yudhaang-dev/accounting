@@ -21,6 +21,7 @@ final class InstallTemplatePack
 {
     public function __construct(
         private readonly TemplateComponents $components,
+        private readonly TemplatePacks $packs,
         private readonly Audit $audit,
     ) {}
 
@@ -28,15 +29,26 @@ final class InstallTemplatePack
      * @param  Pack  $pack
      * @param  list<string>  $componentIds  ids of the components to install
      * @param  array<string, list<string>>  $exclude  item keys to leave out, by component id
+     * @param  string|null  $profile  a profile of the pack: only its components may be picked, and optional items are left out
      * @return list<array{id: string, template: string, created: list<string>, skipped: list<string>}>
      *
      * @throws ValidationException a component or item the pack lacks, or one a module refuses
      * @throws AuthorizationException the caller lacks the permission of a picked component
      */
-    public function __invoke(array $pack, array $componentIds, array $exclude, AccessContext $access, int $actorId): array
+    public function __invoke(array $pack, array $componentIds, array $exclude, AccessContext $access, int $actorId, ?string $profile = null): array
     {
         $entries = array_column($pack['components'], null, 'id');
         $errors = [];
+
+        if ($profile !== null) {
+            $allowed = array_column($this->profileEntries($pack, $profile), 'id');
+
+            foreach ($componentIds as $index => $id) {
+                if (isset($entries[$id]) && ! in_array($id, $allowed, true)) {
+                    $errors["components.{$index}"] = [__('template_packs.component_not_in_profile', ['id' => $id, 'profile' => $profile])];
+                }
+            }
+        }
 
         foreach ($componentIds as $index => $id) {
             if (! isset($entries[$id])) {
@@ -61,7 +73,7 @@ final class InstallTemplatePack
             $access->requirePermission($this->components->for($entry['kind'])->permission());
         }
 
-        return DB::transaction(function () use ($pack, $picked, $exclude, $actorId): array {
+        return DB::transaction(function () use ($pack, $picked, $exclude, $actorId, $profile): array {
             $results = [];
 
             foreach ($picked as $entry) {
@@ -89,6 +101,8 @@ final class InstallTemplatePack
                         }
 
                         $skipped[] = $item->key;
+                    } elseif ($profile !== null && $item->optional && ! in_array($item->key, $pack['profiles'][$profile]['keep'][$entry['id']] ?? [], true)) {
+                        $skipped[] = $item->key;
                     } elseif (! in_array($item->key, $left, true)) {
                         $create[] = $item->key;
                     }
@@ -104,10 +118,23 @@ final class InstallTemplatePack
             $this->audit->record('template_pack.installed', "Template pack {$pack['key']} installed.", properties: [
                 'pack' => $pack['key'],
                 'version' => $pack['version'],
+                'profile' => $profile,
                 'components' => array_map(fn (array $result): array => ['id' => $result['id'], 'template' => $result['template'], 'created' => count($result['created']), 'skipped' => count($result['skipped'])], $results),
             ]);
 
             return $results;
         });
+    }
+
+    /**
+     * @param  Pack  $pack
+     * @return list<array{id: string, kind: string, template: string}>
+     *
+     * @throws ValidationException the pack has no such profile
+     */
+    private function profileEntries(array $pack, string $profile): array
+    {
+        return $this->packs->profileComponents($pack, $profile)
+            ?? throw ValidationException::withMessages(['profile' => [__('template_packs.profile_unknown', ['profile' => $profile])]]);
     }
 }

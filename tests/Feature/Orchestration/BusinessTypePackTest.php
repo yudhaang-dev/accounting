@@ -259,3 +259,66 @@ describe('packs of a business type (B-11e, ADR-0019)', function () {
         }
     });
 });
+
+describe('the simple profile (B-11i, ADR-0019 item 6)', function () {
+    it('offers the profile on every business type pack and on no other', function () {
+        $profiles = collect($this->actingAs($this->admin)->getJson("{$this->url}/template-packs")->assertOk()->json('data'))->pluck('profiles', 'key');
+
+        foreach (['retail', 'services', 'contractor', 'manufacturing', 'fnb'] as $key) {
+            expect($profiles[$key])->toBe(['simple']);
+        }
+
+        expect($profiles['general'])->toBe([])->and($profiles['addon-tax'])->toBe([]);
+    });
+
+    it('describes only the components of the profile, without the free-form journal type', function () {
+        $data = $this->actingAs($this->admin)->getJson("{$this->url}/template-packs/retail?profile=simple")->assertOk()->json('data');
+        $ids = array_column($data['components'], 'id');
+
+        expect($ids)->toContain('chart_of_accounts', 'transaction_types.daily-operations', 'transaction_types.retail-operations', 'report_definitions')
+            ->and($ids)->not->toContain('transaction_types.general');
+
+        $this->actingAs($this->admin)->getJson("{$this->url}/template-packs/retail?profile=nope")->assertNotFound();
+    });
+
+    it('installs without the optional accounts and still activates and reports with no unmapped row', function () {
+        $full = collect($this->actingAs($this->admin)->getJson("{$this->url}/template-packs/retail")->json('data.components'))->firstWhere('id', 'chart_of_accounts')['items'];
+        $optional = collect($full)->where('optional', true)->pluck('key')->all();
+        expect($optional)->not->toBe([]);
+
+        $result = $this->actingAs($this->admin)->postJson("{$this->url}/template-packs/retail/install", ['profile' => 'simple', 'confirmed' => true])->assertCreated()->json('data');
+        $codes = Account::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->pluck('code')->all();
+        $types = TransactionType::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->pluck('key')->all();
+
+        // 2160 and 2170 are optional but named by the cash flow definition, so the profile keeps them.
+        expect(array_values(array_intersect($optional, $codes)))->toBe(['2160', '2170'])
+            ->and(array_column($result['components'], 'id'))->not->toContain('transaction_types.general')
+            ->and($types)->toContain('daily_cash_sale')->and($types)->not->toContain('general_journal');
+
+        setUpFiscalCalendar($this->admin, $this->companyId);
+        $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();
+
+        [, $values] = btpValues('income_statement', 'from=2026-03-01&to=2026-03-31');
+        expect($values)->not->toHaveKey('unmapped');
+    });
+
+    it('installs the simple profile of every business type pack into an empty company and activates it', function (string $key) {
+        $this->actingAs($this->admin)->postJson("{$this->url}/template-packs/{$key}/install", ['profile' => 'simple', 'confirmed' => true])->assertCreated();
+
+        setUpFiscalCalendar($this->admin, $this->companyId);
+        $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();
+
+        foreach (['income_statement' => 'from=2026-03-01&to=2026-03-31', 'balance_sheet' => 'from=2026-03-31&to=2026-03-31', 'cash_flow_indirect' => 'from=2026-03-01&to=2026-03-31'] as $report => $query) {
+            expect(btpValues($report, $query)[1])->not->toHaveKey('unmapped');
+        }
+    })->with(['retail', 'services', 'contractor', 'manufacturing', 'fnb']);
+
+    it('refuses a component outside the profile and an unknown profile, creating nothing', function () {
+        $this->actingAs($this->admin)->postJson("{$this->url}/template-packs/retail/install", ['profile' => 'simple', 'components' => ['chart_of_accounts', 'transaction_types.general'], 'confirmed' => true])
+            ->assertUnprocessable()->assertJsonValidationErrors('components.1');
+        $this->actingAs($this->admin)->postJson("{$this->url}/template-packs/retail/install", ['profile' => 'nope', 'confirmed' => true])
+            ->assertUnprocessable()->assertJsonValidationErrors('profile');
+
+        expect(Account::withoutGlobalScope(CompanyScope::class)->where('company_id', $this->companyId)->count())->toBe(0);
+    });
+});

@@ -24537,6 +24537,12 @@
                                                     "additive": {
                                                         "type": "boolean"
                                                     },
+                                                    "profiles": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
                                                     "components": {
                                                         "type": "array",
                                                         "items": {
@@ -24566,6 +24572,7 @@
                                                     "description",
                                                     "version",
                                                     "additive",
+                                                    "profiles",
                                                     "components"
                                                 ]
                                             }
@@ -24587,7 +24594,7 @@
         "/companies/{companyId}/template-packs/{key}": {
             "get": {
                 "operationId": "template-packs.show",
-                "summary": "What the pack would create in this company, component by component, with the items the company already\nhas marked `exists`. Nothing is created",
+                "summary": "What the pack would create in this company, component by component, with the items the company already\nhas marked `exists`. Nothing is created. `profile` (a name from `profiles`, such as `simple`) narrows the\npack to the components of that profile",
                 "tags": [
                     "TemplatePack"
                 ],
@@ -24604,6 +24611,13 @@
                         "name": "key",
                         "in": "path",
                         "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "profile",
+                        "in": "query",
                         "schema": {
                             "type": "string"
                         }
@@ -24634,6 +24648,12 @@
                                                 },
                                                 "additive": {
                                                     "type": "boolean"
+                                                },
+                                                "profiles": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
                                                 },
                                                 "components": {
                                                     "type": "array",
@@ -24706,6 +24726,7 @@
                                                 "description",
                                                 "version",
                                                 "additive",
+                                                "profiles",
                                                 "components"
                                             ]
                                         }
@@ -24729,7 +24750,7 @@
         "/companies/{companyId}/template-packs/{key}/install": {
             "post": {
                 "operationId": "template-packs.install",
-                "summary": "Creates the picked components of the pack in one transaction: all or none. `confirmed` must be true. The\ncaller needs the permission of every picked component. Items the company already has are skipped and\nreported, never overwritten. `exclude` lists, per component id, items to leave out",
+                "summary": "Creates the picked components of the pack in one transaction: all or none. `confirmed` must be true. The\ncaller needs the permission of every picked component. Items the company already has are skipped and\nreported, never overwritten. `exclude` lists, per component id, items to leave out. With `profile` (such as `simple`, for a small company\nwithout an accountant) only that profile's components may be picked (all of them when `components` is omitted)\nand the optional items are left out",
                 "tags": [
                     "TemplatePack"
                 ],
@@ -30248,6 +30269,10 @@
                             true
                         ]
                     },
+                    "profile": {
+                        "type": "string",
+                        "maxLength": 32
+                    },
                     "components": {
                         "type": "array",
                         "items": {
@@ -30270,8 +30295,7 @@
                     }
                 },
                 "required": [
-                    "confirmed",
-                    "components"
+                    "confirmed"
                 ],
                 "title": "InstallTemplatePackRequest"
             },

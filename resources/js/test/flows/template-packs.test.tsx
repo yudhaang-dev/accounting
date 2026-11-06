@@ -61,6 +61,7 @@ const servedPack = () => ({
                     name: loans.name,
                     description: loans.description,
                     version: 1,
+                    profiles: [],
                     components: [
                         {
                             id: 'chart_of_accounts',
@@ -127,6 +128,55 @@ describe('template packs of a running company', () => {
         expect(
             await screen.findByRole('button', { name: 'Pasang paket' }),
         ).toBeInTheDocument();
+    });
+
+    it('installs the simple profile when the user picks the simple choice', async () => {
+        const api = mockApi({
+            ...withPermissions(['accounts.manage']),
+            ...servedPack(),
+            [`GET ${base}/template-packs`]: () =>
+                json({
+                    data: [
+                        {
+                            key: loans.key,
+                            name: loans.name,
+                            description: loans.description,
+                            version: 1,
+                            profiles: ['simple'],
+                            components: [
+                                {
+                                    id: 'chart_of_accounts',
+                                    kind: 'chart_of_accounts',
+                                    template: 'addon-loans',
+                                },
+                            ],
+                        },
+                    ],
+                }),
+        });
+
+        renderApp(path);
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('checkbox', {
+                name: /Pilihan sederhana untuk usaha kecil/,
+            }),
+        );
+        await typist.click(
+            await screen.findByRole('checkbox', {
+                name: 'Saya telah meninjau isi paket ini dan ingin memasangnya.',
+            }),
+        );
+        await typist.click(
+            screen.getByRole('button', { name: 'Pasang paket' }),
+        );
+
+        expect(await screen.findByText('Paket terpasang')).toBeInTheDocument();
+        expect(
+            api.called(`POST ${base}/template-packs/addon-loans/install`)[0]
+                ?.body,
+        ).toMatchObject({ confirmed: true, profile: 'simple' });
     });
 
     it('says so when no pack is released', async () => {

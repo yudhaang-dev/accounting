@@ -44,14 +44,27 @@ export const templatePacksQuery = (companyId: string) =>
     });
 
 /** What the pack would create in this company, item by item; nothing is created (X-AC-06). */
-export const templatePackQuery = (companyId: string, key: string) =>
+export const templatePackQuery = (
+    companyId: string,
+    key: string,
+    profile?: string,
+) =>
     queryOptions({
-        queryKey: ['companies', companyId, 'template-packs', key],
+        queryKey: [
+            'companies',
+            companyId,
+            'template-packs',
+            key,
+            profile ?? null,
+        ],
         queryFn: async (): Promise<Pack> =>
             (
                 await unwrap(
                     api.GET('/companies/{companyId}/template-packs/{key}', {
-                        params: { path: { companyId, key } },
+                        params: {
+                            path: { companyId, key },
+                            query: profile ? { profile } : {},
+                        },
                     }),
                 )
             ).data,
@@ -61,7 +74,11 @@ export const templatePackQuery = (companyId: string, key: string) =>
 export async function installPack(
     companyId: string,
     key: string,
-    input: { components: string[]; exclude: Record<string, string[]> },
+    input: {
+        components: string[];
+        exclude: Record<string, string[]>;
+        profile?: string;
+    },
 ): Promise<InstallResult> {
     return (
         await unwrap(

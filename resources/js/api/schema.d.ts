@@ -3890,7 +3890,8 @@ export interface paths {
         };
         /**
          * What the pack would create in this company, component by component, with the items the company already
-         *     has marked `exists`. Nothing is created
+         *     has marked `exists`. Nothing is created. `profile` (a name from `profiles`, such as `simple`) narrows the
+         *     pack to the components of that profile
          */
         get: operations["template-packs.show"];
         put?: never;
@@ -3913,7 +3914,9 @@ export interface paths {
         /**
          * Creates the picked components of the pack in one transaction: all or none. `confirmed` must be true. The
          *     caller needs the permission of every picked component. Items the company already has are skipped and
-         *     reported, never overwritten. `exclude` lists, per component id, items to leave out
+         *     reported, never overwritten. `exclude` lists, per component id, items to leave out. With `profile` (such as `simple`, for a small company
+         *     without an accountant) only that profile's components may be picked (all of them when `components` is omitted)
+         *     and the optional items are left out
          */
         post: operations["template-packs.install"];
         delete?: never;
@@ -5200,7 +5203,8 @@ export interface components {
         InstallTemplatePackRequest: {
             /** @enum {unknown} */
             confirmed: "yes" | "on" | "1" | 1 | "true" | true;
-            components: string[];
+            profile?: string;
+            components?: string[];
             exclude?: string[][];
         };
         /** IntegrationClientResource */
@@ -15568,6 +15572,7 @@ export interface operations {
                             description: string;
                             version: number;
                             additive: boolean;
+                            profiles: string[];
                             components: {
                                 id: string;
                                 kind: string;
@@ -15582,7 +15587,9 @@ export interface operations {
     };
     "template-packs.show": {
         parameters: {
-            query?: never;
+            query?: {
+                profile?: string;
+            };
             header?: never;
             path: {
                 companyId: string;
@@ -15604,6 +15611,7 @@ export interface operations {
                             description: string;
                             version: number;
                             additive: boolean;
+                            profiles: string[];
                             components: {
                                 id: string;
                                 kind: string;
