@@ -1987,8 +1987,6 @@ export const en: Widen<typeof id> = {
             removeField: 'Remove field {{n}}',
             addField: 'Add field',
             allowedAccounts: 'Accounts that may be picked (empty means all)',
-            allowedClasses:
-                'Account classes that may be picked (none ticked means every class)',
             allowedRoles:
                 'Roles a party may hold (none checked means any party)',
             roleInactive: 'inactive',
