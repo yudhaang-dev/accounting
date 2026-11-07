@@ -92,7 +92,12 @@ export const entryQuery = (companyId: string, id: string) =>
     });
 
 /** Accounts an entry line may use: active ones, leaf accounts only (parents take no postings). */
-export type LineAccount = { id: string; code: string; name: string };
+export type LineAccount = {
+    id: string;
+    code: string;
+    name: string;
+    class: string;
+};
 
 export const lineAccountsQuery = (companyId: string) =>
     queryOptions({
@@ -113,15 +118,22 @@ export const lineAccountsQuery = (companyId: string) =>
                 )
             ).data
                 .filter((account) => account.is_leaf)
-                .map(({ id, code, name }) => ({ id, code, name })),
+                .map(({ id, code, name, class: accountClass }) => ({
+                    id,
+                    code,
+                    name,
+                    class: accountClass,
+                })),
     });
 
 /** Every account by id, whatever its status: a posted entry may use an account closed since. */
+export type AccountName = Pick<LineAccount, 'id' | 'code' | 'name'>;
+
 export const accountNamesQuery = (companyId: string) =>
     queryOptions({
         queryKey: ['companies', companyId, 'entries', 'account-names'],
         staleTime: 60_000,
-        queryFn: async (): Promise<Record<string, LineAccount>> =>
+        queryFn: async (): Promise<Record<string, AccountName>> =>
             Object.fromEntries(
                 (
                     await unwrap(

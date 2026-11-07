@@ -18,7 +18,7 @@ return [
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Diterima di rekening'],
                 ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor rekap kasir', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Total penjualan'],
-                ['name' => 'revenue_account', 'type' => 'account', 'label' => 'Akun penjualan'],
+                ['name' => 'revenue_account', 'type' => 'account', 'account_classes' => ['income'], 'label' => 'Akun penjualan'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
@@ -39,7 +39,7 @@ return [
                 ['name' => 'customer', 'type' => 'party', 'label' => 'Pelanggan', 'allowed_roles' => ['customer']],
                 ['name' => 'credit_note_number', 'type' => 'reference', 'label' => 'Nomor nota retur', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Nilai retur'],
-                ['name' => 'returns_account', 'type' => 'account', 'label' => 'Akun retur penjualan'],
+                ['name' => 'returns_account', 'type' => 'account', 'account_classes' => ['income'], 'label' => 'Akun retur penjualan'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'field', 'field' => 'returns_account'], 'apply_dimensions' => true, 'reuses_field' => true],
@@ -63,7 +63,7 @@ return [
                 ['name' => 'supplier', 'type' => 'party', 'label' => 'Pemasok', 'allowed_roles' => ['supplier']],
                 ['name' => 'credit_note_number', 'type' => 'reference', 'label' => 'Nomor nota retur', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Nilai retur'],
-                ['name' => 'returns_account', 'type' => 'account', 'label' => 'Akun persediaan atau retur pembelian'],
+                ['name' => 'returns_account', 'type' => 'account', 'account_classes' => ['asset', 'expense'], 'label' => 'Akun persediaan atau retur pembelian'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'supplier'], 'apply_dimensions' => false, 'reuses_field' => true],

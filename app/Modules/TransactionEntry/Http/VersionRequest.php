@@ -2,6 +2,7 @@
 
 namespace App\Modules\TransactionEntry\Http;
 
+use App\Modules\GeneralLedger\Contracts\AccountClass;
 use App\Modules\TransactionEntry\Domain\FieldType;
 use App\Modules\TransactionEntry\Domain\PostingRules;
 use App\Modules\TransactionEntry\Domain\TransactionTypeMode;
@@ -28,6 +29,9 @@ class VersionRequest extends FormRequest
             'fields.*.required' => ['sometimes', 'boolean'],
             'fields.*.account_ids' => ['sometimes', 'array', 'min:1', 'max:500'],
             'fields.*.account_ids.*' => ['string', 'size:26'],
+            // The classes of account an account field accepts (TE-FR-04); an empty list is not sent, it means every class.
+            'fields.*.account_classes' => ['sometimes', 'array', 'min:1', 'max:5'],
+            'fields.*.account_classes.*' => ['string', Rule::enum(AccountClass::class)],
             'fields.*.dimension_type' => ['sometimes', 'string', 'max:64'],
             // The roles a party field accepts (TE-FR-04); that they exist and are active is checked by the application layer.
             'fields.*.allowed_roles' => ['sometimes', 'array', 'min:1', 'max:50'],

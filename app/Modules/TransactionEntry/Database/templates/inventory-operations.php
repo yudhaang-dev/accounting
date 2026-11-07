@@ -25,8 +25,8 @@ return [
             'fields' => [
                 ['name' => 'adjustment_date', 'type' => 'date', 'label' => 'Tanggal'],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Nilai penurunan'],
-                ['name' => 'expense_account', 'type' => 'account', 'label' => 'Akun beban penurunan nilai'],
-                ['name' => 'inventory_account', 'type' => 'account', 'label' => 'Akun persediaan atau cadangan'],
+                ['name' => 'expense_account', 'type' => 'account', 'account_classes' => ['expense'], 'label' => 'Akun beban penurunan nilai'],
+                ['name' => 'inventory_account', 'type' => 'account', 'account_classes' => ['asset'], 'label' => 'Akun persediaan atau cadangan'],
                 ['name' => 'note', 'type' => 'text', 'label' => 'Catatan', 'required' => false],
             ],
             'posting_rules' => [

@@ -6,7 +6,7 @@ namespace App\Modules\TransactionEntry\Domain;
  * The field schema of a `structured` version, published as a subset of JSON Schema so the SPA and
  * integration clients can build forms and validate on their own (TE-FR-04).
  *
- * @phpstan-type FieldDefinition array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, dimension_type?: string, allowed_roles?: list<string>}
+ * @phpstan-type FieldDefinition array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, account_classes?: list<string>, dimension_type?: string, allowed_roles?: list<string>}
  */
 final class FieldSchema
 {
@@ -50,7 +50,7 @@ final class FieldSchema
             FieldType::Date => ['type' => 'string', 'format' => 'date'],
             FieldType::Text => ['type' => 'string', 'maxLength' => 500],
             FieldType::Reference => ['type' => 'string', 'maxLength' => 100],
-            FieldType::Account => ['type' => 'string', 'x-reference' => 'account'] + (isset($field['account_ids']) ? ['enum' => $field['account_ids']] : []),
+            FieldType::Account => ['type' => 'string', 'x-reference' => 'account'] + (isset($field['account_ids']) ? ['enum' => $field['account_ids']] : []) + (isset($field['account_classes']) ? ['x-account-classes' => $field['account_classes']] : []),
             FieldType::Party => ['type' => 'string', 'x-reference' => 'party'] + (isset($field['allowed_roles']) ? ['x-allowed-roles' => $field['allowed_roles']] : []),
             FieldType::CashAccount => ['type' => 'string', 'x-reference' => 'cash_account'],
             FieldType::Dimension => ['type' => 'string', 'x-reference' => 'dimension_value', 'x-dimension-type' => $field['dimension_type'] ?? null],

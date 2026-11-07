@@ -96,11 +96,11 @@ class TransactionTypeVersionController
     }
 
     /**
-     * @return list<array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, dimension_type?: string, allowed_roles?: list<string>}>
+     * @return list<array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, account_classes?: list<string>, dimension_type?: string, allowed_roles?: list<string>}>
      */
     private function fields(VersionRequest $request): array
     {
-        /** @var list<array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, dimension_type?: string, allowed_roles?: list<string>}> */
+        /** @var list<array{name: string, type: string, label: string, required?: bool, account_ids?: list<string>, account_classes?: list<string>, dimension_type?: string, allowed_roles?: list<string>}> */
         return $request->validated('fields', []);
     }
 }

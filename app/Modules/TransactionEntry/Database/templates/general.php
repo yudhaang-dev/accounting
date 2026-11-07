@@ -32,8 +32,8 @@ return [
             'fields' => [
                 ['name' => 'payroll_date', 'type' => 'date', 'label' => 'Tanggal payroll'],
                 ['name' => 'gross_salary', 'type' => 'amount', 'label' => 'Total gaji bruto'],
-                ['name' => 'expense_account', 'type' => 'account', 'label' => 'Akun beban gaji'],
-                ['name' => 'payable_account', 'type' => 'account', 'label' => 'Akun utang gaji'],
+                ['name' => 'expense_account', 'type' => 'account', 'account_classes' => ['expense'], 'label' => 'Akun beban gaji'],
+                ['name' => 'payable_account', 'type' => 'account', 'account_classes' => ['liability'], 'label' => 'Akun utang gaji'],
                 ['name' => 'note', 'type' => 'text', 'label' => 'Catatan', 'required' => false],
             ],
             'posting_rules' => [
@@ -54,7 +54,7 @@ return [
                 ['name' => 'invoice_number', 'type' => 'reference', 'label' => 'Nomor faktur', 'required' => false],
                 ['name' => 'due_date', 'type' => 'date', 'label' => 'Jatuh tempo', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Total faktur'],
-                ['name' => 'revenue_account', 'type' => 'account', 'label' => 'Akun pendapatan'],
+                ['name' => 'revenue_account', 'type' => 'account', 'account_classes' => ['income'], 'label' => 'Akun pendapatan'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'customer'], 'apply_dimensions' => true, 'reuses_field' => true],

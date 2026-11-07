@@ -26,7 +26,7 @@ return [
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Dibayar dari rekening'],
                 ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah'],
-                ['name' => 'cost_account', 'type' => 'account', 'label' => 'Akun biaya produksi'],
+                ['name' => 'cost_account', 'type' => 'account', 'account_classes' => ['expense', 'asset'], 'label' => 'Akun biaya produksi'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'field', 'field' => 'cost_account'], 'apply_dimensions' => true, 'reuses_field' => true],

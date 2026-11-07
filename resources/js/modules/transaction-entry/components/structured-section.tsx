@@ -160,8 +160,14 @@ function FieldInput({
                             items={accounts
                                 .filter(
                                     (item) =>
-                                        !field.accountIds ||
-                                        field.accountIds.includes(item.id),
+                                        (!field.accountIds ||
+                                            field.accountIds.includes(
+                                                item.id,
+                                            )) &&
+                                        (!field.accountClasses ||
+                                            field.accountClasses.includes(
+                                                item.class,
+                                            )),
                                 )
                                 .map((item) => ({
                                     value: item.id,

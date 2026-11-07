@@ -19,7 +19,7 @@ return [
                 ['name' => 'invoice_number', 'type' => 'reference', 'label' => 'Nomor tagihan', 'required' => false],
                 ['name' => 'due_date', 'type' => 'date', 'label' => 'Jatuh tempo', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Nilai tagihan'],
-                ['name' => 'revenue_account', 'type' => 'account', 'label' => 'Akun pendapatan kontrak'],
+                ['name' => 'revenue_account', 'type' => 'account', 'account_classes' => ['income'], 'label' => 'Akun pendapatan kontrak'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'customer'], 'apply_dimensions' => true, 'reuses_field' => true],
@@ -43,7 +43,7 @@ return [
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Dibayar dari rekening'],
                 ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah'],
-                ['name' => 'cost_account', 'type' => 'account', 'label' => 'Akun biaya proyek'],
+                ['name' => 'cost_account', 'type' => 'account', 'account_classes' => ['expense', 'asset'], 'label' => 'Akun biaya proyek'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'field', 'field' => 'cost_account'], 'apply_dimensions' => true, 'reuses_field' => true],

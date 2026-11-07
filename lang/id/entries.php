@@ -66,6 +66,8 @@ return [
     'rule_cash_field_route' => 'Aturan rekening kas memakai field rekening kas dari rute, :field.',
     'rule_cash_side' => 'Dokumen berjenis :kind diposting ke rekening kas di sisi :side.',
     'field_roles_not_allowed' => 'Hanya field pihak yang memakai peran yang diizinkan.',
+    'field_classes_not_allowed' => 'Hanya field akun yang memakai kelas akun.',
+    'field_account_class' => 'Akun pada field :field harus berkelas :classes.',
     'field_role_unknown' => 'Peran pihak :key tidak ada di perusahaan ini atau tidak aktif.',
     'field_party_role' => 'Pihak harus memiliki salah satu peran :roles.',
     'route_not_allowed' => 'Versi baris bebas tidak memiliki rute subledger.',

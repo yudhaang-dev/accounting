@@ -18,7 +18,7 @@ return [
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Diterima di rekening'],
                 ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor rekap kasir', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Total penjualan'],
-                ['name' => 'revenue_account', 'type' => 'account', 'label' => 'Akun penjualan'],
+                ['name' => 'revenue_account', 'type' => 'account', 'account_classes' => ['income'], 'label' => 'Akun penjualan'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
@@ -39,7 +39,7 @@ return [
                 ['name' => 'platform', 'type' => 'party', 'label' => 'Platform', 'allowed_roles' => ['customer']],
                 ['name' => 'statement_number', 'type' => 'reference', 'label' => 'Nomor laporan platform', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Nilai penjualan'],
-                ['name' => 'revenue_account', 'type' => 'account', 'label' => 'Akun penjualan'],
+                ['name' => 'revenue_account', 'type' => 'account', 'account_classes' => ['income'], 'label' => 'Akun penjualan'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'platform'], 'apply_dimensions' => true, 'reuses_field' => true],

@@ -104,7 +104,7 @@ describe('transaction type templates (TE-FR-01, X-AC-03)', function () {
             'transaction_type_key' => 'payroll_summary',
             'accounting_date' => '2026-03-31',
             'description' => 'Gaji Maret',
-            'values' => ['payroll_date' => '2026-03-31', 'gross_salary' => '1000.00', 'expense_account' => $account('1112'), 'payable_account' => $account('4110')],
+            'values' => ['payroll_date' => '2026-03-31', 'gross_salary' => '1000.00', 'expense_account' => $account('6210'), 'payable_account' => $account('2130')],
         ])->assertCreated()->assertJsonCount(2, 'data.lines')->json('data.id');
 
         foreach ([$free, $payroll] as $id) {

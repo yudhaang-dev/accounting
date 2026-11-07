@@ -55,12 +55,15 @@ import {
 import { partyRolesQuery } from '@/modules/subledger/party-roles';
 import { postingProfilesQuery } from '@/modules/subledger/posting-profiles';
 
+type AccountClassKey = 'asset' | 'liability' | 'equity' | 'income' | 'expense';
+
 type FieldRow = {
     name: string;
     type: FieldType;
     label: string;
     required: boolean;
     account_ids: string[];
+    account_classes: AccountClassKey[];
     dimension_type: string;
     allowed_roles: string[];
 };
@@ -162,6 +165,7 @@ const blankField = (): FieldRow => ({
     label: '',
     required: true,
     account_ids: [],
+    account_classes: [],
     dimension_type: '',
     allowed_roles: [],
 });
@@ -187,6 +191,7 @@ export function valuesOfVersion(version: TypeVersion): Values {
             label: field.label,
             required: field.required ?? true,
             account_ids: field.account_ids ?? [],
+            account_classes: (field.account_classes ?? []) as AccountClassKey[],
             dimension_type: field.dimension_type ?? '',
             allowed_roles: field.allowed_roles ?? [],
         })),
@@ -272,6 +277,10 @@ export function versionInputOf(values: Values): VersionInput {
                   required: field.required,
                   ...(field.type === 'account' && field.account_ids.length > 0
                       ? { account_ids: field.account_ids }
+                      : {}),
+                  ...(field.type === 'account' &&
+                  field.account_classes.length > 0
+                      ? { account_classes: field.account_classes }
                       : {}),
                   ...(field.type === 'dimension' && field.dimension_type
                       ? { dimension_type: field.dimension_type }
@@ -431,6 +440,55 @@ function AccountSet({
 }
 
 /** The roles a party field accepts, picked from the company's roles; none checked means any party (TE-FR-04). */
+const ACCOUNT_CLASSES: AccountClassKey[] = [
+    'asset',
+    'liability',
+    'equity',
+    'income',
+    'expense',
+];
+
+/** The classes of account an account field accepts; none ticked means every class (TE-FR-04). */
+function ClassSet({
+    value,
+    onChange,
+    scope,
+}: {
+    value: AccountClassKey[];
+    onChange: (value: AccountClassKey[]) => void;
+    scope: number;
+}) {
+    const { t } = useTranslation();
+
+    return (
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
+            {ACCOUNT_CLASSES.map((accountClass) => (
+                <div key={accountClass} className="flex items-center gap-2">
+                    <Checkbox
+                        id={`allowed-class-${scope}-${accountClass}`}
+                        checked={value.includes(accountClass)}
+                        onCheckedChange={(checked) =>
+                            onChange(
+                                checked === true
+                                    ? [...value, accountClass]
+                                    : value.filter(
+                                          (item) => item !== accountClass,
+                                      ),
+                            )
+                        }
+                    />
+                    <Label
+                        htmlFor={`allowed-class-${scope}-${accountClass}`}
+                        className="font-normal"
+                    >
+                        {t(`accountClass.${accountClass}`)}
+                    </Label>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 function RoleSet({
     value,
     onChange,
@@ -650,6 +708,26 @@ function FieldRows({
                                                 value={field.value}
                                                 onChange={field.onChange}
                                                 accounts={accounts}
+                                            />
+                                        )}
+                                    />
+                                </Field>
+                            )}
+                            {kind === 'account' && (
+                                <Field>
+                                    <FieldLabel className="text-xs text-muted-foreground">
+                                        {t(
+                                            'transactionTypes.designer.allowedClasses',
+                                        )}
+                                    </FieldLabel>
+                                    <Controller
+                                        control={control}
+                                        name={`fields.${index}.account_classes`}
+                                        render={({ field }) => (
+                                            <ClassSet
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                                scope={index}
                                             />
                                         )}
                                     />

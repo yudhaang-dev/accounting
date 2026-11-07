@@ -52,7 +52,7 @@ return [
                 ['name' => 'bill_number', 'type' => 'reference', 'label' => 'Nomor tagihan', 'required' => false],
                 ['name' => 'due_date', 'type' => 'date', 'label' => 'Jatuh tempo', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Total tagihan'],
-                ['name' => 'expense_account', 'type' => 'account', 'label' => 'Akun biaya atau persediaan'],
+                ['name' => 'expense_account', 'type' => 'account', 'account_classes' => ['expense', 'asset'], 'label' => 'Akun biaya atau persediaan'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'field', 'field' => 'expense_account'], 'apply_dimensions' => true, 'reuses_field' => true],
@@ -269,7 +269,7 @@ return [
                 ['name' => 'subscription_number', 'type' => 'reference', 'label' => 'Nomor akta atau bukti', 'required' => false],
                 ['name' => 'due_date', 'type' => 'date', 'label' => 'Jatuh tempo setoran', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah'],
-                ['name' => 'equity_account', 'type' => 'account', 'label' => 'Akun modal'],
+                ['name' => 'equity_account', 'type' => 'account', 'account_classes' => ['equity'], 'label' => 'Akun modal'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'shareholder'], 'apply_dimensions' => false, 'reuses_field' => true],
@@ -371,7 +371,7 @@ return [
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Dibayar dari rekening'],
                 ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah'],
-                ['name' => 'expense_account', 'type' => 'account', 'label' => 'Akun biaya'],
+                ['name' => 'expense_account', 'type' => 'account', 'account_classes' => ['expense'], 'label' => 'Akun biaya'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'field', 'field' => 'expense_account'], 'apply_dimensions' => true, 'reuses_field' => true],
@@ -392,7 +392,7 @@ return [
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Diterima di rekening'],
                 ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah diterima'],
-                ['name' => 'income_account', 'type' => 'account', 'label' => 'Akun pendapatan atau ekuitas'],
+                ['name' => 'income_account', 'type' => 'account', 'account_classes' => ['income', 'equity'], 'label' => 'Akun pendapatan atau ekuitas'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],
@@ -413,7 +413,7 @@ return [
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Rekening bank'],
                 ['name' => 'statement_reference', 'type' => 'reference', 'label' => 'Referensi rekening koran', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah dipotong'],
-                ['name' => 'expense_account', 'type' => 'account', 'label' => 'Akun biaya atau bunga'],
+                ['name' => 'expense_account', 'type' => 'account', 'account_classes' => ['expense'], 'label' => 'Akun biaya atau bunga'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'field', 'field' => 'expense_account'], 'apply_dimensions' => true, 'reuses_field' => true],

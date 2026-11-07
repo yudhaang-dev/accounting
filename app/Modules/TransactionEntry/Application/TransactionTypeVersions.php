@@ -696,6 +696,14 @@ final class TransactionTypeVersions
                 $definition['account_ids'] = array_values(array_unique($field['account_ids']));
             }
 
+            if (isset($field['account_classes'])) {
+                if ($type !== FieldType::Account) {
+                    $errors["fields.{$index}.account_classes"] = [__('entries.field_classes_not_allowed')];
+                } else {
+                    $definition['account_classes'] = array_values(array_unique($field['account_classes']));
+                }
+            }
+
             if (isset($field['allowed_roles'])) {
                 $roles = array_values(array_unique($field['allowed_roles']));
 

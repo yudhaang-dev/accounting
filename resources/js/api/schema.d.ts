@@ -6227,6 +6227,8 @@ export interface components {
                 label: string;
                 required?: boolean;
                 account_ids?: string[];
+                /** @description The classes of account an account field accepts (TE-FR-04); an empty list is not sent, it means every class. */
+                account_classes?: components["schemas"]["AccountClass"][];
                 dimension_type?: string;
                 /** @description The roles a party field accepts (TE-FR-04); that they exist and are active is checked by the application layer. */
                 allowed_roles?: string[];

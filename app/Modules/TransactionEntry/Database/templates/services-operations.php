@@ -18,7 +18,7 @@ return [
                 ['name' => 'invoice_number', 'type' => 'reference', 'label' => 'Nomor faktur', 'required' => false],
                 ['name' => 'due_date', 'type' => 'date', 'label' => 'Jatuh tempo', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Total faktur'],
-                ['name' => 'revenue_account', 'type' => 'account', 'label' => 'Akun pendapatan jasa'],
+                ['name' => 'revenue_account', 'type' => 'account', 'account_classes' => ['income'], 'label' => 'Akun pendapatan jasa'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'control_account', 'party_field' => 'customer'], 'apply_dimensions' => true, 'reuses_field' => true],
@@ -42,7 +42,7 @@ return [
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Diterima di rekening'],
                 ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah diterima'],
-                ['name' => 'revenue_account', 'type' => 'account', 'label' => 'Akun pendapatan jasa'],
+                ['name' => 'revenue_account', 'type' => 'account', 'account_classes' => ['income'], 'label' => 'Akun pendapatan jasa'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'cash_account', 'field' => 'bank'], 'apply_dimensions' => false, 'reuses_field' => true],

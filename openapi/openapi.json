@@ -34526,6 +34526,15 @@
                                     "minItems": 1,
                                     "maxItems": 500
                                 },
+                                "account_classes": {
+                                    "type": "array",
+                                    "description": "The classes of account an account field accepts (TE-FR-04); an empty list is not sent, it means every class.",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AccountClass"
+                                    },
+                                    "minItems": 1,
+                                    "maxItems": 5
+                                },
                                 "dimension_type": {
                                     "type": "string",
                                     "maxLength": 64

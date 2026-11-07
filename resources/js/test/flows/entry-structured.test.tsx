@@ -251,6 +251,68 @@ describe('structured entry form', () => {
         expect(api.called(create)[0]?.body).not.toHaveProperty('lines');
     });
 
+    it('offers only the accounts of the classes the field accepts (TE-FR-04)', async () => {
+        const restricted = {
+            ...schema,
+            properties: {
+                ...schema.properties,
+                expense_account: {
+                    ...schema.properties.expense_account,
+                    'x-account-classes': ['expense'],
+                },
+            },
+        };
+        mockApi(
+            form([payroll()], {
+                [`GET ${base}/transaction-types/${payroll().id}/versions/1/schema`]:
+                    () => json({ data: restricted }),
+                [`GET ${base}/accounts`]: () =>
+                    json({
+                        data: [
+                            {
+                                id: expense,
+                                code: '5100',
+                                name: 'Beban Gaji',
+                                class: 'expense',
+                                normal_balance: 'debit',
+                                parent_id: null,
+                                is_leaf: true,
+                                status: 'active',
+                                lock_version: 1,
+                            },
+                            {
+                                id: '01JACCOUNT0000000000000BANK',
+                                code: '1112',
+                                name: 'Bank Operasional',
+                                class: 'asset',
+                                normal_balance: 'debit',
+                                parent_id: null,
+                                is_leaf: true,
+                                status: 'active',
+                                lock_version: 1,
+                            },
+                        ],
+                        links: {},
+                        meta: { current_page: 1, last_page: 1, total: 2 },
+                    }),
+            }),
+        );
+
+        renderApp(`${entriesPath}/new?type=payroll_summary`);
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('combobox', { name: 'Akun beban gaji' }),
+        );
+
+        expect(
+            await screen.findByRole('option', { name: '5100 · Beban Gaji' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('option', { name: '1112 · Bank Operasional' }),
+        ).not.toBeInTheDocument();
+    });
+
     it('says which fields are needed before asking the server', async () => {
         const create = `POST ${base}/entries`;
         const api = mockApi(form([payroll()], { [create]: () => json({}) }));

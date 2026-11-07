@@ -16,8 +16,8 @@ return [
             'fields' => [
                 ['name' => 'tax_date', 'type' => 'date', 'label' => 'Tanggal'],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Pajak terutang'],
-                ['name' => 'expense_account', 'type' => 'account', 'label' => 'Akun beban atau PPN masukan'],
-                ['name' => 'payable_account', 'type' => 'account', 'label' => 'Akun utang pajak'],
+                ['name' => 'expense_account', 'type' => 'account', 'account_classes' => ['expense', 'asset'], 'label' => 'Akun beban atau PPN masukan'],
+                ['name' => 'payable_account', 'type' => 'account', 'account_classes' => ['liability'], 'label' => 'Akun utang pajak'],
                 ['name' => 'note', 'type' => 'text', 'label' => 'Catatan', 'required' => false],
             ],
             'posting_rules' => [
@@ -34,7 +34,7 @@ return [
                 ['name' => 'bank', 'type' => 'cash_account', 'label' => 'Dibayar dari rekening'],
                 ['name' => 'receipt_number', 'type' => 'reference', 'label' => 'Nomor bukti setor', 'required' => false],
                 ['name' => 'total', 'type' => 'amount', 'label' => 'Jumlah disetor'],
-                ['name' => 'payable_account', 'type' => 'account', 'label' => 'Akun utang pajak'],
+                ['name' => 'payable_account', 'type' => 'account', 'account_classes' => ['liability'], 'label' => 'Akun utang pajak'],
             ],
             'posting_rules' => [
                 ['type' => 'amount', 'side' => 'debit', 'amount_field' => 'total', 'account' => ['source' => 'field', 'field' => 'payable_account'], 'apply_dimensions' => true, 'reuses_field' => true],

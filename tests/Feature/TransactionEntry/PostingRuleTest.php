@@ -352,3 +352,44 @@ function ruleAction(User $user, string $id, string $action)
 {
     return test()->actingAs($user)->postJson(test()->url."/entries/{$id}/{$action}");
 }
+
+describe('account classes of an account field (TE-FR-04, TE-AC-11)', function () {
+    function incomeOnlyFields(): array
+    {
+        $fields = saleFields();
+        $fields[2] = ['name' => 'revenue', 'type' => 'account', 'label' => 'Pendapatan', 'account_classes' => ['income']];
+
+        return $fields;
+    }
+
+    it('publishes the classes in the schema and refuses an unknown class or a non-account field', function () {
+        $post = fn (array $fields) => $this->actingAs($this->admin)->postJson("{$this->url}/transaction-types/{$this->typeId}/versions", ruleVersionBody($fields));
+
+        $fields = saleFields();
+        $fields[2]['account_classes'] = ['revenue'];
+        $post($fields)->assertUnprocessable()->assertJsonValidationErrors(['fields.2.account_classes.0']);
+
+        $fields = saleFields();
+        $fields[0]['account_classes'] = ['income'];
+        $post($fields)->assertUnprocessable()->assertJsonValidationErrors(['fields.0.account_classes']);
+
+        $number = publishedVersion(ruleVersionBody(incomeOnlyFields()));
+        $schema = $this->actingAs($this->admin)->getJson("{$this->url}/transaction-types/{$this->typeId}/versions/{$number}/schema")->json('data');
+
+        expect($schema['properties']['revenue']['x-account-classes'])->toBe(['income']);
+    });
+
+    it('refuses an entry whose account is of another class, and takes one of the class', function () {
+        publishedVersion(ruleVersionBody(incomeOnlyFields()));
+
+        $rejected = createSale(['revenue' => $this->bank]);
+        if ($rejected->status() === 201) {
+            $this->actingAs($this->preparer)->postJson("{$this->url}/entries/{$rejected->json('data.id')}/submit")->assertUnprocessable()->assertJsonValidationErrors(['values.revenue']);
+        } else {
+            $rejected->assertUnprocessable()->assertJsonValidationErrors(['values.revenue']);
+        }
+
+        $accepted = createSale(['revenue' => $this->sales])->assertCreated();
+        $this->actingAs($this->preparer)->postJson("{$this->url}/entries/{$accepted->json('data.id')}/submit")->assertOk();
+    });
+});

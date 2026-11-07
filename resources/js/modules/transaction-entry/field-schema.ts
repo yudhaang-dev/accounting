@@ -19,6 +19,8 @@ export type SchemaField = {
         | 'allocations';
     /** For an account field: the accounts it is limited to; none means every account. */
     accountIds?: string[];
+    /** For an account field: the classes of account it accepts; none means every class (TE-FR-04). */
+    accountClasses?: string[];
     /** For a dimension field: the key of the dimension type whose values are offered. */
     dimensionType?: string;
     /** For a party field: the roles a party must hold one of; none means any party (TE-FR-04). */
@@ -68,6 +70,10 @@ export function parseSchema(schema: JsonSchema | null): SchemaField[] {
             field.kind = 'account';
             field.accountIds = Array.isArray(property.enum)
                 ? (property.enum as string[])
+                : undefined;
+            const classes = property['x-account-classes'];
+            field.accountClasses = Array.isArray(classes)
+                ? (classes as string[])
                 : undefined;
         } else if (reference === 'dimension_value') {
             field.kind = 'dimension';

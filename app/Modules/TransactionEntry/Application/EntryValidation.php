@@ -69,8 +69,10 @@ final class EntryValidation
 
                 if ($field['type'] === FieldType::Amount->value && ! in_array($field['name'], $inAccountCurrency, true) && $this->decimals($value) > $scale) {
                     $errors[$key] = [__('entries.value_scale', ['field' => $field['label'], 'scale' => $scale])];
-                } elseif ($field['type'] === FieldType::Account->value && $this->accounts->find($companyId, $value) === null) {
+                } elseif ($field['type'] === FieldType::Account->value && ($account = $this->accounts->find($companyId, $value)) === null) {
                     $errors[$key] = [__('entries.field_account_unknown', ['id' => $value])];
+                } elseif ($field['type'] === FieldType::Account->value && isset($field['account_classes']) && ! in_array($account->class->value, $field['account_classes'], true)) {
+                    $errors[$key] = [__('entries.field_account_class', ['field' => $field['label'], 'classes' => implode(', ', $field['account_classes'])])];
                 } elseif ($field['type'] === FieldType::Party->value && ($party = $this->parties->find($companyId, $value)) === null) {
                     $errors[$key] = [__('entries.field_party_unknown')];
                 } elseif ($field['type'] === FieldType::Party->value && isset($field['allowed_roles']) && array_intersect($field['allowed_roles'], $party->roles) === []) {

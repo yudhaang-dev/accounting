@@ -66,6 +66,8 @@ return [
     'rule_cash_field_route' => 'A cash account rule uses the cash account field of the route, :field.',
     'rule_cash_side' => 'A document of the kind :kind posts to the cash account on the :side side.',
     'field_roles_not_allowed' => 'Only a party field takes allowed roles.',
+    'field_classes_not_allowed' => 'Only an account field takes account classes.',
+    'field_account_class' => 'The account of the field :field must be of the class :classes.',
     'field_role_unknown' => 'The party role :key does not exist in this company or is not active.',
     'field_party_role' => 'The party must hold one of the roles :roles.',
     'route_not_allowed' => 'A free-lines version has no subledger route.',
