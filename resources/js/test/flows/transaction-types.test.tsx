@@ -623,13 +623,27 @@ describe('version designer', () => {
     });
 
     it('opens a draft whose account field names account classes', async () => {
-        const withClasses = payroll();
-        const draft = withClasses.versions[1];
-        draft.fields = (draft.fields ?? []).map((field: { type: string }) =>
-            field.type === 'account'
-                ? { ...field, account_classes: ['expense'] }
-                : field,
-        );
+        const original = payroll();
+        const withClasses = {
+            ...original,
+            versions: original.versions.map((item) =>
+                item.status === 'draft'
+                    ? {
+                          ...item,
+                          fields: (
+                              (item.fields ?? []) as Array<{ type: string }>
+                          ).map((field) =>
+                              field.type === 'account'
+                                  ? {
+                                        ...field,
+                                        account_classes: ['expense' as const],
+                                    }
+                                  : field,
+                          ),
+                      }
+                    : item,
+            ),
+        };
         mockApi(
             route({
                 [`GET ${base}/transaction-types/${payroll().id}`]: () =>
