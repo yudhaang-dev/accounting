@@ -1982,6 +1982,8 @@ export const id = {
             removeField: 'Hapus field {{n}}',
             addField: 'Tambah field',
             allowedAccounts: 'Akun yang boleh dipilih (kosong berarti semua)',
+            allowedClasses:
+                'Kelas akun yang boleh dipilih (tidak ada yang dicentang berarti semua kelas)',
             allowedRoles:
                 'Peran yang boleh dimiliki pihak (tidak ada yang dicentang berarti pihak mana pun)',
             roleInactive: 'nonaktif',
