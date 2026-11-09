@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.4.27",
         "brick/math": "^1.0",
         "dedoc/scramble": "^0.13.46",
         "dompdf/dompdf": "^3.1",
