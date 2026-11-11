@@ -242,6 +242,8 @@ Nominal dibandingkan dengan total debit dalam mata uang fungsional.
 
 Untuk perusahaan yang sudah ada, izin baru (mis. menerbitkan snapshot laporan) perlu **ditambahkan manual** ke role yang relevan.
 
+**Akun hanya lewat undangan.** Tidak ada pendaftaran terbuka: orang baru mendapat akun saat menerima undangan, dengan nama dan kata sandi yang ia isi sendiri; kata sandi tidak pernah dibuat atau dikirim oleh administrator. Tiap anggota mengatur nama, email, kata sandi, 2FA, dan passkey-nya sendiri di **Akun saya** (lihat panduan pengguna). Anggota yang keluar atau menonaktifkan akunnya hanya kehilangan akses; catatannya tetap. Pastikan selalu ada lebih dari satu orang yang dapat mengelola anggota, karena yang terakhir tidak dapat keluar atau menonaktifkan akunnya. Membuat ruang kerja baru hanya untuk pemilik pertama; untuk anggota lain berikan permission `workspaces.create` lewat role.
+
 **Anggota** (Akses → Anggota): undang lewat email, pilih role, tentukan masa berlaku (akses berhenti di akhir hari itu), dan atur **cakupan data** per nilai dimensi beserta turunannya. Pengguna dengan cakupan terbatas tidak bisa menerbitkan atau membuka isi snapshot.
 
 **Kebijakan keamanan** (Akses → Kebijakan keamanan):

@@ -17,7 +17,7 @@
 
 | Modul | Resource |
 | --- | --- |
-| Identitas | `/api/v1/me`, `/api/v1/me/workspaces`, `memberships`, `roles`, `permissions` (katalog), `integration-clients` |
+| Identitas | `/api/v1/me` (`PATCH` ubah nama), `/api/v1/me/workspaces`, akun sendiri: `POST me/email` dan `POST me/email/confirm` (ubah email dengan konfirmasi, 204), `PUT me/password`, `GET`/`DELETE me/sessions[/{id}]`, `GET me/passkeys`, `POST me/workspaces/{id}/leave`, `POST me/deactivate` (butuh kata sandi saat ini); `POST invitations/accept` (terbuka untuk tamu, membuat akun bila alamatnya belum punya); `memberships`, `roles`, `permissions` (katalog), `integration-clients`. 2FA dan passkey memakai rute Fortify di akar situs (`/user/two-factor-*`, `/user/passkeys*`), yang menjawab 423 sampai kata sandi dikonfirmasi lewat `POST /user/confirm-password`. Tidak ada `/register` ([ADR-0021](adr/0021-accounts-by-invitation-only.md)) |
 | Data induk | profil perusahaan (`/api/v1/companies/{companyId}`), `dimension-types`, `dimension-values`, `iso-currencies` (referensi ISO 4217, baca saja), `currencies` (diidentifikasi kode ISO), `rate-types`, `exchange-rates` (`GET exchange-rates/lookup` untuk pencarian kurs, `POST exchange-rates/import` untuk CSV) |
 | Buku besar | `accounts`, `account-templates`, `fiscal-calendar`, `fiscal-years`, `periods`, `journals` (baca), `opening-balance-imports`, `history-imports`, `revaluation-runs`, `general-ledger/account-role-mappings` |
 | Pencatatan | `transaction-types`, `entries`, `financial-events`, `recurring-schedules` |

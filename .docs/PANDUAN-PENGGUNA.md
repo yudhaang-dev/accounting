@@ -77,11 +77,24 @@ Sesi berakhir otomatis bila tidak ada aktivitas selama batas yang ditetapkan per
 - Bila hanya punya satu ruang kerja, sistem langsung membukanya.
 - Bila punya beberapa, pilih dari daftar **Pilih ruang kerja**. Sistem mengingat ruang kerja yang terakhir Anda pakai.
 - Untuk berpindah, klik pemilih ruang kerja di kiri atas sidebar (**Ganti ruang kerja**).
-- Bila diundang ke ruang kerja baru, buka tautan di email undangan dan klik **Terima undangan**. Pakai akun yang email-nya sama dengan alamat yang diundang.
+- Bila diundang ke ruang kerja baru, buka tautan di email undangan dan klik **Terima undangan**. Bila alamat itu belum punya akun, isi nama dan kata sandi di halaman yang sama; akun dibuat saat itu juga. Bila sudah punya, masuk dulu dengan akun yang email-nya sama dengan alamat yang diundang. Tidak ada pendaftaran terbuka: akun hanya dibuat lewat undangan.
 
 ### Keluar
 
 Klik nama Anda di bawah sidebar, lalu **Keluar**.
+
+### Akun saya
+
+Klik nama Anda di bawah sidebar, lalu **Akun saya**. Di sini Anda mengatur akun sendiri:
+
+- **Profil.** Ubah nama yang dilihat anggota lain.
+- **Alamat email.** Isi alamat baru dan kata sandi Anda. Kami mengirim tautan ke alamat baru itu; alamat baru baru berlaku setelah Anda membuka tautannya (berlaku satu jam). Sampai saat itu Anda tetap masuk dengan alamat lama.
+- **Kata sandi.** Isi kata sandi saat ini dan yang baru. Perangkat lain langsung keluar.
+- **Verifikasi dua langkah.** Klik **Siapkan verifikasi dua langkah**, pindai kode QR dengan aplikasi autentikator, lalu ketik 6 digit yang tampil. Simpan **kode pemulihan** yang muncul di tempat aman: tiap kode dapat dipakai sekali bila ponsel hilang. Anda dapat menampilkan atau membuat ulang kode itu, dan mematikan 2FA, dari kartu yang sama. Sistem meminta kata sandi Anda lagi sebelum perubahan ini.
+- **Passkey.** **Tambah passkey**, beri nama (mis. *Laptop kantor*), lalu ikuti petunjuk peramban. Daftar menunjukkan kapan tiap passkey ditambahkan dan terakhir dipakai; **Hapus** mencabutnya.
+- **Perangkat yang masuk.** Daftar peramban yang sedang masuk; keluarkan yang tidak Anda kenal atau **Keluarkan semua perangkat lain**.
+- **Ruang kerja saya.** **Keluar** dari sebuah ruang kerja mengakhiri akses Anda; yang pernah Anda catat tetap ada. Orang terakhir yang dapat mengelola anggota tidak dapat keluar: beri anggota lain akses itu lebih dulu.
+- **Nonaktifkan akun.** Mengakhiri akses Anda ke semua ruang kerja dan mengeluarkan Anda di mana pun; nama Anda tetap ada pada catatan yang pernah Anda buat, tidak ada yang dihapus. Perlu kata sandi, dan ditolak selama Anda satu-satunya pengelola anggota di sebuah ruang kerja. Akun nonaktif tidak dapat masuk lagi; hubungi administrator platform bila perlu dipulihkan.
 
 ---
 

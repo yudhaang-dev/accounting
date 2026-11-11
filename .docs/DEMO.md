@@ -24,14 +24,16 @@ Angkanya berasal dari seed acak tetap, jadi tiap jalan menghasilkan cerita yang 
 
 PT Sinar Nusantara Perkasa, distributor alat kesehatan dan perlengkapan kantor. Mata uang rupiah saja. Buku dimulai 1 Januari 2025 dari saldo konversi sistem lama (kas, bank, persediaan, aset tetap, pinjaman, modal) beserta piutang dan utang awal, lalu berjalan sampai hari ini.
 
-| Peran | E-mail | Kata sandi |
-| --- | --- | --- |
-| Direktur: pemilik, pengaturan, penyetuju tahap akhir | `direktur@demo.test` | `password` |
-| Akuntan: penutupan, rekonsiliasi, anggaran, laporan | `akuntan@demo.test` | `password` |
-| Admin keuangan: mencatat dan mengajukan | `admin.keuangan@demo.test` | `password` |
-| Manajer keuangan: penyetuju | `manajer.keuangan@demo.test` | `password` |
-| Auditor: baca saja | `auditor@demo.test` | `password` |
-| Kepala cabang Surabaya: hanya melihat Surabaya | `kepala.surabaya@demo.test` | `password` |
+| Peran | E-mail |
+| --- | --- |
+| Direktur: pemilik, pengaturan, penyetuju tahap akhir | `direktur@demo.test` |
+| Akuntan: penutupan, rekonsiliasi, anggaran, laporan | `akuntan@demo.test` |
+| Admin keuangan: mencatat dan mengajukan | `admin.keuangan@demo.test` |
+| Manajer keuangan: penyetuju | `manajer.keuangan@demo.test` |
+| Auditor: baca saja | `auditor@demo.test` |
+| Kepala cabang Surabaya: hanya melihat Surabaya | `kepala.surabaya@demo.test` |
+
+Semua akun memakai satu kata sandi. Seeder mengambilnya dari variabel lingkungan `DEMO_PASSWORD`, atau membuat yang acak, lalu mencetaknya di akhir jalannya. Kata sandi tidak tertulis di repositori, dan seeder menolak berjalan di `production`.
 
 ## Jalur presentasi
 
