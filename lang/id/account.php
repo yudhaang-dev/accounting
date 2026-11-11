@@ -7,6 +7,7 @@ return [
     'email_change_line' => 'Gunakan tombol di bawah untuk menjadikan alamat ini alamat masuk Anda. Tautan berlaku satu jam; sampai saat itu alamat lama tetap berlaku.',
     'email_change_action' => 'Konfirmasi alamat email',
     'email_change_invalid' => 'Tautan konfirmasi ini tidak valid atau sudah kedaluwarsa.',
+    'last_administrator' => 'Anda satu-satunya orang yang dapat mengelola anggota :workspace. Beri anggota lain akses itu terlebih dahulu.',
     'email_taken' => 'Alamat email itu sudah dipakai akun lain.',
 
 ];

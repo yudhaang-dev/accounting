@@ -340,6 +340,66 @@
                 }
             }
         },
+        "/me/workspaces/{workspaceId}/leave": {
+            "post": {
+                "operationId": "me.workspaces.leave",
+                "summary": "Leaves a workspace: the membership is revoked, nothing is deleted. 404 when the user has no current\naccess to it; 422 when the user is the last one who can manage its memberships",
+                "tags": [
+                    "Account"
+                ],
+                "parameters": [
+                    {
+                        "name": "workspaceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/deactivate": {
+            "post": {
+                "operationId": "me.deactivate",
+                "summary": "Deactivates the account (needs the current password): memberships end, passkeys are removed, every\nsession ends, and the account can no longer sign in. Nothing is deleted. 422 while the user is the last\none who can manage the memberships of a workspace",
+                "tags": [
+                    "Account"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeactivateAccountRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/accounts": {
             "get": {
                 "operationId": "accounts.index",
@@ -28573,6 +28633,18 @@
                     "down"
                 ],
                 "title": "CurrencyRounding"
+            },
+            "DeactivateAccountRequest": {
+                "type": "object",
+                "properties": {
+                    "current_password": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "current_password"
+                ],
+                "title": "DeactivateAccountRequest"
             },
             "DescribeTransactionTypeRequest": {
                 "type": "object",

@@ -3,10 +3,12 @@
 namespace App\Modules\IdentityAccess\Http;
 
 use App\Models\User;
+use App\Modules\IdentityAccess\Application\AccountLifecycle;
 use App\Modules\IdentityAccess\Application\ManageAccount;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * The signed-in user's own account (IA-FR-01, IA-FR-04). Everything here acts on the caller only.
@@ -94,6 +96,35 @@ class AccountController
         /** @var User $user */
         $user = $request->user();
         $account->endOtherSessions($user, $this->sessionId($request));
+
+        return response()->noContent();
+    }
+
+    /**
+     * Leaves a workspace: the membership is revoked, nothing is deleted. 404 when the user has no current
+     * access to it; 422 when the user is the last one who can manage its memberships.
+     */
+    public function leaveWorkspace(Request $request, AccountLifecycle $lifecycle, string $workspaceId): Response
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $lifecycle->leaveWorkspace($user, $workspaceId);
+
+        return response()->noContent();
+    }
+
+    /**
+     * Deactivates the account (needs the current password): memberships end, passkeys are removed, every
+     * session ends, and the account can no longer sign in. Nothing is deleted. 422 while the user is the last
+     * one who can manage the memberships of a workspace.
+     */
+    public function deactivate(DeactivateAccountRequest $request, AccountLifecycle $lifecycle): Response
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $lifecycle->deactivate($user);
+
+        Auth::guard('web')->logout();
 
         return response()->noContent();
     }

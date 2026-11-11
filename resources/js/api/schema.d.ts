@@ -147,6 +147,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/workspaces/{workspaceId}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Leaves a workspace: the membership is revoked, nothing is deleted. 404 when the user has no current
+         *     access to it; 422 when the user is the last one who can manage its memberships
+         */
+        post: operations["me.workspaces.leave"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deactivates the account (needs the current password): memberships end, passkeys are removed, every
+         *     session ends, and the account can no longer sign in. Nothing is deleted. 422 while the user is the last
+         *     one who can manage the memberships of a workspace
+         */
+        post: operations["me.deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/accounts": {
         parameters: {
             query?: never;
@@ -4839,6 +4880,10 @@ export interface components {
          * @enum {string}
          */
         CurrencyRounding: "half_up" | "half_even" | "up" | "down";
+        /** DeactivateAccountRequest */
+        DeactivateAccountRequest: {
+            current_password: string;
+        };
         /** DescribeTransactionTypeRequest */
         DescribeTransactionTypeRequest: {
             description: string | null;
@@ -6706,6 +6751,52 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "me.workspaces.leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "me.deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeactivateAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "accounts.index": {

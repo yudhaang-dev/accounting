@@ -9,6 +9,7 @@ use App\Modules\IdentityAccess\Application\EloquentIntegrationWebhooks;
 use App\Modules\IdentityAccess\Application\EloquentWorkspaceCreators;
 use App\Modules\IdentityAccess\Application\EloquentWorkspaces;
 use App\Modules\IdentityAccess\Application\IntegrationClientAuthenticator;
+use App\Modules\IdentityAccess\Application\RejectDeactivatedLogin;
 use App\Modules\IdentityAccess\Application\WorkspaceCompanyAccessGate;
 use App\Modules\IdentityAccess\Console\InviteOwnerCommand;
 use App\Modules\IdentityAccess\Console\SyncPermissionsCommand;
@@ -23,10 +24,12 @@ use App\Modules\IdentityAccess\Http\RequireGroupAccess;
 use App\Modules\IdentityAccess\Http\RequirePermission;
 use App\Support\Company\CompanyAccessGate;
 use App\Support\Modules\ModuleServiceProvider;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Passport\Passport;
 
@@ -59,6 +62,8 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
         parent::boot();
 
         RateLimiter::for('invitation-accept', fn (Request $request) => Limit::perMinute(10)->by('ip:'.$request->ip()));
+
+        Event::listen(Login::class, [RejectDeactivatedLogin::class, 'handle']);
 
         RateLimiter::for('account-security', fn (Request $request) => Limit::perMinute(5)->by('user:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 

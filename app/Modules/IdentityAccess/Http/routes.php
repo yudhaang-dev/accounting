@@ -26,6 +26,9 @@ Route::middleware('auth')->prefix('me')->name('me.')->group(function () {
     Route::get('sessions', [AccountController::class, 'sessions'])->name('sessions.index');
     Route::delete('sessions', [AccountController::class, 'endOtherSessions'])->name('sessions.destroy-others');
     Route::delete('sessions/{id}', [AccountController::class, 'endSession'])->name('sessions.destroy');
+    Route::post('workspaces/{workspaceId}/leave', [AccountController::class, 'leaveWorkspace'])
+        ->where('workspaceId', ApiServiceProvider::ULID)->name('workspaces.leave');
+    Route::post('deactivate', [AccountController::class, 'deactivate'])->middleware('throttle:account-security')->name('deactivate');
 });
 
 // Client Credentials token request of integration clients (API-TR-22): form-encoded, `client_secret_basic`.
