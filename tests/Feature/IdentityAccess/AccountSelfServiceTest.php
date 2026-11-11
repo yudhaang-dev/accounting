@@ -43,7 +43,7 @@ describe('email change (IA-FR-04)', function () {
     function requestedToken(User $user, string $email): string
     {
         Notification::fake();
-        test()->actingAs($user)->postJson('/api/v1/me/email', ['email' => $email, 'current_password' => CURRENT_PASSWORD])->assertStatus(202);
+        test()->actingAs($user)->postJson('/api/v1/me/email', ['email' => $email, 'current_password' => CURRENT_PASSWORD])->assertNoContent();
 
         $token = null;
         Notification::assertSentOnDemand(EmailChangeNotification::class, function ($notification, $channels, $notifiable) use (&$token, $email) {

@@ -113,6 +113,8 @@ import { VerifyEmailPage } from '@/modules/identity-access/pages/verify-email-pa
 import { WorkspaceNotFound } from '@/modules/identity-access/pages/workspace-not-found';
 import { WorkspacesPage } from '@/modules/identity-access/pages/workspaces-page';
 import { AcceptInvitationPage } from '@/modules/identity-access/pages/accept-invitation-page';
+import { AccountPage } from '@/modules/identity-access/pages/account-page';
+import { ConfirmEmailChangePage } from '@/modules/identity-access/pages/confirm-email-change-page';
 import { IntegrationClientsPage } from '@/modules/identity-access/pages/integration-clients-page';
 import { MembersPage } from '@/modules/identity-access/pages/members-page';
 import { RolesPage } from '@/modules/identity-access/pages/roles-page';
@@ -1956,6 +1958,42 @@ const acceptInvitationRoute = createRoute({
     },
 });
 
+const accountRoute = createRoute({
+    getParentRoute: () => verifiedRoute,
+    path: '/account',
+    staticData: {
+        crumbs: () => [{ labelKey: 'breadcrumb.account' }],
+    },
+    component: function Account() {
+        const { me, workspaces } = accountRoute.useRouteContext();
+
+        return <AccountPage me={me} workspaces={workspaces} />;
+    },
+});
+
+// The link of the e-mail sent to a new sign-in address; signing in first keeps the token in `redirect`.
+const confirmEmailChangeRoute = createRoute({
+    getParentRoute: () => verifiedRoute,
+    path: '/account/confirm-email',
+    validateSearch: (search: Record<string, unknown>): { token?: string } =>
+        typeof search.token === 'string' && search.token !== ''
+            ? { token: search.token }
+            : {},
+    staticData: {
+        crumbs: () => [
+            { labelKey: 'breadcrumb.account', href: '/account' },
+            { labelKey: 'breadcrumb.confirmEmail' },
+        ],
+    },
+    component: function ConfirmEmail() {
+        return (
+            <ConfirmEmailChangePage
+                token={confirmEmailChangeRoute.useSearch().token}
+            />
+        );
+    },
+});
+
 const newWorkspaceRoute = createRoute({
     getParentRoute: () => verifiedRoute,
     path: '/workspaces/new',
@@ -2252,6 +2290,8 @@ const routeTree = rootRoute.addChildren([
             indexRoute,
             workspacesRoute,
             newWorkspaceRoute,
+            accountRoute,
+            confirmEmailChangeRoute,
             groupsRoute,
             groupRoute.addChildren([
                 groupIndexRoute,

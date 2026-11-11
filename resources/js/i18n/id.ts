@@ -151,6 +151,7 @@ export const id = {
         navSecurityPolicy: 'Kebijakan keamanan',
         navIntegrations: 'Klien integrasi',
         account: 'Akun',
+        accountSettings: 'Akun saya',
         signOut: 'Keluar',
         signingOut: 'Keluar…',
         openMenu: 'Buka menu akun',
@@ -3138,6 +3139,82 @@ export const id = {
             action: 'Aktifkan',
         },
     },
+    account: {
+        pageTitle: 'Akun saya',
+        title: 'Akun saya',
+        description:
+            'Nama, alamat email masuk, kata sandi, dan perangkat yang sedang masuk.',
+        currentPassword: 'Kata sandi saat ini',
+        passwordRequired: 'Isi kata sandi.',
+        rateLimited: 'Terlalu banyak percobaan. Tunggu semenit lalu coba lagi.',
+        profile: {
+            title: 'Profil',
+            description: 'Nama yang dilihat orang lain di ruang kerja ini.',
+            name: 'Nama',
+            nameRequired: 'Isi nama Anda.',
+            saved: 'Nama disimpan.',
+        },
+        email: {
+            title: 'Alamat email',
+            description:
+                'Anda masuk dengan {{email}}. Alamat baru baru berlaku setelah Anda mengonfirmasinya dari email yang kami kirim ke sana; sebelum itu alamat yang sekarang tetap berlaku.',
+            new: 'Alamat email baru',
+            required: 'Isi alamat email baru.',
+            submit: 'Kirim konfirmasi',
+            sent: 'Kami mengirim tautan konfirmasi ke {{email}}. Berlaku satu jam.',
+        },
+        confirmEmail: {
+            pageTitle: 'Konfirmasi alamat email',
+            title: 'Konfirmasi alamat email',
+            confirming: 'Mengonfirmasi alamat baru Anda…',
+            done: 'Selesai. Sekarang Anda masuk dengan {{email}}.',
+            invalid:
+                'Tautan konfirmasi ini tidak valid atau sudah kedaluwarsa. Minta yang baru dari halaman akun Anda.',
+            toAccount: 'Ke akun saya',
+        },
+        password: {
+            title: 'Kata sandi',
+            description:
+                'Mengganti kata sandi mengeluarkan Anda dari semua perangkat lain.',
+            new: 'Kata sandi baru',
+            confirm: 'Ulangi kata sandi baru',
+            mismatch: 'Kedua kata sandi tidak sama.',
+            submit: 'Ganti kata sandi',
+            saved: 'Kata sandi diganti. Perangkat lain dikeluarkan.',
+        },
+        sessions: {
+            title: 'Perangkat yang masuk',
+            description:
+                'Semua peramban yang sedang masuk ke akun Anda. Keluarkan yang tidak Anda kenal.',
+            current: 'Perangkat ini',
+            unknownDevice: 'Perangkat tidak dikenal',
+            end: 'Keluarkan',
+            endOthers: 'Keluarkan semua perangkat lain',
+            ended: 'Perangkat dikeluarkan.',
+            endedOthers: 'Semua perangkat lain dikeluarkan.',
+        },
+        workspaces: {
+            title: 'Ruang kerja saya',
+            description:
+                'Keluar mengakhiri akses Anda; yang pernah Anda catat tidak dihapus. Untuk kembali, orang yang dapat mengelola anggota harus mengundang Anda lagi.',
+            none: 'Anda bukan anggota ruang kerja mana pun.',
+            leave: 'Keluar',
+            leaveTitle: 'Keluar dari {{name}}?',
+            leaveDescription:
+                'Akses Anda berakhir seketika. Yang pernah Anda catat tetap ada. Orang terakhir yang dapat mengelola anggota tidak dapat keluar.',
+            left: 'Anda keluar dari ruang kerja.',
+        },
+        deactivate: {
+            title: 'Nonaktifkan akun',
+            description:
+                'Mengakhiri akses Anda di mana pun dan mengeluarkan Anda dari semua perangkat. Nama Anda tetap ada pada yang pernah Anda catat; tidak ada yang dihapus.',
+            open: 'Nonaktifkan akun',
+            confirmTitle: 'Nonaktifkan akun Anda?',
+            confirmDescription:
+                'Anda tidak akan dapat masuk lagi dan akses Anda ke semua ruang kerja berakhir. Catatan yang Anda buat tetap memuat nama Anda. Ini tidak dapat dibatalkan dari sini.',
+            confirm: 'Nonaktifkan',
+        },
+    },
     breadcrumb: {
         label: 'Navigasi halaman',
         new: 'Baru',
@@ -3145,6 +3222,8 @@ export const id = {
         reports: 'Laporan',
         setup: 'Penyiapan',
         workspaces: 'Ruang kerja',
+        account: 'Akun saya',
+        confirmEmail: 'Konfirmasi email',
         rateTypes: 'Jenis kurs',
         more: 'Lainnya',
     },

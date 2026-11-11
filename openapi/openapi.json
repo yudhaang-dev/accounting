@@ -143,8 +143,8 @@
                     }
                 },
                 "responses": {
-                    "202": {
-                        "description": ""
+                    "204": {
+                        "description": "No content"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"

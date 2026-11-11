@@ -6622,7 +6622,8 @@ export interface operations {
             };
         };
         responses: {
-            202: {
+            /** @description No content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };

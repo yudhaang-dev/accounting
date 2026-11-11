@@ -28,6 +28,7 @@ import {
     RepeatIcon,
     ShapesIcon,
     ShieldCheckIcon,
+    UserIcon,
     SplitIcon,
     SigmaIcon,
     PackagePlusIcon,
@@ -387,6 +388,10 @@ function UserMenu({ me }: { me: Me }) {
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
+                            <DropdownMenuItem render={<Link to="/account" />}>
+                                <UserIcon />
+                                {t('app.accountSettings')}
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                                 disabled={signOut.isPending}
                                 onClick={() => signOut.mutate()}

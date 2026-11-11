@@ -36,7 +36,7 @@ class AccountController
         $user = $request->user();
         $account->requestEmailChange($user, (string) $request->validated('email'));
 
-        return response()->noContent(202);
+        return response()->noContent();
     }
 
     /**

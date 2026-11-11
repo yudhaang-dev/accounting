@@ -153,6 +153,7 @@ export const en: Widen<typeof id> = {
         navSecurityPolicy: 'Security policy',
         navIntegrations: 'Integration clients',
         account: 'Account',
+        accountSettings: 'My account',
         signOut: 'Sign out',
         signingOut: 'Signing out…',
         openMenu: 'Open account menu',
@@ -3137,6 +3138,82 @@ export const en: Widen<typeof id> = {
             action: 'Activate',
         },
     },
+    account: {
+        pageTitle: 'My account',
+        title: 'My account',
+        description:
+            'Your name, sign-in address, password, and the devices that are signed in.',
+        currentPassword: 'Current password',
+        passwordRequired: 'Enter the password.',
+        rateLimited: 'Too many attempts. Wait a minute and try again.',
+        profile: {
+            title: 'Profile',
+            description: 'The name other people see in this workspace.',
+            name: 'Name',
+            nameRequired: 'Enter your name.',
+            saved: 'Name saved.',
+        },
+        email: {
+            title: 'Email address',
+            description:
+                'You sign in with {{email}}. A new address only takes over after you confirm it from the email we send there; until then the current one keeps working.',
+            new: 'New email address',
+            required: 'Enter the new email address.',
+            submit: 'Send confirmation',
+            sent: 'We sent a confirmation link to {{email}}. It is valid for one hour.',
+        },
+        confirmEmail: {
+            pageTitle: 'Confirm email address',
+            title: 'Confirm email address',
+            confirming: 'Confirming your new address…',
+            done: 'Done. You now sign in with {{email}}.',
+            invalid:
+                'This confirmation link is invalid or has expired. Request a new one from your account page.',
+            toAccount: 'Go to my account',
+        },
+        password: {
+            title: 'Password',
+            description:
+                'Changing the password signs you out on every other device.',
+            new: 'New password',
+            confirm: 'Repeat the new password',
+            mismatch: 'The two passwords are not the same.',
+            submit: 'Change password',
+            saved: 'Password changed. Other devices were signed out.',
+        },
+        sessions: {
+            title: 'Signed-in devices',
+            description:
+                'Every browser that is signed in to your account. End the ones you do not recognise.',
+            current: 'This device',
+            unknownDevice: 'Unknown device',
+            end: 'Sign out',
+            endOthers: 'Sign out all other devices',
+            ended: 'Device signed out.',
+            endedOthers: 'All other devices were signed out.',
+        },
+        workspaces: {
+            title: 'My workspaces',
+            description:
+                'Leaving ends your access; nothing you recorded is deleted. Someone who can manage members has to invite you again to return.',
+            none: 'You are not a member of any workspace.',
+            leave: 'Leave',
+            leaveTitle: 'Leave {{name}}?',
+            leaveDescription:
+                'Your access ends right away. What you recorded stays. The last person who can manage members cannot leave.',
+            left: 'You left the workspace.',
+        },
+        deactivate: {
+            title: 'Deactivate account',
+            description:
+                'Ends your access everywhere and signs you out on every device. Your name stays on what you recorded; nothing is deleted.',
+            open: 'Deactivate account',
+            confirmTitle: 'Deactivate your account?',
+            confirmDescription:
+                'You will no longer be able to sign in, and your access to every workspace ends. Records you made keep your name. This cannot be undone from here.',
+            confirm: 'Deactivate',
+        },
+    },
     breadcrumb: {
         label: 'Page navigation',
         new: 'New',
@@ -3144,6 +3221,8 @@ export const en: Widen<typeof id> = {
         reports: 'Reports',
         setup: 'Setup',
         workspaces: 'Workspaces',
+        account: 'My account',
+        confirmEmail: 'Confirm email',
         rateTypes: 'Rate types',
         more: 'More',
     },
