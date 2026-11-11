@@ -35,6 +35,7 @@ import { applyApiErrors } from '@/lib/forms';
 import { isApiError } from '@/lib/http';
 import { accountApi, sessionsQuery } from '@/modules/identity-access/account';
 import { PasswordField } from '@/modules/identity-access/components/password-field';
+import { PasskeysSection } from '@/modules/identity-access/components/passkeys-section';
 import { TwoFactorSection } from '@/modules/identity-access/components/two-factor-section';
 import { useSignOut } from '@/modules/identity-access/hooks/use-sign-out';
 import { meQuery, refreshMe, type Me } from '@/modules/identity-access/session';
@@ -684,7 +685,7 @@ function DeactivateSection() {
 
 /**
  * The user's own account (IA-FR-01, IA-FR-04): name, sign-in address, password, active sessions, leaving
- * workspaces, and deactivation. Two-step verification is on the same page; passkeys follow (D2d3c).
+ * workspaces, and deactivation. Two-step verification and passkeys are on the same page.
  */
 export function AccountPage({
     me,
@@ -711,6 +712,7 @@ export function AccountPage({
             <EmailSection me={me} />
             <PasswordSection />
             <TwoFactorSection me={me} />
+            <PasskeysSection />
             <SessionsSection />
             <WorkspacesSection workspaces={workspaces} />
             <DeactivateSection />

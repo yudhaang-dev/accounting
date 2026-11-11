@@ -97,6 +97,29 @@ final class ManageAccount
     }
 
     /**
+     * Passkeys registered by the user, oldest first. Registering and deleting go through the package's own
+     * routes (`user/passkeys`); only the list is missing there.
+     *
+     * @return list<array{id: string, name: string, authenticator: string|null, created_at: string|null, last_used_at: string|null}>
+     */
+    public function passkeys(User $user): array
+    {
+        $passkeys = [];
+
+        foreach ($user->passkeys()->orderBy('created_at')->orderBy('id')->get() as $passkey) {
+            $passkeys[] = [
+                'id' => (string) $passkey->id,
+                'name' => $passkey->name,
+                'authenticator' => $passkey->authenticator,
+                'created_at' => $passkey->created_at?->toIso8601String(),
+                'last_used_at' => $passkey->last_used_at?->toIso8601String(),
+            ];
+        }
+
+        return $passkeys;
+    }
+
+    /**
      * Sessions of the user, most recently active first.
      *
      * @return list<array{id: string, ip_address: string|null, user_agent: string|null, last_active_at: string, is_current: bool}>

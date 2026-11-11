@@ -1,7 +1,34 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { account, json, mockApi, renderApp, workspace } from '@/test/harness';
+
+const registerPasskey = vi.fn();
+
+vi.mock('@laravel/passkeys', async (importOriginal) => {
+    const original = await importOriginal<typeof import('@laravel/passkeys')>();
+
+    return {
+        ...original,
+        Passkeys: {
+            ...original.Passkeys,
+            isSupported: () => true,
+            isAutofillSupported: async () => false,
+            cancel: () => undefined,
+            register: (options: { name: string }) => registerPasskey(options),
+        },
+    };
+});
+
+const passkeys = [
+    {
+        id: '7',
+        name: 'Laptop kantor',
+        authenticator: 'iCloud Keychain',
+        created_at: '2026-11-01T08:00:00+00:00',
+        last_used_at: null,
+    },
+];
 
 const sessions = [
     {
@@ -24,6 +51,7 @@ const signedIn = () => ({
     'GET /api/v1/me': () => json({ data: account }),
     'GET /api/v1/me/workspaces': () => json({ data: [workspace] }),
     'GET /api/v1/me/sessions': () => json({ data: sessions }),
+    'GET /api/v1/me/passkeys': () => json({ data: passkeys }),
 });
 
 describe('own account (D2d)', () => {
@@ -396,5 +424,109 @@ describe('two-step verification (IA-FR-04)', () => {
         expect(
             api.called('DELETE /user/two-factor-authentication'),
         ).toHaveLength(1);
+    });
+});
+
+describe('passkeys (IA-FR-04)', () => {
+    it('lists the passkeys and removes one after a confirmation', async () => {
+        let list = passkeys;
+        const api = mockApi({
+            ...signedIn(),
+            'GET /api/v1/me/passkeys': () => json({ data: list }),
+            'DELETE /user/passkeys/7': () => {
+                list = [];
+
+                return json({ status: 'passkey-deleted' });
+            },
+        });
+
+        renderApp('/account');
+        const typist = userEvent.setup();
+
+        expect(await screen.findByText('Laptop kantor')).toBeInTheDocument();
+        expect(screen.getByText(/iCloud Keychain/)).toBeInTheDocument();
+
+        const row = screen.getByText('Laptop kantor').closest('li');
+        await typist.click(
+            within(row as HTMLElement).getByRole('button', { name: 'Hapus' }),
+        );
+        const dialog = await screen.findByRole('alertdialog');
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Hapus' }),
+        );
+
+        expect(
+            await screen.findByText('Anda belum menambahkan passkey.'),
+        ).toBeInTheDocument();
+        expect(api.called('DELETE /user/passkeys/7')).toHaveLength(1);
+    });
+
+    it('asks for the password first, then runs the browser ceremony with the chosen name', async () => {
+        registerPasskey.mockReset();
+        registerPasskey.mockResolvedValue({});
+        let confirmed = false;
+        const api = mockApi({
+            ...signedIn(),
+            'GET /user/confirmed-password-status': () => json({ confirmed }),
+            'POST /user/confirm-password': () => {
+                confirmed = true;
+
+                return json('', 201);
+            },
+        });
+
+        renderApp('/account');
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('button', { name: 'Tambah passkey' }),
+        );
+        await typist.type(
+            within(await screen.findByRole('dialog')).getByLabelText('Nama'),
+            'Ponsel',
+        );
+        await typist.click(screen.getByRole('button', { name: 'Lanjut' }));
+
+        const confirm = await screen.findByLabelText('Kata sandi saat ini', {
+            selector: '#confirm-password',
+        });
+        await typist.type(confirm, 'Secret-pass-123');
+        await typist.click(
+            within(confirm.closest('form') as HTMLElement).getByRole('button', {
+                name: 'Lanjut',
+            }),
+        );
+
+        await waitFor(() =>
+            expect(registerPasskey).toHaveBeenCalledWith({ name: 'Ponsel' }),
+        );
+        expect(api.called('POST /user/confirm-password')).toHaveLength(1);
+    });
+
+    it('stays quiet when the person cancels the browser prompt', async () => {
+        const { UserCancelledError } = await import('@laravel/passkeys');
+
+        registerPasskey.mockReset();
+        registerPasskey.mockRejectedValue(new UserCancelledError());
+        mockApi({
+            ...signedIn(),
+            'GET /user/confirmed-password-status': () =>
+                json({ confirmed: true }),
+        });
+
+        renderApp('/account');
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('button', { name: 'Tambah passkey' }),
+        );
+        await typist.type(
+            within(await screen.findByRole('dialog')).getByLabelText('Nama'),
+            'Ponsel',
+        );
+        await typist.click(screen.getByRole('button', { name: 'Lanjut' }));
+
+        await waitFor(() => expect(registerPasskey).toHaveBeenCalled());
+        expect(screen.queryByRole('alert')).toBeNull();
     });
 });

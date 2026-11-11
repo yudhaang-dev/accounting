@@ -23,6 +23,7 @@ Route::middleware('auth')->prefix('me')->name('me.')->group(function () {
     Route::post('email', [AccountController::class, 'requestEmailChange'])->middleware('throttle:account-security')->name('email.request');
     Route::post('email/confirm', [AccountController::class, 'confirmEmailChange'])->middleware('throttle:account-security')->name('email.confirm');
     Route::put('password', [AccountController::class, 'changePassword'])->middleware('throttle:account-security')->name('password.update');
+    Route::get('passkeys', [AccountController::class, 'passkeys'])->name('passkeys.index');
     Route::get('sessions', [AccountController::class, 'sessions'])->name('sessions.index');
     Route::delete('sessions', [AccountController::class, 'endOtherSessions'])->name('sessions.destroy-others');
     Route::delete('sessions/{id}', [AccountController::class, 'endSession'])->name('sessions.destroy');

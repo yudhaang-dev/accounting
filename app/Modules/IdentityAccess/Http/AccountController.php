@@ -63,6 +63,20 @@ class AccountController
     }
 
     /**
+     * Passkeys of the user, oldest first. Add and remove them with `user/passkeys` (Fortify), which asks to
+     * confirm the password first.
+     *
+     * @response array{data: list<array{id: string, name: string, authenticator: string|null, created_at: string|null, last_used_at: string|null}>}
+     */
+    public function passkeys(Request $request, ManageAccount $account): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return response()->json(['data' => $account->passkeys($user)]);
+    }
+
+    /**
      * Sessions of the user, most recently active first; `is_current` marks the one making the request.
      *
      * @response array{data: list<array{id: string, ip_address: string|null, user_agent: string|null, last_active_at: string, is_current: bool}>}

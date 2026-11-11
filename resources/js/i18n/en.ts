@@ -3210,6 +3210,32 @@ export const en: Widen<typeof id> = {
             disableDescription:
                 'Signing in will need only your password. Roles that require two-step verification will be refused until you set it up again.',
         },
+        passkeys: {
+            title: 'Passkeys',
+            description:
+                'Sign in with your fingerprint, face, or device PIN instead of typing a password. Each passkey stays on the device or password manager that made it.',
+            none: 'You have not added a passkey yet.',
+            add: 'Add a passkey',
+            addTitle: 'Add a passkey',
+            addDescription: 'Name the passkey, then follow your browser.',
+            name: 'Name',
+            namePlaceholder: 'Work laptop',
+            nameHint: 'So you can tell your passkeys apart later.',
+            nameRequired: 'Give the passkey a name.',
+            continue: 'Continue',
+            waiting: 'Waiting for your device…',
+            created: 'added {{date}}',
+            lastUsed: 'last used {{date}}',
+            neverUsed: 'never used',
+            remove: 'Remove',
+            removeTitle: 'Remove {{name}}?',
+            removeDescription:
+                'You will no longer be able to sign in with this passkey. Remove it from your device or password manager too if you want it gone there.',
+            added: 'Passkey added.',
+            removed: 'Passkey removed.',
+            exists: 'This device already has a passkey for this account.',
+            unsupported: 'This browser cannot create passkeys.',
+        },
         sessions: {
             title: 'Signed-in devices',
             description:

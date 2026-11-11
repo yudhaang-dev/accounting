@@ -185,3 +185,26 @@ describe('password and sessions (IA-FR-04)', function () {
         $this->putJson('/api/v1/me/password', ['current_password' => 'wrong'])->assertStatus(429);
     });
 });
+
+describe('passkeys (IA-FR-04)', function () {
+    it('lists only the own passkeys, oldest first, without the credential', function () {
+        $user = accountUser();
+        $other = accountUser();
+
+        foreach ([[$user, 'Laptop', 'c-1', '2026-11-01'], [$user, 'Phone', 'c-2', '2026-11-05'], [$other, 'Theirs', 'c-3', '2026-11-02']] as [$owner, $name, $credentialId, $created]) {
+            DB::table('passkeys')->insert([
+                'user_id' => $owner->id, 'name' => $name, 'credential_id' => $credentialId,
+                'credential' => json_encode(['secret' => 'material']), 'created_at' => $created, 'updated_at' => $created,
+            ]);
+        }
+
+        $response = $this->actingAs($user)->getJson('/api/v1/me/passkeys')->assertOk();
+
+        expect(array_column($response->json('data'), 'name'))->toBe(['Laptop', 'Phone']);
+        expect($response->getContent())->not->toContain('material')->not->toContain('c-1');
+    });
+
+    it('needs a session', function () {
+        $this->getJson('/api/v1/me/passkeys')->assertStatus(401);
+    });
+});

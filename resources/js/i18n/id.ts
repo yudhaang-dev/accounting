@@ -3214,6 +3214,32 @@ export const id = {
             disableDescription:
                 'Masuk hanya akan memerlukan kata sandi Anda. Peran yang mewajibkan verifikasi dua langkah akan ditolak sampai Anda menyiapkannya lagi.',
         },
+        passkeys: {
+            title: 'Passkey',
+            description:
+                'Masuk dengan sidik jari, wajah, atau PIN perangkat tanpa mengetik kata sandi. Setiap passkey tersimpan di perangkat atau pengelola kata sandi yang membuatnya.',
+            none: 'Anda belum menambahkan passkey.',
+            add: 'Tambah passkey',
+            addTitle: 'Tambah passkey',
+            addDescription: 'Beri nama passkey, lalu ikuti petunjuk peramban.',
+            name: 'Nama',
+            namePlaceholder: 'Laptop kantor',
+            nameHint: 'Agar Anda dapat membedakan passkey Anda nanti.',
+            nameRequired: 'Beri nama passkey.',
+            continue: 'Lanjut',
+            waiting: 'Menunggu perangkat Anda…',
+            created: 'ditambahkan {{date}}',
+            lastUsed: 'terakhir dipakai {{date}}',
+            neverUsed: 'belum pernah dipakai',
+            remove: 'Hapus',
+            removeTitle: 'Hapus {{name}}?',
+            removeDescription:
+                'Anda tidak dapat lagi masuk dengan passkey ini. Hapus juga dari perangkat atau pengelola kata sandi bila ingin hilang di sana.',
+            added: 'Passkey ditambahkan.',
+            removed: 'Passkey dihapus.',
+            exists: 'Perangkat ini sudah punya passkey untuk akun ini.',
+            unsupported: 'Peramban ini tidak dapat membuat passkey.',
+        },
         sessions: {
             title: 'Perangkat yang masuk',
             description:

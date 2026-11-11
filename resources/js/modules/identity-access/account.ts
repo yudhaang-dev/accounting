@@ -95,3 +95,40 @@ export const twoFactorApi = {
 
     disable: () => request('DELETE', '/user/two-factor-authentication'),
 };
+
+export type AccountPasskey = {
+    id: string;
+    name: string;
+    /** The kind of authenticator, when the device reports one (for example "iCloud Keychain"). */
+    authenticator: string | null;
+    created_at: string | null;
+    last_used_at: string | null;
+};
+
+export const passkeysQuery = queryOptions({
+    queryKey: ['me', 'passkeys'],
+    queryFn: async (): Promise<AccountPasskey[]> =>
+        (
+            await request<{ data: AccountPasskey[] }>(
+                'GET',
+                '/api/v1/me/passkeys',
+            )
+        ).data,
+});
+
+/**
+ * Adding a passkey runs a browser ceremony (`@laravel/passkeys`); removing one is Fortify's own route. Both
+ * ask to confirm the password first, which `passwordConfirmed` lets a screen check before it starts.
+ */
+export const passkeyApi = {
+    passwordConfirmed: async (): Promise<boolean> =>
+        (
+            await request<{ confirmed: boolean }>(
+                'GET',
+                '/user/confirmed-password-status',
+            )
+        ).confirmed,
+
+    remove: (id: string) =>
+        request('DELETE', `/user/passkeys/${encodeURIComponent(id)}`),
+};
