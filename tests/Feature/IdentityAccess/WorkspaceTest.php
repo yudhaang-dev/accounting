@@ -36,7 +36,7 @@ function newWorkspacePayload(array $overrides = []): array
 
 describe('POST /api/v1/workspaces (IA-FR-01)', function () {
     it('creates the workspace, its company in setup, and the creator membership', function () {
-        $user = User::factory()->create();
+        $user = makePlatformOwner(User::factory()->create());
 
         $response = $this->actingAs($user)->postJson('/api/v1/workspaces', newWorkspacePayload())
             ->assertCreated()
@@ -57,7 +57,7 @@ describe('POST /api/v1/workspaces (IA-FR-01)', function () {
     });
 
     it('rolls the company back when the workspace cannot be created', function () {
-        $user = User::factory()->create();
+        $user = makePlatformOwner(User::factory()->create());
         $this->mock(Workspaces::class)
             ->shouldReceive('createFor')->andThrow(new RuntimeException('boom'));
 
@@ -74,7 +74,7 @@ describe('POST /api/v1/workspaces (IA-FR-01)', function () {
     });
 
     it('does not create a second workspace for a repeated Idempotency-Key', function () {
-        $user = User::factory()->create();
+        $user = makePlatformOwner(User::factory()->create());
         $headers = ['Idempotency-Key' => 'create-acme'];
 
         $first = $this->actingAs($user)->postJson('/api/v1/workspaces', newWorkspacePayload(), $headers)->assertCreated();

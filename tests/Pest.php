@@ -9,6 +9,7 @@ use App\Modules\IdentityAccess\Domain\Role;
 use App\Modules\IdentityAccess\Domain\Workspace;
 use App\Support\Company\CompanyScope;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /*
@@ -66,9 +67,19 @@ function something()
 | Shared helpers for feature tests that need a company with members and roles.
 */
 
+/** Lets the user create workspaces without a role, as the first owner can (D2c). */
+function makePlatformOwner(User $user): User
+{
+    DB::table('ia_platform_owners')->insertOrIgnore(['user_id' => $user->id]);
+
+    return $user;
+}
+
 /** A workspace created through the API, so roles are seeded the way they are in production. */
 function createWorkspaceAs(User $user, string $name = 'Acme'): array
 {
+    makePlatformOwner($user);
+
     $response = test()->actingAs($user)->postJson('/api/v1/workspaces', [
         'workspace_name' => $name,
         'company_name' => "PT {$name}",

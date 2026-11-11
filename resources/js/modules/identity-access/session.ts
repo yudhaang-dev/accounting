@@ -7,6 +7,8 @@ export type Me = {
     email: string;
     email_verified: boolean;
     two_factor_enabled: boolean;
+    /** Whether the user may create a workspace: the first owner, or a role with `workspaces.create`. */
+    can_create_workspace: boolean;
 };
 
 /**

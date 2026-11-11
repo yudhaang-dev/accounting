@@ -77,6 +77,28 @@ describe('workspace selection', () => {
         ).toBeInTheDocument();
     });
 
+    it('sends someone who may not create a workspace to ask for an invitation, never to the form', async () => {
+        mockApi({
+            'GET /api/v1/me': () =>
+                json({ data: { ...account, can_create_workspace: false } }),
+            'GET /api/v1/me/workspaces': () => json({ data: [] }),
+        });
+        const { router } = renderApp('/');
+
+        expect(
+            await screen.findByText('Belum ada ruang kerja'),
+        ).toBeInTheDocument();
+        expect(router.state.location.pathname).toBe('/workspaces');
+        expect(screen.getByText(/Minta undangan/)).toBeInTheDocument();
+        expect(
+            screen.queryByRole('link', { name: /Buat ruang kerja/ }),
+        ).not.toBeInTheDocument();
+
+        // The form's own address is closed to them as well.
+        await router.navigate({ to: '/workspaces/new' });
+        expect(router.state.location.pathname).toBe('/workspaces');
+    });
+
     it('offers a choice when there are several workspaces, and opens the chosen one', async () => {
         mockApi({ ...both });
         const { router } = renderApp('/');

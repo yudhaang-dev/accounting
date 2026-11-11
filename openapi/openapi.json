@@ -26250,7 +26250,7 @@
         "/workspaces": {
             "post": {
                 "operationId": "workspaces.store",
-                "summary": "Creates a workspace together with its company (status `setup`); the caller becomes its first member",
+                "summary": "Creates a workspace together with its company (status `setup`); the caller becomes its first member.\nOnly the first owner's account, or a user holding `workspaces.create` through a role, may do this;\nanyone else gets 403",
                 "tags": [
                     "Workspace"
                 ],
@@ -28088,7 +28088,8 @@
                                 "roles.manage",
                                 "integration-clients.manage",
                                 "policies.manage",
-                                "consolidation.join"
+                                "consolidation.join",
+                                "workspaces.create"
                             ]
                         },
                         "uniqueItems": true
@@ -30961,6 +30962,9 @@
                     },
                     "two_factor_enabled": {
                         "type": "boolean"
+                    },
+                    "can_create_workspace": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -30968,7 +30972,8 @@
                     "name",
                     "email",
                     "email_verified",
-                    "two_factor_enabled"
+                    "two_factor_enabled",
+                    "can_create_workspace"
                 ],
                 "title": "MeResource"
             },
@@ -34382,7 +34387,8 @@
                                 "roles.manage",
                                 "integration-clients.manage",
                                 "policies.manage",
-                                "consolidation.join"
+                                "consolidation.join",
+                                "workspaces.create"
                             ]
                         },
                         "uniqueItems": true
@@ -34475,7 +34481,8 @@
                                 "roles.manage",
                                 "integration-clients.manage",
                                 "policies.manage",
-                                "consolidation.join"
+                                "consolidation.join",
+                                "workspaces.create"
                             ]
                         },
                         "uniqueItems": true

@@ -164,6 +164,8 @@ export const en: Widen<typeof id> = {
         emptyTitle: 'No workspaces yet',
         emptyDescription:
             'You are not a member of any workspace. A new workspace is created together with its company.',
+        emptyNoAccess:
+            'You are not a member of any workspace. Ask the admin of the workspace you will use for an invitation.',
         company: 'Company: {{name}}',
         open: 'Open {{name}}',
         all: 'All workspaces',

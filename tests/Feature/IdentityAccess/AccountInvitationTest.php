@@ -141,6 +141,9 @@ describe('the first owner (ADR-0021)', function () {
         expect($owner->hasVerifiedEmail())->toBeTrue()->and(User::query()->count())->toBe(1);
         $this->assertAuthenticatedAs($owner);
 
+        // The first owner alone may create workspaces without a role (D2c).
+        $this->postJson('/api/v1/workspaces', ['workspace_name' => 'W', 'company_name' => 'PT W', 'functional_currency' => 'IDR'])->assertCreated();
+
         // The command no longer runs once an account exists.
         $this->artisan('access:invite-owner')->assertFailed();
     });

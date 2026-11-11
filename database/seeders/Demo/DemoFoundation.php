@@ -7,6 +7,7 @@ use App\Modules\IdentityAccess\Domain\Membership;
 use App\Modules\IdentityAccess\Domain\Workspace;
 use Carbon\CarbonImmutable;
 use Closure;
+use Illuminate\Support\Facades\DB;
 
 /**
  * The setup an accountant does before the company is used (PANDUAN-AKUNTAN-SETUP): the people and their roles,
@@ -119,6 +120,9 @@ final class DemoFoundation
     private function company(): void
     {
         $this->say('Perusahaan dan ruang kerja');
+
+        // The demo owner stands in for the first owner, who alone may create a workspace (D2c).
+        DB::table('ia_platform_owners')->insertOrIgnore(['user_id' => $this->users['owner']->id]);
 
         $created = $this->api->as($this->users['owner'])->post('/api/v1/workspaces', [
             'workspace_name' => 'Sinar Nusantara',

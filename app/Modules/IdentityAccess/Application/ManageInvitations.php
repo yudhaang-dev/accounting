@@ -159,6 +159,8 @@ final class ManageInvitations
             }
 
             if ($invitation->workspace_id === null) {
+                // The first owner may create workspaces; everyone else needs `workspaces.create` in a role (D2c).
+                DB::table('ia_platform_owners')->insertOrIgnore(['user_id' => $user->id]);
                 $invitation->update(['status' => InvitationStatus::Accepted, 'accepted_at' => now()]);
                 $this->audit->record('invitation.accepted', "First-owner invitation accepted by {$user->email}.", $invitation, actor: $user);
 

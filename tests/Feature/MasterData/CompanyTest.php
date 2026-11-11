@@ -44,7 +44,7 @@ beforeEach(function () {
         });
     });
 
-    $this->admin = User::factory()->create();
+    $this->admin = makePlatformOwner(User::factory()->create());
     $response = $this->actingAs($this->admin)->postJson('/api/v1/workspaces', [
         'workspace_name' => 'Acme',
         'company_name' => 'PT Acme',

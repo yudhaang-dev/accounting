@@ -15,7 +15,7 @@ use Brick\Math\BigDecimal;
 use Illuminate\Validation\ValidationException;
 
 beforeEach(function () {
-    $this->admin = User::factory()->create();
+    $this->admin = makePlatformOwner(User::factory()->create());
     [$this->companyId] = createWorkspaceAs($this->admin);
     $this->url = "/api/v1/companies/{$this->companyId}";
     $this->currencies = "{$this->url}/currencies";
@@ -50,7 +50,7 @@ describe('activating currencies (MD-FR-06)', function () {
             'is_functional' => true, 'status' => 'active', 'lock_version' => 1,
         ]]]);
 
-        $other = User::factory()->create();
+        $other = makePlatformOwner(User::factory()->create());
         $response = $this->actingAs($other)->postJson('/api/v1/workspaces', ['workspace_name' => 'Tokyo', 'company_name' => 'KK Tokyo', 'functional_currency' => 'JPY'])->assertCreated();
 
         $this->actingAs($other)->getJson('/api/v1/companies/'.$response->json('data.company_id').'/currencies')->assertJsonPath('data.0.code', 'JPY')->assertJsonPath('data.0.scale', 0);
@@ -219,7 +219,7 @@ describe('the Currencies contract and rounding', function () {
 
 describe('the ledger follows the scale of the functional currency', function () {
     beforeEach(function () {
-        $this->yen = User::factory()->create();
+        $this->yen = makePlatformOwner(User::factory()->create());
         $response = $this->actingAs($this->yen)->postJson('/api/v1/workspaces', ['workspace_name' => 'Tokyo', 'company_name' => 'KK Tokyo', 'functional_currency' => 'JPY'])->assertCreated();
         $this->yenCompany = $response->json('data.company_id');
         $this->yenUrl = "/api/v1/companies/{$this->yenCompany}";

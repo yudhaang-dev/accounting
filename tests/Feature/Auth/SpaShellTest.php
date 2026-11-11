@@ -35,6 +35,7 @@ describe('GET /api/v1/me', function () {
                 'email' => $user->email,
                 'email_verified' => true,
                 'two_factor_enabled' => false,
+                'can_create_workspace' => false,
             ]]);
     });
 

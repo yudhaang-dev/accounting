@@ -162,6 +162,8 @@ export const id = {
         emptyTitle: 'Belum ada ruang kerja',
         emptyDescription:
             'Anda belum tergabung di ruang kerja mana pun. Ruang kerja baru dapat dibuat bersama perusahaannya.',
+        emptyNoAccess:
+            'Anda belum tergabung di ruang kerja mana pun. Minta undangan dari admin ruang kerja yang akan Anda pakai.',
         company: 'Perusahaan: {{name}}',
         open: 'Buka {{name}}',
         all: 'Semua ruang kerja',

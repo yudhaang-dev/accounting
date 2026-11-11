@@ -31,6 +31,7 @@ export const account = {
     email: 'budi@example.com',
     email_verified: true,
     two_factor_enabled: false,
+    can_create_workspace: true,
 };
 
 /**

@@ -43,7 +43,7 @@ export function WorkspacesPage({
                         {t('workspace.description')}
                     </p>
                 </div>
-                {workspaces.length > 0 && (
+                {workspaces.length > 0 && me.can_create_workspace && (
                     <Button
                         variant="outline"
                         render={<Link to="/workspaces/new" />}
@@ -62,15 +62,19 @@ export function WorkspacesPage({
                         </EmptyMedia>
                         <EmptyTitle>{t('workspace.emptyTitle')}</EmptyTitle>
                         <EmptyDescription>
-                            {t('workspace.emptyDescription')}
+                            {me.can_create_workspace
+                                ? t('workspace.emptyDescription')
+                                : t('workspace.emptyNoAccess')}
                         </EmptyDescription>
                     </EmptyHeader>
-                    <EmptyContent>
-                        <Button render={<Link to="/workspaces/new" />}>
-                            <PlusIcon data-icon="inline-start" />
-                            {t('workspace.create')}
-                        </Button>
-                    </EmptyContent>
+                    {me.can_create_workspace && (
+                        <EmptyContent>
+                            <Button render={<Link to="/workspaces/new" />}>
+                                <PlusIcon data-icon="inline-start" />
+                                {t('workspace.create')}
+                            </Button>
+                        </EmptyContent>
+                    )}
                 </Empty>
             ) : (
                 <ul className="grid max-w-3xl gap-3 sm:grid-cols-2">

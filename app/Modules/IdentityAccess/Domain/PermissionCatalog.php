@@ -44,6 +44,7 @@ final class PermissionCatalog
         'integration-clients' => ['manage'],
         'policies' => ['manage'],
         'consolidation' => ['join'],
+        'workspaces' => ['create'],
     ];
 
     /** @return list<string> */

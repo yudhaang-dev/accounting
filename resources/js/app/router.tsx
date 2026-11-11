@@ -277,9 +277,10 @@ const indexRoute = createRoute({
             });
         }
 
-        // Someone with no workspace has only one thing to do, and it is the first step of the setup:
-        // start it, rather than showing an empty list with a button.
-        throw workspaces.length === 0
+        // Someone with no workspace who may create one has only one thing to do, and it is the first step
+        // of the setup: start it, rather than showing an empty list with a button. Someone who may not
+        // lands on the list, which tells them to ask for an invitation.
+        throw workspaces.length === 0 && me.can_create_workspace
             ? redirect({ to: '/workspaces/new' })
             : redirect({ to: '/workspaces' });
     },
@@ -1958,6 +1959,11 @@ const acceptInvitationRoute = createRoute({
 const newWorkspaceRoute = createRoute({
     getParentRoute: () => verifiedRoute,
     path: '/workspaces/new',
+    beforeLoad: ({ context }) => {
+        if (!context.me.can_create_workspace) {
+            throw redirect({ to: '/workspaces' });
+        }
+    },
     staticData: {
         crumbs: () => [
             { labelKey: 'breadcrumb.workspaces', href: '/workspaces' },
