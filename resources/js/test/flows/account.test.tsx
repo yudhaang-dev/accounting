@@ -260,3 +260,141 @@ describe('own account (D2d)', () => {
         });
     });
 });
+
+describe('two-step verification (IA-FR-04)', () => {
+    const qr = {
+        svg: '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+        url: 'otpauth://x',
+    };
+
+    it('asks for the password when refused, then sets up with a code and shows the recovery codes', async () => {
+        let confirmed = false;
+        let enabled = false;
+        const api = mockApi({
+            ...signedIn(),
+            'GET /api/v1/me': () =>
+                json({ data: { ...account, two_factor_enabled: enabled } }),
+            'POST /user/two-factor-authentication': () =>
+                confirmed
+                    ? json('')
+                    : json({ message: 'Password confirmation required.' }, 423),
+            'POST /user/confirm-password': () => {
+                confirmed = true;
+
+                return json('', 201);
+            },
+            'GET /user/two-factor-qr-code': () => json(qr),
+            'GET /user/two-factor-secret-key': () =>
+                json({ secretKey: 'ABCDEF234567' }),
+            'POST /user/confirmed-two-factor-authentication': () => {
+                enabled = true;
+
+                return json('');
+            },
+            'GET /user/two-factor-recovery-codes': () =>
+                json(['aaaaa-11111', 'bbbbb-22222']),
+        });
+
+        renderApp('/account');
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('button', {
+                name: 'Siapkan verifikasi dua langkah',
+            }),
+        );
+
+        const dialog = await screen.findByRole('dialog');
+        await typist.type(
+            within(dialog).getByLabelText('Kata sandi saat ini'),
+            'Secret-pass-123',
+        );
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Lanjut' }),
+        );
+
+        // The refused click ran again by itself: the setup shows without a second click.
+        expect(await screen.findByText('ABCDEF234567')).toBeInTheDocument();
+        expect(api.called('POST /user/two-factor-authentication')).toHaveLength(
+            2,
+        );
+
+        await typist.type(
+            screen.getByLabelText('Kode dari aplikasi'),
+            '123456',
+        );
+
+        expect(await screen.findByText('aaaaa-11111')).toBeInTheDocument();
+        expect(
+            api.called('POST /user/confirmed-two-factor-authentication')[0]
+                ?.body,
+        ).toEqual({ code: '123456' });
+        expect(
+            await screen.findByRole('button', { name: 'Matikan' }),
+        ).toBeInTheDocument();
+    });
+
+    it('says when the code is wrong and keeps the setup open', async () => {
+        mockApi({
+            ...signedIn(),
+            'POST /user/two-factor-authentication': () => json(''),
+            'GET /user/two-factor-qr-code': () => json(qr),
+            'GET /user/two-factor-secret-key': () =>
+                json({ secretKey: 'ABCDEF234567' }),
+            'POST /user/confirmed-two-factor-authentication': () =>
+                json({ message: 'invalid', errors: { code: ['x'] } }, 422),
+        });
+
+        renderApp('/account');
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('button', {
+                name: 'Siapkan verifikasi dua langkah',
+            }),
+        );
+        await typist.type(
+            await screen.findByLabelText('Kode dari aplikasi'),
+            '000000',
+        );
+
+        expect(
+            await screen.findByText(/Kode itu tidak sesuai/),
+        ).toBeInTheDocument();
+        expect(screen.getByText('ABCDEF234567')).toBeInTheDocument();
+    });
+
+    it('turns it off after a confirmation', async () => {
+        let enabled = true;
+        const api = mockApi({
+            ...signedIn(),
+            'GET /api/v1/me': () =>
+                json({ data: { ...account, two_factor_enabled: enabled } }),
+            'DELETE /user/two-factor-authentication': () => {
+                enabled = false;
+
+                return json('');
+            },
+        });
+
+        renderApp('/account');
+        const typist = userEvent.setup();
+
+        await typist.click(
+            await screen.findByRole('button', { name: 'Matikan' }),
+        );
+        const dialog = await screen.findByRole('alertdialog');
+        await typist.click(
+            within(dialog).getByRole('button', { name: 'Matikan' }),
+        );
+
+        expect(
+            await screen.findByRole('button', {
+                name: 'Siapkan verifikasi dua langkah',
+            }),
+        ).toBeInTheDocument();
+        expect(
+            api.called('DELETE /user/two-factor-authentication'),
+        ).toHaveLength(1);
+    });
+});

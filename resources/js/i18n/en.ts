@@ -3181,6 +3181,35 @@ export const en: Widen<typeof id> = {
             submit: 'Change password',
             saved: 'Password changed. Other devices were signed out.',
         },
+        confirmPassword: {
+            title: 'Confirm your password',
+            description:
+                'This is a sensitive change. Enter your password to continue.',
+            submit: 'Continue',
+        },
+        twoFactor: {
+            title: 'Two-step verification',
+            description:
+                'Ask for a 6-digit code from an authenticator app each time you sign in, so a stolen password alone is not enough.',
+            enable: 'Set up two-step verification',
+            scan: 'Scan this code with an authenticator app (Google Authenticator, Authy, 1Password, and similar), then enter the 6-digit code it shows.',
+            qrAlt: 'QR code for the authenticator app',
+            secretHint: 'Cannot scan? Enter this key by hand:',
+            codeLabel: 'Code from the app',
+            invalidCode: 'That code is not right. Check the app and try again.',
+            enabled: 'Two-step verification is on.',
+            disabled: 'Two-step verification is off.',
+            renewed: 'New recovery codes created. The old ones no longer work.',
+            showCodes: 'Show recovery codes',
+            renewCodes: 'Create new recovery codes',
+            recoveryCodes: 'Recovery codes',
+            recoveryHint:
+                'Keep these somewhere safe. Each one signs you in once if you lose your phone.',
+            disable: 'Turn off',
+            disableTitle: 'Turn off two-step verification?',
+            disableDescription:
+                'Signing in will need only your password. Roles that require two-step verification will be refused until you set it up again.',
+        },
         sessions: {
             title: 'Signed-in devices',
             description:

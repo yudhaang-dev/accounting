@@ -59,3 +59,39 @@ export const accountApi = {
             current_password: currentPassword,
         }),
 };
+
+/**
+ * Fortify's routes for two-step verification. They live at the site root and refuse with 423 until the
+ * password was confirmed recently (`user/confirm-password`).
+ */
+export const twoFactorApi = {
+    confirmPassword: (password: string) =>
+        request('POST', '/user/confirm-password', { password }),
+
+    enable: () => request('POST', '/user/two-factor-authentication'),
+
+    qrCode: () =>
+        request<{ svg: string; url: string }>(
+            'GET',
+            '/user/two-factor-qr-code',
+        ),
+
+    secretKey: async (): Promise<string> =>
+        (
+            await request<{ secretKey: string }>(
+                'GET',
+                '/user/two-factor-secret-key',
+            )
+        ).secretKey,
+
+    confirm: (code: string) =>
+        request('POST', '/user/confirmed-two-factor-authentication', { code }),
+
+    recoveryCodes: () =>
+        request<string[]>('GET', '/user/two-factor-recovery-codes'),
+
+    regenerateRecoveryCodes: () =>
+        request('POST', '/user/two-factor-recovery-codes'),
+
+    disable: () => request('DELETE', '/user/two-factor-authentication'),
+};

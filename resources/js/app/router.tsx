@@ -1,4 +1,4 @@
-import type { QueryClient } from '@tanstack/react-query';
+import { useQuery, type QueryClient } from '@tanstack/react-query';
 import {
     createRootRouteWithContext,
     createRoute,
@@ -250,7 +250,11 @@ const verifiedRoute = createRoute({
         };
     },
     component: function Verified() {
-        const { me, workspaces } = verifiedRoute.useRouteContext();
+        const loaded = verifiedRoute.useRouteContext();
+        // The user and workspaces can change while a screen is open (a new name, leaving a workspace);
+        // the queries hold the latest, the route context only what was loaded on arrival.
+        const me = useQuery(meQuery).data ?? loaded.me;
+        const workspaces = useQuery(workspacesQuery).data ?? loaded.workspaces;
 
         return (
             <AppShell me={me} workspaces={workspaces}>
@@ -1965,7 +1969,9 @@ const accountRoute = createRoute({
         crumbs: () => [{ labelKey: 'breadcrumb.account' }],
     },
     component: function Account() {
-        const { me, workspaces } = accountRoute.useRouteContext();
+        const loaded = accountRoute.useRouteContext();
+        const me = useQuery(meQuery).data ?? loaded.me;
+        const workspaces = useQuery(workspacesQuery).data ?? loaded.workspaces;
 
         return <AccountPage me={me} workspaces={workspaces} />;
     },

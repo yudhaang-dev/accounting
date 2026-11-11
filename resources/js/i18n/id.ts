@@ -3182,6 +3182,38 @@ export const id = {
             submit: 'Ganti kata sandi',
             saved: 'Kata sandi diganti. Perangkat lain dikeluarkan.',
         },
+        confirmPassword: {
+            title: 'Konfirmasi kata sandi Anda',
+            description:
+                'Ini perubahan yang sensitif. Masukkan kata sandi Anda untuk melanjutkan.',
+            submit: 'Lanjut',
+        },
+        twoFactor: {
+            title: 'Verifikasi dua langkah',
+            description:
+                'Minta kode 6 digit dari aplikasi autentikator setiap kali Anda masuk, sehingga kata sandi yang bocor saja tidak cukup.',
+            enable: 'Siapkan verifikasi dua langkah',
+            scan: 'Pindai kode ini dengan aplikasi autentikator (Google Authenticator, Authy, 1Password, dan sejenisnya), lalu masukkan kode 6 digit yang tampil.',
+            qrAlt: 'Kode QR untuk aplikasi autentikator',
+            secretHint:
+                'Tidak bisa memindai? Masukkan kunci ini secara manual:',
+            codeLabel: 'Kode dari aplikasi',
+            invalidCode:
+                'Kode itu tidak sesuai. Periksa aplikasinya lalu coba lagi.',
+            enabled: 'Verifikasi dua langkah aktif.',
+            disabled: 'Verifikasi dua langkah dimatikan.',
+            renewed:
+                'Kode pemulihan baru dibuat. Yang lama tidak berlaku lagi.',
+            showCodes: 'Tampilkan kode pemulihan',
+            renewCodes: 'Buat kode pemulihan baru',
+            recoveryCodes: 'Kode pemulihan',
+            recoveryHint:
+                'Simpan di tempat aman. Tiap kode dapat dipakai satu kali untuk masuk bila ponsel Anda hilang.',
+            disable: 'Matikan',
+            disableTitle: 'Matikan verifikasi dua langkah?',
+            disableDescription:
+                'Masuk hanya akan memerlukan kata sandi Anda. Peran yang mewajibkan verifikasi dua langkah akan ditolak sampai Anda menyiapkannya lagi.',
+        },
         sessions: {
             title: 'Perangkat yang masuk',
             description:
