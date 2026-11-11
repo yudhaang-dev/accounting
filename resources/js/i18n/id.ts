@@ -2794,6 +2794,17 @@ export const id = {
         accept: 'Terima undangan',
         accepting: 'Memproses…',
         home: 'Ke beranda',
+        newAccountDescription:
+            'Anda diundang. Isi nama dan kata sandi untuk membuat akun dengan alamat email undangan ini.',
+        name: 'Nama',
+        password: 'Kata sandi',
+        passwordHint: 'Minimal 8 karakter.',
+        confirmPassword: 'Ulangi kata sandi',
+        mismatch: 'Kata sandi belum sama.',
+        createAccount: 'Buat akun dan terima undangan',
+        accountExists:
+            'Alamat email undangan ini sudah punya akun. Masuk dengan akun itu, lalu buka tautan ini lagi.',
+        signIn: 'Masuk',
     },
     members: {
         pageTitle: 'Anggota',

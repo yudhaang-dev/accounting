@@ -7,6 +7,8 @@ use App\Modules\IdentityAccess\Application\ManageInvitations;
 use App\Modules\IdentityAccess\Contracts\Workspaces;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 
 class InvitationController
 {
@@ -45,17 +47,34 @@ class InvitationController
     }
 
     /**
-     * Accepts an invitation with the token from the email. The signed-in user must have a verified
-     * email equal to the invited address. Answers the workspace that was joined.
+     * Accepts an invitation with the token from the email; no sign-in is needed when the invited address
+     * has no account yet, in which case `name`, `password` and `password_confirmation` create it (email
+     * verified) and the user is signed in. When the address already has an account, that user must be
+     * signed in. Answers the workspace that was joined, or 204 for the first owner's invitation, which
+     * only creates the account.
+     *
+     * @response WorkspaceResource
      */
-    public function accept(AcceptInvitationRequest $request, ManageInvitations $invitations, Workspaces $workspaces): WorkspaceResource
+    public function accept(AcceptInvitationRequest $request, ManageInvitations $invitations, Workspaces $workspaces): WorkspaceResource|Response
     {
-        /** @var User $user */
-        $user = $request->user();
-        $joined = $invitations->accept($request->string('token')->toString(), $user);
+        /** @var User|null $signedIn */
+        $signedIn = $request->user();
+        $accepted = $invitations->accept($request->string('token')->toString(), $signedIn, [
+            'name' => $request->input('name'),
+            'password' => $request->input('password'),
+        ]);
 
-        foreach ($workspaces->accessibleTo($user->id) as $workspace) {
-            if ($workspace->id === $joined->id) {
+        if ($accepted->accountCreated) {
+            Auth::guard('web')->login($accepted->user);
+            $request->session()->regenerate();
+        }
+
+        if ($accepted->workspace === null) {
+            return response()->noContent();
+        }
+
+        foreach ($workspaces->accessibleTo($accepted->user->id) as $workspace) {
+            if ($workspace->id === $accepted->workspace->id) {
                 return new WorkspaceResource($workspace);
             }
         }

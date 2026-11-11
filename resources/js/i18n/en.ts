@@ -2796,6 +2796,17 @@ export const en: Widen<typeof id> = {
         accept: 'Accept invitation',
         accepting: 'Working…',
         home: 'Go to home',
+        newAccountDescription:
+            'You have been invited. Enter a name and a password to create an account with the email address of this invitation.',
+        name: 'Name',
+        password: 'Password',
+        passwordHint: 'At least 8 characters.',
+        confirmPassword: 'Repeat the password',
+        mismatch: 'The passwords do not match.',
+        createAccount: 'Create account and accept',
+        accountExists:
+            'The email address of this invitation already has an account. Sign in with it, then open this link again.',
+        signIn: 'Sign in',
     },
     members: {
         pageTitle: 'Members',

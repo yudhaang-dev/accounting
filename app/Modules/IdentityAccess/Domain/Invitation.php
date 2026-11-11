@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
  * owns the invited email address, revoked by an admin, or past `expires_at`.
  *
  * @property string $id
- * @property string $workspace_id
+ * @property string|null $workspace_id
  * @property string $email
  * @property string $token_hash
  * @property list<string> $role_ids
@@ -19,7 +19,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $membership_expires_at
  * @property Carbon $expires_at
  * @property InvitationStatus $status
- * @property int $invited_by
+ * @property int|null $invited_by
  * @property Carbon|null $accepted_at
  * @property Carbon|null $created_at
  */

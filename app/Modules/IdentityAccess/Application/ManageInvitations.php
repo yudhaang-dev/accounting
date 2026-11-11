@@ -119,23 +119,50 @@ final class ManageInvitations
     }
 
     /**
-     * @throws ValidationException when the token is unknown, used, revoked, expired or meant for another address
+     * Accepts an invitation. The invited address either already has an account, in which case the
+     * signed-in `$user` must be that account with a verified email, or has none, in which case the
+     * account is created here (the only place a user is created, ADR-0021) with `$account` and a
+     * verified email, since holding the token proves the address. An invitation without a workspace
+     * (the first owner's) only creates the account.
+     *
+     * @param  array{name?: string|null, password?: string|null}  $account
+     *
+     * @throws ValidationException when the token is unknown, used, revoked, expired or meant for another address, or the account details are missing
+     * @throws ApiException UNAUTHENTICATED when the address has an account and nobody is signed in
      */
-    public function accept(string $token, User $user): Workspace
+    public function accept(string $token, ?User $user, array $account = []): AcceptedInvitation
     {
-        return DB::transaction(function () use ($token, $user): Workspace {
+        return DB::transaction(function () use ($token, $user, $account): AcceptedInvitation {
             $invitation = Invitation::query()
                 ->usable()
                 ->where('token_hash', Invitation::hashToken($token))
                 ->lockForUpdate()
                 ->first();
 
-            if (
-                $invitation === null
-                || ! $user->hasVerifiedEmail()
-                || Str::lower($user->email) !== $invitation->email
-            ) {
-                throw ValidationException::withMessages(['token' => [__('memberships.invitation_invalid')]]);
+            if ($invitation === null || ($invitation->workspace_id === null && ! $this->isFirstOwner($invitation))) {
+                throw $this->invalid();
+            }
+
+            $existing = User::query()->whereRaw('lower(email) = ?', [$invitation->email])->first();
+            $created = $existing === null;
+
+            if ($created) {
+                if ($user !== null) {
+                    throw $this->invalid();
+                }
+
+                $user = $this->createAccount($invitation->email, $account);
+            } elseif ($user === null) {
+                throw new ApiException(ErrorCode::Unauthenticated);
+            } elseif ($user->id !== $existing->id || ! $user->hasVerifiedEmail()) {
+                throw $this->invalid();
+            }
+
+            if ($invitation->workspace_id === null) {
+                $invitation->update(['status' => InvitationStatus::Accepted, 'accepted_at' => now()]);
+                $this->audit->record('invitation.accepted', "First-owner invitation accepted by {$user->email}.", $invitation, actor: $user);
+
+                return new AcceptedInvitation($user, null, true);
             }
 
             $workspace = Workspace::query()->findOrFail($invitation->workspace_id);
@@ -162,8 +189,50 @@ final class ManageInvitations
                 companyId: $workspace->company_id,
             );
 
-            return $workspace;
+            return new AcceptedInvitation($user, $workspace, $created);
         });
+    }
+
+    private function invalid(): ValidationException
+    {
+        return ValidationException::withMessages(['token' => [__('memberships.invitation_invalid')]]);
+    }
+
+    /** The first-owner invitation is honoured only for the configured address and while nobody has an account. */
+    private function isFirstOwner(Invitation $invitation): bool
+    {
+        $configured = config('access.first_owner_email');
+
+        return is_string($configured)
+            && Str::lower($configured) === $invitation->email
+            && ! DB::table('users')->exists();
+    }
+
+    /**
+     * @param  array{name?: string|null, password?: string|null}  $account
+     *
+     * @throws ValidationException when the name or password is missing
+     */
+    private function createAccount(string $email, array $account): User
+    {
+        $name = $account['name'] ?? '';
+        $password = $account['password'] ?? '';
+        $errors = [];
+
+        foreach (['name' => $name, 'password' => $password] as $field => $value) {
+            if ($value === '') {
+                $errors[$field] = [__('validation.required', ['attribute' => $field])];
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        $user = new User;
+        $user->forceFill(['name' => $name, 'email' => $email, 'password' => $password, 'email_verified_at' => now()])->save();
+
+        return $user;
     }
 
     private function isActiveMember(Workspace $workspace, string $email): bool

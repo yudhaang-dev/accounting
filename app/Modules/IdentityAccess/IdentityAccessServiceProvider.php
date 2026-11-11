@@ -9,6 +9,7 @@ use App\Modules\IdentityAccess\Application\EloquentIntegrationWebhooks;
 use App\Modules\IdentityAccess\Application\EloquentWorkspaces;
 use App\Modules\IdentityAccess\Application\IntegrationClientAuthenticator;
 use App\Modules\IdentityAccess\Application\WorkspaceCompanyAccessGate;
+use App\Modules\IdentityAccess\Console\InviteOwnerCommand;
 use App\Modules\IdentityAccess\Console\SyncPermissionsCommand;
 use App\Modules\IdentityAccess\Contracts\AccessContexts;
 use App\Modules\IdentityAccess\Contracts\GroupGrants;
@@ -20,9 +21,11 @@ use App\Modules\IdentityAccess\Http\RequireGroupAccess;
 use App\Modules\IdentityAccess\Http\RequirePermission;
 use App\Support\Company\CompanyAccessGate;
 use App\Support\Modules\ModuleServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Passport\Passport;
 
 class IdentityAccessServiceProvider extends ModuleServiceProvider
@@ -42,7 +45,7 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
         // Replaces the fail-closed default bound by the API platform capability.
         $this->app->bind(CompanyAccessGate::class, WorkspaceCompanyAccessGate::class);
 
-        $this->commands([SyncPermissionsCommand::class]);
+        $this->commands([SyncPermissionsCommand::class, InviteOwnerCommand::class]);
 
         // The token endpoint lives at /api/v1/oauth/token (see Http/routes.php), not Passport's own paths.
         Passport::ignoreRoutes();
@@ -51,6 +54,8 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        RateLimiter::for('invitation-accept', fn (Request $request) => Limit::perMinute(10)->by('ip:'.$request->ip()));
 
         $this->app->make(Router::class)->aliasMiddleware('permission', RequirePermission::class);
         $this->app->make(Router::class)->aliasMiddleware('group-access', RequireGroupAccess::class);

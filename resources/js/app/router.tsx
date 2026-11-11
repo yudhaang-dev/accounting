@@ -1938,17 +1938,14 @@ const journalRoute = createRoute({
     },
 });
 
-// The link of an invitation e-mail. Outside any company: the invited person does not belong to one yet.
+// The link of an invitation e-mail. Outside the signed-in screens and any company: the invited person may have no account and belongs to no company yet.
 const acceptInvitationRoute = createRoute({
-    getParentRoute: () => verifiedRoute,
+    getParentRoute: () => rootRoute,
     path: '/invitations/accept',
     validateSearch: (search: Record<string, unknown>): { token?: string } =>
         typeof search.token === 'string' && search.token !== ''
             ? { token: search.token }
             : {},
-    staticData: {
-        crumbs: () => [{ labelKey: 'invitation.crumb' }],
-    },
     component: function AcceptInvitation() {
         return (
             <AcceptInvitationPage
@@ -2235,6 +2232,8 @@ const groupStatementsRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
+    // Open to anyone with the link: a visitor with no account makes one there (ADR-0021).
+    acceptInvitationRoute,
     guestRoute.addChildren([
         loginRoute,
         twoFactorRoute,
@@ -2247,7 +2246,6 @@ const routeTree = rootRoute.addChildren([
             indexRoute,
             workspacesRoute,
             newWorkspaceRoute,
-            acceptInvitationRoute,
             groupsRoute,
             groupRoute.addChildren([
                 groupIndexRoute,

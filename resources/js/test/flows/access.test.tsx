@@ -1125,6 +1125,86 @@ describe('accepting an invitation', () => {
         ).toBeInTheDocument();
     });
 
+    it('lets a visitor with no account make one with a name and a password, then opens the workspace', async () => {
+        const joined = { ...workspace, permissions: ['company.read'] };
+        let session = false;
+        const api = mockApi({
+            'GET /api/v1/me': () =>
+                session
+                    ? json({ data: account })
+                    : json({ message: 'x', code: 'UNAUTHENTICATED' }, 401),
+            'GET /api/v1/me/workspaces': () =>
+                json({ data: session ? [joined] : [] }),
+            [`GET ${base}`]: () =>
+                json({ data: { ...company, status: 'active' } }),
+            [accept]: () => {
+                session = true;
+
+                return json({ data: joined });
+            },
+        });
+
+        const { router } = renderApp('/invitations/accept?token=abc123');
+        const typist = userEvent.setup();
+
+        await typist.type(await screen.findByLabelText('Nama'), 'Budi');
+        await typist.type(
+            screen.getByLabelText('Kata sandi'),
+            'Secret-pass-123',
+        );
+        await typist.type(
+            screen.getByLabelText('Ulangi kata sandi'),
+            'Secret-pass-123',
+        );
+        await typist.click(
+            screen.getByRole('button', {
+                name: 'Buat akun dan terima undangan',
+            }),
+        );
+
+        await waitFor(() => expect(api.called(accept)).toHaveLength(1));
+        expect(api.called(accept)[0]?.body).toEqual({
+            token: 'abc123',
+            name: 'Budi',
+            password: 'Secret-pass-123',
+            password_confirmation: 'Secret-pass-123',
+        });
+        await waitFor(() => expect(router.state.location.pathname).toBe(home));
+    });
+
+    it('asks to sign in when the invited address already has an account', async () => {
+        mockApi({
+            'GET /api/v1/me': () =>
+                json({ message: 'x', code: 'UNAUTHENTICATED' }, 401),
+            [accept]: () =>
+                json(
+                    { message: 'Unauthenticated.', code: 'UNAUTHENTICATED' },
+                    401,
+                ),
+        });
+
+        renderApp('/invitations/accept?token=abc123');
+        const typist = userEvent.setup();
+
+        await typist.type(await screen.findByLabelText('Nama'), 'Budi');
+        await typist.type(
+            screen.getByLabelText('Kata sandi'),
+            'Secret-pass-123',
+        );
+        await typist.type(
+            screen.getByLabelText('Ulangi kata sandi'),
+            'Secret-pass-123',
+        );
+        await typist.click(
+            screen.getByRole('button', {
+                name: 'Buat akun dan terima undangan',
+            }),
+        );
+
+        expect(await screen.findByText(/sudah punya akun/)).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Masuk' })).toBeInTheDocument();
+    });
+
     it('does not offer to accept a link without a token', async () => {
         mockApi({
             'GET /api/v1/me': () => json({ data: account }),

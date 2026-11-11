@@ -8,7 +8,7 @@ UI first-party adalah SPA di situs yang sama dengan API ([ADR-0010](0010-first-p
 
 ## Keputusan
 
-- **User:** sesi cookie lewat Fortify mode headless (login, verifikasi email, reset kata sandi, 2FA TOTP, passkey). SPA meminta cookie CSRF sebelum login; route `/api/v1` menerima sesi yang sama lewat middleware sesi dan CSRF di grup route (diubah [ADR-0011](0011-drop-sanctum.md)). CORS mengizinkan credentials hanya untuk origin SPA; domain cookie sesi dikonfigurasi per lingkungan. Tidak ada token di browser.
+- **User:** sesi cookie lewat Fortify mode headless (login, verifikasi email, reset kata sandi, 2FA TOTP, passkey). SPA meminta cookie CSRF sebelum login; route `/api/v1` menerima sesi yang sama lewat middleware sesi dan CSRF di grup route (diubah [ADR-0011](0011-drop-sanctum.md)). CORS mengizinkan credentials hanya untuk origin SPA; domain cookie sesi dikonfigurasi per lingkungan. Tidak ada token di browser. Registrasi publik dihapus; akun hanya lewat undangan ([ADR-0021](0021-accounts-by-invitation-only.md)).
 - **Klien mesin:** Passport Client Credentials. Endpoint token didaftarkan di `/api/v1/oauth/token` dengan `client_secret_basic`. Masa berlaku token default 600 detik (konfigurasi), tanpa refresh token. Secret disimpan sebagai hash.
 - Data scope klien (perusahaan, `source_system`, allowlist Jenis Transaksi) milik `IdentityAccess` dan ditautkan ke klien OAuth. Rotasi dan pencabutan mencabut token aktif lewat action khusus.
 - Access token Passport berbentuk JWT, tetapi klien wajib memperlakukannya sebagai opaque.

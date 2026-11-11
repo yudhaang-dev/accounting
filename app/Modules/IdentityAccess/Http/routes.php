@@ -19,7 +19,8 @@ Route::get('me/workspaces', [MeController::class, 'workspaces'])->middleware('au
 // Client Credentials token request of integration clients (API-TR-22): form-encoded, `client_secret_basic`.
 Route::post('oauth/token', [AccessTokenController::class, 'issueToken'])->name('oauth.token');
 
-Route::post('invitations/accept', [InvitationController::class, 'accept'])->middleware('auth')->name('invitations.accept');
+// Open to guests: the address of an invitation without an account gets one here (ADR-0021), so it is throttled per IP.
+Route::post('invitations/accept', [InvitationController::class, 'accept'])->middleware('throttle:invitation-accept')->name('invitations.accept');
 
 Route::companyScoped(function () {
     $ulid = ApiServiceProvider::ULID;

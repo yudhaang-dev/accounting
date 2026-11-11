@@ -135,3 +135,34 @@ it('has no literal passwords in application code, seeders, or end-to-end support
 
     expect(array_map(fn (string $path) => basename($path), $offenders))->toBe([]);
 });
+
+it('creates users only when an invitation is accepted (ADR-0021)', function () {
+    $creating = '/\bUser::(create|forceCreate|firstOrCreate|updateOrCreate|insert)\(|\bUser::query\(\)\s*->(create|forceCreate|firstOrCreate|updateOrCreate|insert)\(|=\s*new User;|table\([\'"]users[\'"]\)\s*->(insert|upsert)/';
+    $allowed = str_replace('/', DIRECTORY_SEPARATOR, '/Modules/IdentityAccess/Application/ManageInvitations.php');
+
+    $offenders = array_filter(
+        phpFilesUnder(APP_DIR),
+        fn (string $path) => ! str_ends_with($path, $allowed) && preg_match($creating, file_get_contents($path)) === 1,
+    );
+
+    expect(array_map(fn (string $path) => basename($path), $offenders))->toBe([]);
+
+    // The pattern must catch what it is meant to catch, and the allowed file must really create users.
+    expect(preg_match($creating, 'User::create([]);'))->toBe(1)
+        ->and(preg_match($creating, '$u = new User;'))->toBe(1)
+        ->and(preg_match($creating, 'User::query()->create([]);'))->toBe(1)
+        ->and(preg_match($creating, file_get_contents(APP_DIR.'/Modules/IdentityAccess/Application/ManageInvitations.php')))->toBe(1);
+});
+
+it('keeps console commands from touching users or password hashing (ADR-0021)', function () {
+    // A command that can run on a server must never be able to mint an account or a password.
+    $forbidden = '/\bUser\b|\bHash\b|bcrypt\(|->forceFill\(/';
+    $isCommand = '/extends\s+(Command|Seeder)\b/';
+
+    $commands = array_filter(phpFilesUnder(APP_DIR), fn (string $path) => preg_match($isCommand, file_get_contents($path)) === 1);
+    $offenders = array_filter($commands, fn (string $path) => preg_match($forbidden, file_get_contents($path)) === 1);
+
+    expect($commands)->not->toBe([])
+        ->and(array_map(fn (string $path) => basename($path), $offenders))->toBe([])
+        ->and(preg_match($forbidden, 'User::count();'))->toBe(1);
+});

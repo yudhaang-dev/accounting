@@ -198,10 +198,19 @@ export async function revokeInvitation(
     ).data;
 }
 
-/** Answers the workspace that was joined. */
-export async function acceptInvitation(token: string) {
-    return (await unwrap(api.POST('/invitations/accept', { body: { token } })))
-        .data;
+/**
+ * Answers the workspace that was joined, or `null` for the first owner's invitation (204), which only
+ * creates the account. `account` is needed when the invited address has no account yet.
+ */
+export async function acceptInvitation(
+    token: string,
+    account?: { name: string; password: string; password_confirmation: string },
+) {
+    const result = await unwrap(
+        api.POST('/invitations/accept', { body: { token, ...account } }),
+    );
+
+    return result?.data ?? null;
 }
 
 /** `lock_version` is required; `role_ids` and `data_scope` replace what the member has. */

@@ -10697,7 +10697,7 @@
         "/invitations/accept": {
             "post": {
                 "operationId": "invitations.accept",
-                "summary": "Accepts an invitation with the token from the email. The signed-in user must have a verified\nemail equal to the invited address. Answers the workspace that was joined",
+                "summary": "Accepts an invitation with the token from the email; no sign-in is needed when the invited address\nhas no account yet, in which case `name`, `password` and `password_confirmation` create it (email\nverified) and the user is signed in. When the address already has an account, that user must be\nsigned in. Answers the workspace that was joined, or 204 for the first owner's invitation, which\nonly creates the account",
                 "tags": [
                     "Invitation"
                 ],
@@ -10735,9 +10735,6 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -26317,6 +26314,25 @@
                     "token": {
                         "type": "string",
                         "maxLength": 255
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "password": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "password_confirmation": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
