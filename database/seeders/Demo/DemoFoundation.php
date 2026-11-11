@@ -7,7 +7,6 @@ use App\Modules\IdentityAccess\Domain\Membership;
 use App\Modules\IdentityAccess\Domain\Workspace;
 use Carbon\CarbonImmutable;
 use Closure;
-use Database\Seeders\DemoSeeder;
 
 /**
  * The setup an accountant does before the company is used (PANDUAN-AKUNTAN-SETUP): the people and their roles,
@@ -62,6 +61,7 @@ final class DemoFoundation
         public readonly DemoApi $api,
         public readonly CarbonImmutable $today,
         Closure $say,
+        private readonly string $password,
     ) {
         $this->say = $say;
     }
@@ -100,7 +100,7 @@ final class DemoFoundation
 
     private function people(): void
     {
-        $this->say('Pengguna demo (kata sandi: '.DemoSeeder::PASSWORD.')');
+        $this->say('Pengguna demo');
 
         foreach ([
             'owner' => ['Andi Wijaya', self::OWNER_EMAIL],
@@ -111,7 +111,7 @@ final class DemoFoundation
             'branch' => ['Siti Rahayu', 'kepala.surabaya@demo.test'],
         ] as $key => [$name, $email]) {
             $user = new User;
-            $user->forceFill(['name' => $name, 'email' => $email, 'password' => DemoSeeder::PASSWORD, 'email_verified_at' => now()])->save();
+            $user->forceFill(['name' => $name, 'email' => $email, 'password' => $this->password, 'email_verified_at' => now()])->save();
             $this->users[$key] = $user;
         }
     }

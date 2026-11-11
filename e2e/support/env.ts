@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -5,11 +6,15 @@ export const PORT = 8123;
 export const BASE_URL = `http://127.0.0.1:${PORT}`;
 export const E2E_DATABASE = 'accounting_e2e';
 
+// Random per run unless E2E_PASSWORD is set. Set on the main process before the workers start, so
+// the setup that creates the user and the scenarios that sign in agree on it.
+process.env.E2E_PASSWORD ??= randomBytes(18).toString('base64url');
+
 /** The signed-in user every scenario starts from (created by the global setup). */
 export const USER = {
     name: 'Budi Santoso',
     email: 'budi@example.com',
-    password: 'rahasia-e2e-123',
+    password: process.env.E2E_PASSWORD,
 };
 
 /** Reads `KEY=value` pairs of `.env` so the setup can reach PostgreSQL with the same credentials. */
@@ -69,6 +74,6 @@ export const appEnv: Record<string, string> = {
     SESSION_DOMAIN: 'null',
     CACHE_STORE: 'array',
     QUEUE_CONNECTION: 'sync',
-    MAIL_MAILER: 'log',
+    MAIL_MAILER: 'array',
     LOG_CHANNEL: 'stderr',
 };

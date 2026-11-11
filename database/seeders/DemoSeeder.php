@@ -17,6 +17,7 @@ use Database\Seeders\Demo\DemoReports;
 use Database\Seeders\Demo\DemoShowcase;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * A presentable demo: one company, PT Sinar Nusantara Perkasa, with books from 1 January 2025 to today in
@@ -25,14 +26,20 @@ use Illuminate\Support\Facades\DB;
  * receivables and payables, bank reconciliation, period and year-end closing, budget, and reports.
  *
  * It only adds data and never removes any, so it is safe beside real data; running it twice stops at once.
- * Run it with `php artisan db:seed --class=DemoSeeder`, and sign in as `direktur@demo.test` / `password`.
+ * Run it with `php artisan db:seed --class=DemoSeeder`, and sign in as `direktur@demo.test` with the
+ * password printed at the end (random per run, or `DEMO_PASSWORD` from the environment). It refuses to
+ * run in production.
  */
 class DemoSeeder extends Seeder
 {
-    public const PASSWORD = 'password';
-
     public function run(): void
     {
+        if (app()->environment('production')) {
+            $this->command->error('Seeder demo tidak boleh dijalankan di production.');
+
+            return;
+        }
+
         if (User::query()->where('email', DemoFoundation::OWNER_EMAIL)->exists()) {
             $this->say('Data demo sudah ada ('.DemoFoundation::OWNER_EMAIL.'). Tidak ada yang diubah.');
 
@@ -50,7 +57,8 @@ class DemoSeeder extends Seeder
         $today = CarbonImmutable::parse(config('demo.today') ?: 'now', 'Asia/Jakarta')->startOfDay();
         $api = new DemoApi;
 
-        $foundation = new DemoFoundation($api, $today, fn (string $line) => $this->say($line));
+        $password = config('demo.password') ?: Str::password(16, symbols: false);
+        $foundation = new DemoFoundation($api, $today, fn (string $line) => $this->say($line), $password);
         $foundation->run();
         (new DemoCatalog($foundation))->run();
         (new DemoOpening($foundation))->run();
@@ -115,12 +123,12 @@ class DemoSeeder extends Seeder
         (new DemoShowcase($foundation, $operations->books(), $today))->run();
 
         $this->command->table(['Peran', 'Email', 'Kata sandi'], [
-            ['Direktur (pemilik, pengaturan, penyetuju tahap akhir)', 'direktur@demo.test', self::PASSWORD],
-            ['Akuntan (penutupan, rekonsiliasi, anggaran, laporan)', 'akuntan@demo.test', self::PASSWORD],
-            ['Admin keuangan (mencatat dan mengajukan)', 'admin.keuangan@demo.test', self::PASSWORD],
-            ['Manajer keuangan (penyetuju)', 'manajer.keuangan@demo.test', self::PASSWORD],
-            ['Auditor (baca saja)', 'auditor@demo.test', self::PASSWORD],
-            ['Kepala cabang Surabaya (hanya melihat Surabaya)', 'kepala.surabaya@demo.test', self::PASSWORD],
+            ['Direktur (pemilik, pengaturan, penyetuju tahap akhir)', 'direktur@demo.test', $password],
+            ['Akuntan (penutupan, rekonsiliasi, anggaran, laporan)', 'akuntan@demo.test', $password],
+            ['Admin keuangan (mencatat dan mengajukan)', 'admin.keuangan@demo.test', $password],
+            ['Manajer keuangan (penyetuju)', 'manajer.keuangan@demo.test', $password],
+            ['Auditor (baca saja)', 'auditor@demo.test', $password],
+            ['Kepala cabang Surabaya (hanya melihat Surabaya)', 'kepala.surabaya@demo.test', $password],
         ]);
 
         $this->say(sprintf('Selesai dalam %.0f detik, %d panggilan API.', microtime(true) - $started, $api->requests));

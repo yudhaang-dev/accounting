@@ -112,3 +112,26 @@ it('opens the hard-delete bypass only inside the retention platform capability',
 
     expect($offenders)->toBe([]);
 });
+
+it('has no literal passwords in application code, seeders, or end-to-end support', function () {
+    $root = __DIR__.'/../..';
+    $files = [
+        ...phpFilesUnder(APP_DIR),
+        ...phpFilesUnder($root.'/database/seeders'),
+    ];
+
+    foreach (['e2e', 'e2e/support', 'e2e/manual'] as $directory) {
+        foreach (glob("$root/$directory/*.{ts,mjs,php}", GLOB_BRACE) as $path) {
+            $files[] = $path;
+        }
+    }
+
+    $literal = '/[\'"]password[\'"]\s*=>\s*[\'"](?!hashed[\'"])[^\'"]+[\'"]|Hash::make\(\s*[\'"]|const\s+PASSWORD\b|\b[pP]assword\s*:\s*[\'"`][^\'"`]+[\'"`]/';
+
+    $offenders = array_filter(
+        $files,
+        fn (string $path) => preg_match($literal, file_get_contents($path)) === 1,
+    );
+
+    expect(array_map(fn (string $path) => basename($path), $offenders))->toBe([]);
+});

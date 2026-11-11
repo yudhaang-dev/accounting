@@ -9,6 +9,12 @@ return [
 
     'today' => env('DEMO_TODAY') ?: null,
 
+    /*
+    | Password of the demo users. Random per run unless set here; it is printed once at the end of the run.
+    */
+
+    'password' => env('DEMO_PASSWORD') ?: null,
+
     'timing' => (bool) env('DEMO_TIMING', false),
 
 ];

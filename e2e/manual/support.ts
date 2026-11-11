@@ -3,11 +3,20 @@ import { mkdirSync, appendFileSync } from 'node:fs';
 
 export const MANUAL_DIR = '.docs/manual-book';
 
-/** The user every manual-book run signs in as (created by `manual:reset`). */
+/**
+ * The user every manual-book run signs in as (created by `manual:reset`). The password comes from
+ * `E2E_PASSWORD`, which `manual:reset` prints when it had to make one up.
+ */
 export const USER = {
     name: 'Budi Santoso',
     email: 'budi@example.com',
-    password: 'rahasia-e2e-123',
+    password:
+        process.env.E2E_PASSWORD ??
+        (() => {
+            throw new Error(
+                'Set E2E_PASSWORD to the password printed by `pnpm run manual:reset`.',
+            );
+        })(),
 };
 
 const counters = new Map<string, number>();
