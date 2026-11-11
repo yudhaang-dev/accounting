@@ -50,6 +50,296 @@
                 }
             }
         },
+        "/me": {
+            "patch": {
+                "operationId": "me.update",
+                "summary": "Changes the display name",
+                "tags": [
+                    "Account"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`MeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "get": {
+                "operationId": "me",
+                "summary": "The signed-in user. Answers 401 `UNAUTHENTICATED` when there is no session, which is how the\nSPA learns that it must show the login screen",
+                "tags": [
+                    "Me"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`MeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/email": {
+            "post": {
+                "operationId": "me.email.request",
+                "summary": "Asks to change the sign-in address. Needs the current password. The new address gets an email with a\ntoken; the current address keeps working until `POST /me/email/confirm` succeeds",
+                "tags": [
+                    "Account"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RequestEmailChangeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": ""
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/me/email/confirm": {
+            "post": {
+                "operationId": "me.email.confirm",
+                "summary": "Confirms the address change with the token from the email sent to the new address",
+                "tags": [
+                    "Account"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ConfirmEmailChangeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`MeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/password": {
+            "put": {
+                "operationId": "me.password.update",
+                "summary": "Changes the password (needs the current one) and ends the user's other sessions",
+                "tags": [
+                    "Account"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangePasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/me/sessions": {
+            "get": {
+                "operationId": "me.sessions.index",
+                "summary": "Sessions of the user, most recently active first; `is_current` marks the one making the request",
+                "tags": [
+                    "Account"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "ip_address": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "user_agent": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "last_active_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "is_current": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "ip_address",
+                                                    "user_agent",
+                                                    "last_active_at",
+                                                    "is_current"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "me.sessions.destroy-others",
+                "summary": "Ends every session of the user except the current one",
+                "tags": [
+                    "Account"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/sessions/{id}": {
+            "delete": {
+                "operationId": "me.sessions.destroy",
+                "summary": "Ends one other session. The current session cannot be ended here (use logout); 404 for an unknown id",
+                "tags": [
+                    "Account"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/companies/{companyId}/accounts": {
             "get": {
                 "operationId": "accounts.index",
@@ -11800,38 +12090,6 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/me": {
-            "get": {
-                "operationId": "me",
-                "summary": "The signed-in user. Answers 401 `UNAUTHENTICATED` when there is no session, which is how the\nSPA learns that it must show the login screen",
-                "tags": [
-                    "Me"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`MeResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/MeResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -27175,6 +27433,26 @@
                 ],
                 "title": "CashTransactionResource"
             },
+            "ChangePasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "current_password": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "password_confirmation": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "current_password",
+                    "password",
+                    "password_confirmation"
+                ],
+                "title": "ChangePasswordRequest"
+            },
             "ClearCashTransactionRequest": {
                 "type": "object",
                 "properties": {
@@ -27311,6 +27589,19 @@
                     "lock_version"
                 ],
                 "title": "CompanyResource"
+            },
+            "ConfirmEmailChangeRequest": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "token"
+                ],
+                "title": "ConfirmEmailChangeRequest"
             },
             "ControlRole": {
                 "type": "string",
@@ -32563,6 +32854,24 @@
                 "additionalProperties": {},
                 "title": "ReportSnapshotResource"
             },
+            "RequestEmailChangeRequest": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "current_password": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "email",
+                    "current_password"
+                ],
+                "title": "RequestEmailChangeRequest"
+            },
             "ResetPeriod": {
                 "type": "string",
                 "enum": [
@@ -34117,6 +34426,19 @@
                     "lock_version"
                 ],
                 "title": "UpdatePostingProfileRequest"
+            },
+            "UpdateProfileRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "title": "UpdateProfileRequest"
             },
             "UpdateRateTypeRequest": {
                 "type": "object",

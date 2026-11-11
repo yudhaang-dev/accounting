@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\IdentityAccess\Http\AccountController;
 use App\Modules\IdentityAccess\Http\IntegrationClientController;
 use App\Modules\IdentityAccess\Http\InvitationController;
 use App\Modules\IdentityAccess\Http\MeController;
@@ -15,6 +16,17 @@ use Laravel\Passport\Http\Controllers\AccessTokenController;
 
 Route::get('me', [MeController::class, 'show'])->middleware('auth')->name('me');
 Route::get('me/workspaces', [MeController::class, 'workspaces'])->middleware('auth')->name('me.workspaces');
+
+// The user's own account (D2d). Changes that touch credentials are throttled per user.
+Route::middleware('auth')->prefix('me')->name('me.')->group(function () {
+    Route::patch('/', [AccountController::class, 'update'])->name('update');
+    Route::post('email', [AccountController::class, 'requestEmailChange'])->middleware('throttle:account-security')->name('email.request');
+    Route::post('email/confirm', [AccountController::class, 'confirmEmailChange'])->middleware('throttle:account-security')->name('email.confirm');
+    Route::put('password', [AccountController::class, 'changePassword'])->middleware('throttle:account-security')->name('password.update');
+    Route::get('sessions', [AccountController::class, 'sessions'])->name('sessions.index');
+    Route::delete('sessions', [AccountController::class, 'endOtherSessions'])->name('sessions.destroy-others');
+    Route::delete('sessions/{id}', [AccountController::class, 'endSession'])->name('sessions.destroy');
+});
 
 // Client Credentials token request of integration clients (API-TR-22): form-encoded, `client_secret_basic`.
 Route::post('oauth/token', [AccessTokenController::class, 'issueToken'])->name('oauth.token');

@@ -37,6 +37,116 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The signed-in user. Answers 401 `UNAUTHENTICATED` when there is no session, which is how the
+         *     SPA learns that it must show the login screen
+         */
+        get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Changes the display name */
+        patch: operations["me.update"];
+        trace?: never;
+    };
+    "/me/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Asks to change the sign-in address. Needs the current password. The new address gets an email with a
+         *     token; the current address keeps working until `POST /me/email/confirm` succeeds
+         */
+        post: operations["me.email.request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/email/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirms the address change with the token from the email sent to the new address */
+        post: operations["me.email.confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Changes the password (needs the current one) and ends the user's other sessions */
+        put: operations["me.password.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sessions of the user, most recently active first; `is_current` marks the one making the request */
+        get: operations["me.sessions.index"];
+        put?: never;
+        post?: never;
+        /** Ends every session of the user except the current one */
+        delete: operations["me.sessions.destroy-others"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Ends one other session. The current session cannot be ended here (use logout); 404 for an unknown id */
+        delete: operations["me.sessions.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{companyId}/accounts": {
         parameters: {
             query?: never;
@@ -2140,26 +2250,6 @@ export interface paths {
          *     between is VERSION_CONFLICT
          */
         put: operations["groups.account-mappings.update"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * The signed-in user. Answers 401 `UNAUTHENTICATED` when there is no session, which is how the
-         *     SPA learns that it must show the login screen
-         */
-        get: operations["me"];
-        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -4436,6 +4526,12 @@ export interface components {
             cleared_on: string | null;
             cleared_by: number | null;
         };
+        /** ChangePasswordRequest */
+        ChangePasswordRequest: {
+            current_password: string;
+            password: string;
+            password_confirmation: string;
+        };
         /** ClearCashTransactionRequest */
         ClearCashTransactionRequest: {
             /**
@@ -4475,6 +4571,10 @@ export interface components {
             default_locale: string;
             status: string;
             lock_version: number;
+        };
+        /** ConfirmEmailChangeRequest */
+        ConfirmEmailChangeRequest: {
+            token: string;
         };
         /**
          * ControlRole
@@ -5779,6 +5879,12 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** RequestEmailChangeRequest */
+        RequestEmailChangeRequest: {
+            /** Format: email */
+            email: string;
+            current_password: string;
+        };
         /**
          * ResetPeriod
          * @enum {string}
@@ -6175,6 +6281,10 @@ export interface components {
             name?: string;
             is_default?: boolean;
         };
+        /** UpdateProfileRequest */
+        UpdateProfileRequest: {
+            name: string;
+        };
         /** UpdateRateTypeRequest */
         UpdateRateTypeRequest: {
             lock_version: number;
@@ -6401,6 +6511,201 @@ export interface operations {
                     "application/json": string;
                 };
             };
+        };
+    };
+    me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `MeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "me.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description `MeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "me.email.request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestEmailChangeRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "me.email.confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmEmailChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description `MeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MeResource"];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "me.password.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "me.sessions.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            ip_address: string | null;
+                            user_agent: string | null;
+                            last_active_at: string;
+                            is_current: boolean;
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "me.sessions.destroy-others": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "me.sessions.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "accounts.index": {
@@ -11127,29 +11432,6 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
-        };
-    };
-    me: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description `MeResource` */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["MeResource"];
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
         };
     };
     "me.workspaces": {

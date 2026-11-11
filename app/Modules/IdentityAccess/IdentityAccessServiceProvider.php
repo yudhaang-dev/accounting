@@ -60,6 +60,8 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
 
         RateLimiter::for('invitation-accept', fn (Request $request) => Limit::perMinute(10)->by('ip:'.$request->ip()));
 
+        RateLimiter::for('account-security', fn (Request $request) => Limit::perMinute(5)->by('user:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
         $this->app->make(Router::class)->aliasMiddleware('permission', RequirePermission::class);
         $this->app->make(Router::class)->aliasMiddleware('group-access', RequireGroupAccess::class);
 
