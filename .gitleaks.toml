@@ -8,8 +8,4 @@ useDefault = true
 [[allowlists]]
 description = "Throwaway values in test fixtures"
 targetRules = ["generic-api-key"]
-paths = [
-  '''^tests/''',
-  '''^resources/js/test/''',
-  '''^e2e/''',
-]
+paths = ['''^tests/''', '''^resources/js/test/''', '''^e2e/''']
