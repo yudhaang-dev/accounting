@@ -315,4 +315,4 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 
 - [ ] **D5a** Staging menyerupai produksi: pasang perusahaan lewat paket template, seeder demo di staging, e2e dan k6 ringkas, latih alur kritis (setup, posting, tutup periode, tutup tahun, pulihkan backup)
 - [ ] **D5b** Permission baru ditambahkan ke role yang sudah ada (daftar di bagian "Penerapan pada perusahaan yang sudah ada", ditambah izin dari D2c) lewat skrip atau migrasi, bukan manual
-- [ ] **D5c** Runbook deploy dan rollback, tag rilis, pemilik pertama lewat `access:invite-owner`
+- [ ] **D5c** Runbook deploy dan rollback, tag rilis, pemilik pertama lewat `access:invite-owner`; jadikan repo GitHub privat sebelum deploy (saat ini publik; setelah privat, menit Actions dibatasi kuota paket)
