@@ -1,0 +1,15 @@
+title = "accounting"
+
+[extend]
+useDefault = true
+
+# Test fixtures use throwaway values (fake passwords, TOTP secrets) that
+# the generic rule mistakes for keys. Production code and config stay scanned.
+[[allowlists]]
+description = "Throwaway values in test fixtures"
+targetRules = ["generic-api-key"]
+paths = [
+  '''^tests/''',
+  '''^resources/js/test/''',
+  '''^e2e/''',
+]

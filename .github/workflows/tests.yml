@@ -35,6 +35,7 @@ jobs:
       DB_DATABASE: accounting_testing
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
+      LARAVEL_BYPASS_ENV_CHECK: 1
 
     steps:
       - name: Checkout code
