@@ -157,8 +157,14 @@ final class ManageAccount
         return $ended;
     }
 
+    /**
+     * Ends every session of the user except the current one. The remember-me token is replaced too: it is
+     * what lets a device that lost its session sign in again from its cookie.
+     */
     public function endOtherSessions(User $user, ?string $currentSessionId): int
     {
+        $user->forceFill(['remember_token' => Str::random(60)])->save();
+
         $query = DB::table('sessions')->where('user_id', $user->id);
 
         if ($currentSessionId !== null) {

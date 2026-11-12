@@ -117,3 +117,32 @@ describe('deactivating the account (X-FR-05)', function () {
         $this->getJson('/api/v1/me')->assertStatus(401);
     });
 });
+
+describe('the last administrator rule under concurrency (D3g)', function () {
+    it('locks the workspace before it counts the administrators, when leaving and when deactivating', function () {
+        $first = lifecycleAdmin();
+        [$companyId] = createWorkspaceAs($first);
+        $second = memberWithRoles($companyId, 'accounting_admin');
+        $workspaceId = workspaceIdOf($companyId);
+
+        DB::enableQueryLog();
+        $this->actingAs($second)->postJson("/api/v1/me/workspaces/{$workspaceId}/leave")->assertNoContent();
+        $leave = collect(DB::getQueryLog())->pluck('query')->all();
+        DB::flushQueryLog();
+
+        $this->actingAs($first)->postJson('/api/v1/me/deactivate', ['current_password' => LIFECYCLE_PASSWORD])->assertUnprocessable();
+        $deactivate = collect(DB::getQueryLog())->pluck('query')->all();
+
+        // The position of the first query that satisfies the test, or null.
+        $position = fn (array $queries, Closure $matches): ?int => collect($queries)->search($matches) === false ? null : collect($queries)->search($matches);
+        $workspaceLock = fn (string $q): bool => str_starts_with($q, 'select * from "ia_workspaces"') && str_contains($q, 'for update');
+        $adminCount = fn (string $q): bool => str_contains($q, 'model_has_roles');
+
+        foreach ([$leave, $deactivate] as $queries) {
+            $lock = $position($queries, $workspaceLock);
+
+            expect($lock)->not->toBeNull()
+                ->and($lock)->toBeLessThan($position($queries, $adminCount));
+        }
+    });
+});

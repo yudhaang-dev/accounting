@@ -208,3 +208,27 @@ describe('passkeys (IA-FR-04)', function () {
         $this->getJson('/api/v1/me/passkeys')->assertStatus(401);
     });
 });
+
+describe('remember-me after sessions end (D3g)', function () {
+    it('replaces the remember token when the password changes, so a remembered device cannot sign in again', function () {
+        $user = accountUser();
+        $user->forceFill(['remember_token' => 'old-remember-token'])->save();
+
+        $this->actingAs($user)->putJson('/api/v1/me/password', [
+            'current_password' => CURRENT_PASSWORD, 'password' => NEW_PASSWORD, 'password_confirmation' => NEW_PASSWORD,
+        ])->assertNoContent();
+
+        expect($user->fresh()->remember_token)->not->toBe('old-remember-token')->not->toBeNull();
+    });
+
+    it('replaces the remember token when the other sessions end', function () {
+        $user = accountUser();
+        $user->forceFill(['remember_token' => 'old-remember-token'])->save();
+        sessionRow($user, 'other-device', now()->timestamp);
+
+        $this->actingAs($user)->deleteJson('/api/v1/me/sessions')->assertNoContent();
+
+        expect($user->fresh()->remember_token)->not->toBe('old-remember-token');
+        expect(DB::table('sessions')->where('id', 'other-device')->exists())->toBeFalse();
+    });
+});

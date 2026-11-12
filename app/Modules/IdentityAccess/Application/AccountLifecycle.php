@@ -32,7 +32,8 @@ final class AccountLifecycle
     public function leaveWorkspace(User $user, string $workspaceId): void
     {
         DB::transaction(function () use ($user, $workspaceId): void {
-            $workspace = Workspace::query()->findOrFail($workspaceId);
+            // The workspace row serializes everyone leaving it, so two administrators cannot both see the other as the one who stays.
+            $workspace = Workspace::query()->lockForUpdate()->findOrFail($workspaceId);
             $membership = Membership::query()->grantingAccess()
                 ->where('workspace_id', $workspace->id)->where('user_id', $user->id)->lockForUpdate()->firstOrFail();
 
@@ -62,8 +63,10 @@ final class AccountLifecycle
     public function deactivate(User $user): void
     {
         DB::transaction(function () use ($user): void {
+            // Workspaces first and in a fixed order, like a member leaving one, so the locks cannot cross.
+            $workspaceIds = Membership::query()->grantingAccess()->where('user_id', $user->id)->pluck('workspace_id');
+            $workspaces = Workspace::query()->whereIn('id', $workspaceIds)->orderBy('id')->lockForUpdate()->get();
             $memberships = Membership::query()->grantingAccess()->where('user_id', $user->id)->lockForUpdate()->get();
-            $workspaces = Workspace::query()->whereIn('id', $memberships->pluck('workspace_id'))->get();
 
             foreach ($workspaces as $workspace) {
                 $this->assertNotLastAdmin($user, $workspace);
