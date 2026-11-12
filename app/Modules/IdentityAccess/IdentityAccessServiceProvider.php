@@ -11,6 +11,7 @@ use App\Modules\IdentityAccess\Application\EloquentWorkspaces;
 use App\Modules\IdentityAccess\Application\IntegrationClientAuthenticator;
 use App\Modules\IdentityAccess\Application\RejectDeactivatedLogin;
 use App\Modules\IdentityAccess\Application\WorkspaceCompanyAccessGate;
+use App\Modules\IdentityAccess\Console\GrantPermissionsCommand;
 use App\Modules\IdentityAccess\Console\InviteOwnerCommand;
 use App\Modules\IdentityAccess\Console\SyncPermissionsCommand;
 use App\Modules\IdentityAccess\Contracts\AccessContexts;
@@ -51,7 +52,7 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
         // Replaces the fail-closed default bound by the API platform capability.
         $this->app->bind(CompanyAccessGate::class, WorkspaceCompanyAccessGate::class);
 
-        $this->commands([SyncPermissionsCommand::class, InviteOwnerCommand::class]);
+        $this->commands([SyncPermissionsCommand::class, InviteOwnerCommand::class, GrantPermissionsCommand::class]);
 
         // The token endpoint lives at /api/v1/oauth/token (see Http/routes.php), not Passport's own paths.
         Passport::ignoreRoutes();

@@ -10,7 +10,7 @@
 
 **Penerapan pada perusahaan yang sudah ada** (catatan item selesai dipangkas; yang tersisa hanya yang perlu dilakukan operator):
 
-- Permission baru tidak otomatis masuk role yang sudah ada; tambahkan ke role terkait: `plans.publish`, `planning-policy.manage` (M7-03), `reports.publish` (M8-11), `bank-statements.read` dan `bank-statements.manage` (B-01), `consolidation.join` (B-05c); `workspaces.create` (D2c) hanya bila perusahaan memang ingin user selain pemilik pertama membuat workspace.
+- Permission baru tidak otomatis masuk role yang sudah ada; tambahkan ke role terkait dengan `php artisan access:grant-permissions` (D5b): `plans.publish`, `planning-policy.manage` (M7-03), `reports.publish` (M8-11), `bank-statements.read` dan `bank-statements.manage` (B-01), `consolidation.join` (B-05c); `workspaces.create` (D2c) hanya bila perusahaan memang ingin user selain pemilik pertama membuat workspace.
 - Produksi perlu worker queue (`queue:work`, Horizon di Linux) dan scheduler untuk `outbox:relay` per menit; atur `WEBHOOK_QUEUE`, `WEBHOOK_TRIES`, `WEBHOOK_TIMEOUT_SECONDS` bila perlu (B-02).
 - Passport: `php artisan passport:keys`, migrasi Passport, atur `API_TOKEN_TTL_SECONDS` (M3-05).
 
@@ -321,5 +321,5 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 ### D5 — Deploy
 
 - [ ] **D5a** Staging menyerupai produksi: pasang perusahaan lewat paket template, seeder demo di staging, e2e dan k6 ringkas, latih alur kritis (setup, posting, tutup periode, tutup tahun, pulihkan backup)
-- [ ] **D5b** Permission baru ditambahkan ke role yang sudah ada (daftar di bagian "Penerapan pada perusahaan yang sudah ada", ditambah izin dari D2c) lewat skrip atau migrasi, bukan manual
+- [x] **D5b** Permission baru ditambahkan ke role yang sudah ada (daftar di bagian "Penerapan pada perusahaan yang sudah ada", ditambah izin dari D2c) lewat skrip atau migrasi, bukan manual — `php artisan access:grant-permissions {role} {permission...} [--company=ID] [--dry-run]`: idempoten, diaudit per role, menaikkan `lock_version`. Role itu data perusahaan, jadi operator yang menamai role dan izinnya; kode tidak memutuskan role mana yang berhak (P-01). Jalankan `--dry-run` dulu di staging (D5a) dan catat perintah finalnya di runbook (D5c)
 - [ ] **D5c** Runbook deploy dan rollback, tag rilis, pemilik pertama lewat `access:invite-owner`; jadikan repo GitHub privat sebelum deploy (saat ini publik; setelah privat, menit Actions dibatasi kuota paket)
