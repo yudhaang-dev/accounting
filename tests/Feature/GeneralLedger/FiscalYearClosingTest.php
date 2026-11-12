@@ -122,9 +122,11 @@ describe('closing a fiscal year (GL-FR-12, GL-FR-13, GL-AC-09)', function () {
         $retained = $rows->where('account_id', $this->retained);
         $values = DB::table('md_dimension_set_items')->whereIn('dimension_set_id', $retained->pluck('dimension_set_id'))->pluck('dimension_value_id', 'dimension_set_id');
 
+        // Row order from GROUP BY is up to the query plan, so compare by dimension value, not by position.
+        $netByValue = collect($retained)->mapWithKeys(fn ($row) => [$values[$row->dimension_set_id] => (float) $row->net])->sortKeys()->all();
+
         expect($retained)->toHaveCount(2)
-            ->and(collect($retained)->mapWithKeys(fn ($row) => [$values[$row->dimension_set_id] => (float) $row->net])->all())
-            ->toBe([$jakarta => -700000.0, $bandung => -200000.0]);
+            ->and($netByValue)->toBe(collect([$jakarta => -700000.0, $bandung => -200000.0])->sortKeys()->all());
     });
 
     it('carries the balance sheet into the next year and starts income and expense from zero', function () {
