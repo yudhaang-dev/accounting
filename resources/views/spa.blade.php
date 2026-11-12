@@ -6,7 +6,7 @@
         <title>{{ config('app.name') }}</title>
 
         {{-- Apply the stored appearance before first paint to avoid a light flash in dark mode. --}}
-        <script>
+        <script nonce="{{ Vite::cspNonce() }}">
             (function () {
                 var appearance = '{{ $appearance ?? 'system' }}';
                 var dark = appearance === 'dark' || (appearance === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
