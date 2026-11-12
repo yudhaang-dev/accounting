@@ -24,7 +24,7 @@ final class GrantPermissionsToRoles
 
     /**
      * @param  list<string>  $permissions
-     * @return list<array{company_id: string, role_id: string, role: string, added: list<string>}> roles that gain something
+     * @return list<array{company_id: string, role_id: string, role_name: string, added: list<string>}> roles that gain something
      *
      * @throws InvalidArgumentException a permission outside the catalog, or no role of that name
      */
@@ -65,7 +65,7 @@ final class GrantPermissionsToRoles
                     continue;
                 }
 
-                $changes[] = ['company_id' => $role->company_id, 'role_id' => $role->id, 'role' => $role->name, 'added' => $added];
+                $changes[] = ['company_id' => $role->company_id, 'role_id' => $role->id, 'role_name' => $role->name, 'added' => $added];
 
                 if ($dryRun) {
                     continue;

@@ -34,7 +34,7 @@ class GrantPermissionsCommand extends Command
         }
 
         foreach ($changes as $change) {
-            $this->line(($dryRun ? 'Would grant ' : 'Granted ').implode(', ', $change['added'])." to {$change['role']} of {$change['company_id']}.");
+            $this->line(($dryRun ? 'Would grant ' : 'Granted ').implode(', ', $change['added'])." to {$change['role_name']} of {$change['company_id']}.");
         }
 
         $this->info($changes === [] ? 'Nothing to change.' : count($changes).' role(s) '.($dryRun ? 'would change.' : 'changed.'));
