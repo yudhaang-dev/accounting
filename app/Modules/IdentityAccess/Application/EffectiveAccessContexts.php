@@ -65,7 +65,6 @@ final class EffectiveAccessContexts implements AccessContexts
             ->whereIn('assigned.company_id', $companyIds)
             ->where('role.is_active', true)
             ->distinct()
-            ->orderBy('permission.name')
             ->get(['assigned.company_id', 'permission.name']);
 
         $byCompany = array_fill_keys($companyIds, []);
@@ -74,6 +73,11 @@ final class EffectiveAccessContexts implements AccessContexts
             $byCompany[$row->company_id][] = $row->name;
         }
 
-        return $byCompany;
+        // Sorted here, not by the database: collation decides how '-' and '.' order, and it differs per platform.
+        return array_map(static function (array $names): array {
+            sort($names, SORT_STRING);
+
+            return $names;
+        }, $byCompany);
     }
 }
