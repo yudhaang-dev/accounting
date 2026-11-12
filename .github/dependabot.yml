@@ -31,6 +31,9 @@ updates:
     cooldown:
       default-days: 5
     open-pull-requests-limit: 5
+    # vite-plus needs its own vite build (TODO D1d): leave it until the toolchain migration.
+    ignore:
+      - dependency-name: "vite-plus"
     groups:
       npm-minor-patch:
         update-types:
