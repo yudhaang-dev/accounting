@@ -8,7 +8,7 @@ import { USER } from './env';
  */
 export async function createActiveCompany(
     page: Page,
-    name = 'PT Toko Budi',
+    name = 'PT Contoh Maju',
 ): Promise<void> {
     await page.goto('/');
     await expect(page).toHaveURL(/\/login/);
@@ -16,6 +16,12 @@ export async function createActiveCompany(
     await page.getByLabel('Kata sandi', { exact: true }).fill(USER.password);
     await page.getByRole('button', { name: 'Masuk', exact: true }).click();
 
+    // Signing in redirects; going elsewhere before it finishes would drop the session.
+    await page.waitForURL((url) => !url.pathname.startsWith('/login'));
+
+    // The scenarios share one user, so an earlier one may have left a workspace behind: always
+    // start a new one instead of relying on the empty-account redirect.
+    await page.goto('/workspaces/new');
     await expect(page).toHaveURL(/\/workspaces\/new$/);
     await page.getByLabel('Nama ruang kerja').fill(name);
     await page.getByLabel('Nama perusahaan').fill(name);
