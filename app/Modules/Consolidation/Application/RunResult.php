@@ -76,7 +76,7 @@ final class RunResult
         $eliminations = $run->eliminations()->orderBy('group_account_code')->orderBy('company_id')->orderBy('account_code')->orderBy('id')->get();
         $matches = $run->matches()->orderBy('kind')->orderBy('company_a_id')->orderBy('company_b_id')->get();
         $recorded = Adjustment::query()->where('run_id', $run->id)->with('lines')->orderBy('created_at')->orderBy('id')->get();
-        $scale = $this->scale(array_values([...$balances->all(), ...$eliminations->all(), ...$matches->all(), ...$recorded->pluck('lines')->flatten()->all()]));
+        $scale = $this->scale([...$balances->all(), ...$eliminations->all(), ...$matches->all(), ...$recorded->pluck('lines')->flatten()->all()]);
 
         $lines = [];
         $exceptions = [];
@@ -343,7 +343,7 @@ final class RunResult
     /**
      * The scale amounts were stored with: the most decimals any of them really uses, at least two.
      *
-     * @param  list<RunBalance|RunElimination|RunMatch|AdjustmentLine>  $rows
+     * @param  array<int, RunBalance|RunElimination|RunMatch|AdjustmentLine>  $rows
      * @return int<0, max>
      */
     private function scale(array $rows): int
