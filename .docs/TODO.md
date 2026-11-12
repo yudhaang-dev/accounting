@@ -295,7 +295,6 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 ### D3 — Hardening dan verifikasi
 
 > **Serah terima sesi (2026-11-12), hapus setelah dibaca:**
-> - **Belum di-push (atas permintaan pemilik):** `11a8d40` (catatan D5c) dan `f6564fb` (perbaikan helper e2e). `origin/main` ada di `b12e4e7`; run terakhirnya (43212936280) gagal di e2e karena spec perancang mengira user belum punya ruang kerja. `f6564fb` memperbaikinya dan lulus berurutan di lokal, tetapi **belum terbukti di CI**: D3b baru benar-benar hijau setelah run berikutnya lulus. Tanyakan dulu sebelum push.
 > - **Spec e2e berbagi satu database dan satu user.** Spec baru memakai `createActiveCompany` (`e2e/support/company.ts`), yang membuka `/workspaces/new` sendiri; jangan bergantung pada user tanpa ruang kerja. Jalankan seluruh `pnpm exec playwright test`, bukan satu spec saja, sebelum push.
 > - **Dependabot:** 7 PR terbuka sejak `dependabot.yml` ter-push. Rebase diminta untuk #1 sampai #4 dan ignore major untuk #5 (`vite-plus` 1.5.0, butuh migrasi toolchain, lihat D1d), #6 (`jsdom` 31), dan #7 (`i18next` 27, sudah tertutup); #5 dan #6 mungkin masih terbuka. Semua status `ci=fail` lama berasal dari masa sebelum perbaikan CI, jadi tidak bermakna. Merge #1 sampai #4 satu per satu hanya setelah CI-nya hijau di atas `main` yang memuat `f6564fb`.
 > - **CI:** `tests` kini membatalkan run lama (`concurrency`) dan tidak jalan untuk push yang hanya mengubah `.md`, kecuali `API-CONTRACT.md` dan `CHART-OF-ACCOUNTS.md` (dibaca tes). Filter `paths` itu belum terbukti sampai ada push dokumen saja. Repo GitHub masih publik sampai deploy (D5c).
@@ -317,7 +316,7 @@ Alur: login → buat perusahaan → COA dan periode → entri jurnal umum → ap
 - [ ] **D4c** PostgreSQL 18: `btree_gist`, `max_locks_per_transaction` ≥ 256, backup terjadwal dan uji restore
 - [ ] **D4d** Worker queue (Supervisor atau Horizon) dan scheduler (`outbox:relay` per menit, `entries:run-recurring`, `entries:reverse-scheduled`, purge idempotensi); `WEBHOOK_QUEUE`, `WEBHOOK_TRIES`, `WEBHOOK_TIMEOUT_SECONDS`
 - [ ] **D4e** Passport: `passport:keys` dibuat di server (bukan disalin dari lokal), migrasi, `API_TOKEN_TTL_SECONDS`; SMTP untuk undangan (undangan satu-satunya jalur akun); penyimpanan lampiran dan ekspor; Redis hanya bila dipakai
-- [ ] **D4f** Log terpusat, pemantauan kesalahan, endpoint health-check, Pulse bila dipakai
+- [ ] **D4f** Log terpusat, pemantauan kesalahan, endpoint health-check, Pulse bila dipakai — Pulse kini `PULSE_ENABLED=false` di e2e dan `.env.production.example` karena migrasinya belum dipublikasikan (tanpa itu tiap request mencatat insert gagal ke `pulse_entries`); bila dipakai, publikasikan migrasinya dan nyalakan lagi
 
 ### D5 — Deploy
 

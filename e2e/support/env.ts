@@ -76,4 +76,6 @@ export const appEnv: Record<string, string> = {
     QUEUE_CONNECTION: 'sync',
     MAIL_MAILER: 'array',
     LOG_CHANNEL: 'stderr',
+    // Its tables are not migrated; without this every request logs a failed insert into pulse_entries.
+    PULSE_ENABLED: 'false',
 };
