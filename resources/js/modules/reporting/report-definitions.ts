@@ -62,7 +62,7 @@ export const dateModeOf = (definition: ReportDefinition) =>
 
 /** Whether the structure has a `plan` column, so the viewer offers a plan version. */
 export const comparesWithPlan = (definition: ReportDefinition): boolean => {
-    const columns = definition.structure.columns;
+    const columns = definition.structure?.columns;
 
     return (
         Array.isArray(columns) &&

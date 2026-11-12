@@ -1,5 +1,5 @@
 {
-    "openapi": "3.1.0",
+    "openapi": "3.1.2",
     "info": {
         "title": "Accounting API",
         "version": "1.0.0",
@@ -1007,7 +1007,7 @@
                                                         ]
                                                     },
                                                     "valid": {
-                                                        "type": "string"
+                                                        "type": "boolean"
                                                     },
                                                     "required": {
                                                         "type": "string",
@@ -1097,7 +1097,15 @@
                                             "type": "object",
                                             "properties": {
                                                 "key": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "retained_earnings",
+                                                        "fx_realized_gain",
+                                                        "fx_realized_loss",
+                                                        "fx_unrealized_gain",
+                                                        "fx_unrealized_loss",
+                                                        "fx_rounding"
+                                                    ]
                                                 },
                                                 "account_id": {
                                                     "type": "string"
@@ -9534,8 +9542,10 @@
                         "name": "transaction_type_keys[]",
                         "in": "query",
                         "schema": {
-                            "type": "array",
-                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "type": [
+                                "array",
+                                "null"
+                            ],
                             "items": {
                                 "type": "string",
                                 "pattern": "^[a-z][a-z0-9_.]*$",
@@ -13129,8 +13139,10 @@
                         "name": "transaction_type_keys[]",
                         "in": "query",
                         "schema": {
-                            "type": "array",
-                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "type": [
+                                "array",
+                                "null"
+                            ],
                             "items": {
                                 "type": "string",
                                 "pattern": "^[a-z][a-z0-9_.]*$",
@@ -13444,8 +13456,10 @@
                         "name": "transaction_type_keys[]",
                         "in": "query",
                         "schema": {
-                            "type": "array",
-                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "type": [
+                                "array",
+                                "null"
+                            ],
                             "items": {
                                 "type": "string",
                                 "pattern": "^[a-z][a-z0-9_.]*$",
@@ -13800,8 +13814,10 @@
                         "name": "transaction_type_keys[]",
                         "in": "query",
                         "schema": {
-                            "type": "array",
-                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "type": [
+                                "array",
+                                "null"
+                            ],
                             "items": {
                                 "type": "string",
                                 "pattern": "^[a-z][a-z0-9_.]*$",
@@ -14580,7 +14596,8 @@
                             "items": {
                                 "type": "string",
                                 "maxLength": 32
-                            }
+                            },
+                            "maxItems": 50
                         }
                     },
                     {
@@ -17943,7 +17960,7 @@
                                                                     ]
                                                                 },
                                                                 "valid": {
-                                                                    "type": "string"
+                                                                    "type": "boolean"
                                                                 },
                                                                 "lock_version": {
                                                                     "type": "integer",
@@ -18052,7 +18069,7 @@
                                                                 ]
                                                             },
                                                             "valid": {
-                                                                "type": "string"
+                                                                "type": "boolean"
                                                             },
                                                             "lock_version": {
                                                                 "type": "integer",
@@ -18162,7 +18179,7 @@
                                                                 ]
                                                             },
                                                             "valid": {
-                                                                "type": "string"
+                                                                "type": "boolean"
                                                             },
                                                             "lock_version": {
                                                                 "type": "integer",
@@ -18278,7 +18295,7 @@
                                                                 ]
                                                             },
                                                             "valid": {
-                                                                "type": "string"
+                                                                "type": "boolean"
                                                             },
                                                             "lock_version": {
                                                                 "type": "integer",
@@ -18407,7 +18424,7 @@
                                                                 ]
                                                             },
                                                             "valid": {
-                                                                "type": "string"
+                                                                "type": "boolean"
                                                             },
                                                             "lock_version": {
                                                                 "type": "integer",
@@ -20307,8 +20324,10 @@
                         "name": "transaction_type_keys[]",
                         "in": "query",
                         "schema": {
-                            "type": "array",
-                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "type": [
+                                "array",
+                                "null"
+                            ],
                             "items": {
                                 "type": "string",
                                 "pattern": "^[a-z][a-z0-9_.]*$",
@@ -26329,8 +26348,10 @@
                         "name": "transaction_type_keys[]",
                         "in": "query",
                         "schema": {
-                            "type": "array",
-                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "type": [
+                                "array",
+                                "null"
+                            ],
                             "items": {
                                 "type": "string",
                                 "pattern": "^[a-z][a-z0-9_.]*$",
@@ -26368,13 +26389,16 @@
                         "name": "adjustment_keys[]",
                         "in": "query",
                         "schema": {
-                            "type": "array",
-                            "pattern": "^[a-z][a-z0-9_.]*$",
+                            "type": [
+                                "array",
+                                "null"
+                            ],
                             "items": {
                                 "type": "string",
                                 "pattern": "^[a-z][a-z0-9_.]*$",
                                 "maxLength": 64
-                            }
+                            },
+                            "maxItems": 50
                         }
                     }
                 ],
@@ -26751,7 +26775,14 @@
                         "type": "string"
                     },
                     "class": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "asset",
+                            "liability",
+                            "equity",
+                            "income",
+                            "expense"
+                        ]
                     },
                     "normal_balance": {
                         "type": "string"
@@ -26766,7 +26797,11 @@
                         "type": "boolean"
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ]
                     },
                     "allowed_sources": {
                         "type": "array",
@@ -26778,7 +26813,12 @@
                         "type": "string"
                     },
                     "currency_restriction": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "functional_only",
+                            "specific",
+                            "any"
+                        ]
                     },
                     "restricted_currency": {
                         "type": [
@@ -27307,7 +27347,11 @@
                         ]
                     },
                     "direction": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "in",
+                            "out"
+                        ]
                     },
                     "amount": {
                         "type": "string"
@@ -27450,7 +27494,11 @@
                         "type": "string"
                     },
                     "kind": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "cash",
+                            "bank"
+                        ]
                     },
                     "bank_name": {
                         "type": [
@@ -27471,7 +27519,11 @@
                         "type": "string"
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ]
                     },
                     "lock_version": {
                         "type": "integer"
@@ -27500,7 +27552,11 @@
                         "type": "string"
                     },
                     "direction": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "in",
+                            "out"
+                        ]
                     },
                     "amount": {
                         "type": "string"
@@ -28657,13 +28713,23 @@
                         "type": "integer"
                     },
                     "rounding_mode": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "half_up",
+                            "half_even",
+                            "up",
+                            "down"
+                        ]
                     },
                     "is_functional": {
                         "type": "boolean"
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ]
                     },
                     "lock_version": {
                         "type": "integer"
@@ -28767,7 +28833,11 @@
                         "type": "boolean"
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ]
                     },
                     "lock_version": {
                         "type": "integer"
@@ -28821,7 +28891,11 @@
                         ]
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ]
                     },
                     "lock_version": {
                         "type": "integer"
@@ -28861,10 +28935,22 @@
                         "type": "string"
                     },
                     "kind": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "invoice",
+                            "credit_note",
+                            "payment",
+                            "advance",
+                            "write_off",
+                            "loan"
+                        ]
                     },
                     "control_role": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "receivables_control",
+                            "payables_control"
+                        ]
                     },
                     "party_id": {
                         "type": "string"
@@ -28916,10 +29002,16 @@
                         "description": "An open item of the conversion date, recorded with the opening balance journal."
                     },
                     "reversal_journal_id": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "reversal_date": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -29182,7 +29274,15 @@
                         ]
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "submitted",
+                            "approved",
+                            "posted",
+                            "rejected",
+                            "cancelled"
+                        ]
                     },
                     "source": {
                         "type": "string"
@@ -29292,16 +29392,19 @@
                         ],
                         "properties": {
                             "stages": {
-                                "type": "string"
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
                             },
                             "approved": {
                                 "type": "integer"
                             },
                             "auto_post": {
-                                "type": "string"
+                                "type": "boolean"
                             },
                             "separation_of_duties": {
-                                "type": "string"
+                                "type": "boolean"
                             }
                         },
                         "required": [
@@ -29503,7 +29606,12 @@
                         "type": "integer"
                     },
                     "source": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "manual",
+                            "csv",
+                            "api"
+                        ]
                     },
                     "actor_type": {
                         "type": [
@@ -29770,7 +29878,12 @@
                         "type": "string"
                     },
                     "pattern": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "monthly",
+                            "four_four_five",
+                            "free"
+                        ]
                     },
                     "start_month": {
                         "type": [
@@ -30782,7 +30895,7 @@
                         ]
                     },
                     "webhook_enabled": {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "Webhooks go out only with a URL and a secret; the secret itself is never readable again."
                     },
                     "data_scope": {
@@ -30791,7 +30904,11 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "`active` or `revoked`."
+                        "description": "`active` or `revoked`.",
+                        "enum": [
+                            "active",
+                            "revoked"
+                        ]
                     },
                     "secret_rotated_at": {
                         "type": [
@@ -30868,7 +30985,7 @@
                         ]
                     },
                     "webhook_enabled": {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "Webhooks go out only with a URL and a secret; the secret itself is never readable again."
                     },
                     "data_scope": {
@@ -30877,7 +30994,11 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "`active` or `revoked`."
+                        "description": "`active` or `revoked`.",
+                        "enum": [
+                            "active",
+                            "revoked"
+                        ]
                     },
                     "secret_rotated_at": {
                         "type": [
@@ -30959,7 +31080,7 @@
                         ]
                     },
                     "webhook_enabled": {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "Webhooks go out only with a URL and a secret; the secret itself is never readable again."
                     },
                     "data_scope": {
@@ -30968,7 +31089,11 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "`active` or `revoked`."
+                        "description": "`active` or `revoked`.",
+                        "enum": [
+                            "active",
+                            "revoked"
+                        ]
                     },
                     "secret_rotated_at": {
                         "type": [
@@ -31026,7 +31151,13 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "`pending`, `accepted`, `revoked`, or `expired` once the invitation lapsed unanswered."
+                        "description": "`pending`, `accepted`, `revoked`, or `expired` once the invitation lapsed unanswered.",
+                        "enum": [
+                            "expired",
+                            "pending",
+                            "accepted",
+                            "revoked"
+                        ]
                     },
                     "role_ids": {
                         "type": "array",
@@ -31435,7 +31566,12 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "`active`, `revoked`, or `expired` once a set expiry has passed."
+                        "description": "`active`, `revoked`, or `expired` once a set expiry has passed.",
+                        "enum": [
+                            "active",
+                            "revoked",
+                            "expired"
+                        ]
                     },
                     "expires_at": {
                         "type": [
@@ -31484,10 +31620,16 @@
                         "type": "integer"
                     },
                     "version": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "structure": {
-                        "type": "object",
+                        "type": [
+                            "object",
+                            "null"
+                        ],
                         "properties": {
                             "rows": {
                                 "type": "array",
@@ -31600,10 +31742,22 @@
                         "type": "string"
                     },
                     "control_role": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "receivables_control",
+                            "payables_control"
+                        ]
                     },
                     "kind": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "invoice",
+                            "credit_note",
+                            "payment",
+                            "advance",
+                            "write_off",
+                            "loan"
+                        ]
                     },
                     "side": {
                         "type": "string"
@@ -31636,7 +31790,12 @@
                         "type": "string"
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "open",
+                            "settled",
+                            "reversed"
+                        ]
                     }
                 },
                 "required": [
@@ -31761,7 +31920,11 @@
                         ]
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ]
                     },
                     "external_refs": {
                         "type": "array",
@@ -31811,7 +31974,11 @@
                         "type": "string"
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ]
                     },
                     "lock_version": {
                         "type": "integer"
@@ -31955,7 +32122,12 @@
                         "type": "string"
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "open",
+                            "soft_closed",
+                            "closed"
+                        ]
                     }
                 },
                 "required": [
@@ -32084,7 +32256,12 @@
                         "type": "string"
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "published",
+                            "archived"
+                        ]
                     },
                     "origin_version_id": {
                         "type": [
@@ -32279,7 +32456,11 @@
                         ]
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ]
                     },
                     "lock_version": {
                         "type": "integer"
@@ -32848,10 +33029,16 @@
                         "type": "integer"
                     },
                     "version": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "structure": {
-                        "type": "object",
+                        "type": [
+                            "object",
+                            "null"
+                        ],
                         "additionalProperties": {}
                     }
                 },
@@ -35148,7 +35335,10 @@
                         "maxItems": 50
                     },
                     "subledger_route": {
-                        "type": "object",
+                        "type": [
+                            "object",
+                            "null"
+                        ],
                         "description": "The document an entry of the version records in the subledger (TE-FR-10); how it fits the fields and rules is checked by the application layer.",
                         "properties": {
                             "kind": {

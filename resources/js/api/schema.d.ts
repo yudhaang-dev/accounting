@@ -4385,14 +4385,17 @@ export interface components {
             id: string;
             code: string;
             name: string;
-            class: string;
+            /** @enum {string} */
+            class: "asset" | "liability" | "equity" | "income" | "expense";
             normal_balance: string;
             parent_id: string | null;
             is_leaf: boolean;
-            status: string;
+            /** @enum {string} */
+            status: "active" | "inactive";
             allowed_sources: string[];
             dimension_requirements: string;
-            currency_restriction: string;
+            /** @enum {string} */
+            currency_restriction: "functional_only" | "specific" | "any";
             restricted_currency: string | null;
             is_revaluable: boolean;
             lock_version: number;
@@ -4525,7 +4528,8 @@ export interface components {
             transaction_date: string;
             description: string | null;
             reference: string | null;
-            direction: string;
+            /** @enum {string} */
+            direction: "in" | "out";
             amount: string;
             cash_transaction_id: string | null;
             matched_at: string | null;
@@ -4564,19 +4568,22 @@ export interface components {
         CashAccountResource: {
             id: string;
             name: string;
-            kind: string;
+            /** @enum {string} */
+            kind: "cash" | "bank";
             bank_name: string | null;
             account_number: string | null;
             currency: string;
             account_id: string;
-            status: string;
+            /** @enum {string} */
+            status: "active" | "inactive";
             lock_version: number;
         };
         /** CashTransactionResource */
         CashTransactionResource: {
             id: string;
             cash_account_id: string;
-            direction: string;
+            /** @enum {string} */
+            direction: "in" | "out";
             amount: string;
             currency: string;
             transaction_date: string;
@@ -4883,9 +4890,11 @@ export interface components {
             name: string;
             minor_unit: number;
             scale: number;
-            rounding_mode: string;
+            /** @enum {string} */
+            rounding_mode: "half_up" | "half_even" | "up" | "down";
             is_functional: boolean;
-            status: string;
+            /** @enum {string} */
+            status: "active" | "inactive";
             lock_version: number;
         };
         /**
@@ -4926,7 +4935,8 @@ export interface components {
             label: string;
             is_hierarchical: boolean;
             leaf_only: boolean;
-            status: string;
+            /** @enum {string} */
+            status: "active" | "inactive";
             lock_version: number;
         };
         /** DimensionValueResource */
@@ -4939,7 +4949,8 @@ export interface components {
             is_leaf: boolean;
             valid_from: string | null;
             valid_to: string | null;
-            status: string;
+            /** @enum {string} */
+            status: "active" | "inactive";
             lock_version: number;
         };
         /**
@@ -4951,8 +4962,10 @@ export interface components {
         /** DocumentResource */
         DocumentResource: {
             id: string;
-            kind: string;
-            control_role: string;
+            /** @enum {string} */
+            kind: "invoice" | "credit_note" | "payment" | "advance" | "write_off" | "loan";
+            /** @enum {string} */
+            control_role: "receivables_control" | "payables_control";
             party_id: string;
             cash_account_id: string | null;
             journal_id: string;
@@ -4968,8 +4981,8 @@ export interface components {
             description: string;
             /** @description An open item of the conversion date, recorded with the opening balance journal. */
             is_opening: boolean;
-            reversal_journal_id: string;
-            reversal_date: string;
+            reversal_journal_id: string | null;
+            reversal_date: string | null;
         };
         /** EndPerimeterMemberRequest */
         EndPerimeterMemberRequest: {
@@ -5033,7 +5046,8 @@ export interface components {
         EntryResource: {
             id: string;
             number: string | null;
-            status: string;
+            /** @enum {string} */
+            status: "draft" | "submitted" | "approved" | "posted" | "rejected" | "cancelled";
             source: string;
             transaction_type_key: string;
             transaction_type_version: number;
@@ -5059,10 +5073,10 @@ export interface components {
             currency: string | null;
             exchange_rate: string | null;
             approval: {
-                stages: string;
+                stages: string[];
                 approved: number;
-                auto_post: string;
-                separation_of_duties: string;
+                auto_post: boolean;
+                separation_of_duties: boolean;
             } | null;
             reverses_journal_id: string | null;
             reason: string | null;
@@ -5101,7 +5115,8 @@ export interface components {
             effective_date: string;
             rate: string;
             version: number;
-            source: string;
+            /** @enum {string} */
+            source: "manual" | "csv" | "api";
             actor_type: string | null;
             actor_id: string | null;
             created_at: string | null;
@@ -5167,7 +5182,8 @@ export interface components {
         /** FiscalCalendarResource */
         FiscalCalendarResource: {
             id: string;
-            pattern: string;
+            /** @enum {string} */
+            pattern: "monthly" | "four_four_five" | "free";
             start_month: number | null;
             lock_version: number;
         };
@@ -5393,11 +5409,14 @@ export interface components {
             transaction_type_keys: string[];
             webhook_url: string | null;
             /** @description Webhooks go out only with a URL and a secret; the secret itself is never readable again. */
-            webhook_enabled: string;
+            webhook_enabled: boolean;
             /** @description Dimension values the client is limited to, each with its descendants; empty means no limit. */
             data_scope: string;
-            /** @description `active` or `revoked`. */
-            status: string;
+            /**
+             * @description `active` or `revoked`.
+             * @enum {string}
+             */
+            status: "active" | "revoked";
             secret_rotated_at: string | null;
             revoked_at: string | null;
             created_at: string | null;
@@ -5414,11 +5433,14 @@ export interface components {
             transaction_type_keys: string[];
             webhook_url: string | null;
             /** @description Webhooks go out only with a URL and a secret; the secret itself is never readable again. */
-            webhook_enabled: string;
+            webhook_enabled: boolean;
             /** @description Dimension values the client is limited to, each with its descendants; empty means no limit. */
             data_scope: string;
-            /** @description `active` or `revoked`. */
-            status: string;
+            /**
+             * @description `active` or `revoked`.
+             * @enum {string}
+             */
+            status: "active" | "revoked";
             secret_rotated_at: string | null;
             revoked_at: string | null;
             created_at: string | null;
@@ -5437,11 +5459,14 @@ export interface components {
             transaction_type_keys: string[];
             webhook_url: string | null;
             /** @description Webhooks go out only with a URL and a secret; the secret itself is never readable again. */
-            webhook_enabled: string;
+            webhook_enabled: boolean;
             /** @description Dimension values the client is limited to, each with its descendants; empty means no limit. */
             data_scope: string;
-            /** @description `active` or `revoked`. */
-            status: string;
+            /**
+             * @description `active` or `revoked`.
+             * @enum {string}
+             */
+            status: "active" | "revoked";
             secret_rotated_at: string | null;
             revoked_at: string | null;
             created_at: string | null;
@@ -5453,8 +5478,11 @@ export interface components {
         InvitationResource: {
             id: string;
             email: string;
-            /** @description `pending`, `accepted`, `revoked`, or `expired` once the invitation lapsed unanswered. */
-            status: string;
+            /**
+             * @description `pending`, `accepted`, `revoked`, or `expired` once the invitation lapsed unanswered.
+             * @enum {string}
+             */
+            status: "expired" | "pending" | "accepted" | "revoked";
             role_ids: string[];
             /** @description Dimension values the member is limited to once they accept; empty means unrestricted. */
             data_scope: string[];
@@ -5558,8 +5586,11 @@ export interface components {
                 name: string;
                 email: string;
             };
-            /** @description `active`, `revoked`, or `expired` once a set expiry has passed. */
-            status: string;
+            /**
+             * @description `active`, `revoked`, or `expired` once a set expiry has passed.
+             * @enum {string}
+             */
+            status: "active" | "revoked" | "expired";
             expires_at: string | null;
             roles: string;
             /** @description Dimension values the member is limited to, each with its descendants; empty means no limit. */
@@ -5573,7 +5604,7 @@ export interface components {
             name: string;
             current_version: number;
             lock_version: number;
-            version: number;
+            version: number | null;
             structure: {
                 rows: {
                     key: string;
@@ -5586,7 +5617,7 @@ export interface components {
                     }[];
                     transaction_type_keys: string[];
                 }[];
-            };
+            } | null;
         };
         /** NumberingRequest */
         NumberingRequest: {
@@ -5601,8 +5632,10 @@ export interface components {
             id: string;
             document_id: string;
             party_id: string;
-            control_role: string;
-            kind: string;
+            /** @enum {string} */
+            control_role: "receivables_control" | "payables_control";
+            /** @enum {string} */
+            kind: "invoice" | "credit_note" | "payment" | "advance" | "write_off" | "loan";
             side: string;
             document_number: string;
             document_date: string;
@@ -5613,7 +5646,8 @@ export interface components {
             original_functional: string;
             remaining_functional: string;
             exchange_rate: string;
-            status: string;
+            /** @enum {string} */
+            status: "open" | "settled" | "reversed";
         };
         /**
          * OpenItemStatus
@@ -5643,7 +5677,8 @@ export interface components {
             tax_id: string | null;
             posting_profile_id: string | null;
             counterparty_company_id: string | null;
-            status: string;
+            /** @enum {string} */
+            status: "active" | "inactive";
             external_refs: {
                 source_system: string;
                 external_ref: string;
@@ -5655,7 +5690,8 @@ export interface components {
             id: string;
             key: string;
             label: string;
-            status: string;
+            /** @enum {string} */
+            status: "active" | "inactive";
             lock_version: number;
         };
         /**
@@ -5694,7 +5730,8 @@ export interface components {
             name: string;
             start_date: string;
             end_date: string;
-            status: string;
+            /** @enum {string} */
+            status: "open" | "soft_closed" | "closed";
         };
         /**
          * PeriodStatus
@@ -5730,7 +5767,8 @@ export interface components {
             id: string;
             plan_id: string;
             name: string;
-            status: string;
+            /** @enum {string} */
+            status: "draft" | "published" | "archived";
             origin_version_id: string | null;
             published_by: number | null;
             published_at: string | null;
@@ -5776,7 +5814,8 @@ export interface components {
             key: string;
             label: string;
             max_age_days: number | null;
-            status: string;
+            /** @enum {string} */
+            status: "active" | "inactive";
             lock_version: number;
         };
         /**
@@ -5917,10 +5956,10 @@ export interface components {
             publish_on_period_close: boolean;
             publish_on_year_close: boolean;
             lock_version: number;
-            version: number;
+            version: number | null;
             structure: {
                 [key: string]: unknown;
-            };
+            } | null;
         };
         /** ReportSnapshotResource */
         ReportSnapshotResource: {
@@ -6453,7 +6492,7 @@ export interface components {
                 counterpart_cash_account_field?: string | null;
                 allocations_field?: string | null;
                 posting_profile_id?: string | null;
-            };
+            } | null;
         };
         /** WaiveReconciliationRequest */
         WaiveReconciliationRequest: {
@@ -7068,7 +7107,7 @@ export interface operations {
                             key: string;
                             account_id: string | null;
                             effective_date: string | null;
-                            valid: string;
+                            valid: boolean;
                             /** @enum {string} */
                             required: "year_end_close" | "foreign_currency";
                             allowed_classes: unknown[];
@@ -7104,7 +7143,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
-                            key: string;
+                            /** @enum {string} */
+                            key: "retained_earnings" | "fx_realized_gain" | "fx_realized_loss" | "fx_unrealized_gain" | "fx_unrealized_loss" | "fx_rounding";
                             account_id: string;
                             effective_date: string;
                             lock_version: number;
@@ -10458,7 +10498,7 @@ export interface operations {
                 to: string | null;
                 account_id: string | null;
                 "dimensions[]"?: (string | null)[] | null;
-                "transaction_type_keys[]"?: string[];
+                "transaction_type_keys[]"?: string[] | null;
                 source?: components["schemas"]["JournalSource"] | null;
                 plan_version_id?: string | null;
             };
@@ -11918,7 +11958,7 @@ export interface operations {
                 version?: number | null;
                 account_id?: string | null;
                 "dimensions[]"?: (string | null)[] | null;
-                "transaction_type_keys[]"?: string[];
+                "transaction_type_keys[]"?: string[] | null;
                 source?: components["schemas"]["JournalSource"] | null;
                 plan_version_id?: string | null;
             };
@@ -11990,7 +12030,7 @@ export interface operations {
                 version?: number | null;
                 account_id?: string | null;
                 "dimensions[]"?: (string | null)[] | null;
-                "transaction_type_keys[]"?: string[];
+                "transaction_type_keys[]"?: string[] | null;
                 source?: components["schemas"]["JournalSource"] | null;
                 plan_version_id?: string | null;
             };
@@ -12072,7 +12112,7 @@ export interface operations {
                 version?: number | null;
                 account_id?: string | null;
                 "dimensions[]"?: (string | null)[] | null;
-                "transaction_type_keys[]"?: string[];
+                "transaction_type_keys[]"?: string[] | null;
                 source?: components["schemas"]["JournalSource"] | null;
                 plan_version_id?: string | null;
             };
@@ -13692,7 +13732,7 @@ export interface operations {
                                 key: string;
                                 account_id: string | null;
                                 effective_date: string | null;
-                                valid: string;
+                                valid: boolean;
                                 /** @description The version of the mapping (0 when none), named as the concurrency field (API-TR-14). */
                                 lock_version: number;
                             }[];
@@ -13733,7 +13773,7 @@ export interface operations {
                                 key: string;
                                 account_id: string | null;
                                 effective_date: string | null;
-                                valid: string;
+                                valid: boolean;
                                 /** @description The version of the mapping (0 when none), named as the concurrency field (API-TR-14). */
                                 lock_version: number;
                             }[];
@@ -13772,7 +13812,7 @@ export interface operations {
                                 key: string;
                                 account_id: string | null;
                                 effective_date: string | null;
-                                valid: string;
+                                valid: boolean;
                                 /** @description The version of the mapping (0 when none), named as the concurrency field (API-TR-14). */
                                 lock_version: number;
                             }[];
@@ -13814,7 +13854,7 @@ export interface operations {
                                 key: string;
                                 account_id: string | null;
                                 effective_date: string | null;
-                                valid: string;
+                                valid: boolean;
                                 /** @description The version of the mapping (0 when none), named as the concurrency field (API-TR-14). */
                                 lock_version: number;
                             }[];
@@ -13858,7 +13898,7 @@ export interface operations {
                                 key: string;
                                 account_id: string | null;
                                 effective_date: string | null;
-                                valid: string;
+                                valid: boolean;
                                 /** @description The version of the mapping (0 when none), named as the concurrency field (API-TR-14). */
                                 lock_version: number;
                             }[];
@@ -14617,7 +14657,7 @@ export interface operations {
                 version?: number | null;
                 account_id?: string | null;
                 "dimensions[]"?: (string | null)[] | null;
-                "transaction_type_keys[]"?: string[];
+                "transaction_type_keys[]"?: string[] | null;
                 source?: components["schemas"]["JournalSource"] | null;
                 plan_version_id?: string | null;
             };
@@ -16578,10 +16618,10 @@ export interface operations {
                 to: string | null;
                 account_id?: string | null;
                 "dimensions[]"?: (string | null)[] | null;
-                "transaction_type_keys[]"?: string[];
+                "transaction_type_keys[]"?: string[] | null;
                 source?: components["schemas"]["JournalSource"] | null;
                 plan_version_id?: string | null;
-                "adjustment_keys[]"?: string[];
+                "adjustment_keys[]"?: string[] | null;
             };
             header?: never;
             path: {
