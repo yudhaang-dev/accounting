@@ -9,6 +9,7 @@ use App\Modules\GeneralLedger\Domain\Account;
 use App\Modules\TransactionEntry\Domain\TransactionType;
 use App\Orchestration\Setup\TemplatePacks;
 use App\Support\Company\CompanyScope;
+use Illuminate\Support\Facades\DB;
 
 // The cash and receivable accounts take only the subledger as a source, so the activity is posted as such. These tests install copies of the manifests marked as reviewed, which proves the content installs.
 beforeEach(function () {
@@ -324,6 +325,41 @@ describe('the simple profile (B-11i, ADR-0019 item 6)', function () {
             expect(btpValues($report, $query)[1])->not->toHaveKey('unmapped');
         }
     })->with(['retail', 'services', 'contractor', 'manufacturing', 'fnb']);
+
+    it('records a daily cash sale and a sales return on a simple company and reports them (D3d)', function () {
+        $this->actingAs($this->admin)->postJson("{$this->url}/template-packs/retail/install", ['profile' => 'simple', 'confirmed' => true])->assertCreated();
+        setUpFiscalCalendar($this->admin, $this->companyId);
+        $this->actingAs($this->admin)->postJson("{$this->url}/activate")->assertOk();
+
+        $this->preparer = memberWithRoles($this->companyId, 'preparer');
+        $this->approver = memberWithRoles($this->companyId, 'approver');
+
+        $bank = $this->actingAs($this->admin)->postJson("{$this->url}/cash-accounts", [
+            'name' => 'BCA Toko', 'kind' => 'bank', 'bank_name' => 'BCA', 'account_number' => '123-456-7890', 'currency' => 'IDR', 'account_id' => btpAccountId('1112'),
+        ])->assertCreated()->json('data.id');
+        $customer = docParty(['name' => 'Toko Sentosa']);
+
+        $sale = docEntry('daily_cash_sale', ['bank' => $bank, 'total' => '1000000', 'revenue_account' => btpAccountId('4111')])->assertCreated()->json('data.id');
+        docPosted($sale);
+
+        // The credit note needs no invoice: it raises a credit balance on the customer.
+        $return = docEntry('sales_return', ['customer' => $customer, 'credit_note_number' => 'CN-001', 'total' => '200000', 'returns_account' => btpAccountId('4111')])->assertCreated()->json('data.id');
+        docPosted($return);
+
+        expect(DB::table('sl_documents')->where('company_id', $this->companyId)->where('kind', 'credit_note')->value('document_number'))->toBe('CN-001')
+            ->and(DB::table('sl_open_items')->where('company_id', $this->companyId)->where('kind', 'credit_note')->value('remaining_amount'))->toBe('200000.000000');
+
+        [, $values] = btpValues('income_statement', 'from=2026-03-01&to=2026-03-31');
+        expect($values['revenue']['period'])->toBe('800000.00')
+            ->and($values['net_profit']['period'])->toBe('800000.00')
+            ->and($values)->not->toHaveKey('unmapped');
+
+        [$balance, $values] = btpValues('balance_sheet', 'from=2026-03-31&to=2026-03-31');
+        expect($balance['balance_checks']['at']['balanced'])->toBeTrue()->and($values)->not->toHaveKey('unmapped');
+
+        [$cash] = btpValues('cash_flow_indirect', 'from=2026-03-01&to=2026-03-31');
+        expect($cash['cash_checks']['period']['reconciled'])->toBeTrue();
+    });
 
     it('refuses a component outside the profile and an unknown profile, creating nothing', function () {
         $this->actingAs($this->admin)->postJson("{$this->url}/template-packs/retail/install", ['profile' => 'simple', 'components' => ['chart_of_accounts', 'transaction_types.general'], 'confirmed' => true])
