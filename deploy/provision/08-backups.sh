@@ -57,10 +57,9 @@ verify() {
         report="tables=$tables"
         if [ "$(psql -tA -d "$scratch" -c "select to_regclass('public.gl_journal_lines') is not null")" = t ]; then
             # The ledger must still be internally consistent after a restore (GL-FR-05): lines balance, balances equal the lines.
-            diff=$(psql -tA -d "$scratch" -c "select coalesce(sum(debit) - sum(credit), 0) from gl_journal_lines")
-            bal=$(psql -tA -d "$scratch" -c "select coalesce((select sum(debit) from gl_account_balances), 0) - coalesce((select sum(debit) from gl_journal_lines), 0)")
-            [ "$diff" = 0.000000 ] || fail "$db: restored journal lines do not balance ($diff)"
-            [ "$bal" = 0.000000 ] || fail "$db: restored balances differ from the lines ($bal)"
+            # Compared as numbers in SQL: an empty ledger sums to 0, which is not the text 0.000000.
+            [ "$(psql -tA -d "$scratch" -c "select coalesce(sum(debit) - sum(credit), 0) = 0 from gl_journal_lines")" = t ] || fail "$db: restored journal lines do not balance"
+            [ "$(psql -tA -d "$scratch" -c "select coalesce((select sum(debit) from gl_account_balances), 0) = coalesce((select sum(debit) from gl_journal_lines), 0)")" = t ] || fail "$db: restored balances differ from the lines"
             report="$report journal_lines_balance=ok balances_match=ok"
         fi
         dropdb "$scratch"
