@@ -13,19 +13,20 @@ Skrip yang dijalankan di server produksi/demo (Ubuntu 22.04, satu mesin dengan s
 | `07-mail.sh` | templat `/etc/accounting/mail.env` (Brevo SMTP) dan `accounting-mail-test` |
 | `08-backups.sh` | `pg_dump` harian (14 harian, 8 mingguan), uji restore mingguan, timer systemd |
 | `09-queue-and-scheduler.sh` | worker `queue:work` dan `schedule:run` tiap menit per lingkungan; menyala sendiri begitu `current/artisan` ada |
+| `10-firewall.sh` | `ufw`: tolak masuk kecuali SSH dan 80/443 dari Cloudflare (IPv4 dan IPv6), `fail2ban`, vhost penangkap host tak dikenal (444), sinkron mingguan rentang Cloudflare ke `ufw` dan Nginx (`accounting-cloudflare-sync`); pengatur waktu 3 menit mematikan `ufw` bila tidak dibatalkan. Setelah itu: `systemctl enable ufw` |
 
 Nama domain dan IP tertulis di skrip untuk server yang sekarang; ganti bila berpindah.
 
 ## Perhatian: Cloudflare dan firewall
 
-Rencananya port 80 dan 443 hanya menerima rentang IP Cloudflare (SSH tetap terbuka, hanya kunci). Selama itu berlaku:
+Port 80 dan 443 hanya menerima rentang IP Cloudflare (SSH tetap terbuka, hanya kunci). Karena itu:
 
 - **Jangan ubah rekaman DNS domain di server ini ke "DNS only" (awan abu-abu).** Situsnya langsung tidak terjangkau, dan perpanjangan sertifikat Let's Encrypt-nya ikut gagal, sampai aturan firewall disesuaikan. Semua nama sekarang diproksikan: `vcare.web.id`, `ipm`, `accounting`, `demo-accounting`.
 - Domain baru yang ditambahkan ke server ini harus diproksikan sejak awal.
 - Akses langsung ke IP server di 80/443 memang ditolak; pemeriksaan dari server ke dirinya sendiri (`127.0.0.1`) tetap jalan.
 - Rentang Cloudflare berubah sesekali: daftar firewall dan `set_real_ip_from` di Nginx harus diperbarui bersama (timer mingguan, setelah firewall terpasang).
 
-Status: firewall belum terpasang (`ufw` nonaktif); catatan ini berlaku begitu aturannya aktif.
+Status: aktif sejak skrip 10 (`ufw` enabled saat boot).
 
 ## Sesudah deploy
 
