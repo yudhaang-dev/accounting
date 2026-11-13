@@ -67,17 +67,8 @@ jobs:
           scp $ssh_opts "$FILE" "$DEPLOY_USER@$DEPLOY_HOST:/var/tmp/deploy/$NAME"
           ssh $ssh_opts "$DEPLOY_USER@$DEPLOY_HOST" "sudo /usr/local/sbin/accounting-deploy accounting-staging /var/tmp/deploy/$NAME"
 
-      - name: Check from outside
-        env:
-          URL: ${{ vars.DEPLOY_URL }}
-        run: |
-          for i in 1 2 3 4 5; do
-            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL/up" || true)
-            [ "$code" = 200 ] && { echo "$URL/up answered 200"; exit 0; }
-            sleep 5
-          done
-          echo "$URL/up answered $code" >&2
-          exit 1
+      # No check from outside here: Cloudflare answers 403 to GitHub's runner addresses. The server checks /up itself before it
+      # keeps a release and goes back to the previous one when that fails, so a failure shows as a failed "Send and install" step.
 
       - name: Remove the key
         if: always()
