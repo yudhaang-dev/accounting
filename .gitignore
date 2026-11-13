@@ -44,3 +44,4 @@ yarn-error.log
 # Playwright
 /test-results
 /playwright-report
+deploy/out/

@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+# Installs a release on this server. Usage (root): accounting-deploy <accounting|accounting-staging> <release.tar.gz>
+# Extracts to releases/<name>, links the shared .env and storage, composer install, migrate, switches `current`,
+# restarts the queue worker, checks /up, and returns to the previous release when the check fails.
+# Migrations are forward-only: a rollback restores the code, not the schema (a migration must stay compatible with the code before it).
+set -Eeuo pipefail
+
+env=${1:?usage: accounting-deploy <accounting|accounting-staging> <release.tar.gz>}
+tarball=${2:?usage: accounting-deploy <accounting|accounting-staging> <release.tar.gz>}
+
+case "$env" in
+    accounting)         user=acct;     db=accounting;         domain=accounting.vcare.web.id;      app_env=production ;;
+    accounting-staging) user=acct-stg; db=accounting_staging; domain=demo-accounting.vcare.web.id; app_env=staging ;;
+    *) echo "unknown environment: $env" >&2; exit 2 ;;
+esac
+[ -f "$tarball" ] || { echo "no such file: $tarball" >&2; exit 2; }
+
+base=/var/www/$env
+name=$(basename "$tarball" .tar.gz)
+rel=$base/releases/$name
+previous=$(readlink -f "$base/current" 2>/dev/null || true)
+as_user() { sudo -u "$user" -H env COMPOSER_HOME="$base/shared/.composer" "$@"; }
+say() { printf '== %s\n' "$*"; }
+
+[ ! -e "$rel" ] || { echo "release $name already exists" >&2; exit 2; }
+umask 027
+
+say "extract $name"
+install -d -o "$user" -g "$user" -m 0711 "$base/releases"   # nginx (www-data) passes through it to public/
+install -d -o "$user" -g "$user" -m 0750 "$rel" "$base/shared" "$base/shared/.composer"
+tar -xzf "$tarball" -C "$rel"
+chown -R "$user:$user" "$rel"
+
+say "shared storage and .env"
+for d in app/public framework/cache/data framework/sessions framework/views logs; do install -d -o "$user" -g "$user" -m 0750 "$base/shared/storage/$d"; done
+# `install -d` gives only the last directory its owner; the parents it creates on the way belong to root.
+chown -R "$user:$user" "$base/shared"
+rm -rf "$rel/storage"; ln -s "$base/shared/storage" "$rel/storage"
+install -d -o "$user" -g "$user" -m 0750 "$rel/bootstrap/cache"
+
+if [ ! -f "$base/shared/.env" ]; then
+    say "first deploy: creating .env"
+    DEPLOY_ENV=$env DEPLOY_USER=$user DEPLOY_DB=$db DEPLOY_DOMAIN=$domain DEPLOY_APP_ENV=$app_env DEPLOY_EXAMPLE="$rel/.env.production.example" DEPLOY_TARGET="$base/shared/.env" python3 - <<'PY'
+import os, re
+
+def read_env(path):
+    values = {}
+    for line in open(path, encoding="utf-8"):
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            values[key.strip()] = value.strip().strip('"')
+    return values
+
+e = os.environ
+db_pass = open(f"/etc/accounting/{e['DEPLOY_DB']}.db.pass", encoding="utf-8").read().strip()
+values = {
+    "APP_ENV": e["DEPLOY_APP_ENV"], "APP_URL": f"https://{e['DEPLOY_DOMAIN']}",
+    "DB_DATABASE": e["DEPLOY_DB"], "DB_USERNAME": e["DEPLOY_DB"], "DB_PASSWORD": db_pass,
+}
+if e["DEPLOY_APP_ENV"] == "production":
+    mail = read_env("/etc/accounting/mail.env")
+    for key in ("MAIL_MAILER", "MAIL_SCHEME", "MAIL_HOST", "MAIL_PORT", "MAIL_USERNAME", "MAIL_PASSWORD", "MAIL_FROM_ADDRESS"):
+        values[key] = mail.get(key, "")
+else:
+    # The demo environment never sends real email.
+    values.update({"MAIL_MAILER": "log", "MAIL_HOST": "", "MAIL_USERNAME": "", "MAIL_PASSWORD": "", "MAIL_FROM_ADDRESS": "noreply@vcare.web.id", "LOG_LEVEL": "info"})
+
+out = []
+for line in open(e["DEPLOY_EXAMPLE"], encoding="utf-8"):
+    m = re.match(r"^([A-Z0-9_]+)=(.*)$", line.rstrip("\n"))
+    if m and m.group(1) in values:
+        v = values[m.group(1)]
+        line = f'{m.group(1)}="{v}"\n' if re.search(r"[\s#\"'$]", v) else f"{m.group(1)}={v}\n"
+    out.append(line)
+open(e["DEPLOY_TARGET"], "w", encoding="utf-8").write("".join(out))
+PY
+    chown "$user:$user" "$base/shared/.env"; chmod 640 "$base/shared/.env"
+fi
+ln -sfn "$base/shared/.env" "$rel/.env"
+
+say "composer install"
+as_user composer install --no-dev --optimize-autoloader --no-interaction --no-progress --working-dir="$rel" 2>&1 | tail -3
+
+cd "$rel"
+grep -q '^APP_KEY=.\+' "$base/shared/.env" || { say "app key"; as_user php artisan key:generate --force --no-interaction >/dev/null; }
+ls "$base"/shared/storage/oauth-*.key >/dev/null 2>&1 || { say "passport keys"; as_user php artisan passport:keys --no-interaction >/dev/null; }
+
+say "migrate"
+as_user php artisan migrate --force --no-interaction 2>&1 | tail -3
+
+say "optimize"
+as_user php artisan optimize --no-interaction >/dev/null
+
+# Only the public tree is readable by nginx (www-data); the application code stays closed to other users.
+chmod 711 "$rel"
+find "$rel/public" -type d -exec chmod 755 {} +; find "$rel/public" -type f -exec chmod 644 {} +
+
+say "switch"
+placeholder=
+if [ -d "$base/current" ] && [ ! -L "$base/current" ]; then placeholder="$base/current.placeholder-$(date +%s)"; mv "$base/current" "$placeholder"; fi
+ln -sfn "$rel" "$base/current.new"; mv -Tf "$base/current.new" "$base/current"
+systemctl reload php8.4-fpm
+as_user php artisan queue:restart --no-interaction >/dev/null || true
+systemctl restart "accounting-queue-$env.service" 2>/dev/null || true
+
+say "health check"
+ok=0
+for i in $(seq 1 15); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 --resolve "$domain:443:127.0.0.1" "https://$domain/up" || true)
+    [ "$code" = 200 ] && { ok=1; break; }
+    sleep 2
+done
+
+if [ "$ok" != 1 ]; then
+    echo "health check failed (last status $code)." >&2
+    case "$previous" in
+        "$base"/releases/*)
+            # The last release is a real one: point `current` back at it.
+            ln -sfn "$previous" "$base/current.new"; mv -Tf "$base/current.new" "$base/current"
+            systemctl reload php8.4-fpm
+            as_user php artisan queue:restart --no-interaction >/dev/null || true
+            echo "rolled back to $(basename "$previous"); the failed release stays in releases/$name for inspection." >&2 ;;
+        *)
+            # Nothing was released yet: put the placeholder page back where `current` was. Never point `current` at itself.
+            if [ -n "$placeholder" ] && [ -d "$placeholder" ]; then
+                rm -f "$base/current"; mv "$placeholder" "$base/current"
+                echo "no previous release: the placeholder page is back; the failed release stays in releases/$name for inspection." >&2
+            else
+                echo "no previous release to return to." >&2
+            fi ;;
+    esac
+    exit 1
+fi
+
+# Keep the five newest releases and never the current one.
+ls -1dt "$base"/releases/*/ | tail -n +6 | while read -r old; do [ "$(readlink -f "$base/current")" = "${old%/}" ] || rm -rf "$old"; done
+rm -f "$tarball"
+echo "deployed $name to $domain"
