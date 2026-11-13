@@ -1,3 +1,4 @@
+# (probe: JS-only change to prove the PHP checks are skipped)
 packages:
     - '.'
 
