@@ -273,6 +273,12 @@ final class EloquentPostingValidator implements PostingValidator
             ]);
         }
 
+        // Closing or reopening takes the exclusive side of this advisory lock (SetPeriodStatus). The shared side, held until this
+        // posting commits, makes a close wait for postings in flight; a posting that starts during a close waits for it and reads
+        // the status it left (GL-FR-04). Advisory locks queue fairly, so a close is not starved by a steady stream of postings.
+        DB::select('SELECT pg_advisory_xact_lock_shared(hashtextextended(?, 0))', ["gl-period:{$period->id}"]);
+        $period = $this->periods->forDate($companyId, $accountingDate) ?? $period;
+
         // A closed year has its income and expense at zero; only reopening it lets the ledger change (GL-FR-12, GL-FR-14).
         if (DB::table('gl_closing_runs')->where('company_id', $companyId)->where('fiscal_year_id', $period->fiscalYearId)->where('status', 'closed')->exists()) {
             throw new ApiException(ErrorCode::PeriodNotOpen, errors: [

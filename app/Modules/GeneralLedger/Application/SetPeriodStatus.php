@@ -68,6 +68,8 @@ final class SetPeriodStatus
     private function change(string $periodId, string $action, PeriodStatus $to, string $event, ?string $reason): Period
     {
         return DB::transaction(function () use ($periodId, $action, $to, $event, $reason): Period {
+            // Waits for the postings in flight into the period, and holds back new ones until the status has changed (EloquentPostingValidator::periodFor).
+            DB::select('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))', ["gl-period:{$periodId}"]);
             $period = Period::query()->lockForUpdate()->findOrFail($periodId);
             $from = $period->status;
 
