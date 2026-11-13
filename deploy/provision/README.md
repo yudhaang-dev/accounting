@@ -16,6 +16,17 @@ Skrip yang dijalankan di server produksi/demo (Ubuntu 22.04, satu mesin dengan s
 
 Nama domain dan IP tertulis di skrip untuk server yang sekarang; ganti bila berpindah.
 
+## Perhatian: Cloudflare dan firewall
+
+Rencananya port 80 dan 443 hanya menerima rentang IP Cloudflare (SSH tetap terbuka, hanya kunci). Selama itu berlaku:
+
+- **Jangan ubah rekaman DNS domain di server ini ke "DNS only" (awan abu-abu).** Situsnya langsung tidak terjangkau, dan perpanjangan sertifikat Let's Encrypt-nya ikut gagal, sampai aturan firewall disesuaikan. Semua nama sekarang diproksikan: `vcare.web.id`, `ipm`, `accounting`, `demo-accounting`.
+- Domain baru yang ditambahkan ke server ini harus diproksikan sejak awal.
+- Akses langsung ke IP server di 80/443 memang ditolak; pemeriksaan dari server ke dirinya sendiri (`127.0.0.1`) tetap jalan.
+- Rentang Cloudflare berubah sesekali: daftar firewall dan `set_real_ip_from` di Nginx harus diperbarui bersama (timer mingguan, setelah firewall terpasang).
+
+Status: firewall belum terpasang (`ufw` nonaktif); catatan ini berlaku begitu aturannya aktif.
+
 ## Sesudah deploy
 
 - Rilis baru: letakkan di `releases/`, ganti symlink `current`, `php artisan migrate --force`, `php artisan optimize`, `php artisan queue:restart` (worker keluar dan systemd menjalankannya pada kode baru). Kali pertama: `systemctl restart accounting-queue-<env>` bila worker belum menyala.
