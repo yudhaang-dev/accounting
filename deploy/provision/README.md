@@ -14,6 +14,7 @@ Skrip yang dijalankan di server produksi/demo (Ubuntu 22.04, satu mesin dengan s
 | `08-backups.sh` | `pg_dump` harian (14 harian, 8 mingguan), uji restore mingguan, timer systemd |
 | `09-queue-and-scheduler.sh` | worker `queue:work` dan `schedule:run` tiap menit per lingkungan; menyala sendiri begitu `current/artisan` ada |
 | `10-firewall.sh` | `ufw`: tolak masuk kecuali SSH dan 80/443 dari Cloudflare (IPv4 dan IPv6), `fail2ban`, vhost penangkap host tak dikenal (444), sinkron mingguan rentang Cloudflare ke `ufw` dan Nginx (`accounting-cloudflare-sync`); pengatur waktu 3 menit mematikan `ufw` bila tidak dibatalkan. Setelah itu: `systemctl enable ufw` |
+| `11-main-domain.sh` | `vcare.web.id` (situs statis di luar aplikasi): HTTPS Let's Encrypt, HTTP dan `www` dialihkan ke domain utama, halaman netral "VCare" |
 
 Nama domain dan IP tertulis di skrip untuk server yang sekarang; ganti bila berpindah.
 
