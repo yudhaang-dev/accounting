@@ -13,7 +13,9 @@ case "$env" in
     accounting-staging) user=acct-stg; db=accounting_staging; domain=demo-accounting.vcare.web.id; app_env=staging ;;
     *) echo "unknown environment: $env" >&2; exit 2 ;;
 esac
-[ -f "$tarball" ] || { echo "no such file: $tarball" >&2; exit 2; }
+# The CI user may run this script with sudo, so the file it unpacks as root must be a release named by package.sh in a known place.
+[[ "$tarball" =~ ^/var/tmp/(deploy/)?[0-9]{8}-[0-9]{6}-[0-9a-f]+\.tar\.gz$ ]] || { echo "release file must be /var/tmp/[deploy/]<timestamp>-<commit>.tar.gz: $tarball" >&2; exit 2; }
+[ -f "$tarball" ] && [ ! -L "$tarball" ] || { echo "no such file: $tarball" >&2; exit 2; }
 
 base=/var/www/$env
 name=$(basename "$tarball" .tar.gz)

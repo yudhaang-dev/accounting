@@ -1,0 +1,84 @@
+name: deploy
+
+# Deploys the demo environment by hand ("Run workflow" on main). It builds the SPA, packs the release with deploy/package.sh and has the
+# server install it with accounting-deploy (migrate, switch, health check, automatic return on failure). Production is not wired in yet.
+on:
+  workflow_dispatch:
+
+# One deploy at a time; a second one waits instead of cancelling a running install.
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    # Secrets and variables of this environment are only handed to runs of main.
+    environment: demo
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+
+      - name: Enable pnpm (version from package.json packageManager)
+        run: corepack enable
+
+      - name: Build the SPA
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+
+      - name: Pack the release
+        id: pack
+        run: |
+          tarball=$(bash deploy/package.sh)
+          echo "file=$tarball" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$tarball")" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Send and install the release
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          FILE: ${{ steps.pack.outputs.file }}
+          NAME: ${{ steps.pack.outputs.name }}
+        run: |
+          ssh_opts="-i $HOME/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes"
+          scp $ssh_opts "$FILE" "$DEPLOY_USER@$DEPLOY_HOST:/var/tmp/deploy/$NAME"
+          ssh $ssh_opts "$DEPLOY_USER@$DEPLOY_HOST" "sudo /usr/local/sbin/accounting-deploy accounting-staging /var/tmp/deploy/$NAME"
+
+      - name: Check from outside
+        env:
+          URL: ${{ vars.DEPLOY_URL }}
+        run: |
+          for i in 1 2 3 4 5; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL/up" || true)
+            [ "$code" = 200 ] && { echo "$URL/up answered 200"; exit 0; }
+            sleep 5
+          done
+          echo "$URL/up answered $code" >&2
+          exit 1
+
+      - name: Remove the key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/known_hosts
